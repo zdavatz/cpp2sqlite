@@ -10,3 +10,6 @@ _ [BAG XML](http://www.spezialitätenliste.ch/File.axd?file=XMLPublications.zip)
 _ [Refdata](https://www.refdata.ch/content/page_1.aspx?Nid=6&Aid=628&ID=291)\
 _ [Swissmedic](https://www.swissmedic.ch/dam/swissmedic/de/dokumente/listen/excel-version_zugelasseneverpackungen.xlsx.download.xlsx/excel-version_zugelasseneverpackungen.xlsx)\
 _ [EPha](http://download.epha.ch/data/matrix/matrix.csv)
+## Output Sqlite Database
+_ [amiko_db_de](http://pillbox.oddb.org/amiko_db_full_idx_de.zip)\
+_ [amiko_de_fr](http://pillbox.oddb.org/amiko_db_full_idx_fr.zip)
