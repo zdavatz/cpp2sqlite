@@ -12,4 +12,4 @@ _ [Swissmedic](https://www.swissmedic.ch/dam/swissmedic/de/dokumente/listen/exce
 _ [EPha](http://download.epha.ch/data/matrix/matrix.csv)
 ## Output Sqlite Database
 _ [amiko_db_de](http://pillbox.oddb.org/amiko_db_full_idx_de.zip)\
-_ [amiko_de_fr](http://pillbox.oddb.org/amiko_db_full_idx_fr.zip)
+_ [amiko_db_fr](http://pillbox.oddb.org/amiko_db_full_idx_fr.zip)
