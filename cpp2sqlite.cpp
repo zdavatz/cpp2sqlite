@@ -1,5 +1,11 @@
-/* Alessandro Bettarini - 15 Jan 2019
- */
+//
+//  cpp2sqlite.cpp
+//  cpp2sqlite
+//
+//  ©ywesee GmbH -- all rights reserved
+//  License GPLv3.0 -- see License File
+//  Created by Alex Bettarini on 15 Jan 2019
+//
 
 #include <iostream>
 #include <sstream>
