@@ -10,6 +10,8 @@ _ cd cpp2sqlite-build\
 _ cmake ../\
 _ make -j9\
 _ sudo make install
+## Usage
+_ ./cpp2sqlite /home/zeno/.software/aips2sqlite/jars/downloads/aips_xml.xml
 ## Input Sources
 _ [AIPS](http://download.swissmedicinfo.ch)\
 _ [BAG XML](http://www.spezialitätenliste.ch/File.axd?file=XMLPublications.zip)\
