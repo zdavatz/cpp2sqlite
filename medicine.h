@@ -15,6 +15,7 @@ namespace AIPS
     
 struct Medicine {
     std::string title;
+    std::string auth;
     std::string atc;
     std::string subst;
 };

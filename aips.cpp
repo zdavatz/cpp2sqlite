@@ -24,14 +24,14 @@ MedicineList & parseXML(const std::string &filename)
     pt::ptree tree;
     
     try {
-        std::cerr << "Reading XML..." << std::endl;
+        std::cerr << "Reading XML" << std::endl;
         pt::read_xml(filename, tree);
     }
     catch (std::exception &e) {
         std::cout << "Line: " << __LINE__ << "Error" << e.what() << std::endl;
     }
     
-    std::cerr << "Analyzing..." << std::endl;
+    std::cerr << "Analyzing" << std::endl;
     
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("medicalInformations")) {
@@ -40,6 +40,7 @@ MedicineList & parseXML(const std::string &filename)
                 //std::cerr << "Line: " << __LINE__ << ", ";
                 Medicine Med;
                 Med.title = v.second.get("title", "");
+                Med.auth = v.second.get("authHolder", "");
                 Med.atc = v.second.get("atcCode", "");
                 Med.subst = v.second.get("substances", "");
 #if 0

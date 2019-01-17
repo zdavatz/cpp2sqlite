@@ -19,25 +19,32 @@ int main(int argc, char **argv)
 
     std::cerr << basename(argv[0]) << " " << __DATE__ << " " << __TIME__ << std::endl;
     std::cerr << "C++ " << __cplusplus << std::endl;
-    std::cout << "SQLITE_VERSION: " << SQLITE_VERSION << std::endl;  // 3.24.0
-    //std::cout << "SQLITE_VERSION_NUMBER: " << SQLITE_VERSION_NUMBER << std::endl; // 3024000
-    //std::cout << "sqlite3_libversion: " << sqlite3_libversion() << std::endl;  // 3.24.0
+    std::cout << "SQLITE_VERSION: " << SQLITE_VERSION << std::endl;
 
     AIPS::MedicineList &list = AIPS::parseXML(argv[1]);
-    std::cout << "title count: " << list.size() << std::endl;  // 22056
+    std::cout << "title count: " << list.size() << std::endl;
 
     sqlite3 *db = AIPS::createDB("amiko_db_full_idx_de.db");
 
-    std::cerr << "Populating amiko_db_full_idx_de.db..." << std::endl;
+    sqlite3_stmt *statement;
+    AIPS::prepareStatement("amikodb", &statement,
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+
+    std::cerr << "Populating amiko_db_full_idx_de.db" << std::endl;
     for (AIPS::Medicine m : list) {
-        std::ostringstream values;
-        values << "null, '" << m.title << "'";
-        AIPS::insertInto("amikodb", "_id, title", values.str()); // SqlDatabase.java:222
+        AIPS::bindText("amikodb", statement, 1, m.title);
+        AIPS::bindText("amikodb", statement, 2, m.auth);
+        AIPS::bindText("amikodb", statement, 4, m.subst);
+        // TODO: add all other columns
+
+        AIPS::runStatement("amikodb", statement);
     }
+
+    AIPS::destroyStatement(statement);
 
     int rc = sqlite3_close(db);
     if (rc != SQLITE_OK)
-        std::cout << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
+        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
 
     return EXIT_SUCCESS;
 }
