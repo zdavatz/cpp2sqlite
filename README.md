@@ -8,7 +8,7 @@ Using Boost and C++17
 _ mkdir cpp2sqlite-build\
 _ cd cpp2sqlite-build\
 _ cmake ../\
-_ make -j8\
+_ make -j9\
 _ sudo make install
 ## Input Sources
 _ [AIPS](http://download.swissmedicinfo.ch)\
