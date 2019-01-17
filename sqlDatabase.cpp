@@ -35,7 +35,7 @@ void createIndex(const std::string &tableName,
 
 void insertInto(const std::string &tableName, const std::string &keys, const std::string &values)
 {
-#if 1
+#if 0
     sqlite3_stmt * statement;
     std::ostringstream sqlStream;
     sqlStream << "INSERT INTO " << tableName
