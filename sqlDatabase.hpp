@@ -16,7 +16,8 @@ namespace AIPS
 {
     sqlite3 * createDB(const std::string &filename);
 
-    void createTable(const std::string &tableName, const std::string &keys);
+    void createTable(const std::string &tableName,
+                     const std::string &keys);
 
     void createIndex(const std::string &tableName,
                      const std::string &prefix,

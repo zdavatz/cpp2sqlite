@@ -73,11 +73,10 @@ void prepareStatement(const std::string &tableName,
 {
     std::ostringstream sqlStream;
     sqlStream << "INSERT INTO " << tableName
-              //<< " (" << keys << ") "
               << " VALUES (" << placeholders << ");";
     //std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " " << sqlStream.str() << std::endl;
     
-    int rc = sqlite3_prepare(db, sqlStream.str().c_str(), -1, statement, NULL);
+    int rc = sqlite3_prepare_v2(db, sqlStream.str().c_str(), -1, statement, NULL);
     if (rc != SQLITE_OK)
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", error " << rc << std::endl;
 }
