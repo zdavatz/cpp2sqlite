@@ -21,7 +21,9 @@ namespace AIPS
     
 MedicineList medList;
 
-MedicineList & parseXML(const std::string &filename)
+MedicineList & parseXML(const std::string &filename,
+                        const std::string &language,
+                        const std::string &type)
 {
     pt::ptree tree;
     
@@ -34,23 +36,39 @@ MedicineList & parseXML(const std::string &filename)
     }
     
     std::cerr << "Analyzing" << std::endl;
-    
+
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("medicalInformations")) {
             
             if (v.first == "medicalInformation") {
-                //std::cerr << "Line: " << __LINE__ << ", ";
-                Medicine Med;
-                Med.title = v.second.get("title", "");
-                Med.auth = v.second.get("authHolder", "");
-                Med.atc = v.second.get("atcCode", "");
-                Med.subst = v.second.get("substances", "");
-#if 0
-                std::cerr << "title: "   << Med.title;
-                std::cerr << ", atc: "   << Med.atc;
-                std::cerr << ", subst: " << Med.subst << std::endl;
-#endif
-                medList.push_back(Med);
+                
+                std::string typ;
+                std::string lan;
+                pt::ptree & attributes = v.second.get_child("<xmlattr>");
+                BOOST_FOREACH(pt::ptree::value_type &att, attributes) {
+                    //std::cerr << "attr 1st: " << att.first.data() << ", 2nd: " << att.second.data() << std::endl;
+                    if (att.first == "type") {
+                        typ = att.second.data();
+                        //std::cerr << "Line: " << __LINE__ << ", type: " << type << std::endl;
+                    }
+
+                    if (att.first == "lang") {
+                        lan = att.second.data();
+                        //std::cerr << "Line: " << __LINE__ << ", language: " << language << std::endl;
+                    }
+                }
+
+                if ((lan == language) && (typ == type)) {
+                    Medicine Med;
+                    Med.title = v.second.get("title", "");
+                    Med.auth = v.second.get("authHolder", "");
+                    Med.atc = v.second.get("atcCode", "");
+                    Med.subst = v.second.get("substances", "");
+
+                    //std::cerr << "title: " << Med.title << ", atc: " << Med.atc << ", subst: " << Med.subst << std::endl;
+
+                    medList.push_back(Med);
+                }
             }
         }
         //std::cout << "title count: " << List.size() << std::endl;  // 22056

@@ -119,8 +119,6 @@ void createTable(const std::string &tableName, const std::string &keys)
 
 sqlite3 * createDB(const std::string &filename)
 {
-    //const char *dbFilename = "amiko_db_full_idx_de.db";
-    
     int rc = sqlite3_open(filename.c_str(), &db);
     if (rc != SQLITE_OK)
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;

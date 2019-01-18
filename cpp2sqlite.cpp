@@ -12,6 +12,7 @@
 #include <string>
 #include <sqlite3.h>
 #include <libgen.h>     // for basename()
+#include <boost/filesystem.hpp>
 
 #include <boost/program_options.hpp>
 #include <exception>
@@ -30,9 +31,14 @@ void on_version()
 
 int main(int argc, char **argv)
 {
+    std::string appName = boost::filesystem::basename(argv[0]);
+
     std::string xmlFilename;
     std::string language;
-
+    bool flagXml = false;
+    //bool flagPinfo = false;
+    std::string type("fi"); // Fachinfo
+    
     // See file Aips2Sqlite.java, function commandLineParse(), line 71, line 179
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -40,14 +46,14 @@ int main(int argc, char **argv)
         ("version,v", "print the version information and exit")
         ("verbose", "be extra verbose") // Show errors and logs
         ("nodown", "no download, parse only")
-        ("lang", po::value<std::string>( &language )->required(), "use given language (de/fr)")
+        ("lang", po::value<std::string>( &language )->default_value("de"), "use given language (de/fr)")
         ("alpha", "only include titles which start with option value")  // Med title
         ("regnr", "only include medications which start with option value") // Med regnr
         ("owner", "only include medications owned by option value") // Med owner
         ("pseudo", "adds pseudo expert infos to db") // Pseudo fi
         ("inter", "adds drug interactions to db")
         ("pinfo", "generate patient info htmls") // Generate pi
-        ("xml", po::value<std::string>( &xmlFilename )->required(), "generate xml file")
+        ("xml", "generate xml file")
         ("gln", "generate csv file with Swiss gln codes") // Shopping cart
         ("shop", "generate encrypted files for shopping cart")
         ("onlyshop", "skip generation of sqlite database")
@@ -64,6 +70,7 @@ int main(int argc, char **argv)
         ("plain", "does not update the package section")
         ("test", "starts in test mode")
         ("stats", po::value<float>(), "generates statistics for given user")
+        ("inxml", po::value<std::string>( &xmlFilename )->required(), "input XML file")
         ;
     
     po::variables_map vm;
@@ -77,7 +84,7 @@ int main(int argc, char **argv)
         }
         
         if (vm.count("version")) {
-            std::cout << basename(argv[0]) << " " << __DATE__ << " " << __TIME__ << std::endl;
+            std::cout << appName << " " << __DATE__ << " " << __TIME__ << std::endl;
             on_version();
             return EXIT_SUCCESS;
         }
@@ -101,31 +108,50 @@ int main(int argc, char **argv)
     if (vm.count("verbose")) {
         std::cout << "TODO: show errors, show logs" << std::endl;
     }
-
-    AIPS::MedicineList &list = AIPS::parseXML(xmlFilename);
-    std::cout << "title count: " << list.size() << std::endl;
-
-    sqlite3 *db = AIPS::createDB("amiko_db_full_idx_de.db");
-
-    sqlite3_stmt *statement;
-    AIPS::prepareStatement("amikodb", &statement,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
-
-    std::cerr << "Populating amiko_db_full_idx_de.db" << std::endl;
-    for (AIPS::Medicine m : list) {
-        AIPS::bindText("amikodb", statement, 1, m.title);
-        AIPS::bindText("amikodb", statement, 2, m.auth);
-        AIPS::bindText("amikodb", statement, 4, m.subst);
-        // TODO: add all other columns
-
-        AIPS::runStatement("amikodb", statement);
+    
+    if (vm.count("xml")) {
+        flagXml = true;
+        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagXml: " << flagXml << std::endl;
+    }
+    
+    if (vm.count("pinfo")) {
+        //flagPinfo = true;
+        type = "pi";
+        //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
 
-    AIPS::destroyStatement(statement);
+    AIPS::MedicineList &list = AIPS::parseXML(xmlFilename, language, type);
+    std::cout << "title count: " << list.size() << std::endl;
+    //std::cout << "language: " << language << std::endl;
 
-    int rc = sqlite3_close(db);
-    if (rc != SQLITE_OK)
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
+    if (flagXml) {
+        std::cerr << "Creating XML not yet implemented" << std::endl;
+    }
+    else {
+        std::string dbFilename = "amiko_db_full_idx_" + language + ".db";
+        sqlite3 *db = AIPS::createDB(dbFilename);
+
+        sqlite3_stmt *statement;
+        AIPS::prepareStatement("amikodb", &statement,
+                               "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+
+        std::cerr << "Populating " << dbFilename << std::endl;
+        for (AIPS::Medicine m : list) {
+            AIPS::bindText("amikodb", statement, 1, m.title);
+            AIPS::bindText("amikodb", statement, 2, m.auth);
+            AIPS::bindText("amikodb", statement, 3, m.atc);
+            AIPS::bindText("amikodb", statement, 4, m.subst);
+            // TODO: add all other columns
+
+            AIPS::runStatement("amikodb", statement);
+        }
+
+        AIPS::destroyStatement(statement);
+
+        int rc = sqlite3_close(db);
+        if (rc != SQLITE_OK)
+            std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
+    }
 
     return EXIT_SUCCESS;
 }
