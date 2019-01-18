@@ -31,7 +31,8 @@ void on_version()
 int main(int argc, char **argv)
 {
     std::string xmlFilename;
-    
+    std::string language;
+
     // See file Aips2Sqlite.java, function commandLineParse(), line 71, line 179
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -39,7 +40,7 @@ int main(int argc, char **argv)
         ("version,v", "print the version information and exit")
         ("verbose", "be extra verbose") // Show errors and logs
         ("nodown", "no download, parse only")
-        ("lang", po::value<std::string>(), "use given language (de/fr)")
+        ("lang", po::value<std::string>( &language )->required(), "use given language (de/fr)")
         ("alpha", "only include titles which start with option value")  // Med title
         ("regnr", "only include medications which start with option value") // Med regnr
         ("owner", "only include medications owned by option value") // Med owner
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
         ("gln", "generate csv file with Swiss gln codes") // Shopping cart
         ("shop", "generate encrypted files for shopping cart")
         ("onlyshop", "skip generation of sqlite database")
-        ("zurrose", "generate zur Rose full article database or stock/like files (fulldb/atcdb/quick") // Zur Rose DB
+        ("zurrose", "generate zur Rose full article database or stock/like files (fulldb/atcdb/quick)") // Zur Rose DB
         ("desitin", "generate encrypted files for Desitin")
         ("onlydesitin", "skip generation of sqlite database") // Only Desitin DB
         ("takeda", po::value<float>(), "generate sap/gln matching file")
