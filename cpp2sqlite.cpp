@@ -10,14 +10,17 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <sqlite3.h>
-#include <libgen.h>     // for basename()
-#include <boost/filesystem.hpp>
-
-#include <boost/program_options.hpp>
 #include <exception>
 
+#include <sqlite3.h>
+#include <libgen.h>     // for basename()
+
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
+
 #include "aips.hpp"
+#include "refdata.hpp"
 #include "sqlDatabase.hpp"
 
 namespace po = boost::program_options;
@@ -33,12 +36,15 @@ int main(int argc, char **argv)
 {
     std::string appName = boost::filesystem::basename(argv[0]);
 
-    std::string xmlFilename;
-    std::string language;
+    std::string opt_downloadDirectory;
+    std::string opt_language;
     bool flagXml = false;
     //bool flagPinfo = false;
     std::string type("fi"); // Fachinfo
-    
+    std::string opt_aplha;
+    std::string opt_regnr;
+    std::string opt_owner;
+
     // See file Aips2Sqlite.java, function commandLineParse(), line 71, line 179
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -46,10 +52,10 @@ int main(int argc, char **argv)
         ("version,v", "print the version information and exit")
         ("verbose", "be extra verbose") // Show errors and logs
         ("nodown", "no download, parse only")
-        ("lang", po::value<std::string>( &language )->default_value("de"), "use given language (de/fr)")
-        ("alpha", "only include titles which start with option value")  // Med title
-        ("regnr", "only include medications which start with option value") // Med regnr
-        ("owner", "only include medications owned by option value") // Med owner
+        ("lang", po::value<std::string>( &opt_language )->default_value("de"), "use given language (de/fr)")
+        ("alpha", po::value<std::string>( &opt_aplha ), "only include titles which start with arg value")  // Med title
+        ("regnr", po::value<std::string>( &opt_regnr ), "only include medications which start with arg value") // Med regnr
+        ("owner", po::value<std::string>( &opt_owner ), "only include medications owned by arg value") // Med owner
         ("pseudo", "adds pseudo expert infos to db") // Pseudo fi
         ("inter", "adds drug interactions to db")
         ("pinfo", "generate patient info htmls") // Generate pi
@@ -70,7 +76,7 @@ int main(int argc, char **argv)
         ("plain", "does not update the package section")
         ("test", "starts in test mode")
         ("stats", po::value<float>(), "generates statistics for given user")
-        ("inxml", po::value<std::string>( &xmlFilename )->required(), "input XML file")
+        ("inDir", po::value<std::string>( &opt_downloadDirectory )->required(), "download directory")
         ;
     
     po::variables_map vm;
@@ -120,15 +126,15 @@ int main(int argc, char **argv)
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
 
-    AIPS::MedicineList &list = AIPS::parseXML(xmlFilename, language, type);
-    std::cout << "title count: " << list.size() << std::endl;
-    //std::cout << "language: " << language << std::endl;
+    AIPS::MedicineList &list = AIPS::parseXML(opt_downloadDirectory + "/aips_xml.xml", opt_language, type);
+    
+    REFDATA::parseXML(opt_downloadDirectory + "/refdata_pharma_xml.xml", opt_language);
 
     if (flagXml) {
         std::cerr << "Creating XML not yet implemented" << std::endl;
     }
     else {
-        std::string dbFilename = "amiko_db_full_idx_" + language + ".db";
+        std::string dbFilename = "amiko_db_full_idx_" + opt_language + ".db";
         sqlite3 *db = AIPS::createDB(dbFilename);
 
         sqlite3_stmt *statement;
@@ -137,10 +143,36 @@ int main(int argc, char **argv)
 
         std::cerr << "Populating " << dbFilename << std::endl;
         for (AIPS::Medicine m : list) {
+            // See DispoParse.java:164 addArticleDB()
+            // See SqlDatabase.java:347 addExpertDB()
             AIPS::bindText("amikodb", statement, 1, m.title);
             AIPS::bindText("amikodb", statement, 2, m.auth);
             AIPS::bindText("amikodb", statement, 3, m.atc);
             AIPS::bindText("amikodb", statement, 4, m.subst);
+            AIPS::bindText("amikodb", statement, 5, m.regnrs);
+            
+            // For each regnr in the vector add the name from refdata
+            std::vector<std::string> regnrs;
+            boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+            //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << "regnrs size: " << regnrs.size() << std::endl;
+            std::string packInfo;
+            int i=0;
+            for (auto rn : regnrs) {
+                //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " rn: " << rn << std::endl;
+                std::string name = REFDATA::getName(rn);
+                if (!name.empty()) {
+                    if (i>0)
+                        packInfo += "\n";
+
+                    packInfo += name;
+                }
+                //else std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " NOT FOUND" << std::endl;
+                i++;
+            }
+            //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " packInfo: " << packInfo << std::endl;
+            if (!packInfo.empty())
+                AIPS::bindText("amikodb", statement, 11, packInfo);
+
             // TODO: add all other columns
 
             AIPS::runStatement("amikodb", statement);

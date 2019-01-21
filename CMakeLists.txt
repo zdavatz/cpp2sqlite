@@ -22,6 +22,7 @@ add_executable(cpp2sqlite
 	cpp2sqlite.cpp
 	sqlDatabase.hpp sqlDatabase.cpp
 	aips.hpp aips.cpp
+	refdata.hpp refdata.cpp
 	medicine.h)
 
 target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES})
@@ -29,4 +30,4 @@ target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES})
 
 #-------------------------------------------------------------------------------
 
-install(TARGETS cpp2sqlite DESTINATION bin)
+install(TARGETS cpp2sqlite RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})

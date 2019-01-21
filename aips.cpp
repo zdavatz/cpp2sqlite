@@ -12,6 +12,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
+
 #include "aips.hpp"
 
 namespace pt = boost::property_tree;
@@ -28,14 +30,15 @@ MedicineList & parseXML(const std::string &filename,
     pt::ptree tree;
     
     try {
-        std::cerr << "Reading XML" << std::endl;
+        std::cerr << "Reading AIPS XML" << std::endl;
         pt::read_xml(filename, tree);
     }
     catch (std::exception &e) {
         std::cout << "Line: " << __LINE__ << "Error" << e.what() << std::endl;
     }
     
-    std::cerr << "Analyzing" << std::endl;
+    std::cerr << "Analyzing AIPS" << std::endl;
+
 
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("medicalInformations")) {
@@ -64,6 +67,15 @@ MedicineList & parseXML(const std::string &filename,
                     Med.auth = v.second.get("authHolder", "");
                     Med.atc = v.second.get("atcCode", "");
                     Med.subst = v.second.get("substances", "");
+                    Med.regnrs = v.second.get("authNrs", "");
+
+                    //std::cerr << "remark: " << v.second.get("remark", "") << std::endl;
+                    //std::cerr << "style: " << v.second.get("style", "") << std::endl; // unused
+
+                    Med.content = v.second.get("content", "");
+                    //std::cerr << "content: " << Med.content << std::endl; // TODO: change XML to HTML
+
+                    //std::cerr << "sections: " << v.second.get("sections", "") << std::endl; // empty
 
                     //std::cerr << "title: " << Med.title << ", atc: " << Med.atc << ", subst: " << Med.subst << std::endl;
 
@@ -71,7 +83,7 @@ MedicineList & parseXML(const std::string &filename,
                 }
             }
         }
-        //std::cout << "title count: " << List.size() << std::endl;  // 22056
+        //std::cout << "aips record count: " << List.size() << std::endl;
     }
     catch (std::exception &e) {
         std::cout << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;

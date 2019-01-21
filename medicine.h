@@ -17,9 +17,15 @@ namespace AIPS
     
 struct Medicine {
     std::string title;
-    std::string auth;
-    std::string atc;
-    std::string subst;
+    std::string auth;   // authHolder
+    std::string atc;    // atcCode
+    std::string subst;  // substances
+    std::string regnrs;
+    // atc_class ?
+
+    std::string style;
+    std::string content; // XML to be changed to HTML
+    std::string sections;
 };
 
 typedef std::vector<Medicine> MedicineList;
