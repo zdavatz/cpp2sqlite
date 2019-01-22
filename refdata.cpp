@@ -69,17 +69,30 @@ namespace REFDATA
     }
 }
 
-std::string getName(const std::string &rn)
+// GTIN:
+//  76      med
+//  80      Swiss
+//  12345   registration number
+//  123     package (column K of swissmedic)
+//  1       checksum
+//
+// Each registration number can have multiple packages.
+// Get all of them, one per line
+std::string getNames(const std::string &rn)
 {
-    //int i=0;
+    std::string names;
+    int i=0;
     for (Article art : artList) {
-        //i++;
         if (art.gtin_5 == rn) {
-            //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " FOUND at: " << i << " " << art.name << std::endl;
-            return art.name;
+            if (i>0)
+                names += "\n";
+            
+            names += art.name;
+            i++;
         }
     }
-
-    return "";
+    
+    return names;
 }
+
 }

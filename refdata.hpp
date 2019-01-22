@@ -28,7 +28,7 @@ namespace REFDATA
     void parseXML(const std::string &filename,
                   const std::string &language);
 
-    std::string getName(const std::string &rn);
+    std::string getNames(const std::string &rn);
 }
 
 #endif /* refdata_hpp */

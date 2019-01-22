@@ -151,7 +151,7 @@ int main(int argc, char **argv)
             AIPS::bindText("amikodb", statement, 4, m.subst);
             AIPS::bindText("amikodb", statement, 5, m.regnrs);
             
-            // For each regnr in the vector add the name from refdata
+            // For each regnr in the vector add the name(s) from refdata
             std::vector<std::string> regnrs;
             boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
             //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << "regnrs size: " << regnrs.size() << std::endl;
@@ -159,15 +159,15 @@ int main(int argc, char **argv)
             int i=0;
             for (auto rn : regnrs) {
                 //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " rn: " << rn << std::endl;
-                std::string name = REFDATA::getName(rn);
+                std::string name = REFDATA::getNames(rn);
                 if (!name.empty()) {
                     if (i>0)
                         packInfo += "\n";
 
                     packInfo += name;
+                    i++;
                 }
                 //else std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " NOT FOUND" << std::endl;
-                i++;
             }
             //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " packInfo: " << packInfo << std::endl;
             if (!packInfo.empty())

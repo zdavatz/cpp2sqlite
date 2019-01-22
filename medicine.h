@@ -20,7 +20,7 @@ struct Medicine {
     std::string auth;   // authHolder
     std::string atc;    // atcCode
     std::string subst;  // substances
-    std::string regnrs;
+    std::string regnrs; // comma separated list of registration numbers
     // atc_class ?
 
     std::string style;
