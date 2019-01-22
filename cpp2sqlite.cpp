@@ -21,6 +21,7 @@
 
 #include "aips.hpp"
 #include "refdata.hpp"
+#include "swissmedic.hpp"
 #include "sqlDatabase.hpp"
 
 namespace po = boost::program_options;
@@ -76,7 +77,7 @@ int main(int argc, char **argv)
         ("plain", "does not update the package section")
         ("test", "starts in test mode")
         ("stats", po::value<float>(), "generates statistics for given user")
-        ("inDir", po::value<std::string>( &opt_downloadDirectory )->required(), "download directory")
+        ("inDir", po::value<std::string>( &opt_downloadDirectory )->required(), "download directory (without trailing /)")
         ;
     
     po::variables_map vm;
@@ -131,6 +132,7 @@ int main(int argc, char **argv)
     REFDATA::parseXML(opt_downloadDirectory + "/refdata_pharma_xml.xml", opt_language);
     
     // TODO: parse swissmedic_packages_xlsx.xlsx (zipped file)
+    SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");
 
     if (flagXml) {
         std::cerr << "Creating XML not yet implemented" << std::endl;
@@ -144,8 +146,9 @@ int main(int argc, char **argv)
                                "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 
         std::cerr << "Populating " << dbFilename << std::endl;
-        int statsFoundCount = 0;
-        int statsNotFoundCount=0;
+        int statsFoundRefdataCount = 0;
+        int statsNotFoundRefdataCount = 0;
+        int statsFoundSwissmedicCount = 0;
 
         for (AIPS::Medicine m : list) {
             // See DispoParse.java:164 addArticleDB()
@@ -171,12 +174,22 @@ int main(int argc, char **argv)
 
                     packInfo += name;
                     i++;
-                    statsFoundCount++;
+                    statsFoundRefdataCount++;
                 }
                 else {
                     //std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " rn: " << rn << " NOT FOUND in refdata" << std::endl;
-                    statsNotFoundCount++;
-                    // TODO: searwch in swissmedic
+                    statsNotFoundRefdataCount++;
+
+                    // Search in swissmedic
+                    name = SWISSMEDIC::getName(rn);
+                    if (!name.empty()) {
+                        if (i>0)
+                            packInfo += "\n";
+
+                        packInfo += name;
+                        i++;
+                        statsFoundSwissmedicCount++;
+                    }
                 }
             }
 
@@ -190,8 +203,10 @@ int main(int argc, char **argv)
         
         std::cerr
         //<< basename((char *)__FILE__) << ":" << __LINE__
-        << "regnrs found in refdata: " << statsFoundCount
-        << " (not found: " << statsNotFoundCount << ")" << std::endl;
+        << "regnrs in refdata: " << statsFoundRefdataCount
+        << ", not in refdata: " << statsNotFoundRefdataCount
+        << ", in swissmed: " << statsFoundSwissmedicCount
+        << std::endl;
 
         AIPS::destroyStatement(statement);
 
