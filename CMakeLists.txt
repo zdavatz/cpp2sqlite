@@ -15,6 +15,18 @@ message(STATUS "SQLITE3_LIBRARIES: ${SQLITE3_LIBRARIES}")
 include_directories(${SQLITE3_INCLUDEDIR})
 
 #-------------------------------------------------------------------------------
+message(STATUS "XLNT_DIR: ${XLNT_DIR}")
+set(CMAKE_PREFIX_PATH ${XLNT_DIR} ${CMAKE_PREFIX_PATH})
+pkg_check_modules(XLNT REQUIRED xlnt)
+message(STATUS "XLNT_LIBRARY_DIRS: ${XLNT_LIBRARY_DIRS}")
+message(STATUS "XLNT_INCLUDEDIR: ${XLNT_INCLUDEDIR}")
+message(STATUS "XLNT_LIBRARIES: ${XLNT_LIBRARIES}")
+message(STATUS "XLNT_INCLUDE_DIRS: ${XLNT_INCLUDE_DIRS}")
+
+include_directories(${XLNT_INCLUDEDIR})
+link_directories(${XLNT_LIBRARY_DIRS})
+
+#-------------------------------------------------------------------------------
 include_directories("${CMAKE_SOURCE_DIR}")
 
 #-------------------------------------------------------------------------------
@@ -23,9 +35,10 @@ add_executable(cpp2sqlite
 	sqlDatabase.hpp sqlDatabase.cpp
 	aips.hpp aips.cpp
 	refdata.hpp refdata.cpp
+	swissmedic.hpp swissmedic.cpp
 	medicine.h)
 
-target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES})
+target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})
 #set_target_properties(cpp2sqlite PROPERTIES CXX_STANDARD 17)
 
 #-------------------------------------------------------------------------------

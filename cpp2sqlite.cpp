@@ -129,6 +129,8 @@ int main(int argc, char **argv)
     AIPS::MedicineList &list = AIPS::parseXML(opt_downloadDirectory + "/aips_xml.xml", opt_language, type);
     
     REFDATA::parseXML(opt_downloadDirectory + "/refdata_pharma_xml.xml", opt_language);
+    
+    // TODO: parse swissmedic_packages_xlsx.xlsx (zipped file)
 
     if (flagXml) {
         std::cerr << "Creating XML not yet implemented" << std::endl;
@@ -142,6 +144,9 @@ int main(int argc, char **argv)
                                "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 
         std::cerr << "Populating " << dbFilename << std::endl;
+        int statsFoundCount = 0;
+        int statsNotFoundCount=0;
+
         for (AIPS::Medicine m : list) {
             // See DispoParse.java:164 addArticleDB()
             // See SqlDatabase.java:347 addExpertDB()
@@ -166,10 +171,15 @@ int main(int argc, char **argv)
 
                     packInfo += name;
                     i++;
+                    statsFoundCount++;
                 }
-                //else std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " NOT FOUND" << std::endl;
+                else {
+                    //std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " rn: " << rn << " NOT FOUND in refdata" << std::endl;
+                    statsNotFoundCount++;
+                    // TODO: searwch in swissmedic
+                }
             }
-            //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " packInfo: " << packInfo << std::endl;
+
             if (!packInfo.empty())
                 AIPS::bindText("amikodb", statement, 11, packInfo);
 
@@ -177,6 +187,11 @@ int main(int argc, char **argv)
 
             AIPS::runStatement("amikodb", statement);
         }
+        
+        std::cerr
+        //<< basename((char *)__FILE__) << ":" << __LINE__
+        << "regnrs found in refdata: " << statsFoundCount
+        << " (not found: " << statsNotFoundCount << ")" << std::endl;
 
         AIPS::destroyStatement(statement);
 

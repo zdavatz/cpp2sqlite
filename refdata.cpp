@@ -38,8 +38,10 @@ namespace REFDATA
     
     std::cerr << "Analyzing refdata" << std::endl;
 
+    int statsItemCount = 0;
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ARTICLE")) {
+            statsItemCount++;
             if (v.first == "ITEM")
             {
                 std::string atype = v.second.get("ATYPE", "");
@@ -62,7 +64,7 @@ namespace REFDATA
             }
         }
 
-        std::cout << "refdata record count: " << artList.size() << std::endl;
+        std::cout << "refdata items: " << artList.size() << " of " << statsItemCount << std::endl;
     }
     catch (std::exception &e) {
         std::cout << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
