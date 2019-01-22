@@ -7,7 +7,7 @@ Using Boost and C++17
 ## Installation
 _ mkdir cpp2sqlite-build\
 _ cd cpp2sqlite-build\
-_ cmake -DCMAKE_BUILD_TYPE=Release ../\
+_ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/bin/ ../
 _ make -j9\
 _ sudo make install
 ## Usage
