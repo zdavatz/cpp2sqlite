@@ -7,11 +7,11 @@ Using Boost and C++17
 ## Installation
 _ mkdir cpp2sqlite-build\
 _ cd cpp2sqlite-build\
-_ cmake -DCMAKE_BUILD_TYPE=Release ../\
+_ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/bin/ ../\
 _ make -j9\
 _ sudo make install
 ## Usage
-_ ./cpp2sqlite /home/zeno/.software/aips2sqlite/jars/downloads/aips_xml.xml
+_ ./cpp2sqlite --inDir /home/zeno/.software/aips2sqlite/jars/downloads/
 ## Input Sources
 _ [AIPS](http://download.swissmedicinfo.ch)\
 _ [BAG XML](http://www.spezialitätenliste.ch/File.axd?file=XMLPublications.zip)\
