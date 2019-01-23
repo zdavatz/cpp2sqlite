@@ -94,7 +94,7 @@ void insertInto(const std::string &tableName,
     //std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " " << sqlStream.str() << std::endl;
     int rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, NULL);
     if (rc != SQLITE_OK) {
-        std::cout << basename((char *)__FILE__) << ":" << __LINE__
+        std::cerr << basename((char *)__FILE__) << ":" << __LINE__
                   << ", sqlite3_exec error " << rc
                   << ", " << sqlStream.str()
                   << std::endl;

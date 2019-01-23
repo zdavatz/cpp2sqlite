@@ -20,7 +20,7 @@ namespace pt = boost::property_tree;
 namespace REFDATA
 {
 
-    ArticleList artList;
+ArticleList artList;
     
 void parseXML(const std::string &filename,
               const std::string &language)
@@ -29,14 +29,14 @@ void parseXML(const std::string &filename,
     const std::string nameTag = "NAME_" + boost::to_upper_copy( language );
 
     try {
-        std::cerr << "Reading refdata XML" << std::endl;
+        std::clog << "Reading refdata XML" << std::endl;
         pt::read_xml(filename, tree);
     }
     catch (std::exception &e) {
-        std::cout << "Line: " << __LINE__ << "Error" << e.what() << std::endl;
+        std::cerr << "Line: " << __LINE__ << "Error" << e.what() << std::endl;
     }
     
-    std::cerr << "Analyzing refdata" << std::endl;
+    std::clog << "Analyzing refdata" << std::endl;
 
     int statsItemCount = 0;
     try {
@@ -64,10 +64,10 @@ void parseXML(const std::string &filename,
             }
         }
 
-        std::cout << "refdata items: " << artList.size() << " of " << statsItemCount << std::endl;
+        std::cout << "refdata items: " << artList.size() << " of " << statsItemCount << " articles" << std::endl;
     }
     catch (std::exception &e) {
-        std::cout << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
+        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
     }
 }
 

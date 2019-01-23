@@ -19,35 +19,60 @@ namespace pt = boost::property_tree;
 namespace BAG
 {
 
+PreparationList prepList;
+
 void parseXML(const std::string &filename)
 {
     pt::ptree tree;
     
     try {
-        std::cerr << "Reading bag XML" << std::endl;
+        std::clog << "Reading bag XML" << std::endl;
         pt::read_xml(filename, tree);
     }
     catch (std::exception &e) {
-        std::cout << "Line: " << __LINE__ << "Error" << e.what() << std::endl;
+        std::cerr << "Line: " << __LINE__ << "Error" << e.what() << std::endl;
     }
     
+    std::clog << "Analyzing bag" << std::endl;
+
+    int statsPrepCount = 0;
     try {
-        int i=0;
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("Preparations")) {
+            statsPrepCount++;
             if (v.first == "Preparation") {
-                std::cerr << ++i
-                << ", OrgGenCode: " << v.second.get("OrgGenCode", "")
-                << ", FlagSB20: " << v.second.get("FlagSB20", "")
-                << ", GTIN: " << v.second.get("Packs.Pack.GTIN", "")
-                << ", EFP " << v.second.get("Packs.Pack.Prices.ExFactoryPrice.Price", "")
-                << ", PP " << v.second.get("Packs.Pack.Prices.PublicPrice.Price", "")
+
+                Preparation prep;
+                prep.orgen = v.second.get("OrgGenCode", "");
+                prep.sb20 = v.second.get("FlagSB20", "");
+                prep.gtin13 = v.second.get("Packs.Pack.GTIN", "");
+                prep.exFactoryPrice = v.second.get("Packs.Pack.Prices.ExFactoryPrice.Price", "");
+                prep.publicPrice = v.second.get("Packs.Pack.Prices.PublicPrice.Price", "");
+
+#if 0
+                static int i=0;
+                std::clog << ++i
+                << ", OrgGenCode: " << prep.orgen
+                << ", FlagSB20: " << prep.sb20
+                << ", GTIN: " << prep.gtin13
+                << ", EFP " << prep.exFactoryPrice
+                << ", PP " << prep.publicPrice
                 << std::endl;
+#endif
+                prepList.push_back(prep);
             }
         }
+        
+        std::cout << "bag preparations: " << prepList.size() << " of " << statsPrepCount << std::endl;
+
     }
     catch (std::exception &e) {
-        std::cout << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
+        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
     }
 }
-    
+
+std::string getFlags(const std::string &rn)
+{
+    return "";
+}
+
 }

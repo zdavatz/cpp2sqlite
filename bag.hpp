@@ -14,7 +14,18 @@
 
 namespace BAG
 {
+    struct Preparation {
+        std::string orgen;
+        std::string sb20;
+        std::string gtin13;
+        std::string exFactoryPrice;
+        std::string publicPrice;
+    };
+    
+    typedef std::vector<Preparation> PreparationList;
+    
     void parseXML(const std::string &filename);
+    std::string getFlags(const std::string &rn);
 }
 
 #endif /* bag_hpp */

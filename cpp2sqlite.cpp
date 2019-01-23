@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     }
 
     if (vm.count("verbose")) {
-        std::cout << "TODO: show errors, show logs" << std::endl;
+        std::clog << "TODO: show errors, show logs" << std::endl;
     }
     
     if (vm.count("xml")) {
@@ -162,6 +162,7 @@ int main(int argc, char **argv)
             AIPS::bindText("amikodb", statement, 4, m.subst);
             AIPS::bindText("amikodb", statement, 5, m.regnrs);
             
+#if 1 // pack_info_str
             // For each regnr in the vector add the name(s) from refdata
             std::vector<std::string> regnrs;
             boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
@@ -194,10 +195,17 @@ int main(int argc, char **argv)
                         statsFoundSwissmedicCount++;
                     }
                 }
-            }
+                
+                if (!name.empty()) {
+                    std::string flags = BAG::getFlags(rn);
+                    if (!flags.empty())
+                        packInfo += flags;
+                }
+            } // for
 
             if (!packInfo.empty())
                 AIPS::bindText("amikodb", statement, 11, packInfo);
+#endif
 
             // TODO: add all other columns
 
