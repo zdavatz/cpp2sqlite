@@ -26,6 +26,7 @@ namespace BAG
     
     void parseXML(const std::string &filename);
     std::string getFlags(const std::string &gtin_13);
+    std::vector<std::string> getGtinList();
 }
 
 #endif /* bag_hpp */

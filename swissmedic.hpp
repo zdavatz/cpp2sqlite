@@ -17,6 +17,7 @@ namespace SWISSMEDIC
     void parseXLXS(const std::string &filename);
     std::string getNames(const std::string &rn);
     int countRowsWithRn(const std::string &rn);
+    bool findGtin(const std::string &gtin);
 }
 
 #endif /* swissmedic_hpp */

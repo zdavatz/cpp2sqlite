@@ -26,7 +26,7 @@ void parseXML(const std::string &filename)
     pt::ptree tree;
     
     try {
-        std::clog << "Reading bag XML" << std::endl;
+        std::clog << std::endl << "Reading bag XML" << std::endl;
         pt::read_xml(filename, tree);
     }
     catch (std::exception &e) {
@@ -82,6 +82,16 @@ std::string getFlags(const std::string &gtin_13)
     }
 
     return flags;
+}
+
+std::vector<std::string> getGtinList()
+{
+    std::vector<std::string> list;
+
+    for (Preparation p : prepList)
+        list.push_back(p.gtin_13);
+
+    return list;
 }
 
 }

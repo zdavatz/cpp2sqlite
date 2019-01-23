@@ -48,6 +48,28 @@ int countAipsPackagesInSwissmedic(AIPS::MedicineList &list)
     return count;
 }
 
+int countBagGtinInSwissmedic(std::vector<std::string> &list)
+{
+    int count = 0;
+    for (auto g : list) {
+        if (SWISSMEDIC::findGtin(g))
+            count++;
+    }
+
+    return count;
+}
+
+int countBagGtinInRefdata(std::vector<std::string> &list)
+{
+    int count = 0;
+    for (auto g : list) {
+        if (REFDATA::findGtin(g))
+            count++;
+    }
+    
+    return count;
+}
+
 int main(int argc, char **argv)
 {
     std::string appName = boost::filesystem::basename(argv[0]);
@@ -148,8 +170,12 @@ int main(int argc, char **argv)
     REFDATA::parseXML(opt_downloadDirectory + "/refdata_pharma_xml.xml", opt_language);
     
     SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");
+    std::cerr << "swissmedic has " << countAipsPackagesInSwissmedic(list) << " packages matching AIPS" << std::endl;
     
     BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml");
+    std::vector<std::string> bagList = BAG::getGtinList();
+    std::cerr << "bag " << countBagGtinInSwissmedic(bagList) << " GTIN are also in swissmedic" << std::endl;
+    std::cerr << "bag " << countBagGtinInRefdata(bagList) << " GTIN are also in refdata" << std::endl;
 
     if (flagXml) {
         std::cerr << "Creating XML not yet implemented" << std::endl;
@@ -162,11 +188,12 @@ int main(int argc, char **argv)
         AIPS::prepareStatement("amikodb", &statement,
                                "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 
-        std::cerr << "Populating " << dbFilename << std::endl;
+        std::clog << std::endl << "Populating " << dbFilename << std::endl;
         int statsFoundRefdataCount = 0;
         int statsNotFoundRefdataCount = 0;
         int statsFoundSwissmedicCount = 0;
-        int statsNotFoundAnywhereCount = 0;
+        //int statsNotFoundAnywhereCount = 0;
+        std::vector<std::string> statsRegnrsNotFound;
 
         for (AIPS::Medicine m : list) {
             // See DispoParse.java:164 addArticleDB()
@@ -210,9 +237,7 @@ int main(int argc, char **argv)
                         statsFoundSwissmedicCount++;
                     }
                     else {
-                        statsNotFoundAnywhereCount++;
-                        if (flagVerbose)
-                            std::clog << "\trn: " << rn << " not found" << std::endl;
+                        statsRegnrsNotFound.push_back(rn);
                     }
                 }
                 
@@ -233,14 +258,24 @@ int main(int argc, char **argv)
         }
         
         std::cerr
-        << "REGNRS in refdata: " << statsFoundRefdataCount
+        << "aips REGNRS in refdata: " << statsFoundRefdataCount
         << ", not in refdata: " << statsNotFoundRefdataCount
         << ", in swissmedic: " << statsFoundSwissmedicCount
-        << ", not found anywhere: " << statsNotFoundAnywhereCount
+        << ", not found anywhere: " << statsRegnrsNotFound.size()
         << std::endl;
         
-        if ((statsNotFoundAnywhereCount > 0) && !flagVerbose)
-            std::cerr << "Run with --verbose to see REGNRS not found" << std::endl;
+        if (statsRegnrsNotFound.size() > 0) {
+            if (flagVerbose) {
+                std::cout << "REGNRS not found anywhere:" << std::endl;
+                for (auto s : statsRegnrsNotFound)
+                    std::cout << s << ", ";
+                
+                std::cout << std::endl;
+            }
+            else {
+                std::cerr << "Run with --verbose to see REGNRS not found" << std::endl;
+            }
+        }
 
         AIPS::destroyStatement(statement);
 
@@ -248,8 +283,6 @@ int main(int argc, char **argv)
         if (rc != SQLITE_OK)
             std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
     }
-    
-    std::cerr << "Swissmedic has " << countAipsPackagesInSwissmedic(list) << " packages matching AIPS" << std::endl;
 
     return EXIT_SUCCESS;
 }

@@ -29,7 +29,7 @@ void parseXML(const std::string &filename,
     const std::string nameTag = "NAME_" + boost::to_upper_copy( language );
 
     try {
-        std::clog << "Reading refdata XML" << std::endl;
+        std::clog << std::endl << "Reading refdata XML" << std::endl;
         pt::read_xml(filename, tree);
     }
     catch (std::exception &e) {
@@ -38,12 +38,15 @@ void parseXML(const std::string &filename,
     
     std::clog << "Analyzing refdata" << std::endl;
 
+    int statsArticleChildCount = 0;
     int statsItemCount = 0;
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ARTICLE")) {
-            statsItemCount++;
+            statsArticleChildCount++;
             if (v.first == "ITEM")
             {
+                statsItemCount++;
+
                 std::string atype = v.second.get("ATYPE", "");
                 if (atype != "PHARMA")
                     continue;
@@ -62,9 +65,17 @@ void parseXML(const std::string &filename,
 
                 artList.push_back(article);
             }
+//            else {
+//                // one "<xmlattr>" and one "RESULT"
+//                std::cout << " v.first: " << v.first << std::endl;
+//            }
         }
 
-        std::cout << "refdata items: " << artList.size() << " of " << statsItemCount << " articles" << std::endl;
+        std::cout
+        << "refdata PHARMA items with GTIN starting with \"7680\", count: " << artList.size()
+        << " of " << statsItemCount
+        //<< " (" << statsArticleChildCount << " articles)"
+        << std::endl;
     }
     catch (std::exception &e) {
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
@@ -95,6 +106,16 @@ std::string getNames(const std::string &rn)
     }
     
     return names;
+}
+    
+bool findGtin(const std::string &gtin)
+{
+    for (Article art : artList) {
+        if (art.gtin_13 == gtin)
+            return true;
+    }
+
+    return false;
 }
 
 }

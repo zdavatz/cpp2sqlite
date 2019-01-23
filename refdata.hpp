@@ -29,6 +29,7 @@ namespace REFDATA
                   const std::string &language);
 
     std::string getNames(const std::string &rn);
+    bool findGtin(const std::string &gtin);
 }
 
 #endif /* refdata_hpp */
