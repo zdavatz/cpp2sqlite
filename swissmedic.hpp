@@ -16,6 +16,7 @@ namespace SWISSMEDIC
 {
     void parseXLXS(const std::string &filename);
     std::string getNames(const std::string &rn);
+    int countRowsWithRn(const std::string &rn);
 }
 
 #endif /* swissmedic_hpp */

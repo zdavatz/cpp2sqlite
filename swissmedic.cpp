@@ -44,7 +44,8 @@ void parseXLXS(const std::string &filename)
     std::clog << "swissmedic rows: " << theWholeSpreadSheet.size() << std::endl;
 }
 
-// Note that multiple lines can have the same gtin
+// Note that multiple rows can have the same gtin_5
+// Each row corresponds to a different package (=gtin_13)
 std::string getNames(const std::string &rn)
 {
     std::string names;
@@ -69,6 +70,19 @@ std::string getNames(const std::string &rn)
 #endif
     
     return names;
+}
+
+int countRowsWithRn(const std::string &rn)
+{
+    int count = 0;
+    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
+        std::string gtin5 = theWholeSpreadSheet.at(rowInt).at(COLUMN_A);
+        // TODO: to speed up do a numerical comparison so that we can return when gtin5>rn assuming the column 5 is sorted
+        if (gtin5 == rn)
+            count++;
+    }
+
+    return count;
 }
 
 }

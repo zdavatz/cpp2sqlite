@@ -44,7 +44,7 @@ void parseXML(const std::string &filename)
                 Preparation prep;
                 prep.orgen = v.second.get("OrgGenCode", "");
                 prep.sb20 = v.second.get("FlagSB20", "");
-                prep.gtin13 = v.second.get("Packs.Pack.GTIN", "");
+                prep.gtin_13 = v.second.get("Packs.Pack.GTIN", "");
                 prep.exFactoryPrice = v.second.get("Packs.Pack.Prices.ExFactoryPrice.Price", "");
                 prep.publicPrice = v.second.get("Packs.Pack.Prices.PublicPrice.Price", "");
 
@@ -53,7 +53,7 @@ void parseXML(const std::string &filename)
                 std::clog << ++i
                 << ", OrgGenCode: " << prep.orgen
                 << ", FlagSB20: " << prep.sb20
-                << ", GTIN: " << prep.gtin13
+                << ", GTIN: " << prep.gtin_13
                 << ", EFP " << prep.exFactoryPrice
                 << ", PP " << prep.publicPrice
                 << std::endl;
@@ -63,16 +63,25 @@ void parseXML(const std::string &filename)
         }
         
         std::cout << "bag preparations: " << prepList.size() << " of " << statsPrepCount << std::endl;
-
     }
     catch (std::exception &e) {
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
     }
 }
 
-std::string getFlags(const std::string &rn)
+std::string getFlags(const std::string &gtin_13)
 {
-    return "";
+    std::string flags;
+    for (Preparation p : prepList) {
+        if (gtin_13 == p.gtin_13) {
+//            flags += "[";
+//            if (p.orgen == "O")
+//                flags += "SO";
+//            flags += "]";
+        }
+    }
+
+    return flags;
 }
 
 }

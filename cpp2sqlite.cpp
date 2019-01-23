@@ -35,6 +35,19 @@ void on_version()
     std::cout << "BOOST_VERSION: " << BOOST_LIB_VERSION << std::endl;
 }
 
+int countAipsPackagesInSwissmedic(AIPS::MedicineList &list)
+{
+    int count = 0;
+    for (AIPS::Medicine m : list) {
+        std::vector<std::string> regnrs;
+        boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+        for (auto rn : regnrs) {
+            count += SWISSMEDIC::countRowsWithRn(rn);
+        }
+    }
+    return count;
+}
+
 int main(int argc, char **argv)
 {
     std::string appName = boost::filesystem::basename(argv[0]);
@@ -235,6 +248,8 @@ int main(int argc, char **argv)
         if (rc != SQLITE_OK)
             std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
     }
+    
+    std::cerr << "Swissmedic has " << countAipsPackagesInSwissmedic(list) << " packages matching AIPS" << std::endl;
 
     return EXIT_SUCCESS;
 }
