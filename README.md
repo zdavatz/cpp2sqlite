@@ -8,7 +8,7 @@ Using Boost, C++17 and [xlnt](https://github.com/tfussell/xlnt) with `cmake -DST
 ```
 mkdir cpp2sqlite-build
 cd cpp2sqlite-build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/bin/ -DXLNT_DIR=/usr/local/lib -DXLNT_LIBRARY_DIRS=/usr/local ../
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/bin/ -DXLNT_DIR=/usr/local -DXLNT_LIBRARY_DIRS=/usr/local ../
 make -j9
 sudo make install
 ```
