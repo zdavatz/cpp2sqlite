@@ -66,18 +66,18 @@ void parseXLXS(const std::string &filename)
     std::clog << "swissmedic rows: " << theWholeSpreadSheet.size() << std::endl;
 }
 
-// Note that multiple rows can have the same gtin_5
+// Note that multiple rows can have the same value in column A
 // Each row corresponds to a different package (=gtin_13)
 std::string getNames(const std::string &rn)
 {
     std::string names;
     int i=0;
     for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-        std::string gtin_5 = regnrs[rowInt];
+        std::string rn5 = regnrs[rowInt];
 
         // TODO: to speed up do a numerical comparison so that we can return when gtin5>rn
         // assuming that column A is sorted
-        if (gtin_5 == rn) {
+        if (rn5 == rn) {
             if (i>0)
                 names += "\n";
 

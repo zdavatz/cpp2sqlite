@@ -14,12 +14,16 @@
 
 namespace BAG
 {
+    struct Pack {
+        std::string gtin;
+        std::string exFactoryPrice;
+        std::string publicPrice;
+    };
+
     struct Preparation {
         std::string orgen;
         std::string sb20;
-        std::string gtin_13;
-        std::string exFactoryPrice;
-        std::string publicPrice;
+        std::vector<Pack> packs;
     };
     
     typedef std::vector<Preparation> PreparationList;
