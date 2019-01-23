@@ -173,9 +173,11 @@ int main(int argc, char **argv)
     std::cerr << "swissmedic has " << countAipsPackagesInSwissmedic(list) << " packages matching AIPS" << std::endl;
     
     BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml");
-    std::vector<std::string> bagList = BAG::getGtinList();
-    std::cerr << "bag " << countBagGtinInSwissmedic(bagList) << " GTIN are also in swissmedic" << std::endl;
-    std::cerr << "bag " << countBagGtinInRefdata(bagList) << " GTIN are also in refdata" << std::endl;
+    if (flagVerbose) {
+        std::vector<std::string> bagList = BAG::getGtinList();
+        std::cerr << "bag " << countBagGtinInSwissmedic(bagList) << " GTIN are also in swissmedic" << std::endl;
+        std::cerr << "bag " << countBagGtinInRefdata(bagList) << " GTIN are also in refdata" << std::endl;
+    }
 
     if (flagXml) {
         std::cerr << "Creating XML not yet implemented" << std::endl;
