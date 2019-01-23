@@ -262,7 +262,7 @@ int main(int argc, char **argv)
         std::cerr
         << "aips REGNRS in refdata: " << statsFoundRefdataCount
         << ", not in refdata: " << statsNotFoundRefdataCount
-        << ", in swissmedic: " << statsFoundSwissmedicCount
+        << " (" << statsFoundSwissmedicCount << " in swissmedic)"
         << ", not found anywhere: " << statsRegnrsNotFound.size()
         << std::endl;
         
