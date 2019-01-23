@@ -5,11 +5,13 @@ This tool is a port of [aips2sqlite](https://github.com/zdavatz/aips2sqlite)
 ## Requirements
 Using Boost, C++17 and [xlnt](https://github.com/tfussell/xlnt)
 ## Installation
-_ mkdir cpp2sqlite-build\
-_ cd cpp2sqlite-build\
-_ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/bin/ -DXLNT_DIR=/usr/local/lib -DXLNT_LIBRARY_DIRS=/usr/local ../\
-_ make -j9\
-_ sudo make install
+```
+mkdir cpp2sqlite-build
+cd cpp2sqlite-build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/bin/ -DXLNT_DIR=/usr/local/lib -DXLNT_LIBRARY_DIRS=/usr/local ../
+make -j9
+sudo make install
+```
 ## Usage
 _ ./cpp2sqlite --inDir /home/zeno/.software/aips2sqlite/jars/downloads/
 ## Input Sources
