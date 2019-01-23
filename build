@@ -4,7 +4,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/bin/ -DXLNT_D
 make -j9
 sudo make install
 cd /home/zeno/.software/aips2sqlite/jars/downloads/
-wget http://pillbox.oddb.org/amiko_db_full_idx_de.zip
-unzip amiko_db_full_idx_de.zip
+#wget http://pillbox.oddb.org/amiko_db_full_idx_de.zip
+#unzip amiko_db_full_idx_de.zip
 rm amiko_db_full_idx_de.zip
-cpp2sqlite --inDir /home/zeno/.software/aips2sqlite/jars/downloads/
+time cpp2sqlite --inDir /home/zeno/.software/aips2sqlite/jars/downloads/
