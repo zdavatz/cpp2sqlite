@@ -39,7 +39,6 @@ MedicineList & parseXML(const std::string &filename,
     
     std::cerr << "Analyzing AIPS" << std::endl;
 
-
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("medicalInformations")) {
             

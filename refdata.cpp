@@ -22,8 +22,8 @@ namespace REFDATA
 
     ArticleList artList;
     
-    void parseXML(const std::string &filename,
-                  const std::string &language)
+void parseXML(const std::string &filename,
+              const std::string &language)
 {
     pt::ptree tree;
     const std::string nameTag = "NAME_" + boost::to_upper_copy( language );

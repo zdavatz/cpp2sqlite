@@ -36,6 +36,7 @@ add_executable(cpp2sqlite
 	aips.hpp aips.cpp
 	refdata.hpp refdata.cpp
 	swissmedic.hpp swissmedic.cpp
+	bag.hpp bag.cpp
 	medicine.h)
 
 target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})

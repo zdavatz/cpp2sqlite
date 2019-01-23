@@ -22,6 +22,8 @@
 #include "aips.hpp"
 #include "refdata.hpp"
 #include "swissmedic.hpp"
+#include "bag.hpp"
+
 #include "sqlDatabase.hpp"
 
 namespace po = boost::program_options;
@@ -131,8 +133,9 @@ int main(int argc, char **argv)
     
     REFDATA::parseXML(opt_downloadDirectory + "/refdata_pharma_xml.xml", opt_language);
     
-    // TODO: parse swissmedic_packages_xlsx.xlsx (zipped file)
     SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");
+    
+    BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml");
 
     if (flagXml) {
         std::cerr << "Creating XML not yet implemented" << std::endl;
