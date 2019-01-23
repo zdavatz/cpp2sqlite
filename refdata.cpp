@@ -64,7 +64,7 @@ void parseXML(const std::string &filename,
             }
         }
 
-        std::cout << "refdata items: " << artList.size() << " of " << statsItemCount << " articles" << std::endl;
+        std::cout << "refdata pharma items: " << artList.size() << " of " << statsItemCount << " articles" << std::endl;
     }
     catch (std::exception &e) {
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
