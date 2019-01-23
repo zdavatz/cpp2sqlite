@@ -42,6 +42,7 @@ int main(int argc, char **argv)
     std::string opt_downloadDirectory;
     std::string opt_language;
     bool flagXml = false;
+    bool flagVerbose = false;
     //bool flagPinfo = false;
     std::string type("fi"); // Fachinfo
     std::string opt_aplha;
@@ -115,7 +116,7 @@ int main(int argc, char **argv)
     }
 
     if (vm.count("verbose")) {
-        std::clog << "TODO: show errors, show logs" << std::endl;
+        flagVerbose = true;
     }
     
     if (vm.count("xml")) {
@@ -152,6 +153,7 @@ int main(int argc, char **argv)
         int statsFoundRefdataCount = 0;
         int statsNotFoundRefdataCount = 0;
         int statsFoundSwissmedicCount = 0;
+        int statsNotFoundAnywhereCount = 0;
 
         for (AIPS::Medicine m : list) {
             // See DispoParse.java:164 addArticleDB()
@@ -181,11 +183,11 @@ int main(int argc, char **argv)
                     statsFoundRefdataCount++;
                 }
                 else {
-                    //std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " rn: " << rn << " NOT FOUND in refdata" << std::endl;
+                    //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " rn: " << rn << " NOT FOUND in refdata" << std::endl;
                     statsNotFoundRefdataCount++;
 
                     // Search in swissmedic
-                    name = SWISSMEDIC::getName(rn);
+                    name = SWISSMEDIC::getNames(rn);
                     if (!name.empty()) {
                         if (i>0)
                             packInfo += "\n";
@@ -193,6 +195,11 @@ int main(int argc, char **argv)
                         packInfo += name;
                         i++;
                         statsFoundSwissmedicCount++;
+                    }
+                    else {
+                        statsNotFoundAnywhereCount++;
+                        if (flagVerbose)
+                            std::clog << "\trn: " << rn << " not found" << std::endl;
                     }
                 }
                 
@@ -213,11 +220,14 @@ int main(int argc, char **argv)
         }
         
         std::cerr
-        //<< basename((char *)__FILE__) << ":" << __LINE__
-        << "regnrs in refdata: " << statsFoundRefdataCount
+        << "REGNRS in refdata: " << statsFoundRefdataCount
         << ", not in refdata: " << statsNotFoundRefdataCount
         << ", in swissmedic: " << statsFoundSwissmedicCount
+        << ", not found anywhere: " << statsNotFoundAnywhereCount
         << std::endl;
+        
+        if ((statsNotFoundAnywhereCount > 0) && !flagVerbose)
+            std::cerr << "Run with --verbose to see REGNRS not found" << std::endl;
 
         AIPS::destroyStatement(statement);
 

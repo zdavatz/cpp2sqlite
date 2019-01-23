@@ -44,20 +44,31 @@ void parseXLXS(const std::string &filename)
     std::clog << "swissmedic rows: " << theWholeSpreadSheet.size() << std::endl;
 }
 
-// TODO: multiple lines can have the same gtin
-std::string getName(const std::string &rn)
+// Note that multiple lines can have the same gtin
+std::string getNames(const std::string &rn)
 {
+    std::string names;
+    int i=0;
     for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
         std::string gtin5 = theWholeSpreadSheet.at(rowInt).at(COLUMN_A);
         // TODO: to speed up do a numerical comparison so that we can return when gtin5>rn assuming the column 5 is sorted
         if (gtin5 == rn) {
-            std::string name = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
-            //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " FOUND at: " << rowInt << ", name " << name << std::endl;
-            return name;
+            if (i>0)
+                names += "\n";
+
+            //names += "swm-";
+            names += theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
+            //std::cerr << " FOUND at: " << rowInt << ", name " << name << std::endl;
+            i++;
         }
     }
     
-    return "";
+#if 0
+    if (i>1)
+        std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " rn: " << rn << " FOUND " << i << " times" << std::endl;
+#endif
+    
+    return names;
 }
 
 }
