@@ -208,7 +208,7 @@ int main(int argc, char **argv)
         //<< basename((char *)__FILE__) << ":" << __LINE__
         << "regnrs in refdata: " << statsFoundRefdataCount
         << ", not in refdata: " << statsNotFoundRefdataCount
-        << ", in swissmed: " << statsFoundSwissmedicCount
+        << ", in swissmedic: " << statsFoundSwissmedicCount
         << std::endl;
 
         AIPS::destroyStatement(statement);
