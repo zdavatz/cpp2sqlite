@@ -13,7 +13,7 @@ make -j9
 sudo make install
 ```
 ## Usage
-_ ./cpp2sqlite --inDir /home/zeno/.software/aips2sqlite/jars/downloads/
+`./cpp2sqlite --inDir /home/zeno/.software/aips2sqlite/jars/downloads/`
 ## Input Sources
 _ [AIPS](http://download.swissmedicinfo.ch)\
 _ [BAG XML](http://www.spezialitätenliste.ch/File.axd?file=XMLPublications.zip)\
