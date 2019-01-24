@@ -14,6 +14,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include "bag.hpp"
+#include "gtin.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -42,6 +43,7 @@ void parseXML(const std::string &filename,
     std::clog << "Analyzing bag" << std::endl;
 
     int statsPackCount = 0;
+    int statsPackWithoutGtinCount = 0;
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("Preparations")) {
             if (v.first == "Preparation") {
@@ -56,6 +58,11 @@ void parseXML(const std::string &filename,
                     if (p.first == "Pack") {
                         Pack pack;
                         pack.gtin = p.second.get("GTIN", "");
+                        if (pack.gtin.empty())
+                            statsPackWithoutGtinCount++;
+                        else
+                            GTIN::verifyGtin13Checksum(pack.gtin);
+
                         pack.exFactoryPrice = p.second.get("Prices.ExFactoryPrice.Price", "");
                         pack.publicPrice = p.second.get("Prices.PublicPrice.Price", "");
                         prep.packs.push_back(pack);
@@ -122,7 +129,10 @@ void parseXML(const std::string &filename,
             }
         }
         
-        std::cout << "bag preparations: " << prepList.size() << ", packs (GTIN): " << statsPackCount << std::endl;
+        std::cout << "bag preparations: " << prepList.size()
+        << ", packs: " << statsPackCount
+        << ", packs without GTIN: " << statsPackWithoutGtinCount
+        << std::endl;
     }
     catch (std::exception &e) {
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
@@ -148,10 +158,10 @@ std::vector<std::string> getGtinList()
 {
     std::vector<std::string> list;
 
-    for (Preparation pre : prepList) {
+    for (Preparation pre : prepList)
         for (Pack p : pre.packs)
-            list.push_back(p.gtin);
-    }
+            if (!p.gtin.empty())
+                list.push_back(p.gtin);
 
     return list;
 }
@@ -165,6 +175,7 @@ std::string getTindex(const std::string &rn)
             break;
         }
     }
+
     return tindex;
 }
     
@@ -177,6 +188,7 @@ std::string getApplication(const std::string &rn)
             break;
         }
     }
+
     return app;
 }
 }

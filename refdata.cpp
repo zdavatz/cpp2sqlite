@@ -14,6 +14,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include "refdata.hpp"
+#include "gtin.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -51,12 +52,14 @@ void parseXML(const std::string &filename,
                 if (atype != "PHARMA")
                     continue;
 
-                // Check that GTIN starts with 7680
                 std::string gtin = v.second.get<std::string>("GTIN", "");
-                std::string gtinPrefix = gtin.substr(0,4); // pos, len
 
+                // Check that GTIN starts with 7680
+                std::string gtinPrefix = gtin.substr(0,4); // pos, len
                 if (gtinPrefix != "7680") // 76=med, 80=Switzerland
                     continue;
+                
+                GTIN::verifyGtin13Checksum(gtin);
 
                 Article article;
                 article.gtin_13 = gtin;

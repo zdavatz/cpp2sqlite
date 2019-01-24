@@ -217,6 +217,7 @@ int main(int argc, char **argv)
                 AIPS::bindText("amikodb", statement, 7, tindex);
 
             // application_str
+
             std::string application = SWISSMEDIC::getApplication(regnrs[0]);
             std::string appBag = BAG::getApplication(regnrs[0]);
             if (!appBag.empty())

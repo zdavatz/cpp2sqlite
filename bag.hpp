@@ -23,6 +23,7 @@ namespace BAG
         std::string gtin;
         std::string exFactoryPrice;
         std::string publicPrice;
+        std::string limitationPoints;   // TODO
     };
 
     struct Preparation {

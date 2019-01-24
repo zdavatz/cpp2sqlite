@@ -10,8 +10,6 @@
 #ifndef swissmedic_hpp
 #define swissmedic_hpp
 
-#include <stdio.h>
-
 namespace SWISSMEDIC
 {
     void parseXLXS(const std::string &filename);
