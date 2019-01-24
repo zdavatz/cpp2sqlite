@@ -172,7 +172,7 @@ int main(int argc, char **argv)
     SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");
     std::cerr << "swissmedic has " << countAipsPackagesInSwissmedic(list) << " packages matching AIPS" << std::endl;
     
-    BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml");
+    BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml", opt_language);
     if (flagVerbose) {
         std::vector<std::string> bagList = BAG::getGtinList();
         std::cerr << "bag " << countBagGtinInSwissmedic(bagList) << " GTIN are also in swissmedic" << std::endl;
@@ -206,11 +206,27 @@ int main(int argc, char **argv)
             AIPS::bindText("amikodb", statement, 4, m.subst);
             AIPS::bindText("amikodb", statement, 5, m.regnrs);
             
-#if 1 // pack_info_str
             // For each regnr in the vector add the name(s) from refdata
             std::vector<std::string> regnrs;
             boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
             //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << "regnrs size: " << regnrs.size() << std::endl;
+
+            // tindex_str
+            std::string tindex = BAG::getTindex(regnrs[0]);
+            if (!tindex.empty())
+                AIPS::bindText("amikodb", statement, 7, tindex);
+
+            // application_str
+            std::string application = SWISSMEDIC::getApplication(regnrs[0]);
+            std::string appBag = BAG::getApplication(regnrs[0]);
+            if (!appBag.empty())
+                application += ";" + appBag;
+
+            if (!application.empty())
+                AIPS::bindText("amikodb", statement, 8, application);
+
+#if 1
+            // pack_info_str
             std::string packInfo;
             int i=0;
             for (auto rn : regnrs) {

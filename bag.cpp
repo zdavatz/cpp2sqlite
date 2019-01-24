@@ -11,6 +11,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "bag.hpp"
 
@@ -21,9 +22,14 @@ namespace BAG
 
 PreparationList prepList;
 
-void parseXML(const std::string &filename)
+void parseXML(const std::string &filename,
+              const std::string &language)
 {
     pt::ptree tree;
+    
+    std::string lan = language;
+    lan[0] = toupper(lan[0]);
+    const std::string descriptionTag = "Description" + lan;
     
     try {
         std::clog << std::endl << "Reading bag XML" << std::endl;
@@ -41,6 +47,7 @@ void parseXML(const std::string &filename)
             if (v.first == "Preparation") {
 
                 Preparation prep;
+                prep.swissmedNo = v.second.get("SwissmedicNo5", "");
                 prep.orgen = v.second.get("OrgGenCode", "");
                 prep.sb20 = v.second.get("FlagSB20", "");
 
@@ -67,6 +74,49 @@ void parseXML(const std::string &filename)
 #endif
                     }
                 }
+                
+                ItCode itCode;
+                size_t maxLen = size_t(0);
+                size_t minLen = size_t(INT_MAX);
+                BOOST_FOREACH(pt::ptree::value_type &itc, v.second.get_child("ItCodes")) {
+                    if (itc.first == "ItCode") {
+                        
+                        std::string code;
+                        pt::ptree & attributes = itc.second.get_child("<xmlattr>");
+                        BOOST_FOREACH(pt::ptree::value_type &att, attributes) {
+                            //std::cerr << "attr 1st: " << att.first.data() << ", 2nd: " << att.second.data() << std::endl;
+
+                            if (att.first == "Code") {
+                                code = att.second.data();
+                                size_t n = code.size();
+
+                                // application_str - choose the one with the longest attribute "Code"
+                                if (maxLen < n) {
+                                    maxLen = n;
+                                    itCode.application = itc.second.get(descriptionTag, "");
+                                }
+
+                                // tindex_str - choose the one with the longest attribute "Code"
+                                if (minLen > n) {
+                                    minLen = n;
+                                    itCode.tindex = itc.second.get(descriptionTag, "");
+                                }
+                            }
+                        }
+                    }
+                } // BOOST_FOREACH ItCodes
+                
+#if 0
+                static int i=0;
+                if (i<10)
+                    std::clog
+                    << basename((char *)__FILE__) << ":" << __LINE__
+                    << ", i:" << ++i
+                    << ", tindex_str: " << itCode.tindex
+                    << ", application_str: " << itCode.application
+                    << std::endl;
+#endif
+                prep.itCodes = itCode;
 
                 prepList.push_back(prep);
             }
@@ -106,4 +156,27 @@ std::vector<std::string> getGtinList()
     return list;
 }
 
+std::string getTindex(const std::string &rn)
+{
+    std::string tindex;
+    for (Preparation p : prepList) {
+        if (rn == p.swissmedNo) {
+            tindex = p.itCodes.tindex;
+            break;
+        }
+    }
+    return tindex;
+}
+    
+std::string getApplication(const std::string &rn)
+{
+    std::string app;
+    for (Preparation p : prepList) {
+        if (rn == p.swissmedNo) {
+            app = p.itCodes.application + " (BAG)";
+            break;
+        }
+    }
+    return app;
+}
 }

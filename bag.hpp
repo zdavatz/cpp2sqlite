@@ -14,6 +14,11 @@
 
 namespace BAG
 {
+    struct ItCode {
+        std::string tindex;         // localized
+        std::string application;    // localized
+    };
+
     struct Pack {
         std::string gtin;
         std::string exFactoryPrice;
@@ -21,16 +26,22 @@ namespace BAG
     };
 
     struct Preparation {
+        std::string swissmedNo;     // same as regnr
         std::string orgen;
         std::string sb20;
         std::vector<Pack> packs;
+        ItCode itCodes;
     };
     
     typedef std::vector<Preparation> PreparationList;
     
-    void parseXML(const std::string &filename);
+    void parseXML(const std::string &filename,
+                  const std::string &language);
+
     std::string getFlags(const std::string &gtin_13);
     std::vector<std::string> getGtinList();
+    std::string getTindex(const std::string &rn);
+    std::string getApplication(const std::string &rn);
 }
 
 #endif /* bag_hpp */

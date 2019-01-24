@@ -17,6 +17,7 @@
 #define COLUMN_C        2   // name
 #define COLUMN_K       10   // packaging code (3 digits)
 #define COLUMN_N       13   // category (A..E)
+#define COLUMN_S       18   // application field
 
 #define FIRST_DATA_ROW_INDEX    5
 
@@ -147,4 +148,16 @@ bool findGtin(const std::string &gtin)
     return false;
 }
 
+std::string getApplication(const std::string &rn)
+{
+    std::string app;
+    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
+        if (rn == regnrs[rowInt]) {
+            app = theWholeSpreadSheet.at(rowInt).at(COLUMN_S) + " (Swissmedic)";
+            break;
+        }
+    }
+
+    return app;
+}
 }

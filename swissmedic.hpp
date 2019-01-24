@@ -18,6 +18,7 @@ namespace SWISSMEDIC
     std::string getNames(const std::string &rn);
     int countRowsWithRn(const std::string &rn);
     bool findGtin(const std::string &gtin);
+    std::string getApplication(const std::string &rn);
 }
 
 #endif /* swissmedic_hpp */
