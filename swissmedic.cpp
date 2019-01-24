@@ -51,17 +51,11 @@ void parseXLXS(const std::string &filename)
         theWholeSpreadSheet.push_back(aSingleRow);
 
         // Precalculate padded regnr
-        std::string rn5 = aSingleRow[COLUMN_A];
-        while (rn5.length() < 5) // pad with leading zeros
-            rn5 = "0" + rn5;
-
+        std::string rn5 = GTIN::padToLength(5, aSingleRow[COLUMN_A]);
         regnrs.push_back(rn5);
 
         // Precalculate padded packing code
-        std::string code3 = aSingleRow[COLUMN_K];
-        while (code3.length() < 3) // pad with leading zeros
-            code3 = "0" + code3;
-        
+        std::string code3 = GTIN::padToLength(3, aSingleRow[COLUMN_K]);
         packingCode.push_back(code3);
     }
 

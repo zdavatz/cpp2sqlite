@@ -259,12 +259,6 @@ int main(int argc, char **argv)
                         statsRegnrsNotFound.push_back(rn);
                     }
                 }
-                
-                if (!name.empty()) {
-                    std::string flags = BAG::getFlags(rn);
-                    if (!flags.empty())
-                        packInfo += flags;
-                }
             } // for
 
             if (!packInfo.empty())

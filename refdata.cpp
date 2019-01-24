@@ -15,6 +15,7 @@
 
 #include "refdata.hpp"
 #include "gtin.hpp"
+#include "bag.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -104,6 +105,10 @@ std::string getNames(const std::string &rn)
                 names += "\n";
             
             names += art.name;
+            std::string paf = BAG::getPricesAndFlags(art.gtin_13);
+            if (!paf.empty())
+                names += ", " + paf;
+
             i++;
         }
     }

@@ -31,7 +31,8 @@ void parseXML(const std::string &filename,
     std::string lan = language;
     lan[0] = toupper(lan[0]);
     const std::string descriptionTag = "Description" + lan;
-    
+    const std::string nameTag = "Name" + lan;
+
     try {
         std::clog << std::endl << "Reading bag XML" << std::endl;
         pt::read_xml(filename, tree);
@@ -44,6 +45,8 @@ void parseXML(const std::string &filename,
 
     int statsPackCount = 0;
     int statsPackWithoutGtinCount = 0;
+    int statsPackRecoveredGtinCount = 0;
+    int statsPackNotRecoveredGtinCount = 0;
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("Preparations")) {
             if (v.first == "Preparation") {
@@ -58,11 +61,31 @@ void parseXML(const std::string &filename,
                     if (p.first == "Pack") {
                         Pack pack;
                         pack.gtin = p.second.get("GTIN", "");
-                        if (pack.gtin.empty())
+                        if (pack.gtin.empty()) {
                             statsPackWithoutGtinCount++;
+                            // Calculate from SwissmedicNo8
+                            std::string gtin8 = p.second.get("SwissmedicNo8", "");
+                            if (!gtin8.empty()) {
+                                statsPackRecoveredGtinCount++;
+                                gtin8 = GTIN::padToLength(8, gtin8);
+                                char checksum = GTIN::getGtin13Checksum("7680" + gtin8);
+                                pack.gtin = gtin8 + checksum;
+                            }
+                            else {
+                                statsPackNotRecoveredGtinCount++;
+                                std::cerr
+                                << basename((char *)__FILE__) << ":" << __LINE__
+                                << ", SwissmedicNo8 empty"
+                                //<< " for SwissmedicNo5: " << prep.swissmedNo
+                                << ", <" << nameTag << "> " << v.second.get(nameTag, "")
+                                << ", <" << descriptionTag << "> " << v.second.get(descriptionTag, "")
+                                << std::endl;
+                            }
+                        }
                         else
                             GTIN::verifyGtin13Checksum(pack.gtin);
 
+                        pack.limitationPoints = p.second.get("PointLimitations.PointLimitation.Points", "");
                         pack.exFactoryPrice = p.second.get("Prices.ExFactoryPrice.Price", "");
                         pack.publicPrice = p.second.get("Prices.PublicPrice.Price", "");
                         prep.packs.push_back(pack);
@@ -132,6 +155,8 @@ void parseXML(const std::string &filename,
         std::cout << "bag preparations: " << prepList.size()
         << ", packs: " << statsPackCount
         << ", packs without GTIN: " << statsPackWithoutGtinCount
+        << ", recovered GTIN: " << statsPackRecoveredGtinCount
+        << ", not recovered GTIN: " << statsPackNotRecoveredGtinCount
         << std::endl;
     }
     catch (std::exception &e) {
@@ -139,19 +164,61 @@ void parseXML(const std::string &filename,
     }
 }
 
-std::string getFlags(const std::string &gtin_13)
+std::string getPricesAndFlags(const std::string &gtin)
 {
-    std::string flags;
-    for (Preparation p : prepList) {
-//        if (gtin_13 == p.gtin_13) {
-//            flags += "[";
-//            if (p.orgen == "O")
-//                flags += "SO";
-//            flags += "]";
-//        }
+    std::string prices;
+    std::vector<std::string> flagsVector;
+
+    bool found = false;
+    for (Preparation pre : prepList)
+        for (Pack p : pre.packs) {
+            if (gtin == p.gtin) {
+                if (!p.exFactoryPrice.empty())
+                    prices += "EFP " + p.exFactoryPrice;
+
+                if (!p.publicPrice.empty())
+                    prices += ", PP " + p.publicPrice;
+
+                if (!p.exFactoryPrice.empty() || !p.publicPrice.empty())
+                    flagsVector.push_back("SL");
+
+                if (!p.limitationPoints.empty())
+                    flagsVector.push_back("LIM" + p.limitationPoints);
+
+                if (pre.sb20 == "Y")
+                    flagsVector.push_back("SB 20%");
+                else if (pre.sb20 == "N")
+                    flagsVector.push_back("SB 10%");
+
+                if (pre.orgen == "O")
+                    flagsVector.push_back("O");
+                else if (pre.orgen == "G")
+                    flagsVector.push_back("G");
+                
+
+                found = true;
+            } // if
+        }
+
+    std::string paf;
+    if (!prices.empty())
+        paf += prices;
+
+    std::string flagsString;
+    if (flagsVector.size() > 0) {
+        flagsString += " [";
+        int i=0;
+        for (auto f : flagsVector) {
+            if (i++ > 0)
+                flagsString += ", ";  // separator
+
+            flagsString += f;
+        }
+
+        paf += flagsString + "]";
     }
 
-    return flags;
+    return paf;
 }
 
 std::vector<std::string> getGtinList()

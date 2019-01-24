@@ -2,7 +2,9 @@
 //  gtin.hpp
 //  cpp2sqlite
 //
-//  Created by Alex Bettarini on 24/01/2019.
+//  ©ywesee GmbH -- all rights reserved
+//  License GPLv3.0 -- see License File
+//  Created by Alex Bettarini on 24 Jan 2019
 //
 
 #ifndef gtin_hpp
@@ -11,9 +13,9 @@
 namespace GTIN
 {
     
-char getGtin13Checksum(std::string gtin12); // TODO: move to its own gtin class
-bool verifyGtin13Checksum(std::string gtin13); // TODO: move to its own gtin class
-
+char getGtin13Checksum(std::string gtin12);
+bool verifyGtin13Checksum(std::string gtin13);
+std::string padToLength(int lenght, std::string s);
 }
 
 #endif /* gtin_hpp */

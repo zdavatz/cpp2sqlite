@@ -2,7 +2,9 @@
 //  gtin.cpp
 //  cpp2sqlite
 //
-//  Created by Alex Bettarini on 24/01/2019.
+//  ©ywesee GmbH -- all rights reserved
+//  License GPLv3.0 -- see License File
+//  Created by Alex Bettarini on 24 Jan 2019
 //
 
 #include <iostream>
@@ -25,10 +27,10 @@ char getGtin13Checksum(std::string gtin12or13)
         return '0';
     }
     
-    //    std::cout
-    //    << basename((char *)__FILE__) << ":" << __LINE__
-    //    << ", gtin12: " << gtin12or13
-    //    << ", len:" << n;
+//    std::cout
+//    << basename((char *)__FILE__) << ":" << __LINE__
+//    << ", gtin12: " << gtin12or13
+//    << ", len:" << n;
     
     int val=0;
     
@@ -64,6 +66,16 @@ bool verifyGtin13Checksum(std::string gtin13)
     }
     
     return true;
+}
+    
+// pad with leading zeros
+std::string padToLength(int lenght, std::string s)
+{
+    std::string padded = s;
+    while (padded.length() < lenght)
+        padded = "0" + padded;
+    
+    return padded;
 }
 
 }
