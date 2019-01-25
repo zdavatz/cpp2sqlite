@@ -1,6 +1,7 @@
+sudo rm -rf /home/zeno/.software/cpp2sqlite/cpp2sqlite-build
+mkdir /home/zeno/.software/cpp2sqlite/cpp2sqlite-build
 cd /home/zeno/.software/cpp2sqlite/cpp2sqlite-build
-make clean
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/bin/ -DXLNT_DIR=/usr/local/lib -D  XLNT_LIBRARY_DIRS=/usr/local ../
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/bin/ -DXLNT_DIR=/usr/local -D  XLNT_LIBRARY_DIRS=/usr/local ../
 make -j9
 sudo make install
 #cd /tmp
