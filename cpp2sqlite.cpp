@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <set>
 #include <exception>
 
 #include <sqlite3.h>

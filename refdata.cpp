@@ -7,6 +7,7 @@
 //  Created by Alex Bettarini on 21 Jan 2019
 //
 
+#include <set>
 #include <libgen.h>     // for basename()
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
