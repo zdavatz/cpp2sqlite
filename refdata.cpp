@@ -67,6 +67,17 @@ void parseXML(const std::string &filename,
                 article.gtin_13 = gtin;
                 article.gtin_5 = gtin.substr(4,5); // pos, len
                 article.name = v.second.get<std::string>(nameTag, "");
+#if 1  // TBC
+                static int k=0;
+                if (article.name.empty())
+                if (k++ < 13)
+                    std::clog
+                    << basename((char *)__FILE__) << ":" << __LINE__
+                    << ", k:" << k
+                    << ", gtin:" << gtin
+                    << ", ev.nn.i.H."
+                    << std::endl;
+#endif
 
                 artList.push_back(article);
             }

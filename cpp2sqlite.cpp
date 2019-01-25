@@ -240,6 +240,8 @@ int main(int argc, char **argv)
                     packInfo += name;
                     i++;
                     statsFoundRefdataCount++;
+                    // TODO: check if in swissmedic there are additional GTINs based on this rn
+                    // std::set<std::string> gtinSet = REFDATA::getGtinSetFromRgnr(rn);
                 }
                 else {
                     //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " rn: " << rn << " NOT FOUND in refdata" << std::endl;
