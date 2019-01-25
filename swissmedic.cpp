@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <libgen.h>     // for basename()
+#include <set>
 #include <xlnt/xlnt.hpp>
 
 #include "swissmedic.hpp"
@@ -31,6 +32,9 @@ namespace SWISSMEDIC
     std::vector<std::string> packingCode;   // padded to 3 characters (digits)
     std::vector<std::string> gtin;
     std::vector<std::string> category;
+    
+    int statsAugmentedRegnCount = 0;
+    int statsAugmentedGtinCount = 0;
 
 void parseXLXS(const std::string &filename)
 {
@@ -98,21 +102,11 @@ std::string getNames(const std::string &rn)
 #endif
             names += name;
 
-            std::string paf = BAG::getPricesAndFlags(gtin[rowInt], category[rowInt]);
-
-            if (!paf.empty()) {
+            std::string paf = BAG::getPricesAndFlags(gtin[rowInt],
+                                                     "ev.nn.i.H.", // TODO: localize
+                                                     category[rowInt]);
+            if (!paf.empty())
                 names += paf;
-#if 0
-                static int k=0;
-                if (k++ < 13)
-                    std::clog
-                    << basename((char *)__FILE__) << ":" << __LINE__
-                    << ", k:" << k
-                    << ", name: " << name
-                    << ", paf: " << paf
-                    << std::endl;
-#endif
-            }
 
             i++;
         }
@@ -124,6 +118,44 @@ std::string getNames(const std::string &rn)
 #endif
     
     return names;
+}
+    
+std::string getAdditionalNames(const std::string &rn,
+                               const std::set<std::string> &gtinSet)
+{
+    std::string names;
+    std::set<std::string>::iterator it;
+    bool statsGtinAdded = false;
+    
+    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
+        std::string rn5 = regnrs[rowInt];
+        if (rn5 != rn)
+            continue;
+        
+        std::string g13 = gtin[rowInt];
+        it = gtinSet.find(g13);
+        if (it == gtinSet.end()) { // not found in refdata gtin set, we must add it
+            statsGtinAdded = true;
+            statsAugmentedGtinCount++;
+            names += "\n";
+            std::string name = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
+#ifdef DEBUG_IDENTIFY_SWM_NAMES
+            names += "swm+";
+#endif
+            names += name;
+            
+            std::string paf = BAG::getPricesAndFlags(g13,
+                                                     "ev.nn.i.H.", // TODO: localize
+                                                     category[rowInt]);
+            if (!paf.empty())
+                names += paf;
+        }
+    }
+    
+    if (statsGtinAdded)
+        statsAugmentedRegnCount++;
+
+    return names;    
 }
 
 int countRowsWithRn(const std::string &rn)
@@ -139,15 +171,6 @@ int countRowsWithRn(const std::string &rn)
 
     return count;
 }
-
-//std::string getGtinFromRow(const int rowInt)
-//{
-//    std::string rn5 = regnrs[rowInt];
-//    std::string code3 = packingCode[rowInt];
-//    std::string gtin12 = "7680" + rn5 + code3;
-//    char checksum = GTIN::getGtin13Checksum(gtin12);
-//    return gtin12 + checksum;
-//}
     
 bool findGtin(const std::string &gtin)
 {
@@ -191,19 +214,6 @@ std::string getApplication(const std::string &rn)
     return app;
 }
 
-//std::string getCategoryFromRow(const int rowInt)
-//{
-//    std::string category;
-//    std::string modifier;
-//
-//    category = theWholeSpreadSheet.at(rowInt).at(COLUMN_N);
-//    modifier = theWholeSpreadSheet.at(rowInt).at(COLUMN_W);
-//    if ((category == "A") && (modifier == "a"))
-//        category += "+";
-//
-//    return category;
-//}
-
 std::string getCategoryFromGtin(const std::string &g)
 {
     std::string cat;
@@ -217,4 +227,12 @@ std::string getCategoryFromGtin(const std::string &g)
     return cat;
 }
 
+void printStats()
+{
+    std::cout
+    << statsAugmentedRegnCount << " of the REGNRS found in refdata were augmented with a total of "
+    << statsAugmentedGtinCount << " extra GTINs from swissmedic"
+    << std::endl;
+}
+    
 }

@@ -40,6 +40,7 @@ namespace BAG
                   const std::string &language);
 
     std::string getPricesAndFlags(const std::string &gtin,
+                                  const std::string &fromSwissmedic,
                                   const std::string &category="");
 
     std::vector<std::string> getGtinList();

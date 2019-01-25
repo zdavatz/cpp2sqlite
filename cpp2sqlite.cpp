@@ -240,8 +240,12 @@ int main(int argc, char **argv)
                     packInfo += name;
                     i++;
                     statsFoundRefdataCount++;
-                    // TODO: check if in swissmedic there are additional GTINs based on this rn
-                    // std::set<std::string> gtinSet = REFDATA::getGtinSetFromRgnr(rn);
+
+                    // Check if in swissmedic there are additional GTINs based on this rn
+                    std::set<std::string> gtinSet = REFDATA::getGtinSetFromRgnr(rn);
+                    name = SWISSMEDIC::getAdditionalNames(rn, gtinSet);
+                    if (!name.empty())
+                        packInfo += name;
                 }
                 else {
                     //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " rn: " << rn << " NOT FOUND in refdata" << std::endl;
@@ -278,6 +282,7 @@ int main(int argc, char **argv)
         << " (" << statsFoundSwissmedicCount << " in swissmedic)"
         << ", not found anywhere: " << statsRegnrsNotFound.size()
         << std::endl;
+        SWISSMEDIC::printStats();
         
         if (statsRegnrsNotFound.size() > 0) {
             if (flagVerbose) {

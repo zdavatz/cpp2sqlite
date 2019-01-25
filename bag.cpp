@@ -166,6 +166,7 @@ void parseXML(const std::string &filename,
 }
 
 std::string getPricesAndFlags(const std::string &gtin,
+                              const std::string &fromSwissmedic,
                               const std::string &category)
 {
     std::string prices;
@@ -215,9 +216,11 @@ prepareResult:
     }
     
     std::string paf;
-    if (!prices.empty()) {
+    if (!prices.empty())
         paf += ", " + prices;
-    }
+    
+    if (!fromSwissmedic.empty())
+        paf += ", " + fromSwissmedic;
 
     std::string flagsString;
     if (flagsVector.size() > 0) {
