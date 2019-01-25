@@ -68,8 +68,9 @@ void parseXML(const std::string &filename,
                             if (!gtin8.empty()) {
                                 statsPackRecoveredGtinCount++;
                                 gtin8 = GTIN::padToLength(8, gtin8);
-                                char checksum = GTIN::getGtin13Checksum("7680" + gtin8);
-                                pack.gtin = gtin8 + checksum;
+                                std::string gtin12 = "7680" + gtin8;
+                                char checksum = GTIN::getGtin13Checksum(gtin12);
+                                pack.gtin = gtin12 + checksum;
                             }
                             else {
                                 statsPackNotRecoveredGtinCount++;
@@ -164,20 +165,24 @@ void parseXML(const std::string &filename,
     }
 }
 
-std::string getPricesAndFlags(const std::string &gtin)
+std::string getPricesAndFlags(const std::string &gtin,
+                              const std::string &category)
 {
     std::string prices;
     std::vector<std::string> flagsVector;
-
     bool found = false;
+
     for (Preparation pre : prepList)
-        for (Pack p : pre.packs) {
+        for (Pack p : pre.packs)
             if (gtin == p.gtin) {
                 if (!p.exFactoryPrice.empty())
                     prices += "EFP " + p.exFactoryPrice;
 
                 if (!p.publicPrice.empty())
                     prices += ", PP " + p.publicPrice;
+
+                if (!category.empty())
+                    flagsVector.push_back(category);
 
                 if (!p.exFactoryPrice.empty() || !p.publicPrice.empty())
                     flagsVector.push_back("SL");
@@ -190,19 +195,29 @@ std::string getPricesAndFlags(const std::string &gtin)
                 else if (pre.sb20 == "N")
                     flagsVector.push_back("SB 10%");
 
-                if (pre.orgen == "O")
-                    flagsVector.push_back("O");
-                else if (pre.orgen == "G")
-                    flagsVector.push_back("G");
-                
+                if (!pre.orgen.empty())
+                    flagsVector.push_back(pre.orgen);
 
                 found = true;
-            } // if
-        }
+                goto prepareResult; // abort the two for loops
+            }
 
+prepareResult:
+    // The category (input parameter) must be added even if the GTIN was not found
+    if (!found) {
+        if (!category.empty())
+            flagsVector.push_back(category);
+
+//        std::clog
+//        << basename((char *)__FILE__) << ":" << __LINE__
+//        << ", NOT FOUND: " << gtin
+//        << std::endl;
+    }
+    
     std::string paf;
-    if (!prices.empty())
-        paf += prices;
+    if (!prices.empty()) {
+        paf += ", " + prices;
+    }
 
     std::string flagsString;
     if (flagsVector.size() > 0) {

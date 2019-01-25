@@ -39,7 +39,9 @@ namespace BAG
     void parseXML(const std::string &filename,
                   const std::string &language);
 
-    std::string getPricesAndFlags(const std::string &gtin);
+    std::string getPricesAndFlags(const std::string &gtin,
+                                  const std::string &category="");
+
     std::vector<std::string> getGtinList();
     std::string getTindex(const std::string &rn);
     std::string getApplication(const std::string &rn);

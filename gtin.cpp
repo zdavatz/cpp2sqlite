@@ -68,7 +68,7 @@ bool verifyGtin13Checksum(std::string gtin13)
     return true;
 }
     
-// pad with leading zeros
+// Pad with leading zeros
 std::string padToLength(int lenght, std::string s)
 {
     std::string padded = s;

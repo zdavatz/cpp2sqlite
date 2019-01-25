@@ -13,6 +13,7 @@
 
 #include "swissmedic.hpp"
 #include "gtin.hpp"
+#include "bag.hpp"
 
 #define COLUMN_A        0   // GTIN (5 digits)
 #define COLUMN_C        2   // name
@@ -77,9 +78,30 @@ std::string getNames(const std::string &rn)
             if (i>0)
                 names += "\n";
 
-            //names += "swm-";
-            names += theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
-            //std::clog << " FOUND at: " << rowInt << ", name " << name << std::endl;
+            std::string name = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
+#ifdef DEBUG_IDENTIFY_SWM_NAMES
+            names += "swm-";
+#endif
+            names += name;
+
+            std::string gtin = getGtinFromRow(rowInt);
+            std::string cat = getCategoryFromRow(rowInt);
+            std::string paf = BAG::getPricesAndFlags(gtin, cat);
+
+            if (!paf.empty()) {
+                names += paf;
+#if 0
+                static int k=0;
+                if (k++ < 13)
+                    std::clog
+                    << basename((char *)__FILE__) << ":" << __LINE__
+                    << ", k:" << k
+                    << ", name: " << name
+                    << ", paf: " << paf
+                    << std::endl;
+#endif
+            }
+
             i++;
         }
     }
@@ -104,6 +126,15 @@ int countRowsWithRn(const std::string &rn)
     }
 
     return count;
+}
+
+std::string getGtinFromRow(const int rowInt)
+{
+    std::string rn5 = regnrs[rowInt];
+    std::string code3 = packingCode[rowInt];
+    std::string gtin12 = "7680" + rn5 + code3;
+    char checksum = GTIN::getGtin13Checksum(gtin12);
+    return gtin12 + checksum;
 }
 
 bool findGtin(const std::string &gtin)
@@ -146,6 +177,35 @@ std::string getApplication(const std::string &rn)
     }
 
     return app;
+}
+
+std::string getCategoryFromRow(const int rowInt)
+{
+    std::string category;
+    std::string modifier;
+    
+    category = theWholeSpreadSheet.at(rowInt).at(COLUMN_N);
+    modifier = theWholeSpreadSheet.at(rowInt).at(COLUMN_W);
+    if ((category == "A") && (modifier == "a"))
+        category += "+";
+    
+    return category;
+}
+    
+std::string getCategoryFromGtin(const std::string &gtin)
+{
+    std::string category;
+    //std::string modifier;
+
+    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
+        std::string gtin13 = getGtinFromRow(rowInt);
+        if (gtin13 == gtin) {
+            category = getCategoryFromRow(rowInt);
+            break;
+        }
+    }
+
+    return category;
 }
 
 }
