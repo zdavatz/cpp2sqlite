@@ -281,6 +281,9 @@ int main(int argc, char **argv)
                     statsRegnrsNotFound.push_back(rn);
             } // for
 
+            // TODO: capitalize first word of each line
+            // TODO: sort packInfo
+
             if (!packInfo.empty())
                 AIPS::bindText("amikodb", statement, 11, packInfo);
 #endif

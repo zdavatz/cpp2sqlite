@@ -21,6 +21,7 @@ namespace BAG
 
     struct Pack {
         std::string description;
+        std::string category;
         std::string gtin;
         std::string exFactoryPrice;
         std::string publicPrice;

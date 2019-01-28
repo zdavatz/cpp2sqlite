@@ -71,6 +71,7 @@ void parseXML(const std::string &filename,
                         Pack pack;
                         pack.description = p.second.get(descriptionTag, ""); // TODO: trim trailing spaces
 
+                        pack.category = p.second.get("SwissmedicCategory", "");
                         pack.gtin = p.second.get("GTIN", "");
                         if (pack.gtin.empty()) {
                             statsPackWithoutGtinCount++;
@@ -211,11 +212,8 @@ std::string getAdditionalNames(const std::string &rn,
                 names += "bag+";
 #endif
                 names += name;
-                
-                // We can skip the category because we already checked this GTIN in swissmedic
-                //std::string cat = SWISSMEDIC::getCategoryFromGtin(g13);
 
-                std::string paf = getPricesAndFlags(g13, "");
+                std::string paf = getPricesAndFlags(g13, "", p.category);
                 if (!paf.empty())
                     names += paf;
             }
