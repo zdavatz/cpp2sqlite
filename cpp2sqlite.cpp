@@ -230,16 +230,16 @@ int main(int argc, char **argv)
 #if 1
             // pack_info_str
             std::string packInfo;
-            int i=0;
+            int rnCount=0;
             for (auto rn : regnrs) {
                 //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " rn: " << rn << std::endl;
                 std::string name = REFDATA::getNames(rn);
                 if (!name.empty()) {
-                    if (i>0)
+                    if (rnCount>0)
                         packInfo += "\n";
 
                     packInfo += name;
-                    i++;
+                    rnCount++;
                     statsFoundRefdataCount++;
 
                     // Check if in swissmedic there are additional GTINs based on this rn
@@ -255,11 +255,11 @@ int main(int argc, char **argv)
                     // Search in swissmedic
                     name = SWISSMEDIC::getNames(rn);
                     if (!name.empty()) {
-                        if (i>0)
+                        if (rnCount>0)
                             packInfo += "\n";
 
                         packInfo += name;
-                        i++;
+                        rnCount++;
                         statsFoundSwissmedicCount++;
                     }
                     else {
@@ -284,7 +284,8 @@ int main(int argc, char **argv)
         << ", not found anywhere: " << statsRegnrsNotFound.size()
         << std::endl;
         SWISSMEDIC::printStats();
-        
+        REFDATA::printStats();
+
         if (statsRegnrsNotFound.size() > 0) {
             if (flagVerbose) {
                 std::cout << "REGNRS not found anywhere:" << std::endl;

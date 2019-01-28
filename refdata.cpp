@@ -25,6 +25,7 @@ namespace REFDATA
 {
 
 ArticleList artList;
+int statsTotalGtinCount = 0;
     
 void parseXML(const std::string &filename,
               const std::string &language)
@@ -113,6 +114,7 @@ std::string getNames(const std::string &rn)
                 names += paf;
 
             i++;
+            statsTotalGtinCount++;
         }
     }
     
@@ -140,4 +142,10 @@ std::set<std::string> getGtinSetFromRgnr(const std::string &rn)
     return s;
 }
 
+void printStats()
+{
+    std::cout
+    << "refdata total GTINs " << statsTotalGtinCount
+    << std::endl;
+}
 }

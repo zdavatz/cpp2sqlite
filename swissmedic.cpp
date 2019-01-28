@@ -35,6 +35,7 @@ namespace SWISSMEDIC
     
     int statsAugmentedRegnCount = 0;
     int statsAugmentedGtinCount = 0;
+    int statsTotalGtinCount = 0;
 
 void parseXLXS(const std::string &filename)
 {
@@ -109,6 +110,7 @@ std::string getNames(const std::string &rn)
                 names += paf;
 
             i++;
+            statsTotalGtinCount++;
         }
     }
     
@@ -137,6 +139,7 @@ std::string getAdditionalNames(const std::string &rn,
         if (it == gtinSet.end()) { // not found in refdata gtin set, we must add it
             statsGtinAdded = true;
             statsAugmentedGtinCount++;
+            statsTotalGtinCount++;
             names += "\n";
             std::string name = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
 #ifdef DEBUG_IDENTIFY_SWM_NAMES
@@ -232,6 +235,8 @@ void printStats()
     std::cout
     << statsAugmentedRegnCount << " of the REGNRS found in refdata were augmented with a total of "
     << statsAugmentedGtinCount << " extra GTINs from swissmedic"
+    << std::endl
+    << "swissmedic total GTINs " << statsTotalGtinCount
     << std::endl;
 }
     

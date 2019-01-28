@@ -32,6 +32,8 @@ namespace REFDATA
     bool findGtin(const std::string &gtin);
     
     std::set<std::string> getGtinSetFromRgnr(const std::string &rn);
+    
+    void printStats();
 }
 
 #endif /* refdata_hpp */
