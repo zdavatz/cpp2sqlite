@@ -15,6 +15,7 @@
 
 #include "bag.hpp"
 #include "gtin.hpp"
+#include "swissmedic.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -22,6 +23,7 @@ namespace BAG
 {
 
 PreparationList prepList;
+int statsTotalGtinCount = 0;
 
 void parseXML(const std::string &filename,
               const std::string &language)
@@ -52,7 +54,12 @@ void parseXML(const std::string &filename,
             if (v.first == "Preparation") {
 
                 Preparation prep;
+                prep.name = v.second.get(nameTag, "");
+                prep.description = v.second.get(descriptionTag, "");
                 prep.swissmedNo = v.second.get("SwissmedicNo5", "");
+                if (!prep.swissmedNo.empty())
+                    prep.swissmedNo = GTIN::padToLength(5, prep.swissmedNo);
+
                 prep.orgen = v.second.get("OrgGenCode", "");
                 prep.sb20 = v.second.get("FlagSB20", "");
 
@@ -60,6 +67,8 @@ void parseXML(const std::string &filename,
                 BOOST_FOREACH(pt::ptree::value_type &p, v.second.get_child("Packs")) {
                     if (p.first == "Pack") {
                         Pack pack;
+                        pack.description = p.second.get(descriptionTag, ""); // TODO: trim trailing spaces
+
                         pack.gtin = p.second.get("GTIN", "");
                         if (pack.gtin.empty()) {
                             statsPackWithoutGtinCount++;
@@ -165,6 +174,56 @@ void parseXML(const std::string &filename,
     }
 }
 
+std::string getAdditionalNames(const std::string &rn,
+                               std::set<std::string> &gtinUsed)
+{
+    std::string names;
+    int i=0;
+    std::set<std::string>::iterator it;
+
+    for (Preparation pre : prepList) {
+        if (rn != pre.swissmedNo) // TODO pad with 0 to a length of 5
+            continue;
+
+        for (Pack p : pre.packs) {
+            std::string g13 = p.gtin;
+            // TODO build gtin if missing
+            it = gtinUsed.find(g13);
+            if (it == gtinUsed.end()) { // not found in list of used GTINs, we must add the name
+                statsTotalGtinCount++;
+                gtinUsed.insert(g13);   // also update the list of GTINs used so far
+                if (i++ > 0)
+                    names += "\n";
+
+                std::string name = pre.name;
+                name += ", " + pre.description;
+                name += ", " + p.description;
+            
+#if 0
+                std::cout << basename((char *)__FILE__) << ":" << __LINE__
+                << " rn: " << rn
+                << " FOUND " << name
+                << std::endl;
+#endif
+
+#ifdef DEBUG_IDENTIFY_NAMES
+                names += "bag+";
+#endif
+                names += name;
+                
+                // We can skip the category because we already checked this GTIN in swissmedic
+                //std::string cat = SWISSMEDIC::getCategoryFromGtin(g13);
+
+                std::string paf = getPricesAndFlags(g13, "");
+                if (!paf.empty())
+                    names += paf;
+            }
+        }
+    }
+
+    return names;
+}
+
 std::string getPricesAndFlags(const std::string &gtin,
                               const std::string &fromSwissmedic,
                               const std::string &category)
@@ -254,9 +313,9 @@ std::vector<std::string> getGtinList()
 std::string getTindex(const std::string &rn)
 {
     std::string tindex;
-    for (Preparation p : prepList) {
-        if (rn == p.swissmedNo) {
-            tindex = p.itCodes.tindex;
+    for (Preparation pre : prepList) {
+        if (rn == pre.swissmedNo) {
+            tindex = pre.itCodes.tindex;
             break;
         }
     }
@@ -275,5 +334,12 @@ std::string getApplication(const std::string &rn)
     }
 
     return app;
+}
+    
+void printStats()
+{
+    std::cout
+    << "GTINs used from bag " << statsTotalGtinCount
+    << std::endl;
 }
 }

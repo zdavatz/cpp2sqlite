@@ -62,6 +62,7 @@ bool verifyGtin13Checksum(std::string gtin13)
         << ", GTIN error, expected:" << checksum
         << ", received" << gtin13[12]
         << std::endl;
+
         return false;
     }
     

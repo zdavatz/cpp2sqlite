@@ -28,11 +28,9 @@ namespace REFDATA
     void parseXML(const std::string &filename,
                   const std::string &language);
 
-    std::string getNames(const std::string &rn);
+    std::string getNames(const std::string &rn, std::set<std::string> &gtinUsed);
     bool findGtin(const std::string &gtin);
-    
-    std::set<std::string> getGtinSetFromRgnr(const std::string &rn);
-    
+
     void printStats();
 }
 

@@ -81,51 +81,12 @@ void parseXLXS(const std::string &filename)
 
     std::clog << "swissmedic rows: " << theWholeSpreadSheet.size() << std::endl;
 }
-
-// Note that multiple rows can have the same value in column A
-// Each row corresponds to a different package (=gtin_13)
-std::string getNames(const std::string &rn)
+    
+std::string getAdditionalNames(const std::string &rn,
+                               std::set<std::string> &gtinUsed)
 {
     std::string names;
     int i=0;
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-        std::string rn5 = regnrs[rowInt];
-
-        // TODO: to speed up do a numerical comparison so that we can return when gtin5>rn
-        // assuming that column A is sorted
-        if (rn5 == rn) {
-            if (i>0)
-                names += "\n";
-
-            std::string name = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
-#ifdef DEBUG_IDENTIFY_SWM_NAMES
-            names += "swm-";
-#endif
-            names += name;
-
-            std::string paf = BAG::getPricesAndFlags(gtin[rowInt],
-                                                     "ev.nn.i.H.", // TODO: localize
-                                                     category[rowInt]);
-            if (!paf.empty())
-                names += paf;
-
-            i++;
-            statsTotalGtinCount++;
-        }
-    }
-    
-#if 0
-    if (i>1)
-        std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " rn: " << rn << " FOUND " << i << " times" << std::endl;
-#endif
-    
-    return names;
-}
-    
-std::string getAdditionalNames(const std::string &rn,
-                               const std::set<std::string> &gtinSet)
-{
-    std::string names;
     std::set<std::string>::iterator it;
     bool statsGtinAdded = false;
     
@@ -135,14 +96,17 @@ std::string getAdditionalNames(const std::string &rn,
             continue;
         
         std::string g13 = gtin[rowInt];
-        it = gtinSet.find(g13);
-        if (it == gtinSet.end()) { // not found in refdata gtin set, we must add it
+        it = gtinUsed.find(g13);
+        if (it == gtinUsed.end()) { // not found list of used GTINs, we must add the name
             statsGtinAdded = true;
             statsAugmentedGtinCount++;
             statsTotalGtinCount++;
-            names += "\n";
+            gtinUsed.insert(g13);   // also update the list of GTINs used so far
+            if (i++ > 0)
+                names += "\n";
+
             std::string name = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
-#ifdef DEBUG_IDENTIFY_SWM_NAMES
+#ifdef DEBUG_IDENTIFY_NAMES
             names += "swm+";
 #endif
             names += name;
@@ -233,10 +197,7 @@ std::string getCategoryFromGtin(const std::string &g)
 void printStats()
 {
     std::cout
-    << statsAugmentedRegnCount << " of the REGNRS found in refdata were augmented with a total of "
-    << statsAugmentedGtinCount << " extra GTINs from swissmedic"
-    << std::endl
-    << "swissmedic total GTINs " << statsTotalGtinCount
+    << "GTINs used from swissmedic " << statsTotalGtinCount
     << std::endl;
 }
     

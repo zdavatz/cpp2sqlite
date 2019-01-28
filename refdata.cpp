@@ -89,22 +89,18 @@ void parseXML(const std::string &filename,
     }
 }
 
-// GTIN:
-//  76      med
-//  80      Swiss
-//  12345   registration number
-//  123     package (column K of swissmedic)
-//  1       checksum
-//
 // Each registration number can have multiple packages.
 // Get all of them, one per line
-std::string getNames(const std::string &rn)
+// With the second argument we keep track of which GTINs have been used so far for this rn
+std::string getNames(const std::string &rn, std::set<std::string> &gtinUsed)
 {
     std::string names;
     int i=0;
     for (Article art : artList) {
         if (art.gtin_5 == rn) {
-            if (i>0)
+            statsTotalGtinCount++;
+            gtinUsed.insert(art.gtin_13);
+            if (i++ > 0)
                 names += "\n";
             
             names += art.name;
@@ -112,9 +108,6 @@ std::string getNames(const std::string &rn)
             std::string paf = BAG::getPricesAndFlags(art.gtin_13, "", cat);
             if (!paf.empty())
                 names += paf;
-
-            i++;
-            statsTotalGtinCount++;
         }
     }
     
@@ -130,22 +123,12 @@ bool findGtin(const std::string &gtin)
 
     return false;
 }
-    
-std::set<std::string> getGtinSetFromRgnr(const std::string &rn)
-{
-    std::set<std::string> s;
-    
-    for (Article art : artList)
-        if (art.gtin_5 == rn)
-            s.insert(art.gtin_13);
-
-    return s;
-}
 
 void printStats()
 {
     std::cout
-    << "refdata total GTINs " << statsTotalGtinCount
+    << "GTINs used from refdata " << statsTotalGtinCount
     << std::endl;
 }
+
 }

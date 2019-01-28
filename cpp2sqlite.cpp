@@ -192,10 +192,12 @@ int main(int argc, char **argv)
                                "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 
         std::clog << std::endl << "Populating " << dbFilename << std::endl;
-        int statsFoundRefdataCount = 0;
-        int statsNotFoundRefdataCount = 0;
-        int statsFoundSwissmedicCount = 0;
-        //int statsNotFoundAnywhereCount = 0;
+        int statsRnFoundRefdataCount = 0;
+        int statsRnNotFoundRefdataCount = 0;
+        int statsRnFoundSwissmedicCount = 0;
+        int statsRnNotFoundSwissmedicCount = 0;
+        int statsRnFoundBagCount = 0;
+        int statsRnNotFoundBagCount = 0;
         std::vector<std::string> statsRegnrsNotFound;
 
         for (AIPS::Medicine m : list) {
@@ -231,41 +233,52 @@ int main(int argc, char **argv)
             // pack_info_str
             std::string packInfo;
             int rnCount=0;
+            std::set<std::string> gtinUsed;
             for (auto rn : regnrs) {
                 //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " rn: " << rn << std::endl;
-                std::string name = REFDATA::getNames(rn);
-                if (!name.empty()) {
+                std::string name = REFDATA::getNames(rn, gtinUsed);
+                if (name.empty()) {
+                    statsRnNotFoundRefdataCount++;
+                }
+                else {
                     if (rnCount>0)
                         packInfo += "\n";
 
                     packInfo += name;
                     rnCount++;
-                    statsFoundRefdataCount++;
+                    statsRnFoundRefdataCount++;
+                }
 
-                    // Check if in swissmedic there are additional GTINs based on this rn
-                    std::set<std::string> gtinSet = REFDATA::getGtinSetFromRgnr(rn);
-                    name = SWISSMEDIC::getAdditionalNames(rn, gtinSet);
-                    if (!name.empty())
-                        packInfo += name;
+                // Search in swissmedic
+                name = SWISSMEDIC::getAdditionalNames(rn, gtinUsed);
+                if (name.empty()) {
+                    statsRnNotFoundSwissmedicCount++;
                 }
                 else {
-                    //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " rn: " << rn << " NOT FOUND in refdata" << std::endl;
-                    statsNotFoundRefdataCount++;
+                    if (rnCount>0)
+                        packInfo += "\n";
 
-                    // Search in swissmedic
-                    name = SWISSMEDIC::getNames(rn);
-                    if (!name.empty()) {
-                        if (rnCount>0)
-                            packInfo += "\n";
-
-                        packInfo += name;
-                        rnCount++;
-                        statsFoundSwissmedicCount++;
-                    }
-                    else {
-                        statsRegnrsNotFound.push_back(rn);
-                    }
+                    packInfo += name;
+                    rnCount++;
+                    statsRnFoundSwissmedicCount++;
                 }
+
+                // Search in bag
+                name = BAG::getAdditionalNames(rn, gtinUsed);
+                if (name.empty()) {
+                    statsRnNotFoundBagCount++;
+                }
+                else {
+                    if (rnCount>0)
+                        packInfo += "\n";
+                    
+                    packInfo += name;
+                    rnCount++;
+                    statsRnFoundBagCount++;
+                }
+
+                if (gtinUsed.empty())
+                    statsRegnrsNotFound.push_back(rn);
             } // for
 
             if (!packInfo.empty())
@@ -277,14 +290,17 @@ int main(int argc, char **argv)
             AIPS::runStatement("amikodb", statement);
         }
         
-        std::cerr
-        << "aips REGNRS in refdata: " << statsFoundRefdataCount
-        << ", not in refdata: " << statsNotFoundRefdataCount
-        << " (" << statsFoundSwissmedicCount << " in swissmedic)"
-        << ", not found anywhere: " << statsRegnrsNotFound.size()
+        std::clog
+        << "aips REGNRS\t(found/not found)" << std::endl
+        << "\tin refdata: " << statsRnFoundRefdataCount << " / " << statsRnNotFoundRefdataCount << " (" << (statsRnFoundRefdataCount + statsRnNotFoundRefdataCount) << ")" << std::endl
+        << "\tin swissmedic: " << statsRnFoundSwissmedicCount << " / " << statsRnNotFoundSwissmedicCount << " (" << (statsRnFoundSwissmedicCount + statsRnNotFoundSwissmedicCount) << ")" << std::endl
+        << "\tin bag: " << statsRnFoundBagCount << " / " << statsRnNotFoundBagCount << " (" << (statsRnFoundBagCount + statsRnNotFoundBagCount) << ")" << std::endl
+        << "\tnot found anywhere: " << statsRegnrsNotFound.size()
         << std::endl;
-        SWISSMEDIC::printStats();
+
         REFDATA::printStats();
+        SWISSMEDIC::printStats();
+        BAG::printStats();
 
         if (statsRegnrsNotFound.size() > 0) {
             if (flagVerbose) {

@@ -20,6 +20,7 @@ namespace BAG
     };
 
     struct Pack {
+        std::string description;
         std::string gtin;
         std::string exFactoryPrice;
         std::string publicPrice;
@@ -27,6 +28,8 @@ namespace BAG
     };
 
     struct Preparation {
+        std::string name;
+        std::string description;
         std::string swissmedNo;     // same as regnr
         std::string orgen;
         std::string sb20;
@@ -39,6 +42,9 @@ namespace BAG
     void parseXML(const std::string &filename,
                   const std::string &language);
 
+    std::string getAdditionalNames(const std::string &rn,
+                                   std::set<std::string> &gtinUsed);
+
     std::string getPricesAndFlags(const std::string &gtin,
                                   const std::string &fromSwissmedic,
                                   const std::string &category="");
@@ -46,6 +52,8 @@ namespace BAG
     std::vector<std::string> getGtinList();
     std::string getTindex(const std::string &rn);
     std::string getApplication(const std::string &rn);
+    
+    void printStats();
 }
 
 #endif /* bag_hpp */

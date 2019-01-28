@@ -83,7 +83,7 @@ MedicineList & parseXML(const std::string &filename,
             }
         }
         
-        std::cout << "aips medicalInformation count: " << medList.size() << std::endl;
+        std::cout << "aips medicalInformation " << type << " " << language << " " << medList.size() << std::endl;
     }
     catch (std::exception &e) {
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
