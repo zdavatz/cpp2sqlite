@@ -7,6 +7,8 @@
 //  Created by Alex Bettarini on 23 Jan 2019
 //
 
+#include <set>
+#include <iomanip>
 #include <libgen.h>     // for basename()
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -96,8 +98,8 @@ void parseXML(const std::string &filename,
                             GTIN::verifyGtin13Checksum(pack.gtin);
 
                         pack.limitationPoints = p.second.get("PointLimitations.PointLimitation.Points", "");
-                        pack.exFactoryPrice = p.second.get("Prices.ExFactoryPrice.Price", "");
-                        pack.publicPrice = p.second.get("Prices.PublicPrice.Price", "");
+                        pack.exFactoryPrice = formatPriceAsMoney(p.second.get("Prices.ExFactoryPrice.Price", ""));
+                        pack.publicPrice = formatPriceAsMoney(p.second.get("Prices.PublicPrice.Price", ""));
                         prep.packs.push_back(pack);
                         
                         statsPackCount++;
@@ -182,7 +184,7 @@ std::string getAdditionalNames(const std::string &rn,
     std::set<std::string>::iterator it;
 
     for (Preparation pre : prepList) {
-        if (rn != pre.swissmedNo) // TODO pad with 0 to a length of 5
+        if (rn != pre.swissmedNo)
             continue;
 
         for (Pack p : pre.packs) {
@@ -195,8 +197,7 @@ std::string getAdditionalNames(const std::string &rn,
                 if (i++ > 0)
                     names += "\n";
 
-                std::string name = pre.name;
-                name += ", " + pre.description;
+                std::string name = pre.name + " " + pre.description;
                 name += ", " + p.description;
             
 #if 0
@@ -334,6 +335,18 @@ std::string getApplication(const std::string &rn)
     }
 
     return app;
+}
+
+// Make sure the price string has only two decimal digits
+std::string formatPriceAsMoney(const std::string &price)
+{
+    if (price.empty())
+        return price;
+
+    float f = std::stof(price);
+    std::ostringstream s;
+    s << std::fixed << std::setprecision(2) << f;
+    return s.str();
 }
     
 void printStats()

@@ -53,6 +53,8 @@ namespace BAG
     std::string getTindex(const std::string &rn);
     std::string getApplication(const std::string &rn);
     
+    std::string formatPriceAsMoney(const std::string &price);
+
     void printStats();
 }
 
