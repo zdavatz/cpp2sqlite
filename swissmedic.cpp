@@ -15,6 +15,7 @@
 #include "swissmedic.hpp"
 #include "gtin.hpp"
 #include "bag.hpp"
+#include "beautify.hpp"
 
 #define COLUMN_A        0   // GTIN (5 digits)
 #define COLUMN_C        2   // name
@@ -106,6 +107,7 @@ std::string getAdditionalNames(const std::string &rn,
                 names += "\n";
 
             std::string name = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
+            name = BEAUTY::beautifyName(name);
 #ifdef DEBUG_IDENTIFY_NAMES
             names += "swm+";
 #endif

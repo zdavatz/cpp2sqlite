@@ -57,7 +57,12 @@ void parseXML(const std::string &filename,
 
                 Preparation prep;
                 prep.name = v.second.get(nameTag, "");
+                prep.name = boost::to_upper_copy<std::string>(prep.name);
+
                 prep.description = v.second.get(descriptionTag, "");
+                boost::algorithm::trim_right(prep.description);
+                prep.description = boost::to_lower_copy<std::string>(prep.description);
+
                 prep.swissmedNo = v.second.get("SwissmedicNo5", "");
                 if (!prep.swissmedNo.empty())
                     prep.swissmedNo = GTIN::padToLength(5, prep.swissmedNo);
@@ -70,6 +75,8 @@ void parseXML(const std::string &filename,
                     if (p.first == "Pack") {
                         Pack pack;
                         pack.description = p.second.get(descriptionTag, ""); // TODO: trim trailing spaces
+                        boost::algorithm::trim_right(pack.description);
+                        pack.description = boost::to_lower_copy<std::string>(pack.description);
 
                         pack.category = p.second.get("SwissmedicCategory", "");
                         pack.gtin = p.second.get("GTIN", "");

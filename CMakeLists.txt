@@ -38,6 +38,7 @@ add_executable(cpp2sqlite
 	swissmedic.hpp swissmedic.cpp
 	bag.hpp bag.cpp
 	gtin.hpp gtin.cpp
+	beautify.hpp beautify.cpp
 	medicine.h)
 
 target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})

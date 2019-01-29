@@ -26,6 +26,7 @@
 #include "bag.hpp"
 
 #include "sqlDatabase.hpp"
+#include "beautify.hpp"
 
 namespace po = boost::program_options;
 
@@ -281,7 +282,9 @@ int main(int argc, char **argv)
                     statsRegnrsNotFound.push_back(rn);
             } // for
 
-            // TODO: capitalize first word of each line
+            // Capitalize first word of each line
+            //packInfo = BEAUTY::upperName(packInfo);
+
             // TODO: sort packInfo
 
             if (!packInfo.empty())

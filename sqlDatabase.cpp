@@ -49,7 +49,7 @@ void runStatement(const std::string &tableName,
     int rc = sqlite3_step(statement);
     if ((rc != SQLITE_OK) && (rc != SQLITE_DONE))
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__
-                  << ", statement: " << statement
+                  << ", statement: " << sqlite3_expanded_sql(statement)
                   << ", error: " << rc << std::endl;
     
 

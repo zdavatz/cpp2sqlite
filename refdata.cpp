@@ -18,6 +18,7 @@
 #include "gtin.hpp"
 #include "bag.hpp"
 #include "swissmedic.hpp"
+#include "beautify.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -69,6 +70,7 @@ void parseXML(const std::string &filename,
                 article.gtin_13 = gtin;
                 article.gtin_5 = gtin.substr(4,5); // pos, len
                 article.name = v.second.get<std::string>(nameTag, "");
+                article.name = BEAUTY::beautifyName(article.name);
 
                 artList.push_back(article);
             }
