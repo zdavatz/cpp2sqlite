@@ -15,6 +15,7 @@
 namespace BEAUTY
 {
     std::string beautifyName(std::string &name);
+    std::string sort(std::string &packInfo);
 }
 
 #endif /* beautify_hpp */

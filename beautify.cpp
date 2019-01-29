@@ -34,5 +34,43 @@ std::string beautifyName(std::string &name)
     
     return token1 + separator + token2;
 }
+
+// First packages with price
+// then packages without price
+std::string sort(std::string &packInfo)
+{
+    std::string s;
     
+    std::vector<std::string> allLines;
+    std::vector<std::string> linesWithPrice;
+    std::vector<std::string> linesWithoutPrice;
+    boost::algorithm::split(allLines, packInfo, boost::is_any_of("\n"), boost::token_compress_on);
+    if (allLines.size() < 2)
+        return packInfo;
+    
+    std::regex r(", EFP ");
+    
+    for (auto line : allLines)
+        if (std::regex_search(line, r))
+            linesWithPrice.push_back(line);
+        else
+            linesWithoutPrice.push_back(line);
+    
+    int linesCount = 0;
+    for (auto l : linesWithPrice) {
+        if (linesCount++ > 0)
+            s += "\n";
+
+        s += l;
+    }
+
+    for (auto l : linesWithoutPrice) {
+        if (linesCount++ > 0)
+            s += "\n";
+        
+        s += l;
+    }
+    
+    return s;
+}
 }

@@ -282,10 +282,7 @@ int main(int argc, char **argv)
                     statsRegnrsNotFound.push_back(rn);
             } // for
 
-            // Capitalize first word of each line
-            //packInfo = BEAUTY::upperName(packInfo);
-
-            // TODO: sort packInfo
+            packInfo = BEAUTY::sort(packInfo);
 
             if (!packInfo.empty())
                 AIPS::bindText("amikodb", statement, 11, packInfo);
