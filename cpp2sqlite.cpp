@@ -294,10 +294,10 @@ int main(int argc, char **argv)
         }
         
         std::clog
-        << "aips REGNRS\t(found/not found)" << std::endl
-        << "\tin refdata: " << statsRnFoundRefdataCount << " / " << statsRnNotFoundRefdataCount << " (" << (statsRnFoundRefdataCount + statsRnNotFoundRefdataCount) << ")" << std::endl
-        << "\tin swissmedic: " << statsRnFoundSwissmedicCount << " / " << statsRnNotFoundSwissmedicCount << " (" << (statsRnFoundSwissmedicCount + statsRnNotFoundSwissmedicCount) << ")" << std::endl
-        << "\tin bag: " << statsRnFoundBagCount << " / " << statsRnNotFoundBagCount << " (" << (statsRnFoundBagCount + statsRnNotFoundBagCount) << ")" << std::endl
+        << "aips REGNRS (found/not found)" << std::endl
+        << "\tin refdata: " << statsRnFoundRefdataCount << "/" << statsRnNotFoundRefdataCount << " (" << (statsRnFoundRefdataCount + statsRnNotFoundRefdataCount) << ")" << std::endl
+        << "\tin swissmedic: " << statsRnFoundSwissmedicCount << "/" << statsRnNotFoundSwissmedicCount << " (" << (statsRnFoundSwissmedicCount + statsRnNotFoundSwissmedicCount) << ")" << std::endl
+        << "\tin bag: " << statsRnFoundBagCount << "/" << statsRnNotFoundBagCount << " (" << (statsRnFoundBagCount + statsRnNotFoundBagCount) << ")" << std::endl
         << "\tnot found anywhere: " << statsRegnrsNotFound.size()
         << std::endl;
 
