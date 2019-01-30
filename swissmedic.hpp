@@ -13,11 +13,14 @@
 namespace SWISSMEDIC
 {
     void parseXLXS(const std::string &filename);
+
     std::string getAdditionalNames(const std::string &rn,
                                    std::set<std::string> &gtinUsed);
     int countRowsWithRn(const std::string &rn);
-    bool findGtin(const std::string &gtin);
     std::string getApplication(const std::string &rn);
+    std::string getAtcFromFirstRn(const std::string &rn);
+
+    bool findGtin(const std::string &gtin);
     std::string getCategoryFromGtin(const std::string &gtin);
     void printStats();
 }

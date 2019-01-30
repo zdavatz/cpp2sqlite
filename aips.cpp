@@ -15,6 +15,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include "aips.hpp"
+#include "atc.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -64,9 +65,11 @@ MedicineList & parseXML(const std::string &filename,
                     Medicine Med;
                     Med.title = v.second.get("title", "");
                     Med.auth = v.second.get("authHolder", "");
-                    Med.atc = v.second.get("atcCode", "");
+                    
                     Med.subst = v.second.get("substances", "");
                     Med.regnrs = v.second.get("authNrs", "");
+                    Med.atc = v.second.get("atcCode", "");
+                    ATC::validate(Med.regnrs, Med.atc);
 
                     //std::cerr << "remark: " << v.second.get("remark", "") << std::endl;
                     //std::cerr << "style: " << v.second.get("style", "") << std::endl; // unused

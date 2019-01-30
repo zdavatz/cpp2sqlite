@@ -22,6 +22,7 @@
 
 #define COLUMN_A        0   // GTIN (5 digits)
 #define COLUMN_C        2   // name
+#define COLUMN_G        6   // ATC
 #define COLUMN_K       10   // packaging code (3 digits)
 #define COLUMN_L       11   // number for dosage
 #define COLUMN_M       12   // units for dosage
@@ -197,6 +198,20 @@ std::string getApplication(const std::string &rn)
     }
 
     return app;
+}
+
+std::string getAtcFromFirstRn(const std::string &rn)
+{
+    std::string atc;
+
+    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
+        if (rn == regnrs[rowInt]) {
+            atc = theWholeSpreadSheet.at(rowInt).at(COLUMN_G);
+            break;
+        }
+    }
+
+    return atc;
 }
 
 std::string getCategoryFromGtin(const std::string &g)
