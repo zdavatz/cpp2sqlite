@@ -10,6 +10,9 @@
 #include <iostream>
 #include <libgen.h>     // for basename()
 #include <set>
+#include <regex>
+#include <boost/algorithm/string.hpp>
+
 #include <xlnt/xlnt.hpp>
 
 #include "swissmedic.hpp"
@@ -20,6 +23,8 @@
 #define COLUMN_A        0   // GTIN (5 digits)
 #define COLUMN_C        2   // name
 #define COLUMN_K       10   // packaging code (3 digits)
+#define COLUMN_L       11   // number for dosage
+#define COLUMN_M       12   // units for dosage
 #define COLUMN_N       13   // category (A..E)
 #define COLUMN_S       18   // application field
 #define COLUMN_W       22   // preparation contains narcotics
@@ -37,6 +42,7 @@ namespace SWISSMEDIC
     int statsAugmentedRegnCount = 0;
     int statsAugmentedGtinCount = 0;
     int statsTotalGtinCount = 0;
+    int statsRecoveredDosage = 0;
 
 void parseXLXS(const std::string &filename)
 {
@@ -108,6 +114,16 @@ std::string getAdditionalNames(const std::string &rn,
 
             std::string name = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
             name = BEAUTY::beautifyName(name);
+            // Verify presence of dosage
+            std::regex r(R"(\d+)");
+            if (!std::regex_search(name, r)) {
+                statsRecoveredDosage++;
+                //std::clog << "no dosage for " << name << std::endl;
+                std::string dosage = theWholeSpreadSheet.at(rowInt).at(COLUMN_L);
+                std::string units = theWholeSpreadSheet.at(rowInt).at(COLUMN_M);
+                name += " " + dosage + " " + units;
+            }
+
 #ifdef DEBUG_IDENTIFY_NAMES
             names += "swm+";
 #endif
@@ -200,6 +216,7 @@ void printStats()
 {
     std::cout
     << "GTINs used from swissmedic " << statsTotalGtinCount
+    << ", recovered dosage " << statsRecoveredDosage
     << std::endl;
 }
     

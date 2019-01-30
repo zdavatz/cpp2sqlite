@@ -50,12 +50,16 @@ std::string sort(std::string &packInfo)
     
     std::regex r(", EFP ");
     
+    // Analyze
     for (auto line : allLines)
         if (std::regex_search(line, r))
             linesWithPrice.push_back(line);
         else
             linesWithoutPrice.push_back(line);
     
+    // TODO: sort by galenic form each of the two vectors
+
+    // Recombine all lines into a single string
     int linesCount = 0;
     for (auto l : linesWithPrice) {
         if (linesCount++ > 0)
@@ -73,4 +77,10 @@ std::string sort(std::string &packInfo)
     
     return s;
 }
+    
+void sortByGalenicForm(std::vector<std::string> &group)
+{
+        
+}
+
 }
