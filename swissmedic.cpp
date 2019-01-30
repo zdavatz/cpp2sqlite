@@ -9,7 +9,6 @@
 
 #include <iostream>
 #include <libgen.h>     // for basename()
-#include <set>
 #include <regex>
 #include <boost/algorithm/string.hpp>
 

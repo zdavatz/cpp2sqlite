@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include <libgen.h>     // for basename()
+#include <regex>
 #include <boost/algorithm/string.hpp>
 
 #include "atc.hpp"
@@ -41,26 +42,33 @@ void validate(const std::string &regnrs, std::string &atc)
         std::vector<std::string> rnVector;
         boost::algorithm::split(rnVector, regnrs, boost::is_any_of(", "), boost::token_compress_on);
         atc = SWISSMEDIC::getAtcFromFirstRn(rnVector[0]);
-#if 1
-        std::clog
-        << basename((char *)__FILE__) << ":" << __LINE__
-        << ", regnrs: <" << regnrs << ">"
-        << ", rn[0]: " << rnVector[0]
-        << ", input ATC <" << inputAtc << ">";
-        if (atc.empty())
-            std::clog << ", remains empty";
-        else
-            std::clog << ", recovered: " << atc;
-
-        std::clog << std::endl;
-#endif
         if (!atc.empty())
             statsRecoveredAtcCount++;
 
         return;
     }
 
-    // TODO: cleanup HTML stuff &nbsp; &acute;
+    // Cleanup. First extract a list of ATCs from each input atc string
+    // see also RealExpertInfo.java:922
+    std::regex r(R"([A-Z]\d{2}[A-Z]\s?[A-Z]?\s?(\d{2})?)"); // tested at https://regex101.com
+    std::sregex_iterator it(atc.begin(), atc.end(), r);
+    std::sregex_iterator it_end;
+    std::vector<std::string> atcVector;
+    while (it != it_end) {
+        atcVector.push_back(it->str());
+        ++it;
+    }
+    
+    int atcCount = 0;
+    std::string outputAtc;
+    for (auto s : atcVector) {
+        if (atcCount++ > 0)
+            outputAtc += ","; // intersperse separator
+
+        outputAtc += s;
+    }
+    
+    atc = outputAtc;
 
     // TODO: add ";" and localized text from 'atc_codes_multi_lingual.txt'
 }
