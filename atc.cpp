@@ -82,7 +82,9 @@ void validate(const std::string &regnrs, std::string &atc)
     std::sregex_iterator it_end;
     std::vector<std::string> atcVector;
     while (it != it_end) {
-        atcVector.push_back(it->str());
+        std::string trimmed = it->str();
+        boost::algorithm::trim(trimmed);  // TODO: improve the regular expression so we don't need to trim
+        atcVector.push_back(trimmed);
         ++it;
     }
     
