@@ -33,7 +33,8 @@ namespace AIPS
 
 MedicineList & parseXML(const std::string &filename,
                         const std::string &language,
-                        const std::string &type)
+                        const std::string &type,
+                        bool verbose)
 {
     pt::ptree tree;
     
@@ -108,6 +109,13 @@ MedicineList & parseXML(const std::string &filename,
                         }
                         else {
                             statsAtcTextNotFoundCount++;
+                            if (verbose) {
+                                std::clog
+                                << "[" << statsAtcTextNotFoundCount << "]"
+                                << " no text for ATC: <" << Med.atc << ">"
+                                << " (first rn: " << rnVector[0] << ")"
+                                << std::endl;
+                            }
                         }
                     }
                     

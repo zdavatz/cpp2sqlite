@@ -16,7 +16,8 @@ namespace AIPS
 {
     MedicineList & parseXML(const std::string &filename,
                             const std::string &language,
-                            const std::string &type);
+                            const std::string &type,
+                            bool verbose);
 }
 
 #endif /* aips_hpp */
