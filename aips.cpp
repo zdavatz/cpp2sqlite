@@ -111,7 +111,9 @@ MedicineList & parseXML(const std::string &filename,
                             statsAtcTextNotFoundCount++;
                             if (verbose) {
                                 std::clog
-                                << statsAtcTextNotFoundCount << ") no text for ATC: <" << Med.atc << ">"
+                                << "[" << statsAtcTextNotFoundCount << "]"
+                                << " no text for ATC: <" << Med.atc << ">"
+                                << " (first rn: " << rnVector[0] << ")"
                                 << std::endl;
                             }
                         }
