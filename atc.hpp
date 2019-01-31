@@ -12,8 +12,14 @@
 
 namespace ATC
 {
+    void parseTXT(const std::string &filename,
+                  const std::string &language,
+                  bool verbose);
+
     void validate(const std::string &regnrs,
                   std::string &name);
+    
+    std::string getTextFromAtc(std::string atc);
 }
 
 #endif /* atc_hpp */

@@ -8,10 +8,12 @@
 //
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <libgen.h>     // for basename()
 #include <regex>
+#include <map>
 #include <boost/algorithm/string.hpp>
 
 #include "atc.hpp"
@@ -19,7 +21,47 @@
 
 namespace ATC
 {
+    std::map<std::string, std::string> atcMap;
     int statsRecoveredAtcCount = 0;
+
+void parseTXT(const std::string &filename,
+              const std::string &language,
+              bool verbose)
+{
+    try {
+        std::clog << std::endl << "Reading atc TXT" << std::endl;
+        std::ifstream file(filename);
+
+        std::string str;
+        while (std::getline(file, str)) {
+
+            const std::string separator1(": ");
+            std::string::size_type pos1 = str.find(separator1);
+            auto atc = str.substr(0, pos1); // pos, len
+
+            const std::string separator2("; ");
+            std::string::size_type pos2 = str.find(separator2);
+            auto textDe = str.substr(pos1+separator1.length(),       // pos
+                                     pos2-pos1-separator1.length()); // len
+
+            auto textFr = str.substr(pos2+separator2.length()); // pos, len
+
+            atcMap.insert(std::make_pair(atc,
+                                         language == "fr" ? textFr : textDe));
+        }
+    }
+    catch (std::exception &e) {
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << "Error" << e.what()
+        << std::endl;
+    }
+    
+    std::clog
+    << basename((char *)__FILE__) << ":" << __LINE__
+    << " # lines: " << atcMap.size()
+    << std::endl;
+}
 
 // This is required for ATC originating from aips, because they have lots of
 // extra stuff in the string
@@ -33,29 +75,10 @@ void validate(const std::string &regnrs, std::string &atc)
     // Do this first because in one case we get just a space " " as the input atc
     boost::algorithm::trim(atc);
 
-//    if ((atc == "na") ||
-//        (atc == "???") ||
-//        (atc == "-"))
-//    {
-//        // Make it empty so we can search for it in swissmedic
-//        atc = "";
-//    }
-
-#if 0
-    // If empty get it from swissmedic column G, based on the regnrs (just the first regnr)
-    if (atc.empty()) {
-        atc = SWISSMEDIC::getAtcFromFirstRn(rnVector[0]);
-        if (!atc.empty())
-            statsRecoveredAtcCount++;
-
-        return;
-    }
-#endif
-
     // Cleanup. First extract a list of ATCs from each input atc string
     // see also RealExpertInfo.java:922
-    std::regex r(R"([A-Z]\d{2}[A-Z]\s?[A-Z]?\s?(\d{2})?)"); // tested at https://regex101.com
-    std::sregex_iterator it(atc.begin(), atc.end(), r);
+    std::regex regAtc(R"([A-Z]\d{2}[A-Z]\s?[A-Z]?\s?(\d{2})?)"); // tested at https://regex101.com
+    std::sregex_iterator it(atc.begin(), atc.end(), regAtc);
     std::sregex_iterator it_end;
     std::vector<std::string> atcVector;
     while (it != it_end) {
@@ -63,28 +86,26 @@ void validate(const std::string &regnrs, std::string &atc)
         ++it;
     }
     
-#if 0
-    if (atcVector.size() == 0) {  // If empty get it from swissmed
-        atc = SWISSMEDIC::getAtcFromFirstRn(rnVector[0]);
-        if (!atc.empty())
-            statsRecoveredAtcCount++;
-    }
-    else
-#endif
-    {
-        int atcCount = 0;
-        std::string outputAtc;
-        for (auto s : atcVector) {
-            if (atcCount++ > 0)
-                outputAtc += ","; // separator
-            
-            outputAtc += s;
-        }
-
-        atc = outputAtc;
+    int atcCount = 0;
+    std::string outputAtc;
+    for (auto s : atcVector) {
+        if (atcCount++ > 0)
+            outputAtc += ","; // separator
+        
+        outputAtc += s;
     }
 
-    // TODO: add ";" and localized text from 'atc_codes_multi_lingual.txt'
+    atc = outputAtc;
+}
+    
+std::string getTextFromAtc(std::string atc)
+{
+    std::string text;
+    auto search = atcMap.find(atc);
+    if (search != atcMap.end())
+        text = search->second;
+
+    return text;
 }
 
 }

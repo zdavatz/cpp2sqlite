@@ -176,6 +176,8 @@ int main(int argc, char **argv)
     // Read swissmedic next, because aips might need to get missing ATC codes from it
     SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");
 
+    ATC::parseTXT(opt_downloadDirectory + "/../input/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
+
     AIPS::MedicineList &list = AIPS::parseXML(opt_downloadDirectory + "/aips_xml.xml", opt_language, type);
     
     REFDATA::parseXML(opt_downloadDirectory + "/refdata_pharma_xml.xml", opt_language);
@@ -300,6 +302,7 @@ int main(int argc, char **argv)
             //AIPS::bindText("amikodb", statement, 15, m.content);
             
             // packages
+            // The line order must be the same as pack_info_str
             AIPS::bindText("amikodb", statement, 17, "|||CHF 0.00|CHF 0.00||||,,,|||255|0");
             
             // TODO: add all other columns
@@ -318,7 +321,6 @@ int main(int argc, char **argv)
         REFDATA::printStats();
         SWISSMEDIC::printStats();
         BAG::printStats();
-        //ATC::printStats();
 
         if (statsRegnrsNotFound.size() > 0) {
             if (flagVerbose) {

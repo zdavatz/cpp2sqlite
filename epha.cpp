@@ -39,7 +39,10 @@ void parseJSON(const std::string &filename, bool verbose)
         pt::read_json(filename, tree);
     }
     catch (std::exception &e) {
-        std::cerr << "Line: " << __LINE__ << "Error" << e.what() << std::endl;
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << "Error" << e.what()
+        << std::endl;
     }
     
     std::cerr << "Analyzing epha" << std::endl;
@@ -89,9 +92,8 @@ void parseJSON(const std::string &filename, bool verbose)
 
         for (auto rn : rnVector) {
             statsTotalRnCount++;
-            Document doc = {sub, her, atc, pro};
+            Document doc {sub, her, atc, pro};
             docMap.insert(std::make_pair(std::stoi(rn), doc));
-            // TODO: stats
         }
     }
     

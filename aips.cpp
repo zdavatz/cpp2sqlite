@@ -28,6 +28,8 @@ namespace AIPS
     int statsAtcFromAipsCount = 0;
     int statsAtcFromSwissmedicCount = 0;
     int statsAtcNotFoundCount = 0;
+    int statsAtcTextFoundCount = 0;
+    int statsAtcTextNotFoundCount = 0;
 
 MedicineList & parseXML(const std::string &filename,
                         const std::string &language,
@@ -96,7 +98,19 @@ MedicineList & parseXML(const std::string &filename,
                                 statsAtcNotFoundCount++;
                         }
                     }
-
+                    
+                    // Add ";" and localized text from 'atc_codes_multi_lingual.txt'
+                    if (!Med.atc.empty()) {
+                        std::string atcText = ATC::getTextFromAtc(Med.atc);
+                        if (!atcText.empty()) {
+                            statsAtcTextFoundCount++;
+                            Med.atc += ";" + atcText;
+                        }
+                        else {
+                            statsAtcTextNotFoundCount++;
+                        }
+                    }
+                    
                     //std::cerr << "remark: " << v.second.get("remark", "") << std::endl;
                     //std::cerr << "style: " << v.second.get("style", "") << std::endl; // unused
 
@@ -115,11 +129,14 @@ MedicineList & parseXML(const std::string &filename,
         std::cout
         << "aips medicalInformation " << type << " " << language << " " << medList.size()
         << std::endl
-        << "ATC from epha: " << statsAtcFromEphaCount
+        << "ATC codes from epha: " << statsAtcFromEphaCount
         << ", from aips: " << statsAtcFromAipsCount
-        << ", from swm: " << statsAtcFromSwissmedicCount
+        << ", from swissmedic: " << statsAtcFromSwissmedicCount
         << ", not found: " << statsAtcNotFoundCount
         << " (total " << (statsAtcFromEphaCount + statsAtcFromAipsCount + statsAtcFromSwissmedicCount + statsAtcNotFoundCount) << ")"
+        << std::endl
+        << "ATC text found: " << statsAtcTextFoundCount
+        << ", not found: " << statsAtcTextNotFoundCount
         << std::endl;
     }
     catch (std::exception &e) {

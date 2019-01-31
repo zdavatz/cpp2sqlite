@@ -13,7 +13,8 @@
 namespace EPHA
 {
     struct Document {
-        //std::string rn; // zulassung (approval)
+        // zulassung doesn't belong here because it is the key for the map
+
         std::string substance; // substanz
         std::string manufacturer; // hersteller
         std::string atc;
