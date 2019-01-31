@@ -28,6 +28,7 @@
 #include "sqlDatabase.hpp"
 #include "beautify.hpp"
 #include "atc.hpp"
+#include "epha.hpp"
 
 namespace po = boost::program_options;
 
@@ -168,7 +169,11 @@ int main(int argc, char **argv)
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
 
-    // Read swissmedic first, because aips might need to get missing ATC codes from it
+    // Read epha first, because aips needs to get missing ATC codes from it
+    std::string jsonFilename = "/epha_products_" + opt_language + "_json.json";
+    EPHA::parseJSON(opt_downloadDirectory + jsonFilename, flagVerbose);
+
+    // Read swissmedic next, because aips might need to get missing ATC codes from it
     SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");
 
     AIPS::MedicineList &list = AIPS::parseXML(opt_downloadDirectory + "/aips_xml.xml", opt_language, type);
@@ -177,7 +182,7 @@ int main(int argc, char **argv)
     
     std::cerr << "swissmedic has " << countAipsPackagesInSwissmedic(list) << " packages matching AIPS" << std::endl;
     
-    BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml", opt_language);
+    BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml", opt_language, flagVerbose);
     if (flagVerbose) {
         std::vector<std::string> bagList = BAG::getGtinList();
         std::cerr << "bag " << countBagGtinInSwissmedic(bagList) << " GTIN are also in swissmedic" << std::endl;
@@ -291,6 +296,12 @@ int main(int argc, char **argv)
                 AIPS::bindText("amikodb", statement, 11, packInfo);
 #endif
 
+            // content
+            //AIPS::bindText("amikodb", statement, 15, m.content);
+            
+            // packages
+            AIPS::bindText("amikodb", statement, 17, "|||CHF 0.00|CHF 0.00||||,,,|||255|0");
+            
             // TODO: add all other columns
 
             AIPS::runStatement("amikodb", statement);
@@ -307,7 +318,7 @@ int main(int argc, char **argv)
         REFDATA::printStats();
         SWISSMEDIC::printStats();
         BAG::printStats();
-        ATC::printStats();
+        //ATC::printStats();
 
         if (statsRegnrsNotFound.size() > 0) {
             if (flagVerbose) {

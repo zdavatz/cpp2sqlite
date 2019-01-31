@@ -41,7 +41,8 @@ namespace BAG
     typedef std::vector<Preparation> PreparationList;
     
     void parseXML(const std::string &filename,
-                  const std::string &language);
+                  const std::string &language,
+                  bool verbose);
 
     std::string getAdditionalNames(const std::string &rn,
                                    std::set<std::string> &gtinUsed);

@@ -23,12 +23,12 @@ namespace pt = boost::property_tree;
 
 namespace BAG
 {
-
-PreparationList prepList;
-int statsTotalGtinCount = 0;
+    PreparationList prepList;
+    int statsTotalGtinCount = 0;
 
 void parseXML(const std::string &filename,
-              const std::string &language)
+              const std::string &language,
+              bool verbose)
 {
     pt::ptree tree;
     
@@ -93,13 +93,15 @@ void parseXML(const std::string &filename,
                             }
                             else {
                                 statsPackNotRecoveredGtinCount++;
-                                std::cerr
-                                << basename((char *)__FILE__) << ":" << __LINE__
-                                << ", SwissmedicNo8 empty"
-                                //<< " for SwissmedicNo5: " << prep.swissmedNo
-                                << ", <" << nameTag << "> " << v.second.get(nameTag, "")
-                                << ", <" << descriptionTag << "> " << v.second.get(descriptionTag, "")
-                                << std::endl;
+                                if (verbose) {
+                                    std::cerr
+                                    << basename((char *)__FILE__) << ":" << __LINE__
+                                    << ", SwissmedicNo8 empty"
+                                    //<< " for SwissmedicNo5: " << prep.swissmedNo
+                                    << ", <" << nameTag << "> " << v.second.get(nameTag, "")
+                                    << ", <" << descriptionTag << "> " << v.second.get(descriptionTag, "")
+                                    << std::endl;
+                                }
                             }
                         }
                         else

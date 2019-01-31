@@ -14,8 +14,6 @@ namespace ATC
 {
     void validate(const std::string &regnrs,
                   std::string &name);
-
-    void printStats();
 }
 
 #endif /* atc_hpp */

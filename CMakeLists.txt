@@ -40,6 +40,7 @@ add_executable(cpp2sqlite
 	gtin.hpp gtin.cpp
 	beautify.hpp beautify.cpp
 	atc.hpp atc.cpp
+	epha.hpp epha.cpp
 	medicine.h)
 
 target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})

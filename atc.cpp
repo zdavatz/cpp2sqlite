@@ -21,6 +21,8 @@ namespace ATC
 {
     int statsRecoveredAtcCount = 0;
 
+// This is required for ATC originating from aips, because they have lots of
+// extra stuff in the string
 void validate(const std::string &regnrs, std::string &atc)
 {
     std::string inputAtc = atc;  // save the original string for debugging
@@ -31,14 +33,15 @@ void validate(const std::string &regnrs, std::string &atc)
     // Do this first because in one case we get just a space " " as the input atc
     boost::algorithm::trim(atc);
 
-    if ((atc == "na") ||
-        (atc == "???") ||
-        (atc == "-"))
-    {
-        // Make it empty so we can search for it in swissmedic
-        atc = "";
-    }
+//    if ((atc == "na") ||
+//        (atc == "???") ||
+//        (atc == "-"))
+//    {
+//        // Make it empty so we can search for it in swissmedic
+//        atc = "";
+//    }
 
+#if 0
     // If empty get it from swissmedic column G, based on the regnrs (just the first regnr)
     if (atc.empty()) {
         atc = SWISSMEDIC::getAtcFromFirstRn(rnVector[0]);
@@ -47,6 +50,7 @@ void validate(const std::string &regnrs, std::string &atc)
 
         return;
     }
+#endif
 
     // Cleanup. First extract a list of ATCs from each input atc string
     // see also RealExpertInfo.java:922
@@ -59,12 +63,15 @@ void validate(const std::string &regnrs, std::string &atc)
         ++it;
     }
     
+#if 0
     if (atcVector.size() == 0) {  // If empty get it from swissmed
         atc = SWISSMEDIC::getAtcFromFirstRn(rnVector[0]);
         if (!atc.empty())
             statsRecoveredAtcCount++;
     }
-    else {
+    else
+#endif
+    {
         int atcCount = 0;
         std::string outputAtc;
         for (auto s : atcVector) {
@@ -80,10 +87,4 @@ void validate(const std::string &regnrs, std::string &atc)
     // TODO: add ";" and localized text from 'atc_codes_multi_lingual.txt'
 }
 
-void printStats()
-{
-    std::cout
-    << "ATC recovered from swissmedic " << statsRecoveredAtcCount
-    << std::endl;
-}
 }

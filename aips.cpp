@@ -16,13 +16,18 @@
 
 #include "aips.hpp"
 #include "atc.hpp"
+#include "epha.hpp"
+#include "swissmedic.hpp"
 
 namespace pt = boost::property_tree;
 
 namespace AIPS
 {
-    
-MedicineList medList;
+    MedicineList medList;
+    int statsAtcFromEphaCount = 0;
+    int statsAtcFromAipsCount = 0;
+    int statsAtcFromSwissmedicCount = 0;
+    int statsAtcNotFoundCount = 0;
 
 MedicineList & parseXML(const std::string &filename,
                         const std::string &language,
@@ -31,14 +36,14 @@ MedicineList & parseXML(const std::string &filename,
     pt::ptree tree;
     
     try {
-        std::cerr << "Reading AIPS XML" << std::endl;
+        std::clog << std::endl << "Reading AIPS XML" << std::endl;
         pt::read_xml(filename, tree);
     }
     catch (std::exception &e) {
         std::cerr << "Line: " << __LINE__ << "Error" << e.what() << std::endl;
     }
     
-    std::cerr << "Analyzing AIPS" << std::endl;
+    std::clog << "Analyzing AIPS" << std::endl;
 
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("medicalInformations")) {
@@ -68,14 +73,35 @@ MedicineList & parseXML(const std::string &filename,
                     
                     Med.subst = v.second.get("substances", "");
                     Med.regnrs = v.second.get("authNrs", "");
-                    Med.atc = v.second.get("atcCode", "");
-                    ATC::validate(Med.regnrs, Med.atc);
+                    
+                    std::vector<std::string> rnVector;
+                    boost::algorithm::split(rnVector, Med.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+                    Med.atc = EPHA::getAtcFromSingleRn(rnVector[0]);
+                    if (!Med.atc.empty()) {
+                        statsAtcFromEphaCount++;
+                    }
+                    else {
+                        // Fallback 1
+                        Med.atc = v.second.get("atcCode", "");
+                        ATC::validate(Med.regnrs, Med.atc); // these ones need to be cleaned up
+                        if (!Med.atc.empty()) {
+                            statsAtcFromAipsCount++;
+                        }
+                        else {
+                            // Fallback 2
+                            Med.atc = SWISSMEDIC::getAtcFromFirstRn(rnVector[0]);
+                            if (!Med.atc.empty())
+                                statsAtcFromSwissmedicCount++;
+                            else
+                                statsAtcNotFoundCount++;
+                        }
+                    }
 
                     //std::cerr << "remark: " << v.second.get("remark", "") << std::endl;
                     //std::cerr << "style: " << v.second.get("style", "") << std::endl; // unused
 
                     Med.content = v.second.get("content", "");
-                    //std::cerr << "content: " << Med.content << std::endl; // TODO: change XML to HTML
+                    // TODO: change XML to HTML
 
                     //std::cerr << "sections: " << v.second.get("sections", "") << std::endl; // empty
 
@@ -86,7 +112,15 @@ MedicineList & parseXML(const std::string &filename,
             }
         }
         
-        std::cout << "aips medicalInformation " << type << " " << language << " " << medList.size() << std::endl;
+        std::cout
+        << "aips medicalInformation " << type << " " << language << " " << medList.size()
+        << std::endl
+        << "ATC from epha: " << statsAtcFromEphaCount
+        << ", from aips: " << statsAtcFromAipsCount
+        << ", from swm: " << statsAtcFromSwissmedicCount
+        << ", not found: " << statsAtcNotFoundCount
+        << " (total " << (statsAtcFromEphaCount + statsAtcFromAipsCount + statsAtcFromSwissmedicCount + statsAtcNotFoundCount) << ")"
+        << std::endl;
     }
     catch (std::exception &e) {
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
