@@ -1,3 +1,4 @@
+git pull
 sudo rm -rf /home/zeno/.software/cpp2sqlite/cpp2sqlite-build
 mkdir /home/zeno/.software/cpp2sqlite/cpp2sqlite-build
 cd /home/zeno/.software/cpp2sqlite/cpp2sqlite-build
