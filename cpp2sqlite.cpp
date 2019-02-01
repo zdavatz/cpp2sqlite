@@ -12,6 +12,7 @@
 #include <string>
 #include <set>
 #include <exception>
+#include <regex>
 
 #include <sqlite3.h>
 #include <libgen.h>     // for basename()
@@ -78,7 +79,111 @@ int countBagGtinInRefdata(std::vector<std::string> &list)
     return count;
 }
 
+void removeTagFromXml(std::string &xml, const std::string &tag)
+{
+    
+}
+// see RealExpertInfo.java:1065
+void getHtmlFromXml(std::string &xml, std::string &html)
+{
+#if 1
+    // cleanup: see also HtmlUtils.java:934
+    std::regex r1(R"(<span[^>]*>)");
+    xml = std::regex_replace(xml, r1, "");
 
+    std::regex r2(R"(</span>)");
+    xml = std::regex_replace(xml, r2, "");
+
+    std::regex r3(R"(<sub[^>]*>)");
+    xml = std::regex_replace(xml, r3, "");
+
+    std::regex r4(R"(</sub>)");
+    xml = std::regex_replace(xml, r4, "");
+
+    std::regex r5(R"(<sup[^>]*>)");
+    xml = std::regex_replace(xml, r5, "");
+    
+    std::regex r6(R"(</sup>)");
+    xml = std::regex_replace(xml, r6, "");
+    
+    //std::clog << xml << std::endl;
+#endif
+
+    html = xml; // temporary
+    return;
+
+    pt::ptree tree;
+    std::stringstream ss;
+    ss << xml;
+    read_xml(ss, tree);
+    int seq=0;
+    int sectionCount=0;
+    int pCount=0;
+
+    html = "<html>\n <head></head>\n <body>\n";
+
+    try {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("div")) {
+            
+            if (v.first == "p")
+            {
+                pt::ptree & attributes = v.second.get_child("<xmlattr>");
+                
+                std::clog
+                << basename((char *)__FILE__) << ":" << __LINE__
+                << ", seq " << ++seq
+                << ", p count " << ++pCount
+                << ", key <" << v.first.data() << ">"
+                << ", val <" << v.second.data() << ">" // content of the tag
+                << ", # children: " << v.second.size()
+                << ", # attributes: " << attributes.size()
+                << std::endl;
+                
+                int i=0;
+                std::string section;
+                std::string divClass;
+                try {
+                BOOST_FOREACH(pt::ptree::value_type &att, attributes) {
+                    
+                    //static int k=0;
+                    //if (k++ < 14)
+                        std::clog
+                        << "\tattr " << ++i
+                        << ", 1st: <" << att.first.data() << ">"
+                        << ", 2nd: <" << att.second.data() << ">"
+                        << std::endl;
+
+                    if (att.first != "id")
+                        continue;
+
+                    section = att.second.data();
+                    //std::cout << "\tLine: " << __LINE__ << ", section: <" << section.substr(0,7) << ">" << std::endl;
+
+                    if (section.substr(0,7) == "section") {
+                        //std::cout << "\tLine: " << __LINE__ << ", section: " << section << std::endl;
+                        if (sectionCount++ == 0)
+                            divClass = "MonTitle";
+                        else
+                            divClass = "paragraph";
+
+                        html += "\n<div class=\"" + divClass + "\" id=\"" + section + "\">";
+                        html += "\n</div>";
+                    }
+                } // BOOST attributes
+                } catch (std::exception &e) {
+                    std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
+                }
+            } // if p
+            else if (v.first == "table") {
+                std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " table" << std::endl;
+            } // if table
+        } // BOOST div
+    } catch (std::exception &e) {
+        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
+    }
+
+    html += "\n </body>\n</html>";
+}
 
 int main(int argc, char **argv)
 {
@@ -306,7 +411,20 @@ int main(int argc, char **argv)
 
             // content
 
-            AIPS::bindText("amikodb", statement, 15, m.content); // use the XML temporarily
+            {
+#if 0
+                std::clog << std::endl
+                << basename((char *)__FILE__) << ":" << __LINE__
+                << ", ================= " << tempCount
+                << std::endl;
+#endif
+                std::string html;
+                getHtmlFromXml(m.content, html);
+                AIPS::bindText("amikodb", statement, 15, html);
+                //AIPS::bindText("amikodb", statement, 15, m.content);
+                
+                //std::clog << std::endl << html << std::endl;
+            }
 
             // packages
             // The line order must be the same as pack_info_str

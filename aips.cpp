@@ -124,9 +124,7 @@ MedicineList & parseXML(const std::string &filename,
                     //std::cerr << "style: " << v.second.get("style", "") << std::endl; // unused
 
                     Med.content = v.second.get("content", "");
-                    // TODO: change XML to HTML
-
-                    //std::cerr << "sections: " << v.second.get("sections", "") << std::endl; // empty
+                    //std::cout << "Med.content: " << Med.content << std::endl;
 
                     //std::cerr << "title: " << Med.title << ", atc: " << Med.atc << ", subst: " << Med.subst << std::endl;
 
