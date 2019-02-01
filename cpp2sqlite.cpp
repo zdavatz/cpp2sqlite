@@ -19,6 +19,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/foreach.hpp>
 
 #include "aips.hpp"
 #include "refdata.hpp"
@@ -31,6 +34,7 @@
 #include "epha.hpp"
 
 namespace po = boost::program_options;
+namespace pt = boost::property_tree;
 
 void on_version()
 {
@@ -74,12 +78,7 @@ int countBagGtinInRefdata(std::vector<std::string> &list)
     return count;
 }
 
-// see RealExpertInfo.java:1065
-void getHtmlFromXml(std::string &xml, std::string &html)
-{
-    html = "<html>\n <head></head>\n <body>\n";
-    html += "\n </body>\n</html>";
-}
+
 
 int main(int argc, char **argv)
 {
@@ -306,9 +305,8 @@ int main(int argc, char **argv)
 #endif
 
             // content
-            std::string html;
-            getHtmlFromXml(m.content, html);
-            AIPS::bindText("amikodb", statement, 15, html);
+
+            AIPS::bindText("amikodb", statement, 15, m.content); // use the XML temporarily
 
             // packages
             // The line order must be the same as pack_info_str
