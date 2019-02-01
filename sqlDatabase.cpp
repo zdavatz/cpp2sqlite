@@ -67,7 +67,7 @@ void bindText(const std::string &tableName,
     //std::cout << basename((char *)__FILE__) << ":" << __LINE__
     //          << " pos:" << pos << " text:" << text << std::endl;
 
-    int rc = sqlite3_bind_text(statement, pos, text.c_str(), -1, SQLITE_STATIC);
+    int rc = sqlite3_bind_text(statement, pos, text.c_str(), -1, SQLITE_TRANSIENT);
     if (rc != SQLITE_OK)
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", error " << rc << std::endl;
 }
