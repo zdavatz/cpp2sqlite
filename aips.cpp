@@ -108,6 +108,7 @@ MedicineList & parseXML(const std::string &filename,
                             Med.atc += ";" + atcText;
                         }
                         else {
+                            // TODO: fallback get text from epha "substanz" ?
                             statsAtcTextNotFoundCount++;
                             if (verbose) {
                                 std::clog

@@ -74,6 +74,13 @@ int countBagGtinInRefdata(std::vector<std::string> &list)
     return count;
 }
 
+// see RealExpertInfo.java:1065
+void getHtmlFromXml(std::string &xml, std::string &html)
+{
+    html = "<html>\n <head></head>\n <body>\n";
+    html += "\n </body>\n</html>";
+}
+
 int main(int argc, char **argv)
 {
     std::string appName = boost::filesystem::basename(argv[0]);
@@ -299,8 +306,10 @@ int main(int argc, char **argv)
 #endif
 
             // content
-            //AIPS::bindText("amikodb", statement, 15, m.content);
-            
+            std::string html;
+            getHtmlFromXml(m.content, html);
+            AIPS::bindText("amikodb", statement, 15, html);
+
             // packages
             // The line order must be the same as pack_info_str
             AIPS::bindText("amikodb", statement, 17, "|||CHF 0.00|CHF 0.00||||,,,|||255|0");

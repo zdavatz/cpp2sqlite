@@ -14,6 +14,9 @@
 
 #include "sqlDatabase.hpp"
 
+// See SqlDatabase.java:65
+#define FI_DB_VERSION   "140"
+
 namespace AIPS
 {
     static sqlite3 *db;
@@ -106,6 +109,11 @@ void createTable(const std::string &tableName, const std::string &keys)
     std::ostringstream sqlStream;
     int rc;
 
+    sqlStream << "PRAGMA user_version=" << FI_DB_VERSION << ";";
+    rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, NULL);
+    if (rc != SQLITE_OK)
+        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
+    
     sqlStream << "DROP TABLE IF EXISTS " << tableName << ";";
     rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, NULL);
     if (rc != SQLITE_OK)
