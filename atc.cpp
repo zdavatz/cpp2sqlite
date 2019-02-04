@@ -14,6 +14,7 @@
 #include <libgen.h>     // for basename()
 #include <regex>
 #include <map>
+
 #include <boost/algorithm/string.hpp>
 
 #include "atc.hpp"
@@ -68,8 +69,6 @@ void parseTXT(const std::string &filename,
 void validate(const std::string &regnrs, std::string &atc)
 {
     std::string inputAtc = atc;  // save the original string for debugging
-    std::vector<std::string> rnVector;
-    boost::algorithm::split(rnVector, regnrs, boost::is_any_of(", "), boost::token_compress_on);
 
     // Trim leading and trailing spaces
     // Do this first because in one case we get just a space " " as the input atc
@@ -83,7 +82,8 @@ void validate(const std::string &regnrs, std::string &atc)
     std::vector<std::string> atcVector;
     while (it != it_end) {
         std::string trimmed = it->str();
-        boost::algorithm::trim(trimmed);  // TODO: improve the regular expression so we don't need to trim
+        //boost::algorithm::trim(trimmed);  // TODO: improve the regular expression so we don't need to trim
+        boost::erase_all(trimmed, " ");   // "D08A C52" --> "D08AC52"
         atcVector.push_back(trimmed);
         ++it;
     }
@@ -99,11 +99,17 @@ void validate(const std::string &regnrs, std::string &atc)
 
     atc = outputAtc;
 }
-    
+
 std::string getTextFromAtc(std::string atc)
 {
     std::string text;
-    auto search = atcMap.find(atc);
+    
+    // The input parameter 'atc' could be a list of comma separated ATCs
+    // Use just the first one
+    std::vector<std::string> atcVector;
+    boost::algorithm::split(atcVector, atc, boost::is_any_of(","), boost::token_compress_on);
+    
+    auto search = atcMap.find(atcVector[0]);
     if (search != atcMap.end())
         text = search->second;
 

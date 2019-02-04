@@ -83,6 +83,7 @@ void removeTagFromXml(std::string &xml, const std::string &tag)
 {
     
 }
+
 // see RealExpertInfo.java:1065
 void getHtmlFromXml(std::string &xml, std::string &html)
 {
@@ -280,9 +281,11 @@ int main(int argc, char **argv)
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
 
+#if 0
     // Read epha first, because aips needs to get missing ATC codes from it
     std::string jsonFilename = "/epha_products_" + opt_language + "_json.json";
     EPHA::parseJSON(opt_downloadDirectory + jsonFilename, flagVerbose);
+#endif
 
     // Read swissmedic next, because aips might need to get missing ATC codes from it
     SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");

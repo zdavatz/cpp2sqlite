@@ -79,14 +79,17 @@ MedicineList & parseXML(const std::string &filename,
                     
                     std::vector<std::string> rnVector;
                     boost::algorithm::split(rnVector, Med.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+#if 0
                     Med.atc = EPHA::getAtcFromSingleRn(rnVector[0]);
                     if (!Med.atc.empty()) {
                         statsAtcFromEphaCount++;
                     }
-                    else {
+                    else
+#endif
+                    {
                         // Fallback 1
-                        Med.atc = v.second.get("atcCode", "");
-                        ATC::validate(Med.regnrs, Med.atc); // these ones need to be cleaned up
+                        Med.atc = v.second.get("atcCode", ""); // these ones need to be cleaned up
+                        ATC::validate(Med.regnrs, Med.atc);    // so clean them up
                         if (!Med.atc.empty()) {
                             statsAtcFromAipsCount++;
                         }
@@ -135,9 +138,9 @@ MedicineList & parseXML(const std::string &filename,
         
         std::cout
         << "aips medicalInformation " << type << " " << language << " " << medList.size()
-        << std::endl
-        << "ATC codes from epha: " << statsAtcFromEphaCount
-        << ", from aips: " << statsAtcFromAipsCount
+        << std::endl << "ATC codes"
+        //<< " from epha: " << statsAtcFromEphaCount
+        << " from aips: " << statsAtcFromAipsCount
         << ", from swissmedic: " << statsAtcFromSwissmedicCount
         << ", not found: " << statsAtcNotFoundCount
         << " (total " << (statsAtcFromEphaCount + statsAtcFromAipsCount + statsAtcFromSwissmedicCount + statsAtcNotFoundCount) << ")"
