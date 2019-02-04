@@ -106,7 +106,55 @@ void getHtmlFromXml(std::string &xml, std::string &html)
     
     std::regex r6(R"(</sup>)");
     xml = std::regex_replace(xml, r6, "");
+
+#if 1  // This is very time consuming and maybe unnecessary
+    // The Java version seems to be using Jsoup and EscapeMode.xhtml
+    std::regex r7(R"(&nbsp;)");
+    xml = std::regex_replace(xml, r7, " ");
     
+    std::regex r8(R"(&micro;)");
+    xml = std::regex_replace(xml, r8, "µ");
+
+    std::regex r9(R"(&auml;)");
+    xml = std::regex_replace(xml, r9, "ä");
+
+    std::regex r10(R"(&ouml;)");
+    xml = std::regex_replace(xml, r10, "ö");
+    
+    std::regex r11(R"(&uuml;)");
+    xml = std::regex_replace(xml, r11, "ü");
+    
+    std::regex r11a(R"(&Uuml;)");
+    xml = std::regex_replace(xml, r11a, "Ü");
+    
+    std::regex r12(R"(&ge;)");
+    xml = std::regex_replace(xml, r12, ">");
+
+    std::regex r13(R"(&le;)");
+    xml = std::regex_replace(xml, r13, "<");
+    
+    std::regex r14(R"(&agrave;)");
+    xml = std::regex_replace(xml, r14, "à");
+    
+    std::regex r15(R"(&middot;)");
+    xml = std::regex_replace(xml, r15, "–");
+    
+    std::regex r16(R"(&bdquo;)");
+    xml = std::regex_replace(xml, r16, "„");
+    
+    std::regex r17(R"(&ldquo;)");
+    xml = std::regex_replace(xml, r17, "“");
+
+    std::regex r18(R"(&beta;)");
+    xml = std::regex_replace(xml, r18, "β");
+
+    std::regex r19(R"(&gamma;)");
+    xml = std::regex_replace(xml, r19, "γ");
+
+    std::regex r20(R"(&frac12;)");
+    xml = std::regex_replace(xml, r20, "½");
+#endif
+
     //std::clog << xml << std::endl;
 #endif
 
@@ -325,7 +373,14 @@ int main(int argc, char **argv)
         int statsRnNotFoundBagCount = 0;
         std::vector<std::string> statsRegnrsNotFound;
 
+        int ii=1;
+        int n=list.size();
         for (AIPS::Medicine m : list) {
+            
+            // Show progress
+            if ((ii++ % 30) == 0)
+                std::cerr << "\r" << 100*ii/n << " % ";
+
             // See DispoParse.java:164 addArticleDB()
             // See SqlDatabase.java:347 addExpertDB()
             AIPS::bindText("amikodb", statement, 1, m.title);
@@ -436,9 +491,9 @@ int main(int argc, char **argv)
             // TODO: add all other columns
 
             AIPS::runStatement("amikodb", statement);
-        }
+        } // for
         
-        std::clog
+        std::clog << std::endl
         << "aips REGNRS (found/not found)" << std::endl
         << "\tin refdata: " << statsRnFoundRefdataCount << "/" << statsRnNotFoundRefdataCount << " (" << (statsRnFoundRefdataCount + statsRnNotFoundRefdataCount) << ")" << std::endl
         << "\tin swissmedic: " << statsRnFoundSwissmedicCount << "/" << statsRnNotFoundSwissmedicCount << " (" << (statsRnFoundSwissmedicCount + statsRnNotFoundSwissmedicCount) << ")" << std::endl
