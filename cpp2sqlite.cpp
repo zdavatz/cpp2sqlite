@@ -34,6 +34,8 @@
 #include "atc.hpp"
 #include "epha.hpp"
 
+#define WITH_PROGRESS_BAR
+
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
 
@@ -85,8 +87,13 @@ void removeTagFromXml(std::string &xml, const std::string &tag)
 }
 
 // see RealExpertInfo.java:1065
-void getHtmlFromXml(std::string &xml, std::string &html)
+void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
 {
+    //html = xml;
+    //return;
+    
+    //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << regnrs << std::endl;
+
 #if 1
     // cleanup: see also HtmlUtils.java:934
     std::regex r1(R"(<span[^>]*>)");
@@ -106,9 +113,13 @@ void getHtmlFromXml(std::string &xml, std::string &html)
     
     std::regex r6(R"(</sup>)");
     xml = std::regex_replace(xml, r6, "");
-
+    
+    std::regex r6a(R"(')");
+    xml = std::regex_replace(xml, r6a, "&apos;"); // to prevent errors when inserting into sqlite table
+    
 #if 1  // This is very time consuming and maybe unnecessary
     // The Java version seems to be using Jsoup and EscapeMode.xhtml
+    // Don't convert &lt; &apos;
     std::regex r7(R"(&nbsp;)");
     xml = std::regex_replace(xml, r7, " ");
     
@@ -128,10 +139,10 @@ void getHtmlFromXml(std::string &xml, std::string &html)
     xml = std::regex_replace(xml, r11a, "Ü");
     
     std::regex r12(R"(&ge;)");
-    xml = std::regex_replace(xml, r12, ">");
+    xml = std::regex_replace(xml, r12, "≥");
 
     std::regex r13(R"(&le;)");
-    xml = std::regex_replace(xml, r13, "<");
+    xml = std::regex_replace(xml, r13, "≤");
     
     std::regex r14(R"(&agrave;)");
     xml = std::regex_replace(xml, r14, "à");
@@ -144,7 +155,10 @@ void getHtmlFromXml(std::string &xml, std::string &html)
     
     std::regex r17(R"(&ldquo;)");
     xml = std::regex_replace(xml, r17, "“");
-
+    
+    std::regex r17a(R"(&rsquo;)");
+    xml = std::regex_replace(xml, r17a, "’");
+    
     std::regex r18(R"(&beta;)");
     xml = std::regex_replace(xml, r18, "β");
 
@@ -153,13 +167,23 @@ void getHtmlFromXml(std::string &xml, std::string &html)
 
     std::regex r20(R"(&frac12;)");
     xml = std::regex_replace(xml, r20, "½");
+
+    std::regex r21(R"(&ndash;)");
+    xml = std::regex_replace(xml, r21, "–");
 #endif
 
     //std::clog << xml << std::endl;
 #endif
 
-    html = xml; // temporary
-    return;
+    // TODO: see HtmlUtils.java:472
+    /*
+     // Is last character a period (".")?
+     if (!re.endsWith(".") && !re.endsWith(",") && !re.endsWith(":")
+     && !re.startsWith("–") && !re.startsWith("·") && !re.startsWith("-") && !re.startsWith("•")
+     && !re.contains("ATC-Code") && !re.contains("Code ATC")) {
+     re = "<span style=\"font-style:italic;\">" + re + "</span>";
+     }
+     */
 
     pt::ptree tree;
     std::stringstream ss;
@@ -169,22 +193,25 @@ void getHtmlFromXml(std::string &xml, std::string &html)
     int sectionCount=0;
     int pCount=0;
 
-    html = "<html>\n <head></head>\n <body>\n";
+    html = "<html>\n";
+    html += " <head></head>\n";
+    html += " <body>\n";
+    html += "  <div id=\"monographie\" name=\"" + regnrs + "\">\n";
 
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("div")) {
-            
+
             if (v.first == "p")
             {
+#if 1
+                html += "\n  <p class=\"spacing1\"><span style=\"font-style:italic;\">";
+                html += v.second.data();
+                html += "</span></p>";
+#else
                 pt::ptree & attributes = v.second.get_child("<xmlattr>");
                 
                 std::clog
                 << basename((char *)__FILE__) << ":" << __LINE__
-                << ", seq " << ++seq
-                << ", p count " << ++pCount
-                << ", key <" << v.first.data() << ">"
-                << ", val <" << v.second.data() << ">" // content of the tag
-                << ", # children: " << v.second.size()
                 << ", # attributes: " << attributes.size()
                 << std::endl;
                 
@@ -220,18 +247,28 @@ void getHtmlFromXml(std::string &xml, std::string &html)
                     }
                 } // BOOST attributes
                 } catch (std::exception &e) {
-                    std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
+                    std::cerr
+                    << basename((char *)__FILE__) << ":" << __LINE__
+                    << ", Error" << e.what()
+                    << std::endl;
                 }
+#endif
             } // if p
             else if (v.first == "table") {
-                std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " table" << std::endl;
+                std::clog
+                << basename((char *)__FILE__) << ":" << __LINE__
+                << ", table" << v.second.data()
+                << std::endl;
+                html += "\n" + v.second.data();
             } // if table
         } // BOOST div
     } catch (std::exception &e) {
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
     }
 
-    html += "\n </body>\n</html>";
+    html += "\n  </div>";
+    html += "\n </body>";
+    html += "\n</html>";
 }
 
 int main(int argc, char **argv)
@@ -373,13 +410,17 @@ int main(int argc, char **argv)
         int statsRnNotFoundBagCount = 0;
         std::vector<std::string> statsRegnrsNotFound;
 
+#ifdef WITH_PROGRESS_BAR
         int ii=1;
         int n=list.size();
+#endif
         for (AIPS::Medicine m : list) {
             
+#ifdef WITH_PROGRESS_BAR
             // Show progress
             if ((ii++ % 30) == 0)
                 std::cerr << "\r" << 100*ii/n << " % ";
+#endif
 
             // See DispoParse.java:164 addArticleDB()
             // See SqlDatabase.java:347 addExpertDB()
@@ -477,7 +518,7 @@ int main(int argc, char **argv)
                 << std::endl;
 #endif
                 std::string html;
-                getHtmlFromXml(m.content, html);
+                getHtmlFromXml(m.content, html, m.regnrs);
                 AIPS::bindText("amikodb", statement, 15, html);
                 //AIPS::bindText("amikodb", statement, 15, m.content);
                 
@@ -493,7 +534,10 @@ int main(int argc, char **argv)
             AIPS::runStatement("amikodb", statement);
         } // for
         
-        std::clog << std::endl
+#ifdef WITH_PROGRESS_BAR
+        std::cerr << "\r100 %" << std::endl;
+#endif
+        std::clog
         << "aips REGNRS (found/not found)" << std::endl
         << "\tin refdata: " << statsRnFoundRefdataCount << "/" << statsRnNotFoundRefdataCount << " (" << (statsRnFoundRefdataCount + statsRnNotFoundRefdataCount) << ")" << std::endl
         << "\tin swissmedic: " << statsRnFoundSwissmedicCount << "/" << statsRnNotFoundSwissmedicCount << " (" << (statsRnFoundSwissmedicCount + statsRnNotFoundSwissmedicCount) << ")" << std::endl
