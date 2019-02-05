@@ -20,6 +20,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
@@ -35,6 +36,7 @@
 #include "epha.hpp"
 
 #define WITH_PROGRESS_BAR
+#define USE_BOOST_FOR_REPLACEMENTS // 6m 16s, otherwise std::regex 13m 52s
 
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
@@ -98,7 +100,7 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
     // cleanup: see also HtmlUtils.java:934
     std::regex r1(R"(<span[^>]*>)");
     xml = std::regex_replace(xml, r1, "");
-
+    
     std::regex r2(R"(</span>)");
     xml = std::regex_replace(xml, r2, "");
 
@@ -117,9 +119,28 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
     std::regex r6a(R"(')");
     xml = std::regex_replace(xml, r6a, "&apos;"); // to prevent errors when inserting into sqlite table
     
-#if 1  // This is very time consuming and maybe unnecessary
+    // This is time consuming and maybe unnecessary (TBC)
     // The Java version seems to be using Jsoup and EscapeMode.xhtml
     // Don't convert &lt; &apos;
+#ifdef USE_BOOST_FOR_REPLACEMENTS
+    boost::replace_all(xml, "&nbsp;",   " ");
+    boost::replace_all(xml, "&micro;",  "µ");
+    boost::replace_all(xml, "&auml;",   "ä");
+    boost::replace_all(xml, "&ouml;",   "ö");
+    boost::replace_all(xml, "&uuml;",   "ü");
+    boost::replace_all(xml, "&Uuml;",   "Ü");
+    boost::replace_all(xml, "&ge;",     "≥");
+    boost::replace_all(xml, "&le;",     "≤");
+    boost::replace_all(xml, "&agrave;", "à");
+    boost::replace_all(xml, "&middot;", "–");
+    boost::replace_all(xml, "&bdquo;",  "„");
+    boost::replace_all(xml, "&ldquo;",  "“");
+    boost::replace_all(xml, "&rsquo;",  "’");
+    boost::replace_all(xml, "&beta;",   "β");
+    boost::replace_all(xml, "&gamma;",  "γ");
+    boost::replace_all(xml, "&frac12;", "½");
+    boost::replace_all(xml, "&ndash;",  "–");
+#else
     std::regex r7(R"(&nbsp;)");
     xml = std::regex_replace(xml, r7, " ");
     
@@ -175,16 +196,6 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
     //std::clog << xml << std::endl;
 #endif
 
-    // TODO: see HtmlUtils.java:472
-    /*
-     // Is last character a period (".")?
-     if (!re.endsWith(".") && !re.endsWith(",") && !re.endsWith(":")
-     && !re.startsWith("–") && !re.startsWith("·") && !re.startsWith("-") && !re.startsWith("•")
-     && !re.contains("ATC-Code") && !re.contains("Code ATC")) {
-     re = "<span style=\"font-style:italic;\">" + re + "</span>";
-     }
-     */
-
     pt::ptree tree;
     std::stringstream ss;
     ss << xml;
@@ -200,13 +211,41 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
 
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("div")) {
+  
+            std::string tagContent = v.second.data(); // unfortunately it changes &lt; into <
+
+            // Undo then undesired replacements
+#ifdef USE_BOOST_FOR_REPLACEMENTS
+            boost::replace_all(tagContent, "<", "&lt;");
+            boost::replace_all(tagContent, "'", "&apos;");
+#else
+            std::regex r1("<");
+            tagContent = std::regex_replace(tagContent, r1, "&lt;");
+
+            std::regex r2("'");
+            tagContent = std::regex_replace(tagContent, r2, "&apos;");
+#endif
 
             if (v.first == "p")
             {
+                // See HtmlUtils.java:472
+                bool needSpan = true;
+                if (boost::ends_with(tagContent, ".") ||
+                    boost::ends_with(tagContent, ",") ||
+                    boost::ends_with(tagContent, ":") ||
+                    boost::starts_with(tagContent, "–") ||
+                    boost::starts_with(tagContent, "·") ||
+                    boost::starts_with(tagContent, "-") ||
+                    boost::starts_with(tagContent, "•") ||
+                    boost::contains(tagContent, "ATC-Code") ||
+                    boost::contains(tagContent, "Code ATC")) {
+                    needSpan = false;
+                }
+
+                if (needSpan)
+                    tagContent = "<span style=\"font-style:italic;\">" + tagContent + "</span>";
 #if 1
-                html += "\n  <p class=\"spacing1\"><span style=\"font-style:italic;\">";
-                html += v.second.data();
-                html += "</span></p>";
+                html += "  <p class=\"spacing1\">" + tagContent + "</p>\n";
 #else
                 pt::ptree & attributes = v.second.get_child("<xmlattr>");
                 
@@ -255,11 +294,13 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
 #endif
             } // if p
             else if (v.first == "table") {
+#if 0
                 std::clog
                 << basename((char *)__FILE__) << ":" << __LINE__
                 << ", table" << v.second.data()
                 << std::endl;
-                html += "\n" + v.second.data();
+#endif
+                html += "\n" + tagContent;
             } // if table
         } // BOOST div
     } catch (std::exception &e) {
@@ -437,7 +478,9 @@ int main(int argc, char **argv)
 
             // tindex_str
             std::string tindex = BAG::getTindex(regnrs[0]);
-            if (!tindex.empty())
+            if (tindex.empty())
+                AIPS::bindText("amikodb", statement, 7, "");
+            else
                 AIPS::bindText("amikodb", statement, 7, tindex);
 
             // application_str
@@ -447,7 +490,9 @@ int main(int argc, char **argv)
             if (!appBag.empty())
                 application += ";" + appBag;
 
-            if (!application.empty())
+            if (application.empty())
+                AIPS::bindText("amikodb", statement, 8, "");
+            else
                 AIPS::bindText("amikodb", statement, 8, application);
 
 #if 1
@@ -504,7 +549,9 @@ int main(int argc, char **argv)
 
             packInfo = BEAUTY::sort(packInfo);
 
-            if (!packInfo.empty())
+            if (packInfo.empty())
+                AIPS::bindText("amikodb", statement, 11, "");
+            else
                 AIPS::bindText("amikodb", statement, 11, packInfo);
 #endif
 
