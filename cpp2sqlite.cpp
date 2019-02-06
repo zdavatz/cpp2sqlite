@@ -37,8 +37,9 @@
 #include "atc.hpp"
 #include "epha.hpp"
 
-#define WITH_PROGRESS_BAR
+//#define WITH_PROGRESS_BAR
 #define USE_BOOST_FOR_REPLACEMENTS // 6m 16s, otherwise std::regex 13m 52s
+//#define DEBUG_SHOW_RAW_XML_IN_DB_FILE
 
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
@@ -91,10 +92,16 @@ void removeTagFromXml(std::string &xml, const std::string &tag)
 }
 
 // see RealExpertInfo.java:1065
-void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
+void getHtmlFromXml(std::string &xml,
+                    std::string &html,
+                    std::string regnrs,
+                    std::string ownerCompany,
+                    bool verbose)
 {
-    //html = xml;
-    //return;
+#ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
+    html = xml;
+    return;
+#endif
     
     //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << regnrs << std::endl;
 
@@ -114,7 +121,7 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
 
     std::regex r5(R"(<sup[^>]*>)");
     xml = std::regex_replace(xml, r5, "");
-    
+
     std::regex r6(R"(</sup>)");
     xml = std::regex_replace(xml, r6, "");
     
@@ -123,7 +130,7 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
     
     // This is time consuming and maybe unnecessary (TBC)
     // The Java version seems to be using Jsoup and EscapeMode.xhtml
-    // Don't convert &lt; &apos;
+    // Don't convert &lt; &gt; &apos;
 #ifdef USE_BOOST_FOR_REPLACEMENTS
     boost::replace_all(xml, "&nbsp;",   " ");
     boost::replace_all(xml, "&micro;",  "µ");
@@ -203,13 +210,14 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
     ss << xml;
     read_xml(ss, tree);
     //int seq=0;
-    //int sectionCount=0;
-    int pCount=0;
+    int sectionNumber;
+    int statsParCount=0;
+    bool section1Done = false;
 
     html = "<html>\n";
     html += " <head></head>\n";
     html += " <body>\n";
-    html += "  <div id=\"monographie\" name=\"" + regnrs + "\">\n";
+    html += "  <div id=\"monographie\" name=\"" + regnrs + "\">\n\n";
 
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("div")) {
@@ -220,16 +228,20 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
 //                continue;
 //            }
 
-            // Undo then undesired replacements
+            // Undo then undesired replacements done by boost xml_parser
 #ifdef USE_BOOST_FOR_REPLACEMENTS
             boost::replace_all(tagContent, "<", "&lt;");
+            boost::replace_all(tagContent, ">", "&gt;");
             boost::replace_all(tagContent, "'", "&apos;");
 #else
             std::regex r1("<");
             tagContent = std::regex_replace(tagContent, r1, "&lt;");
-
-            std::regex r2("'");
-            tagContent = std::regex_replace(tagContent, r2, "&apos;");
+            
+            std::regex r2(">");
+            tagContent = std::regex_replace(tagContent, r2, "&gt;");
+            
+            std::regex r3("'");
+            tagContent = std::regex_replace(tagContent, r3, "&apos;");
 #endif
 
 #if 0
@@ -244,36 +256,93 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
             
             if (v.first == "p")
             {
-                ++pCount;
+                ++statsParCount;
+
                 bool isSection = true;
                 std::string section;
                 try {
                     section = v.second.get<std::string>("<xmlattr>.id");
+                    sectionNumber = std::stoi(section.substr(7));
+                    
+                    std::string divClass;
+                    if (sectionNumber == 1) {
+                        divClass = "MonTitle";
+                    }
+                    else {
+                        divClass = "paragraph";
+                        tagContent = " <div class=\"absTitle\">\n " + tagContent + "\n </div>\n";
+                    }
+                    
+                    if (sectionNumber > 1)
+                        html += "   </div>\n"; // terminate previous section before starting a new one
+
+                    html += "   <div class=\"" + divClass + "\" id=\"" + section + "\">\n";
+                    html += tagContent + "\n";
+                    //html += "   </div>\n";  // don't terminate the div as yet
+#if 0
+                    std::clog
+                    << basename((char *)__FILE__) << ":" << __LINE__
+                    << ", p count " << statsParCount
+                    << ", attr id: <" << section << ">"
+                    << ", nr: <" << sectionNumber << ">"
+                    << std::endl;
+#endif
+                    if (sectionNumber == 1) {
+                        // ownerCompany is a separate div between section 1 and section 2
+                        html += "   </div>\n";  // terminate previous section
+                        html += "   <div class=\"ownerCompany\">\n";
+                        html += "    <div style=\"text-align: right;\">\n   ";
+                        html += ownerCompany + "\n";
+                        html += "    </div>\n";
+                        //html += "   </div>\n";    // don't terminate the div as yet
+                        section1Done = true;
+                    }
+
+                    continue;
                 }
                 catch (std::exception &e) {
                     isSection = false;
                     //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
-                }
+                }  // try section
 
-                if (!section.empty()) {
-#if 0
-                    std::clog
-                    << basename((char *)__FILE__) << ":" << __LINE__
-                    << ", p count " << pCount
-                    << ", attr id: <" << section << ">"
-                    << std::endl;
-#endif
+                // Skip before section 1
+                if (!section1Done) {
+                    if (verbose)
+                        std::clog
+                        << basename((char *)__FILE__) << ":" << __LINE__
+                        << ", rn " << regnrs
+                        << ", skip before section 1 <" << tagContent << ">"
+                        << std::endl;
+                    
+                    continue;
+                }
+                
+                // Skip all the remaining before section 2
+                if ((sectionNumber < 2) && (section1Done)) {
+                    if (verbose)
+                        std::clog
+                        << basename((char *)__FILE__) << ":" << __LINE__
+                        << ", rn " << regnrs
+                        << ", skip before section 2 <" << tagContent << ">"
+                        << std::endl;
+                    
+                    continue;
                 }
 
                 // See HtmlUtils.java:472
-                bool needSpan = true;
+                bool needItalicSpan = true;
+                boost::algorithm::trim(tagContent); // sometimes it ends with ". "
+                
+                if (tagContent.empty()) // for example in rn 51704
+                    continue; // TBC
+
                 if (boost::ends_with(tagContent, ".") ||
                     boost::ends_with(tagContent, ",") ||
                     boost::ends_with(tagContent, ":") ||
                     boost::contains(tagContent, "ATC-Code") ||
                     boost::contains(tagContent, "Code ATC"))
                 {
-                    needSpan = false;
+                    needItalicSpan = false;
                 }
                 
                 // See HtmlUtils.java:602
@@ -283,72 +352,30 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
 #else
                 if (boost::starts_with(tagContent, "–")) {      // en dash
                     boost::replace_first(tagContent, "–", "– ");
-                    needSpan = false;
+                    needItalicSpan = false;
                 }
                 else if (boost::starts_with(tagContent, "·")) {
                     boost::replace_first(tagContent, "·", "– ");
-                    needSpan = false;
+                    needItalicSpan = false;
                 }
                 else if (boost::starts_with(tagContent, "-")) { // hyphen
                     boost::replace_first(tagContent, "-", "– ");
-                    needSpan = false;
+                    needItalicSpan = false;
                 }
                 else if (boost::starts_with(tagContent, "•")) {
                     boost::replace_first(tagContent, "•", "– ");
-                    needSpan = false;
+                    needItalicSpan = false;
                 }
+//                else if (boost::starts_with(tagContent, "*")) {  // TBC see table footnote for rn 51704
+//                    needItalicSpan = false;
+//                }
 #endif
 
-                if (needSpan)
+                if (needItalicSpan)
                     tagContent = "<span style=\"font-style:italic;\">" + tagContent + "</span>";
-#if 1
+
                 html += "  <p class=\"spacing1\">" + tagContent + "</p>\n";
-#else
-                pt::ptree & attributes = v.second.get_child("<xmlattr>");
-                
-                std::clog
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << ", # attributes: " << attributes.size()
-                << std::endl;
-                
-                int i=0;
-                std::string section;
-                std::string divClass;
-                try {
-                BOOST_FOREACH(pt::ptree::value_type &att, attributes) {
-                    
-                    //static int k=0;
-                    //if (k++ < 14)
-                        std::clog
-                        << "\tattr " << ++i
-                        << ", 1st: <" << att.first.data() << ">"
-                        << ", 2nd: <" << att.second.data() << ">"
-                        << std::endl;
 
-                    if (att.first != "id")
-                        continue;
-
-                    section = att.second.data();
-                    //std::cout << "\tLine: " << __LINE__ << ", section: <" << section.substr(0,7) << ">" << std::endl;
-
-                    if (section.substr(0,7) == "section") {
-                        //std::cout << "\tLine: " << __LINE__ << ", section: " << section << std::endl;
-                        if (sectionCount++ == 0)
-                            divClass = "MonTitle";
-                        else
-                            divClass = "paragraph";
-
-                        html += "\n<div class=\"" + divClass + "\" id=\"" + section + "\">";
-                        html += "\n</div>";
-                    }
-                } // BOOST attributes
-                } catch (std::exception &e) {
-                    std::cerr
-                    << basename((char *)__FILE__) << ":" << __LINE__
-                    << ", Error" << e.what()
-                    << std::endl;
-                }
-#endif
             } // if p
             else if (v.first == "table") {
 #if 0
@@ -376,7 +403,7 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
                 << std::endl;
 #endif
 
-                html += "\n" + table;
+                html += table + "\n";
             } // if table
         } // BOOST div
     } catch (std::exception &e) {
@@ -645,7 +672,7 @@ int main(int argc, char **argv)
                 << std::endl;
 #endif
                 std::string html;
-                getHtmlFromXml(m.content, html, m.regnrs);
+                getHtmlFromXml(m.content, html, m.regnrs, m.auth, flagVerbose);
                 AIPS::bindText("amikodb", statement, 15, html);
             }
 
