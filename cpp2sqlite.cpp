@@ -202,8 +202,8 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
     std::stringstream ss;
     ss << xml;
     read_xml(ss, tree);
-    int seq=0;
-    int sectionCount=0;
+    //int seq=0;
+    //int sectionCount=0;
     int pCount=0;
 
     html = "<html>\n";
@@ -232,8 +232,39 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
             tagContent = std::regex_replace(tagContent, r2, "&apos;");
 #endif
 
+#if 0
+            std::clog
+            << basename((char *)__FILE__) << ":" << __LINE__
+            << ", seq " << ++seq
+            << ", # children: " << v.second.size()
+            << ", key <" << v.first.data() << ">"
+            << ", val <" << tagContent << ">"
+            << std::endl;
+#endif
+            
             if (v.first == "p")
             {
+                ++pCount;
+                bool isSection = true;
+                std::string section;
+                try {
+                    section = v.second.get<std::string>("<xmlattr>.id");
+                }
+                catch (std::exception &e) {
+                    isSection = false;
+                    //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
+                }
+
+                if (!section.empty()) {
+#if 0
+                    std::clog
+                    << basename((char *)__FILE__) << ":" << __LINE__
+                    << ", p count " << pCount
+                    << ", attr id: <" << section << ">"
+                    << std::endl;
+#endif
+                }
+
                 // See HtmlUtils.java:472
                 bool needSpan = true;
                 if (boost::ends_with(tagContent, ".") ||
@@ -326,7 +357,26 @@ void getHtmlFromXml(std::string &xml, std::string &html, std::string regnrs)
                 << ", table" << v.second.data()
                 << std::endl;
 #endif
-                html += "\n" + tagContent;
+                // Purpose: add the table "as is"
+                // Method: create a new tree, string based, not file based
+                //         and add the whole table object as the only child
+                pt::ptree tree;
+                std::stringstream ss;
+                tree.add_child("table", v.second);
+                pt::write_xml(ss, tree);
+                
+                // Clean up the "serialized" string
+                std::string table = ss.str();
+                boost::replace_all(table, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
+
+#if 0
+                std::clog
+                << basename((char *)__FILE__) << ":" << __LINE__
+                << ", table" << table
+                << std::endl;
+#endif
+
+                html += "\n" + table;
             } // if table
         } // BOOST div
     } catch (std::exception &e) {
@@ -597,9 +647,6 @@ int main(int argc, char **argv)
                 std::string html;
                 getHtmlFromXml(m.content, html, m.regnrs);
                 AIPS::bindText("amikodb", statement, 15, html);
-                //AIPS::bindText("amikodb", statement, 15, m.content);
-                
-                //std::clog << std::endl << html << std::endl;
             }
 
             // packages
