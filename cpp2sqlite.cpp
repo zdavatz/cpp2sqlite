@@ -37,7 +37,7 @@
 #include "atc.hpp"
 #include "epha.hpp"
 
-//#define WITH_PROGRESS_BAR
+#define WITH_PROGRESS_BAR
 #define USE_BOOST_FOR_REPLACEMENTS // 6m 16s, otherwise std::regex 13m 52s
 //#define DEBUG_SHOW_RAW_XML_IN_DB_FILE
 
@@ -84,6 +84,45 @@ int countBagGtinInRefdata(std::vector<std::string> &list)
     }
     
     return count;
+}
+
+// Modify <colgroup>, see HtmlUtils.java:525
+// Add all the values first into a `sum` variable,
+// then each value is multiplied by 100 and divided by `sum`
+//
+// Special cases to be tested:
+//  rn 65553 has an empty table before section 1
+//  rn 56885 has only one col
+void modifyColgroup(pt::ptree &colgroup)
+{
+    float sum = 0.0;
+    std::vector<float> oldValue;
+
+    BOOST_FOREACH(pt::ptree::value_type &col, colgroup) {
+        std::string style = col.second.get<std::string>("<xmlattr>.style");
+        
+        float val = 0.0;
+        // Test string: "width:1.77222in;"
+        std::regex rgx(R"(\d*\.\d*)");  // tested at https://regex101.com
+        std::smatch match;
+        if (std::regex_search(style, match, rgx)) {
+            val = std::stof(match[0]);
+        }
+
+        oldValue.push_back(val);
+        sum += val;
+    }
+
+    int index = 0;
+    BOOST_FOREACH(pt::ptree::value_type &col, colgroup) {
+        float newValue = 100.0 * oldValue[index++] / sum;
+        
+        std::ostringstream s;
+        s << std::fixed << std::setprecision(6) << newValue;
+        std::string newStyle = "width:" + s.str() + "%25;background-color: #EEEEEE; padding-right: 5px; padding-left: 5px";
+
+        col.second.put("<xmlattr>.style", newStyle);
+    }
 }
 
 void removeTagFromXml(std::string &xml, const std::string &tag)
@@ -307,24 +346,24 @@ void getHtmlFromXml(std::string &xml,
 
                 // Skip before section 1
                 if (!section1Done) {
-                    if (verbose)
-                        std::clog
-                        << basename((char *)__FILE__) << ":" << __LINE__
-                        << ", rn " << regnrs
-                        << ", skip before section 1 <" << tagContent << ">"
-                        << std::endl;
+//                    if (verbose)
+//                        std::clog
+//                        << basename((char *)__FILE__) << ":" << __LINE__
+//                        << ", rn " << regnrs
+//                        << ", skip before section 1 <" << tagContent << ">"
+//                        << std::endl;
                     
                     continue;
                 }
                 
                 // Skip all the remaining before section 2
                 if ((sectionNumber < 2) && (section1Done)) {
-                    if (verbose)
-                        std::clog
-                        << basename((char *)__FILE__) << ":" << __LINE__
-                        << ", rn " << regnrs
-                        << ", skip before section 2 <" << tagContent << ">"
-                        << std::endl;
+//                    if (verbose)
+//                        std::clog
+//                        << basename((char *)__FILE__) << ":" << __LINE__
+//                        << ", rn " << regnrs
+//                        << ", skip before section 2 <" << tagContent << ">"
+//                        << std::endl;
                     
                     continue;
                 }
@@ -384,8 +423,13 @@ void getHtmlFromXml(std::string &xml,
                 << ", table" << v.second.data()
                 << std::endl;
 #endif
-                // Purpose: add the table "as is"
-                // Method: create a new tree, string based, not file based
+
+                // Normalize column widths to a percentage value
+                pt::ptree &colgroup = v.second.get_child("colgroup");
+                modifyColgroup(colgroup);
+
+                // Purpose: add the table to the html "as is"
+                // Method: create a new property tree, string based, not file based
                 //         and add the whole table object as the only child
                 pt::ptree tree;
                 std::stringstream ss;
