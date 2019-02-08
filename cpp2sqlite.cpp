@@ -256,6 +256,7 @@ void getHtmlFromXml(std::string &xml,
     int sectionNumber;
     int statsParCount=0;
     bool section1Done = false;
+    bool section18Done = false;
 
     html = "<html>\n";
     html += " <head></head>\n";
@@ -350,6 +351,8 @@ void getHtmlFromXml(std::string &xml,
                             // TODO: onmouseup="addShoppingCart(this)"
                             html += "\n<p class=\"barcode\">" + svg + "</p>";
                         }
+
+                        section18Done = true;
                     }
 
                     continue;
@@ -382,6 +385,10 @@ void getHtmlFromXml(std::string &xml,
                     
                     continue;
                 }
+                
+                // Skip all the remaining in section 18
+                if ((sectionNumber == 18) && (section18Done))
+                    continue;
 
                 // See HtmlUtils.java:472
                 bool needItalicSpan = true;
