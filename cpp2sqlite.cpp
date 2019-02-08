@@ -38,6 +38,8 @@
 #include "atc.hpp"
 #include "epha.hpp"
 
+#include "ean13/functii.h"
+
 #define WITH_PROGRESS_BAR
 #define USE_BOOST_FOR_REPLACEMENTS // 6m 16s, otherwise std::regex 13m 52s
 //#define DEBUG_SHOW_RAW_XML_IN_DB_FILE
@@ -136,6 +138,7 @@ void getHtmlFromXml(std::string &xml,
                     std::string &html,
                     std::string regnrs,
                     std::string ownerCompany,
+                    const std::set<std::string> &gtinUsed,
                     bool verbose)
 {
 #ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
@@ -341,6 +344,13 @@ void getHtmlFromXml(std::string &xml,
                     // TODO section 18 barcode
                     // see RealExpertInfo.java:1562
                     // see BarCode.java:77
+                    if (sectionNumber == 18) {
+                        for (auto gtin : gtinUsed) {
+                            std::string svg = EAN13::createSvg("", gtin);
+                            // TODO: onmouseup="addShoppingCart(this)"
+                            html += "\n<p class=\"barcode\">" + svg + "</p>";
+                        }
+                    }
 
                     continue;
                 }
@@ -721,7 +731,7 @@ int main(int argc, char **argv)
                 << std::endl;
 #endif
                 std::string html;
-                getHtmlFromXml(m.content, html, m.regnrs, m.auth, flagVerbose);
+                getHtmlFromXml(m.content, html, m.regnrs, m.auth, gtinUsed, flagVerbose);
                 AIPS::bindText("amikodb", statement, 15, html);
             }
 
