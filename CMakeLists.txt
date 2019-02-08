@@ -30,6 +30,8 @@ link_directories(${XLNT_LIBRARY_DIRS})
 include_directories("${CMAKE_SOURCE_DIR}")
 
 #-------------------------------------------------------------------------------
+source_group(barcode FILES ean13/functii.cpp ean13/functii.h)
+
 add_executable(cpp2sqlite
 	cpp2sqlite.cpp
 	sqlDatabase.hpp sqlDatabase.cpp
@@ -41,6 +43,7 @@ add_executable(cpp2sqlite
 	beautify.hpp beautify.cpp
 	atc.hpp atc.cpp
 	epha.hpp epha.cpp
+	ean13/functii.cpp ean13/functii.h
 	medicine.h)
 
 target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})

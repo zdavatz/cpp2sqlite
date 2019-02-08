@@ -336,6 +336,10 @@ void getHtmlFromXml(std::string &xml,
                         //html += "   </div>\n";    // don't terminate the div as yet
                         section1Done = true;
                     }
+                    
+                    // TODO section 18 barcode
+                    // see RealExpertInfo.java:1562
+                    // see BarCode.java:77
 
                     continue;
                 }

@@ -42,9 +42,9 @@ char getGtin13Checksum(std::string gtin12or13)
     if (checksum_digit == 10)
         checksum_digit = 0;
     
-    //    std::cout
-    //    << ", checksum_digit:" << checksum_digit
-    //    << std::endl;
+//    std::cout
+//    << ", checksum_digit:" << checksum_digit
+//    << std::endl;
     
     return checksum_digit + '0';
 }
