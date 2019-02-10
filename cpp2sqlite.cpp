@@ -26,7 +26,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
-#include <boost/program_options/errors.hpp>
+//#include <boost/program_options/errors.hpp>
 
 #include "aips.hpp"
 #include "refdata.hpp"
@@ -341,15 +341,14 @@ void getHtmlFromXml(std::string &xml,
                         //html += "   </div>\n";    // don't terminate the div as yet
                         section1Done = true;
                     }
-                    
-                    // TODO section 18 barcode
+
                     // see RealExpertInfo.java:1562
                     // see BarCode.java:77
                     if (sectionNumber == 18) {
                         for (auto gtin : gtinUsed) {
                             std::string svg = EAN13::createSvg("", gtin);
                             // TODO: onmouseup="addShoppingCart(this)"
-                            html += "\n<p class=\"barcode\">" + svg + "</p>";
+                            html += "<p class=\"barcode\">" + svg + "</p>\n";
                         }
 
                         section18Done = true;
