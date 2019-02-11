@@ -41,7 +41,7 @@ void parseJSON(const std::string &filename, bool verbose)
     catch (std::exception &e) {
         std::cerr
         << basename((char *)__FILE__) << ":" << __LINE__
-        << "Error" << e.what()
+        << " Error " << e.what()
         << std::endl;
     }
     

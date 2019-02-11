@@ -43,7 +43,7 @@ MedicineList & parseXML(const std::string &filename,
         pt::read_xml(filename, tree);
     }
     catch (std::exception &e) {
-        std::cerr << "Line: " << __LINE__ << "Error" << e.what() << std::endl;
+        std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
     }
     
     std::clog << "Analyzing AIPS" << std::endl;
@@ -150,7 +150,7 @@ MedicineList & parseXML(const std::string &filename,
         << std::endl;
     }
     catch (std::exception &e) {
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error" << e.what() << std::endl;
+        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
     }
     
     return medList;
