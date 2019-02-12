@@ -41,7 +41,7 @@
 #include "ean13/functii.h"
 
 #define WITH_PROGRESS_BAR
-#define USE_BOOST_FOR_REPLACEMENTS // 6m 16s, otherwise std::regex 13m 52s
+#define USE_BOOST_FOR_REPLACEMENTS // faster than with std::regex
 //#define DEBUG_SHOW_RAW_XML_IN_DB_FILE
 
 namespace po = boost::program_options;
@@ -192,6 +192,7 @@ void getHtmlFromXml(std::string &xml,
     boost::replace_all(xml, "&gamma;",  "γ");
     boost::replace_all(xml, "&frac12;", "½");
     boost::replace_all(xml, "&ndash;",  "–");
+    boost::replace_all(xml, "&bull;",  "•"); // See rn 63182. Where is this in the Java code ?
 #else
     std::regex r7(R"(&nbsp;)");
     xml = std::regex_replace(xml, r7, " ");
@@ -243,6 +244,9 @@ void getHtmlFromXml(std::string &xml,
 
     std::regex r21(R"(&ndash;)");
     xml = std::regex_replace(xml, r21, "–");
+    
+    std::regex r22(R"(&bull;)");
+    xml = std::regex_replace(xml, r22, "•");    // See rn 63182. Where is this in the Java code ?
 #endif
 
     //std::clog << xml << std::endl;
@@ -369,7 +373,8 @@ void getHtmlFromXml(std::string &xml,
                 if ((sectionNumber < 2) && (section1Done))
                     continue;
 
-                if (sectionNumber == 13) {
+                //if (sectionNumber == 13) images can be anywhere
+                {
                     bool imgFound = false;
                     BOOST_FOREACH(pt::ptree::value_type &v2, v.second) {
                         if (v2.first == "img") {
@@ -391,10 +396,12 @@ void getHtmlFromXml(std::string &xml,
                                     img += " Alt=\"" + alt + "\"";
                             }
                             catch (std::exception &e) {
-                                std::cerr
-                                << basename((char *)__FILE__) << ":" << __LINE__
-                                << ", regnrs: " << regnrs
-                                << ", <img> Warning " << e.what() << std::endl;
+                                if (verbose)
+                                    std::cerr
+                                    << basename((char *)__FILE__) << ":" << __LINE__
+                                    << ", regnrs: " << regnrs
+                                    << ", section " << sectionNumber
+                                    << ", <img> Warning " << e.what() << std::endl;
                             }
 
                             img += " />";
@@ -405,7 +412,7 @@ void getHtmlFromXml(std::string &xml,
                     
                     if (imgFound)
                         continue;  // already added this <p> to html
-                } // section 13
+                }
 
                 // Skip all the remaining in section 18
                 if ((sectionNumber == 18) && (section18Done))
