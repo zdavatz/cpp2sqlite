@@ -406,7 +406,7 @@ void getHtmlFromXml(std::string &xml,
 
                             img += " />";
 
-                            html += "  <ppp class=\"spacing1\">" + img + "</ppp>\n";
+                            html += "  <p class=\"spacing1\">" + img + "</p>\n";
                         }
                     } // BOOST
                     
