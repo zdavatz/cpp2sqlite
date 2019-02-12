@@ -138,7 +138,8 @@ void getHtmlFromXml(std::string &xml,
                     std::string &html,
                     std::string regnrs,
                     std::string ownerCompany,
-                    const std::set<std::string> &gtinUsed,
+                    std::string &packInfo,  // titles for each barcode
+                    const std::set<std::string> &gtinUsed,  // for barcodes
                     bool verbose)
 {
 #ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
@@ -349,7 +350,19 @@ void getHtmlFromXml(std::string &xml,
                     // see RealExpertInfo.java:1562
                     // see BarCode.java:77
                     if (sectionNumber == 18) {
+                        // Split packInfo into lines
+                        std::vector<std::string> barcodeTitle;
+                        boost::algorithm::split(barcodeTitle, packInfo, boost::is_any_of("\n"), boost::token_compress_on);
+
+                        // Noye: we are using the unsorted packInfo lines to match the order
+                        // of the unsorted GTINs
+
+                        int i=0;
                         for (auto gtin : gtinUsed) {
+                            
+                            if (i < barcodeTitle.size())
+                                html += "  <p class=\"spacing1\">" + barcodeTitle[i++] + "</p>\n";
+
                             std::string svg = EAN13::createSvg("", gtin);
                             // TODO: onmouseup="addShoppingCart(this)"
                             html += "<p class=\"barcode\">" + svg + "</p>\n";
@@ -698,7 +711,7 @@ int main(int argc, char **argv)
 
 #if 1
             // pack_info_str
-            std::string packInfo;
+            std::string packInfo;   // unsorted
             int rnCount=0;
             std::set<std::string> gtinUsed;
             for (auto rn : regnrs) {
@@ -748,12 +761,12 @@ int main(int argc, char **argv)
                     statsRegnrsNotFound.push_back(rn);
             } // for
 
-            packInfo = BEAUTY::sort(packInfo);
+            std::string sortedPackInfo = BEAUTY::sort(packInfo);
 
-            if (packInfo.empty())
+            if (sortedPackInfo.empty())
                 AIPS::bindText("amikodb", statement, 11, "");
             else
-                AIPS::bindText("amikodb", statement, 11, packInfo);
+                AIPS::bindText("amikodb", statement, 11, sortedPackInfo);
 #endif
 
             // content
@@ -766,7 +779,7 @@ int main(int argc, char **argv)
                 << std::endl;
 #endif
                 std::string html;
-                getHtmlFromXml(m.content, html, m.regnrs, m.auth, gtinUsed, flagVerbose);
+                getHtmlFromXml(m.content, html, m.regnrs, m.auth, sortedPackInfo, gtinUsed, flagVerbose);
                 AIPS::bindText("amikodb", statement, 15, html);
             }
 
