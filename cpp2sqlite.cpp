@@ -142,7 +142,9 @@ void getHtmlFromXml(std::string &xml,
                     std::string &html,
                     std::string regnrs,
                     std::string ownerCompany,
-                    GTIN::oneFachinfoPackages &packages,
+                    const GTIN::oneFachinfoPackages &packages, // for barcodes
+                    std::vector<std::string> &sectionId,
+                    std::vector<std::string> &sectionTitle,
                     bool verbose)
 {
 #ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
@@ -197,6 +199,7 @@ void getHtmlFromXml(std::string &xml,
     boost::replace_all(xml, "&frac12;", "½");
     boost::replace_all(xml, "&ndash;",  "–");
     boost::replace_all(xml, "&bull;",  "•"); // See rn 63182. Where is this in the Java code ?
+    boost::replace_all(xml, "&reg;",  "®");
 #else
     std::regex r7(R"(&nbsp;)");
     xml = std::regex_replace(xml, r7, " ");
@@ -251,6 +254,9 @@ void getHtmlFromXml(std::string &xml,
     
     std::regex r22(R"(&bull;)");
     xml = std::regex_replace(xml, r22, "•");    // See rn 63182. Where is this in the Java code ?
+    
+    std::regex r23(R"(&reg;)");
+    xml = std::regex_replace(xml, r23, "®");
 #endif
 
     //std::clog << xml << std::endl;
@@ -314,6 +320,9 @@ void getHtmlFromXml(std::string &xml,
                 try {
                     section = v.second.get<std::string>("<xmlattr>.id");
                     sectionNumber = std::stoi(section.substr(7));
+
+                    // Append the section name to a vector to be used in column "titles_str"
+                    sectionTitle.push_back(tagContent);
                     
                     std::string divClass;
                     if (sectionNumber == 1) {
@@ -323,7 +332,7 @@ void getHtmlFromXml(std::string &xml,
                         divClass = "paragraph";
                         tagContent = " <div class=\"absTitle\">\n " + tagContent + "\n </div>\n";
                     }
-                    
+
                     if (sectionNumber > 1)
                         html += "   </div>\n"; // terminate previous section before starting a new one
 
@@ -365,6 +374,9 @@ void getHtmlFromXml(std::string &xml,
 
                         section18Done = true;
                     }
+                    
+                    // Append 'section#' to a vector to be used in column "ids_str"
+                    sectionId.push_back(section);
 
                     continue;
                 }
@@ -703,7 +715,7 @@ int main(int argc, char **argv)
                 AIPS::bindText("amikodb", statement, 7, tindex);
 
             // application_str
-
+            {
             std::string application = SWISSMEDIC::getApplication(regnrs[0]);
             std::string appBag = BAG::getApplication(regnrs[0]);
             if (!appBag.empty())
@@ -713,6 +725,10 @@ int main(int argc, char **argv)
                 AIPS::bindText("amikodb", statement, 8, "");
             else
                 AIPS::bindText("amikodb", statement, 8, application);
+            }
+            
+            // customer_id
+            //AIPS::bindText("amikodb", statement, 10, "0");  // TODO: customer_id
 
 #if 1
             // pack_info_str
@@ -757,19 +773,59 @@ int main(int argc, char **argv)
                 AIPS::bindText("amikodb", statement, 11, packInfo);
 #endif
 
-            // content
-            {
-                std::string html;
-                getHtmlFromXml(m.content, html, m.regnrs, m.auth, packages, flagVerbose);
-                AIPS::bindText("amikodb", statement, 15, html);
-            }
-
-            // packages
-            // The line order must be the same as pack_info_str
-            AIPS::bindText("amikodb", statement, 17, "|||CHF 0.00|CHF 0.00||||,,,|||255|0");
-            
             // TODO: add all other columns
 
+            // content
+            std::vector<std::string> sectionId;    // HTML section IDs
+            std::vector<std::string> sectionTitle; // HTML section titles
+            {
+                std::string html;
+                getHtmlFromXml(m.content, html, m.regnrs, m.auth,
+                               packages,        // for barcodes
+                               sectionId,       // for ids_str
+                               sectionTitle,    // for titles_str
+                               flagVerbose);
+                AIPS::bindText("amikodb", statement, 15, html);
+            }
+            
+            // ids_str
+            {
+                std::string ids_str = boost::algorithm::join(sectionId, ",");
+                AIPS::bindText("amikodb", statement, 13, ids_str);
+            }
+
+            // titles_str
+            {
+                std::string titles_str = boost::algorithm::join(sectionTitle, ";");
+                AIPS::bindText("amikodb", statement, 14, titles_str);
+            }
+
+            // TODO: style_str
+
+            // packages
+            {
+                // The line order must be the same as pack_info_str
+                std::vector<std::string>::iterator itGtin = packages.gtin.begin();
+                std::vector<std::string> lines;
+                for (auto name : packages.name) {
+                    std::string oneLine = name;
+                    std::string farmacode; // TODO: search refdata or bag, based on gtin
+                    oneLine += "|||CHF 0.00|CHF 0.00||||,,,|";
+                    oneLine += *itGtin;     // field 10
+                    oneLine += "|";
+                    oneLine += farmacode;   // field 11
+                    oneLine += "|255|0";
+
+                    lines.push_back(oneLine);
+                    itGtin++;
+                }
+                
+                // Create a single multi-line string from the vector
+                std::string packages = boost::algorithm::join(lines, "\n");
+
+                AIPS::bindText("amikodb", statement, 17, packages);
+            }
+            
             AIPS::runStatement("amikodb", statement);
         } // for
         
