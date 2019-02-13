@@ -178,7 +178,7 @@ void parseXML(const std::string &filename,
         << ", packs: " << statsPackCount
         << ", packs without GTIN: " << statsPackWithoutGtinCount
         << ", recovered GTIN: " << statsPackRecoveredGtinCount
-        << ", not recovered GTIN: " << statsPackNotRecoveredGtinCount
+        << ", unrecovered GTIN: " << statsPackNotRecoveredGtinCount
         << std::endl;
     }
     catch (std::exception &e) {
