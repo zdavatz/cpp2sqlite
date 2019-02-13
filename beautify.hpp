@@ -11,11 +11,13 @@
 #define beautify_hpp
 
 #include <iostream>
+#include "gtin.hpp"
 
 namespace BEAUTY
 {
-    std::string beautifyName(std::string &name);
-    std::string sort(std::string &packInfo);
+    void beautifyName(std::string &name);
+    //void sort(std::string &packInfo, std::set<std::string> &gtinUsed);
+    void sort(GTIN::oneFachinfoPackages &packages);
 }
 
 #endif /* beautify_hpp */

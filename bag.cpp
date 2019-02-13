@@ -186,12 +186,13 @@ void parseXML(const std::string &filename,
     }
 }
 
-std::string getAdditionalNames(const std::string &rn,
-                               std::set<std::string> &gtinUsed)
+// Return count added
+int getAdditionalNames(const std::string &rn,
+                               std::set<std::string> &gtinUsed,
+                               GTIN::oneFachinfoPackages &packages)
 {
-    std::string names;
-    int i=0;
     std::set<std::string>::iterator it;
+    int countAdded = 0;
 
     for (Preparation pre : prepList) {
         if (rn != pre.swissmedNo)
@@ -199,37 +200,31 @@ std::string getAdditionalNames(const std::string &rn,
 
         for (Pack p : pre.packs) {
             std::string g13 = p.gtin;
-            // TODO build gtin if missing
+            // Build GTIN if missing
             it = gtinUsed.find(g13);
             if (it == gtinUsed.end()) { // not found in list of used GTINs, we must add the name
+                countAdded++;
                 statsTotalGtinCount++;
-                gtinUsed.insert(g13);   // also update the list of GTINs used so far
-                if (i++ > 0)
-                    names += "\n";
 
-                std::string name = pre.name + " " + pre.description;
-                name += ", " + p.description;
-            
-#if 0
-                std::cout << basename((char *)__FILE__) << ":" << __LINE__
-                << " rn: " << rn
-                << " FOUND " << name
-                << std::endl;
-#endif
-
+                std::string onePackageInfo;
 #ifdef DEBUG_IDENTIFY_NAMES
-                names += "bag+";
+                onePackageInfo += "bag+";
 #endif
-                names += name;
+                onePackageInfo += pre.name + " " + pre.description;
+                onePackageInfo += ", " + p.description;
 
                 std::string paf = getPricesAndFlags(g13, "", p.category);
                 if (!paf.empty())
-                    names += paf;
+                    onePackageInfo += paf;
+
+                gtinUsed.insert(g13);
+                packages.gtin.push_back(g13);
+                packages.name.push_back(onePackageInfo);
             }
         }
     }
 
-    return names;
+    return countAdded;
 }
 
 std::string getPricesAndFlags(const std::string &gtin,

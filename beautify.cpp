@@ -19,7 +19,7 @@
 namespace BEAUTY
 {
 
-std::string beautifyName(std::string &name)
+void beautifyName(std::string &name)
 {
     char separator = ' ';
     
@@ -32,50 +32,84 @@ std::string beautifyName(std::string &name)
     auto token2 = name.substr(pos1+1); // pos, len
     token2 = boost::to_lower_copy<std::string>(token2);
     
-    return token1 + separator + token2;
+    name = token1 + separator + token2;
 }
 
-// First packages with price
-// then packages without price
-std::string sort(std::string &packInfo)
+// Sort package infos and gtins maintaining their pairing
+// The sorting rule is
+//      first packages with price
+//      then packages without price
+void sort(GTIN::oneFachinfoPackages &packages)
 {
-    std::string s;
-    
-    std::vector<std::string> allLines;
-    std::vector<std::string> linesWithPrice;
-    std::vector<std::string> linesWithoutPrice;
-    boost::algorithm::split(allLines, packInfo, boost::is_any_of("\n"), boost::token_compress_on);
-    if (allLines.size() < 2)
-        return packInfo;
-    
+    if (packages.name.size() < 2)
+        return;     // nothing to sort
+
+#if 1 // Possibly redundant check now
+    // For a couple of packages: 26395 SOLCOSERYL, and 37397 VENTOLIN
+    // we have more pack info lines than gtins, because there are some
+    // doubles pack info lines
+    if (packages.name.size() != packages.gtin.size()) {
+        std::cerr << std::endl
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", ERROR - pack info lines: " << packages.name.size()
+        << ", gtin used: " << packages.gtin.size()
+        << std::endl;
+
+        for (auto line : packages.name)
+            std::clog << "\tinfo " << line << std::endl;
+
+        for (auto g : packages.gtin)
+            std::clog << "\tgtin " << g << std::endl;
+        
+        return; // impossible to sort
+    }
+#endif
+
+    // Start sorting, first by presence of price
     std::regex r(", EFP ");
     
     // Analyze
-    for (auto line : allLines)
-        if (std::regex_search(line, r))
+    std::vector<std::string> linesWithPrice;
+    std::vector<std::string> linesWithoutPrice;
+
+    std::vector<std::string> gtinsWithPrice;
+    std::vector<std::string> gtinsWithoutPrice;
+    std::vector<std::string>::iterator itGtin;
+
+    itGtin = packages.gtin.begin();
+    for (auto line : packages.name)
+    {
+        if (std::regex_search(line, r)) {
             linesWithPrice.push_back(line);
-        else
+            gtinsWithPrice.push_back(*itGtin);
+        }
+        else {
             linesWithoutPrice.push_back(line);
+            gtinsWithoutPrice.push_back(*itGtin);
+        }
+        
+        itGtin++;
+    }
     
     // TODO: sort by galenic form each of the two vectors
 
-    // Recombine all lines into a single string
-    int linesCount = 0;
+    // Prepare the results
+    packages.name.clear();
+    packages.gtin.clear();
+
+    //std::string s;
+
+    itGtin = gtinsWithPrice.begin();
     for (auto l : linesWithPrice) {
-        if (linesCount++ > 0)
-            s += "\n";
-
-        s += l;
+        packages.name.push_back(l);
+        packages.gtin.push_back(*itGtin++);
     }
 
+    itGtin = gtinsWithoutPrice.begin();
     for (auto l : linesWithoutPrice) {
-        if (linesCount++ > 0)
-            s += "\n";
-        
-        s += l;
+        packages.name.push_back(l);
+        packages.gtin.push_back(*itGtin++);
     }
-    
-    return s;
 }
     
 void sortByGalenicForm(std::vector<std::string> &group)

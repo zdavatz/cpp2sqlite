@@ -37,6 +37,7 @@
 #include "beautify.hpp"
 #include "atc.hpp"
 #include "epha.hpp"
+#include "gtin.hpp"
 
 #include "ean13/functii.h"
 
@@ -138,8 +139,7 @@ void getHtmlFromXml(std::string &xml,
                     std::string &html,
                     std::string regnrs,
                     std::string ownerCompany,
-                    std::string &packInfo,  // titles for each barcode
-                    const std::set<std::string> &gtinUsed,  // for barcodes
+                    GTIN::oneFachinfoPackages &packages,
                     bool verbose)
 {
 #ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
@@ -350,18 +350,11 @@ void getHtmlFromXml(std::string &xml,
                     // see RealExpertInfo.java:1562
                     // see BarCode.java:77
                     if (sectionNumber == 18) {
-                        // Split packInfo into lines
-                        std::vector<std::string> barcodeTitle;
-                        boost::algorithm::split(barcodeTitle, packInfo, boost::is_any_of("\n"), boost::token_compress_on);
-
-                        // Noye: we are using the unsorted packInfo lines to match the order
-                        // of the unsorted GTINs
-
                         int i=0;
-                        for (auto gtin : gtinUsed) {
+                        for (auto gtin : packages.gtin) {
                             
-                            if (i < barcodeTitle.size())
-                                html += "  <p class=\"spacing1\">" + barcodeTitle[i++] + "</p>\n";
+                            if (i < packages.name.size()) // possibly redundant check
+                                html += "  <p class=\"spacing1\">" + packages.name[i++] + "</p>\n";
 
                             std::string svg = EAN13::createSvg("", gtin);
                             // TODO: onmouseup="addShoppingCart(this)"
@@ -711,75 +704,51 @@ int main(int argc, char **argv)
 
 #if 1
             // pack_info_str
-            std::string packInfo;   // unsorted
-            int rnCount=0;
-            std::set<std::string> gtinUsed;
+            GTIN::oneFachinfoPackages packages;
+            std::set<std::string> gtinUsedSet; // To ensure we don't have duplicates, and for stats
             for (auto rn : regnrs) {
                 //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " rn: " << rn << std::endl;
-                std::string name = REFDATA::getNames(rn, gtinUsed);
-                if (name.empty()) {
-                    statsRnNotFoundRefdataCount++;
-                }
-                else {
-                    if (rnCount>0)
-                        packInfo += "\n";
 
-                    packInfo += name;
-                    rnCount++;
+                // Search in refdata
+                int nAdd = REFDATA::getNames(rn, gtinUsedSet, packages);
+                if (nAdd == 0)
+                    statsRnNotFoundRefdataCount++;
+                else
                     statsRnFoundRefdataCount++;
-                }
 
                 // Search in swissmedic
-                name = SWISSMEDIC::getAdditionalNames(rn, gtinUsed);
-                if (name.empty()) {
+                nAdd = SWISSMEDIC::getAdditionalNames(rn, gtinUsedSet, packages);
+                if (nAdd == 0)
                     statsRnNotFoundSwissmedicCount++;
-                }
-                else {
-                    if (rnCount>0)
-                        packInfo += "\n";
-
-                    packInfo += name;
-                    rnCount++;
+                else
                     statsRnFoundSwissmedicCount++;
-                }
 
                 // Search in bag
-                name = BAG::getAdditionalNames(rn, gtinUsed);
-                if (name.empty()) {
+                nAdd = BAG::getAdditionalNames(rn, gtinUsedSet, packages);
+                if (nAdd == 0)
                     statsRnNotFoundBagCount++;
-                }
-                else {
-                    if (rnCount>0)
-                        packInfo += "\n";
-                    
-                    packInfo += name;
-                    rnCount++;
+                else
                     statsRnFoundBagCount++;
-                }
 
-                if (gtinUsed.empty())
+                if (gtinUsedSet.empty())
                     statsRegnrsNotFound.push_back(rn);
             } // for
 
-            std::string sortedPackInfo = BEAUTY::sort(packInfo);
+            BEAUTY::sort(packages);
 
-            if (sortedPackInfo.empty())
+            // Create a single multi-line string from the vector
+            std::string packInfo = boost::algorithm::join(packages.name, "\n");
+
+            if (packInfo.empty())
                 AIPS::bindText("amikodb", statement, 11, "");
             else
-                AIPS::bindText("amikodb", statement, 11, sortedPackInfo);
+                AIPS::bindText("amikodb", statement, 11, packInfo);
 #endif
 
             // content
-
             {
-#if 0
-                std::clog << std::endl
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << ", ================= " << tempCount
-                << std::endl;
-#endif
                 std::string html;
-                getHtmlFromXml(m.content, html, m.regnrs, m.auth, sortedPackInfo, gtinUsed, flagVerbose);
+                getHtmlFromXml(m.content, html, m.regnrs, m.auth, packages, flagVerbose);
                 AIPS::bindText("amikodb", statement, 15, html);
             }
 

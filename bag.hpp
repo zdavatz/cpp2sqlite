@@ -11,6 +11,7 @@
 #define bag_hpp
 
 #include <iostream>
+#include "gtin.hpp"
 
 namespace BAG
 {
@@ -44,8 +45,9 @@ namespace BAG
                   const std::string &language,
                   bool verbose);
 
-    std::string getAdditionalNames(const std::string &rn,
-                                   std::set<std::string> &gtinUsed);
+    int getAdditionalNames(const std::string &rn,
+                           std::set<std::string> &gtinUsed,
+                           GTIN::oneFachinfoPackages &packages);
 
     std::string getPricesAndFlags(const std::string &gtin,
                                   const std::string &fromSwissmedic,

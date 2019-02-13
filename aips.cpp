@@ -75,10 +75,30 @@ MedicineList & parseXML(const std::string &filename,
                     Med.auth = v.second.get("authHolder", "");
                     
                     Med.subst = v.second.get("substances", "");
-                    Med.regnrs = v.second.get("authNrs", "");
-                    
+
                     std::vector<std::string> rnVector;
-                    boost::algorithm::split(rnVector, Med.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+                    {
+                        Med.regnrs = v.second.get("authNrs", "");
+                        boost::algorithm::split(rnVector, Med.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+
+                        int sizeBefore = rnVector.size();
+                        if (sizeBefore > 1) {
+                            // Make sure there are no duplicate rn (26395 SOLCOSERYL, 37397 VENTOLIN)
+                            // Preferable not to sort, which would affect the default order of packages later on
+                            // Skip sorting assuming duplicate elements are guaranteed to be consecutive
+                            // std::sort( rnVector.begin(), rnVector.end() );
+                            rnVector.erase( std::unique( rnVector.begin(), rnVector.end()), rnVector.end());
+
+                            Med.regnrs = boost::algorithm::join(rnVector, ",");
+                            int sizeAfter = rnVector.size();
+                            if (sizeBefore != sizeAfter)
+                                std::clog
+                                << basename((char *)__FILE__) << ":" << __LINE__
+                                << ", Warning - duplicate regnrs have been compacted to: " << Med.regnrs
+                                << std::endl;
+                        }
+                    }
+                    
 #if 0
                     Med.atc = EPHA::getAtcFromSingleRn(rnVector[0]);
                     if (!Med.atc.empty()) {
@@ -88,8 +108,8 @@ MedicineList & parseXML(const std::string &filename,
 #endif
                     {
                         // Fallback 1
-                        Med.atc = v.second.get("atcCode", ""); // these ones need to be cleaned up
-                        ATC::validate(Med.regnrs, Med.atc);    // so clean them up
+                        Med.atc = v.second.get("atcCode", ""); // These ATCs need to be cleaned up
+                        ATC::validate(Med.regnrs, Med.atc);    // Clean up the ATCs
                         if (!Med.atc.empty()) {
                             statsAtcFromAipsCount++;
                         }

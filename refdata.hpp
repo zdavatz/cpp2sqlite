@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "medicine.h"
+#include "gtin.hpp"
 
 namespace REFDATA
 {
@@ -28,7 +29,9 @@ namespace REFDATA
     void parseXML(const std::string &filename,
                   const std::string &language);
 
-    std::string getNames(const std::string &rn, std::set<std::string> &gtinUsed);
+    int getNames(const std::string &rn,
+                 std::set<std::string> &gtinUsed,
+                 GTIN::oneFachinfoPackages &packages);
     bool findGtin(const std::string &gtin);
 
     void printStats();

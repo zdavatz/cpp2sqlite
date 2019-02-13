@@ -11,13 +11,15 @@
 #define swissmedic_hpp
 
 #include <set>
+#include "gtin.hpp"
 
 namespace SWISSMEDIC
 {
     void parseXLXS(const std::string &filename);
 
-    std::string getAdditionalNames(const std::string &rn,
-                                   std::set<std::string> &gtinUsed);
+    int getAdditionalNames(const std::string &rn,
+                           std::set<std::string> &gtinUsed,
+                           GTIN::oneFachinfoPackages &packages);
     int countRowsWithRn(const std::string &rn);
     std::string getApplication(const std::string &rn);
     std::string getAtcFromFirstRn(const std::string &rn);

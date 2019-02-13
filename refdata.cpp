@@ -70,7 +70,7 @@ void parseXML(const std::string &filename,
                 article.gtin_13 = gtin;
                 article.gtin_5 = gtin.substr(4,5); // pos, len
                 article.name = v.second.get<std::string>(nameTag, "");
-                article.name = BEAUTY::beautifyName(article.name);
+                BEAUTY::beautifyName(article.name);
 
                 artList.push_back(article);
             }
@@ -94,26 +94,36 @@ void parseXML(const std::string &filename,
 // Each registration number can have multiple packages.
 // Get all of them, one per line
 // With the second argument we keep track of which GTINs have been used so far for this rn
-std::string getNames(const std::string &rn, std::set<std::string> &gtinUsed)
+// Return count added
+int getNames(const std::string &rn,
+             std::set<std::string> &gtinUsed,
+             GTIN::oneFachinfoPackages &packages)
 {
-    std::string names;
-    int i=0;
+    int countAdded = 0;
+
     for (Article art : artList) {
         if (art.gtin_5 == rn) {
+            countAdded++;
             statsTotalGtinCount++;
-            gtinUsed.insert(art.gtin_13);
-            if (i++ > 0)
-                names += "\n";
             
-            names += art.name;
+            std::string onePackageInfo;
+#ifdef DEBUG_IDENTIFY_NAMES
+            onePackageInfo += "ref+";
+#endif
+            onePackageInfo += art.name;
+
             std::string cat = SWISSMEDIC::getCategoryFromGtin(art.gtin_13);
             std::string paf = BAG::getPricesAndFlags(art.gtin_13, "", cat);
             if (!paf.empty())
-                names += paf;
+                onePackageInfo += paf;
+
+            gtinUsed.insert(art.gtin_13);
+            packages.gtin.push_back(art.gtin_13);
+            packages.name.push_back(onePackageInfo);
         }
     }
     
-    return names;
+    return countAdded;
 }
     
 bool findGtin(const std::string &gtin)

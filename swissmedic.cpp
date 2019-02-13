@@ -88,14 +88,14 @@ void parseXLXS(const std::string &filename)
 
     std::clog << "swissmedic rows: " << theWholeSpreadSheet.size() << std::endl;
 }
-    
-std::string getAdditionalNames(const std::string &rn,
-                               std::set<std::string> &gtinUsed)
+ 
+// Return count added
+int getAdditionalNames(const std::string &rn,
+                             std::set<std::string> &gtinUsed,
+                             GTIN::oneFachinfoPackages &packages)
 {
-    std::string names;
-    int i=0;
     std::set<std::string>::iterator it;
-    bool statsGtinAdded = false;
+    int countAdded = 0;
     
     for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
         std::string rn5 = regnrs[rowInt];
@@ -105,42 +105,42 @@ std::string getAdditionalNames(const std::string &rn,
         std::string g13 = gtin[rowInt];
         it = gtinUsed.find(g13);
         if (it == gtinUsed.end()) { // not found list of used GTINs, we must add the name
-            statsGtinAdded = true;
+            countAdded++;
             statsAugmentedGtinCount++;
             statsTotalGtinCount++;
-            gtinUsed.insert(g13);   // also update the list of GTINs used so far
-            if (i++ > 0)
-                names += "\n";
 
-            std::string name = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
-            name = BEAUTY::beautifyName(name);
+            std::string onePackageInfo;
+#ifdef DEBUG_IDENTIFY_NAMES
+            onePackageInfo += "swm+";
+#endif
+            onePackageInfo += theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
+            BEAUTY::beautifyName(onePackageInfo);
             // Verify presence of dosage
             std::regex r(R"(\d+)");
-            if (!std::regex_search(name, r)) {
+            if (!std::regex_search(onePackageInfo, r)) {
                 statsRecoveredDosage++;
                 //std::clog << "no dosage for " << name << std::endl;
                 std::string dosage = theWholeSpreadSheet.at(rowInt).at(COLUMN_L);
                 std::string units = theWholeSpreadSheet.at(rowInt).at(COLUMN_M);
-                name += " " + dosage + " " + units;
+                onePackageInfo += " " + dosage + " " + units;
             }
-
-#ifdef DEBUG_IDENTIFY_NAMES
-            names += "swm+";
-#endif
-            names += name;
             
             std::string paf = BAG::getPricesAndFlags(g13,
                                                      "ev.nn.i.H.", // TODO: localize
                                                      category[rowInt]);
             if (!paf.empty())
-                names += paf;
+                onePackageInfo += paf;
+
+            gtinUsed.insert(g13);
+            packages.gtin.push_back(g13);
+            packages.name.push_back(onePackageInfo);
         }
     }
     
-    if (statsGtinAdded)
+    if (countAdded > 0)
         statsAugmentedRegnCount++;
 
-    return names;    
+    return countAdded;
 }
 
 int countRowsWithRn(const std::string &rn)
