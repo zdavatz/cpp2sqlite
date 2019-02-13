@@ -809,8 +809,12 @@ int main(int argc, char **argv)
                 std::vector<std::string> lines;
                 for (auto name : packages.name) {
                     std::string oneLine = name;
-                    std::string farmacode; // TODO: search refdata or bag, based on gtin
-                    oneLine += "|||CHF 0.00|CHF 0.00||||,,,|";
+
+                    std::string farmacode = REFDATA::getPharByGtin(*itGtin);
+                    // TODO: if empty search bag
+
+                    oneLine += "|||CHF 0.00|CHF 0.00|||";
+                    oneLine +="|,,,|";      // field 9 has 2 commas or 3 if there is SL
                     oneLine += *itGtin;     // field 10
                     oneLine += "|";
                     oneLine += farmacode;   // field 11

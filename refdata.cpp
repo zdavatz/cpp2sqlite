@@ -69,6 +69,7 @@ void parseXML(const std::string &filename,
                 Article article;
                 article.gtin_13 = gtin;
                 article.gtin_5 = gtin.substr(4,5); // pos, len
+                article.phar = v.second.get<std::string>("PHAR", "");
                 article.name = v.second.get<std::string>(nameTag, "");
                 BEAUTY::beautifyName(article.name);
 
@@ -128,12 +129,24 @@ int getNames(const std::string &rn,
     
 bool findGtin(const std::string &gtin)
 {
-    for (Article art : artList) {
+    for (Article art : artList)
         if (art.gtin_13 == gtin)
             return true;
-    }
 
     return false;
+}
+
+std::string getPharByGtin(const std::string &gtin)
+{
+    std::string phar;
+
+    for (Article art : artList)
+        if (art.gtin_13 == gtin) {
+            phar = art.phar;
+            break;
+        }
+    
+    return phar;
 }
 
 void printStats()

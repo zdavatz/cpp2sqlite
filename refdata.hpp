@@ -21,6 +21,7 @@ namespace REFDATA
     struct Article {
         std::string gtin_13;
         std::string gtin_5;
+        std::string phar;
         std::string name;
     };
     
@@ -32,7 +33,10 @@ namespace REFDATA
     int getNames(const std::string &rn,
                  std::set<std::string> &gtinUsed,
                  GTIN::oneFachinfoPackages &packages);
+
     bool findGtin(const std::string &gtin);
+
+    std::string getPharByGtin(const std::string &gtin);
 
     void printStats();
 }
