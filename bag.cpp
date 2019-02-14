@@ -24,6 +24,7 @@ namespace pt = boost::property_tree;
 namespace BAG
 {
     PreparationList prepList;
+    PackageMap packMap;
     int statsTotalGtinCount = 0;
 
 void parseXML(const std::string &filename,
@@ -227,6 +228,7 @@ int getAdditionalNames(const std::string &rn,
     return countAdded;
 }
 
+// Also build a map(gtin) to be used later when writing packages column
 std::string getPricesAndFlags(const std::string &gtin,
                               const std::string &fromSwissmedic,
                               const std::string &category)
@@ -238,21 +240,30 @@ std::string getPricesAndFlags(const std::string &gtin,
     for (Preparation pre : prepList)
         for (Pack p : pre.packs)
             if (gtin == p.gtin) {
-                if (!p.exFactoryPrice.empty())
+                packageFields pf;
+                
+                // Prices
+                if (!p.exFactoryPrice.empty()) {
                     prices += "EFP " + p.exFactoryPrice;
+                    pf.efp = p.exFactoryPrice;
+                }
 
-                if (!p.publicPrice.empty())
+                if (!p.publicPrice.empty()) {
                     prices += ", PP " + p.publicPrice;
+                    pf.pp = p.publicPrice;
+                }
 
+                // Flags
                 if (!category.empty())
                     flagsVector.push_back(category);
 
                 if (!p.exFactoryPrice.empty() || !p.publicPrice.empty())
-                    flagsVector.push_back("SL");
+                    flagsVector.push_back("SL");  // TODO: localize to LS for French
 
                 if (!p.limitationPoints.empty())
                     flagsVector.push_back("LIM" + p.limitationPoints);
 
+                // SB: Selbstbehalt
                 if (pre.sb20 == "Y")
                     flagsVector.push_back("SB 20%");
                 else if (pre.sb20 == "N")
@@ -261,6 +272,8 @@ std::string getPricesAndFlags(const std::string &gtin,
                 if (!pre.orgen.empty())
                     flagsVector.push_back(pre.orgen);
 
+                pf.flags = flagsVector;
+                packMap[gtin] = pf;
                 found = true;
                 goto prepareResult; // abort the two for loops
             }
@@ -284,19 +297,8 @@ prepareResult:
     if (!fromSwissmedic.empty())
         paf += ", " + fromSwissmedic;
 
-    std::string flagsString;
-    if (flagsVector.size() > 0) {
-        flagsString += " [";
-        int i=0;
-        for (auto f : flagsVector) {
-            if (i++ > 0)
-                flagsString += ", ";  // separator
-
-            flagsString += f;
-        }
-
-        paf += flagsString + "]";
-    }
+    if (flagsVector.size() > 0)
+        paf += " [" + boost::algorithm::join(flagsVector, ", ") + "]";
 
     return paf;
 }
@@ -350,7 +352,12 @@ std::string formatPriceAsMoney(const std::string &price)
     s << std::fixed << std::setprecision(2) << f;
     return s.str();
 }
-    
+
+packageFields getPackageFieldsByGtin(const std::string &gtin)
+{
+    return packMap[gtin];
+}
+
 void printStats()
 {
     std::cout

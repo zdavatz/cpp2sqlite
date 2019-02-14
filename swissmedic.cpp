@@ -37,8 +37,13 @@ namespace SWISSMEDIC
     std::vector<std::string> regnrs;        // padded to 5 characters (digits)
     std::vector<std::string> packingCode;   // padded to 3 characters (digits)
     std::vector<std::string> gtin;
-    std::vector<std::string> category;
     
+    // TODO: change it to a map for better performance
+    std::vector<std::string> category;
+
+    // TODO: change them to a map for better performance
+    std::vector<dosageUnits> duVec;
+
     int statsAugmentedRegnCount = 0;
     int statsAugmentedGtinCount = 0;
     int statsTotalGtinCount = 0;
@@ -79,11 +84,19 @@ void parseXLXS(const std::string &filename)
         gtin.push_back(gtin12 + checksum);
 
         // Precalculate category
+        {
         std::string cat = aSingleRow[COLUMN_N];
         if ((cat == "A") && (aSingleRow[COLUMN_W] == "a"))
             cat += "+";
         
         category.push_back(cat);
+        }
+        
+        // Precalculate dosage and units
+        dosageUnits du;
+        du.dosage = aSingleRow[COLUMN_L];
+        du.units = aSingleRow[COLUMN_M];
+        duVec.push_back(du);
     }
 
     std::clog << "swissmedic rows: " << theWholeSpreadSheet.size() << std::endl;
@@ -120,14 +133,16 @@ int getAdditionalNames(const std::string &rn,
             if (!std::regex_search(onePackageInfo, r)) {
                 statsRecoveredDosage++;
                 //std::clog << "no dosage for " << name << std::endl;
-                std::string dosage = theWholeSpreadSheet.at(rowInt).at(COLUMN_L);
-                std::string units = theWholeSpreadSheet.at(rowInt).at(COLUMN_M);
-                onePackageInfo += " " + dosage + " " + units;
+                onePackageInfo += " " + duVec[rowInt].dosage;
+                onePackageInfo += " " + duVec[rowInt].units;
             }
             
-            std::string paf = BAG::getPricesAndFlags(g13,
-                                                     "ev.nn.i.H.", // TODO: localize
-                                                     category[rowInt]);
+            // TODO: localize
+            // See ReakExpertInfo.java:1544
+            //  "a.H." --> "ev.nn.i.H."
+            //  "p.c." --> "ev.ep.e.c."
+            std::string fromSwissmedic("ev.nn.i.H.");
+            std::string paf = BAG::getPricesAndFlags(g13, fromSwissmedic, category[rowInt]);
             if (!paf.empty())
                 onePackageInfo += paf;
 
@@ -189,6 +204,7 @@ bool findGtin(const std::string &gtin)
 std::string getApplication(const std::string &rn)
 {
     std::string app;
+
     for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
         if (rn == regnrs[rowInt]) {
             app = theWholeSpreadSheet.at(rowInt).at(COLUMN_S) + " (Swissmedic)";
@@ -213,7 +229,7 @@ std::string getAtcFromFirstRn(const std::string &rn)
     return atc;
 }
 
-std::string getCategoryFromGtin(const std::string &g)
+std::string getCategoryByGtin(const std::string &g)
 {
     std::string cat;
 
@@ -224,6 +240,19 @@ std::string getCategoryFromGtin(const std::string &g)
         }
 
     return cat;
+}
+
+dosageUnits getByGtin(const std::string &g)
+{
+    dosageUnits du;
+
+    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++)
+        if (gtin[rowInt] == g) {
+            du = duVec[rowInt];
+            break;
+        }
+
+    return du;
 }
 
 void printStats()

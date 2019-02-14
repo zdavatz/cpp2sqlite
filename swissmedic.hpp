@@ -15,6 +15,11 @@
 
 namespace SWISSMEDIC
 {
+    struct dosageUnits {
+        std::string dosage;
+        std::string units;
+    };
+    
     void parseXLXS(const std::string &filename);
 
     int getAdditionalNames(const std::string &rn,
@@ -25,7 +30,8 @@ namespace SWISSMEDIC
     std::string getAtcFromFirstRn(const std::string &rn);
 
     bool findGtin(const std::string &gtin);
-    std::string getCategoryFromGtin(const std::string &gtin);
+    std::string getCategoryByGtin(const std::string &gtin);
+    dosageUnits getByGtin(const std::string &gtin);
     void printStats();
 }
 

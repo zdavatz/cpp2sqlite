@@ -11,10 +11,18 @@
 #define bag_hpp
 
 #include <iostream>
+#include <map>
 #include "gtin.hpp"
 
 namespace BAG
 {
+    struct packageFields {
+        std::string shortName;
+        std::string efp;
+        std::string pp;
+        std::vector<std::string> flags;
+    };
+
     struct ItCode {
         std::string tindex;         // localized
         std::string application;    // localized
@@ -40,7 +48,8 @@ namespace BAG
     };
     
     typedef std::vector<Preparation> PreparationList;
-    
+    typedef std::map<std::string, packageFields> PackageMap;
+
     void parseXML(const std::string &filename,
                   const std::string &language,
                   bool verbose);
@@ -58,6 +67,8 @@ namespace BAG
     std::string getApplication(const std::string &rn);
     
     std::string formatPriceAsMoney(const std::string &price);
+
+    packageFields getPackageFieldsByGtin(const std::string &gtin);
 
     void printStats();
 }

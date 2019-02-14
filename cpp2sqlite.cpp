@@ -808,17 +808,53 @@ int main(int argc, char **argv)
                 std::vector<std::string>::iterator itGtin = packages.gtin.begin();
                 std::vector<std::string> lines;
                 for (auto name : packages.name) {
-                    std::string oneLine = name;
 
-                    std::string farmacode = REFDATA::getPharByGtin(*itGtin);
-                    // TODO: if empty search bag
+                    SWISSMEDIC::dosageUnits du = SWISSMEDIC::getByGtin(*itGtin);
+                    BAG::packageFields pf = BAG::getPackageFieldsByGtin(*itGtin);
 
-                    oneLine += "|||CHF 0.00|CHF 0.00|||";
-                    oneLine +="|,,,|";      // field 9 has 2 commas or 3 if there is SL
-                    oneLine += *itGtin;     // field 10
+                    // Field 0
+                    // TODO: temporarily use the first part of the name
+                    std::string::size_type len = name.find(",");
+                    std::string oneLine = name.substr(0, len);  // pos, len
+
                     oneLine += "|";
-                    oneLine += farmacode;   // field 11
-                    oneLine += "|255|0";
+                    
+                    // Field 1
+                    oneLine += du.dosage;
+                    oneLine += "|";
+
+                    // Field 2
+                    oneLine += du.units;
+                    oneLine += "|";
+
+                    // Field 3
+                    if (!pf.efp.empty())
+                        oneLine += "CHF " + pf.efp;
+
+                    oneLine += "|";
+
+                    // Field 4
+                    if (!pf.pp.empty())
+                        oneLine += "CHF " + pf.pp;
+
+                    // Fields 5,6,7
+                    // no FAP FEP VAT
+                    oneLine += "||||";
+
+                    // Field 8
+                    // In the Java db there are 2 commas or 3 if there is SL
+                    oneLine += boost::algorithm::join(pf.flags, ",");
+                    oneLine += "|";
+
+                    // Field 9
+                    oneLine += *itGtin;
+                    oneLine += "|";
+                    
+                    // Field 10
+                    oneLine += REFDATA::getPharByGtin(*itGtin);
+
+                    // Fields 11 and 12
+                    oneLine += "|255|0";    // visibility flag, free samples
 
                     lines.push_back(oneLine);
                     itGtin++;
