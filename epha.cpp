@@ -25,10 +25,10 @@ namespace pt = boost::property_tree;
 namespace EPHA
 {
     std::map<int, Document> docMap;
-    int statsTotalDocCount = 0;
-    int statsTotalDocWithAtcCount = 0;
-    int statsTotalDocWithoutAtcCount = 0;
-    int statsTotalRnCount = 0;
+    unsigned int statsTotalDocCount = 0;
+    unsigned int statsTotalDocWithAtcCount = 0;
+    unsigned int statsTotalDocWithoutAtcCount = 0;
+    unsigned int statsTotalRnCount = 0;
 
 void parseJSON(const std::string &filename, bool verbose)
 {

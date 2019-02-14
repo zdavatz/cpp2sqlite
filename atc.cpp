@@ -16,6 +16,8 @@
 #include <map>
 
 #include <boost/algorithm/string.hpp>
+//#include <boost/locale.hpp>
+//#include <boost/algorithm/string/case_conv.hpp>
 
 #include "atc.hpp"
 #include "swissmedic.hpp"
@@ -23,12 +25,14 @@
 namespace ATC
 {
     std::map<std::string, std::string> atcMap;
-    int statsRecoveredAtcCount = 0;
+    std::string statsFilename;
+    std::set<std::string> atcMissingSet;
 
 void parseTXT(const std::string &filename,
               const std::string &language,
               bool verbose)
 {
+    statsFilename = filename;
     try {
         std::clog << std::endl << "Reading atc TXT" << std::endl;
         std::ifstream file(filename);
@@ -100,7 +104,7 @@ void validate(const std::string &regnrs, std::string &atc)
     atc = outputAtc;
 }
 
-std::string getTextFromAtc(std::string atc)
+std::string getTextByAtc(const std::string atc)
 {
     std::string text;
     
@@ -114,6 +118,60 @@ std::string getTextFromAtc(std::string atc)
         text = search->second;
 
     return text;
+}
+    
+static
+std::string getTextByAtc(const std::string atc, const int n)
+{
+    std::string s;
+
+    if (atc.length() > n) {
+        std::string sub = atc.substr(0,n);
+        s = getTextByAtc(sub);
+
+        if (s.empty()) {
+            // Report missing
+            std::set<std::string>::iterator it;
+            it = atcMissingSet.find(sub);
+            if (it == atcMissingSet.end()) { // Report it only once by using a set
+#if 0
+                std::cerr
+                << basename((char *)__FILE__) << ":" << __LINE__
+                << " ### Error missing " << sub
+                << std::endl;
+#endif
+
+                atcMissingSet.insert(sub);
+            }
+        }
+    }
+
+    // Change casing to match what the Java code does
+    //s = boost::locale::to_title(s);
+    //s = boost::to_lower_copy<std::string>(s);
+    //s[0] = std::toupper(s[0]);
+
+    return s;
+}
+
+std::string getClassByAtc(const std::string atc)
+{
+    std::string s1 = getTextByAtc(atc, 1);
+    std::string s3 = getTextByAtc(atc, 3);
+    std::string s4 = getTextByAtc(atc, 4);
+    std::string s5 = getTextByAtc(atc, 5);
+
+    return s1 + ";" + s3 + ";" + s4 + "#" + s5 + "#";
+}
+
+void printStats()
+{
+    std::cout
+    << "ATC: " << atcMissingSet.size()
+    << " missing branches from " << statsFilename
+    << std::endl;
+    
+    std::cerr << boost::algorithm::join(atcMissingSet, ", ") << std::endl;
 }
 
 }

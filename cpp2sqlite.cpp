@@ -267,7 +267,7 @@ void getHtmlFromXml(std::string &xml,
     ss << xml;
     read_xml(ss, tree);
     int sectionNumber;
-    int statsParCount=0;
+    unsigned int statsParCount=0;
     bool section1Done = false;
     bool section18Done = false;
 
@@ -674,12 +674,12 @@ int main(int argc, char **argv)
                                "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 
         std::clog << std::endl << "Populating " << dbFilename << std::endl;
-        int statsRnFoundRefdataCount = 0;
-        int statsRnNotFoundRefdataCount = 0;
-        int statsRnFoundSwissmedicCount = 0;
-        int statsRnNotFoundSwissmedicCount = 0;
-        int statsRnFoundBagCount = 0;
-        int statsRnNotFoundBagCount = 0;
+        unsigned int statsRnFoundRefdataCount = 0;
+        unsigned int statsRnNotFoundRefdataCount = 0;
+        unsigned int statsRnFoundSwissmedicCount = 0;
+        unsigned int statsRnNotFoundSwissmedicCount = 0;
+        unsigned int statsRnFoundBagCount = 0;
+        unsigned int statsRnNotFoundBagCount = 0;
         std::vector<std::string> statsRegnrsNotFound;
 
 #ifdef WITH_PROGRESS_BAR
@@ -706,6 +706,10 @@ int main(int argc, char **argv)
             std::vector<std::string> regnrs;
             boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
             //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << "regnrs size: " << regnrs.size() << std::endl;
+
+            // atc_class
+            std::string atcClass = ATC::getClassByAtc(m.atc);
+            AIPS::bindText("amikodb", statement, 6, atcClass);
 
             // tindex_str
             std::string tindex = BAG::getTindex(regnrs[0]);
@@ -883,6 +887,7 @@ int main(int argc, char **argv)
         REFDATA::printStats();
         SWISSMEDIC::printStats();
         BAG::printStats();
+        ATC::printStats();
 
         if (statsRegnrsNotFound.size() > 0) {
             if (flagVerbose) {

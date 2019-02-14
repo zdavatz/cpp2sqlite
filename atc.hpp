@@ -19,7 +19,10 @@ namespace ATC
     void validate(const std::string &regnrs,
                   std::string &name);
     
-    std::string getTextFromAtc(std::string atc);
+    std::string getTextByAtc(const std::string atc);
+    std::string getClassByAtc(const std::string atc);
+
+    void printStats();
 }
 
 #endif /* atc_hpp */

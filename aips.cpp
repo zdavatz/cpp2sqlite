@@ -24,12 +24,12 @@ namespace pt = boost::property_tree;
 namespace AIPS
 {
     MedicineList medList;
-    int statsAtcFromEphaCount = 0;
-    int statsAtcFromAipsCount = 0;
-    int statsAtcFromSwissmedicCount = 0;
-    int statsAtcNotFoundCount = 0;
-    int statsAtcTextFoundCount = 0;
-    int statsAtcTextNotFoundCount = 0;
+    unsigned int statsAtcFromEphaCount = 0;
+    unsigned int statsAtcFromAipsCount = 0;
+    unsigned int statsAtcFromSwissmedicCount = 0;
+    unsigned int statsAtcNotFoundCount = 0;
+    unsigned int statsAtcTextFoundCount = 0;
+    unsigned int statsAtcTextNotFoundCount = 0;
 
 MedicineList & parseXML(const std::string &filename,
                         const std::string &language,
@@ -125,7 +125,7 @@ MedicineList & parseXML(const std::string &filename,
                     
                     // Add ";" and localized text from 'atc_codes_multi_lingual.txt'
                     if (!Med.atc.empty()) {
-                        std::string atcText = ATC::getTextFromAtc(Med.atc);
+                        std::string atcText = ATC::getTextByAtc(Med.atc);
                         if (!atcText.empty()) {
                             statsAtcTextFoundCount++;
                             Med.atc += ";" + atcText;

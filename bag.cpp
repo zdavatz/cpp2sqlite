@@ -25,7 +25,7 @@ namespace BAG
 {
     PreparationList prepList;
     PackageMap packMap;
-    int statsTotalGtinCount = 0;
+    unsigned int statsTotalGtinCount = 0;
 
 void parseXML(const std::string &filename,
               const std::string &language,
@@ -48,10 +48,10 @@ void parseXML(const std::string &filename,
     
     std::clog << "Analyzing bag" << std::endl;
 
-    int statsPackCount = 0;
-    int statsPackWithoutGtinCount = 0;
-    int statsPackRecoveredGtinCount = 0;
-    int statsPackNotRecoveredGtinCount = 0;
+    unsigned int statsPackCount = 0;
+    unsigned int statsPackWithoutGtinCount = 0;
+    unsigned int statsPackRecoveredGtinCount = 0;
+    unsigned int statsPackNotRecoveredGtinCount = 0;
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("Preparations")) {
             if (v.first == "Preparation") {

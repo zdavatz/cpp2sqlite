@@ -44,10 +44,10 @@ namespace SWISSMEDIC
     // TODO: change them to a map for better performance
     std::vector<dosageUnits> duVec;
 
-    int statsAugmentedRegnCount = 0;
-    int statsAugmentedGtinCount = 0;
-    int statsTotalGtinCount = 0;
-    int statsRecoveredDosage = 0;
+    unsigned int statsAugmentedRegnCount = 0;
+    unsigned int statsAugmentedGtinCount = 0;
+    unsigned int statsTotalGtinCount = 0;
+    unsigned int statsRecoveredDosage = 0;
 
 void parseXLXS(const std::string &filename)
 {

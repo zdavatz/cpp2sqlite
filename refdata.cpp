@@ -24,9 +24,8 @@ namespace pt = boost::property_tree;
 
 namespace REFDATA
 {
-
-ArticleList artList;
-int statsTotalGtinCount = 0;
+    ArticleList artList;
+    unsigned int statsTotalGtinCount = 0;
     
 void parseXML(const std::string &filename,
               const std::string &language)
@@ -44,8 +43,8 @@ void parseXML(const std::string &filename,
     
     std::clog << "Analyzing refdata" << std::endl;
 
-    int statsArticleChildCount = 0;
-    int statsItemCount = 0;
+    unsigned int statsArticleChildCount = 0;
+    unsigned int statsItemCount = 0;
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ARTICLE")) {
             statsArticleChildCount++;
