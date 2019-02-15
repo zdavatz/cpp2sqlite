@@ -731,8 +731,11 @@ int main(int argc, char **argv)
                 AIPS::bindText("amikodb", statement, 8, application);
             }
             
-            // customer_id
-            //AIPS::bindText("amikodb", statement, 10, "0");  // TODO: customer_id
+            // TODO: indications_str
+            AIPS::bindText("amikodb", statement, 9, "");
+            
+            // TODO: customer_id
+            AIPS::bindText("amikodb", statement, 10, "");  // "0"
 
 #if 1
             // pack_info_str
@@ -777,7 +780,8 @@ int main(int argc, char **argv)
                 AIPS::bindText("amikodb", statement, 11, packInfo);
 #endif
 
-            // TODO: add all other columns
+            // TODO: add_info__str
+            AIPS::bindText("amikodb", statement, 12, "");
 
             // content
             std::vector<std::string> sectionId;    // HTML section IDs
@@ -887,7 +891,8 @@ int main(int argc, char **argv)
         REFDATA::printStats();
         SWISSMEDIC::printStats();
         BAG::printStats();
-        ATC::printStats();
+        if (flagVerbose)
+            ATC::printStats();
 
         if (statsRegnrsNotFound.size() > 0) {
             if (flagVerbose) {
