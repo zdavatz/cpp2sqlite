@@ -137,7 +137,8 @@ std::string getTextByAtc(const std::string atc, const int n)
 #if 0
                 std::cerr
                 << basename((char *)__FILE__) << ":" << __LINE__
-                << " ### Error missing " << sub
+                << " ### Error ATC <" << atc << ">"
+                << ", missing branch <" << sub << ">"
                 << std::endl;
 #endif
 
@@ -154,8 +155,12 @@ std::string getTextByAtc(const std::string atc, const int n)
     return s;
 }
 
-std::string getClassByAtc(const std::string atc)
+// The input string is in the format "atccode;text"
+std::string getClassByAtc(const std::string atcColumn)
 {
+    std::string::size_type len = atcColumn.find(";");
+    auto atc = atcColumn.substr(0, len); // pos, len
+
     std::string s1 = getTextByAtc(atc, 1);
     std::string s3 = getTextByAtc(atc, 3);
     std::string s4 = getTextByAtc(atc, 4);
