@@ -39,12 +39,15 @@
 #include "atc.hpp"
 #include "epha.hpp"
 #include "gtin.hpp"
+#include "peddose.hpp"
 
 #include "ean13/functii.h"
 
 #define WITH_PROGRESS_BAR
 #define USE_BOOST_FOR_REPLACEMENTS // faster than with std::regex
 //#define DEBUG_SHOW_RAW_XML_IN_DB_FILE
+
+#define SECTION_TITLES_SEPARATOR    ";"
 
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
@@ -185,6 +188,7 @@ void getHtmlFromXml(std::string &xml,
     boost::replace_all(xml, "&micro;",  "µ");
     boost::replace_all(xml, "&auml;",   "ä");
     boost::replace_all(xml, "&ouml;",   "ö");
+    boost::replace_all(xml, "&Ouml;",   "Ö");
     boost::replace_all(xml, "&uuml;",   "ü");
     boost::replace_all(xml, "&Uuml;",   "Ü");
     boost::replace_all(xml, "&ge;",     "≥");
@@ -198,8 +202,20 @@ void getHtmlFromXml(std::string &xml,
     boost::replace_all(xml, "&gamma;",  "γ");
     boost::replace_all(xml, "&frac12;", "½");
     boost::replace_all(xml, "&ndash;",  "–");
-    boost::replace_all(xml, "&bull;",  "•"); // See rn 63182. Where is this in the Java code ?
-    boost::replace_all(xml, "&reg;",  "®");
+    boost::replace_all(xml, "&bull;",   "•"); // See rn 63182. Where is this in the Java code ?
+    boost::replace_all(xml, "&reg;",    "®");
+    boost::replace_all(xml, "&trade;",  "™");
+    boost::replace_all(xml, "&acirc;",  "â");
+    boost::replace_all(xml, "&egrave;", "è");
+    boost::replace_all(xml, "&eacute;", "é");
+    boost::replace_all(xml, "&laquo;",  "«");
+    boost::replace_all(xml, "&raquo;",  "»");
+    boost::replace_all(xml, "&Ograve;", "Ò");
+    boost::replace_all(xml, "&iuml;",   "ï");
+    boost::replace_all(xml, "&mu;",     "μ");
+    boost::replace_all(xml, "&deg;",    "°");
+    boost::replace_all(xml, "&sup2;",   "²");
+    boost::replace_all(xml, "&sup3;",   "³");
 #else
     std::regex r7(R"(&nbsp;)");
     xml = std::regex_replace(xml, r7, " ");
@@ -257,6 +273,28 @@ void getHtmlFromXml(std::string &xml,
     
     std::regex r23(R"(&reg;)");
     xml = std::regex_replace(xml, r23, "®");
+    
+    std::regex r24(R"(&trade;)");
+    xml = std::regex_replace(xml, r24, "™");
+    
+    std::regex r25(R"(&acirc;)");
+    xml = std::regex_replace(xml, r25, "â");
+    
+    std::regex r26(R"(&egrave;)");
+    xml = std::regex_replace(xml, r26, "è");
+    
+    std::regex r27(R"(&eacute;)");
+    xml = std::regex_replace(xml, r27, "é");
+    
+    // TODO:
+    //boost::replace_all(xml, "&laquo;",  "«");
+    //boost::replace_all(xml, "&raquo;",  "»");
+    //boost::replace_all(xml, "&Ograve;", "Ò");
+    //boost::replace_all(xml, "&iuml;",   "ï");
+    //boost::replace_all(xml, "&mu;",     "μ");
+    //boost::replace_all(xml, "&deg;",    "°");
+    //boost::replace_all(xml, "&sup2;",   "²");
+    //boost::replace_all(xml, "&sup3;",   "³");
 #endif
 
     //std::clog << xml << std::endl;
@@ -286,6 +324,7 @@ void getHtmlFromXml(std::string &xml,
 //            }
 
             // Undo then undesired replacements done by boost xml_parser
+            // because they cause problems inserting the data into sqlite tables
 #ifdef USE_BOOST_FOR_REPLACEMENTS
             boost::replace_all(tagContent, "<", "&lt;");
             boost::replace_all(tagContent, ">", "&gt;");
@@ -319,9 +358,32 @@ void getHtmlFromXml(std::string &xml,
                 std::string section;
                 try {
                     section = v.second.get<std::string>("<xmlattr>.id");
-                    sectionNumber = std::stoi(section.substr(7));
+#if 0
+                    if (section.substr(1,6) != "ection") // section or Section
+                        std::cout
+                        << basename((char *)__FILE__) << ":" << __LINE__
+                        << ", Warning - rn " << regnrs
+                        << ", unexpected attribute id=\"" << section << "\""
+                        << std::endl;
+#endif
+
+                    sectionNumber = std::stoi(section.substr(7));  // from position 7 to end
 
                     // Append the section name to a vector to be used in column "titles_str"
+                    // Make sure it doesn't already contain the separator ";"
+                    boost::replace_all(xml, "Ò",  "®"); // see HtmlUtils.java:636
+                    boost::replace_all(xml, "â",  "®");
+                    if (tagContent.find(SECTION_TITLES_SEPARATOR) != std::string::npos) {
+                        if (verbose)
+                            std::clog
+                            << basename((char *)__FILE__) << ":" << __LINE__
+                            << ", Warning - rn " << regnrs
+                            << ", found embedded section_title_separator <" << tagContent << ">"
+                            << std::endl;
+                        
+                        // TODO: replace ";" with something else (not ',' because it's the decimal point separator)
+                    }
+
                     sectionTitle.push_back(tagContent);
                     
                     std::string divClass;
@@ -644,6 +706,8 @@ int main(int argc, char **argv)
     EPHA::parseJSON(opt_downloadDirectory + jsonFilename, flagVerbose);
 #endif
 
+    PED::parseXML(opt_downloadDirectory + "/swisspeddosepublication-2019-02-07.xml");
+
     // Read swissmedic next, because aips might need to get missing ATC codes from it
     SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");
 
@@ -804,7 +868,7 @@ int main(int argc, char **argv)
 
             // titles_str
             {
-                std::string titles_str = boost::algorithm::join(sectionTitle, ";");
+                std::string titles_str = boost::algorithm::join(sectionTitle, SECTION_TITLES_SEPARATOR);
                 AIPS::bindText("amikodb", statement, 14, titles_str);
             }
 

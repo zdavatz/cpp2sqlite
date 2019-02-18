@@ -43,6 +43,7 @@ add_executable(cpp2sqlite
 	beautify.hpp beautify.cpp
 	atc.hpp atc.cpp
 	epha.hpp epha.cpp
+	peddose.hpp peddose.cpp
 	ean13/functii.cpp ean13/functii.h
 	medicine.h)
 
