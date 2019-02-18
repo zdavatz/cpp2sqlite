@@ -216,6 +216,7 @@ void getHtmlFromXml(std::string &xml,
     boost::replace_all(xml, "&deg;",    "°");
     boost::replace_all(xml, "&sup2;",   "²");
     boost::replace_all(xml, "&sup3;",   "³");
+    boost::replace_all(xml, "&times;",  "×");
 #else
     std::regex r7(R"(&nbsp;)");
     xml = std::regex_replace(xml, r7, " ");
