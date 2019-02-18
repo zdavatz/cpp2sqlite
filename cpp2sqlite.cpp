@@ -171,11 +171,13 @@ void getHtmlFromXml(std::string &xml,
     std::regex r4(R"(</sub>)");
     xml = std::regex_replace(xml, r4, "");
 
+#if 0
     std::regex r5(R"(<sup[^>]*>)");
     xml = std::regex_replace(xml, r5, "");
 
     std::regex r6(R"(</sup>)");
     xml = std::regex_replace(xml, r6, "");
+#endif
     
     std::regex r6a(R"(')");
     xml = std::regex_replace(xml, r6a, "&apos;"); // to prevent errors when inserting into sqlite table
@@ -296,6 +298,7 @@ void getHtmlFromXml(std::string &xml,
     //boost::replace_all(xml, "&deg;",    "°");
     //boost::replace_all(xml, "&sup2;",   "²");
     //boost::replace_all(xml, "&sup3;",   "³");
+    //boost::replace_all(xml, "&times;",  "×");
 #endif
 
     //std::clog << xml << std::endl;
