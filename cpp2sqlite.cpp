@@ -305,7 +305,7 @@ void getHtmlFromXml(std::string &xml,
                         
                         // Replace section separator ";" with something else
                         // (not ',' because it's the decimal point separator on some locales)
-                        boost::replace_all(tagContent, ";",  "•"); // alternatively &middot; "·"
+                        boost::replace_all(tagContent, ";",  "·"); // alternatively &middot; "·"
                     }
 
                     sectionTitle.push_back(tagContent);
