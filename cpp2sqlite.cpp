@@ -165,143 +165,67 @@ void getHtmlFromXml(std::string &xml,
     std::regex r2(R"(</span>)");
     xml = std::regex_replace(xml, r2, "");
 
-    std::regex r3(R"(<sub[^>]*>)");
-    xml = std::regex_replace(xml, r3, "");
-
-    std::regex r4(R"(</sub>)");
-    xml = std::regex_replace(xml, r4, "");
-
-#if 0
-    std::regex r5(R"(<sup[^>]*>)");
-    xml = std::regex_replace(xml, r5, "");
-
-    std::regex r6(R"(</sup>)");
-    xml = std::regex_replace(xml, r6, "");
-#endif
+//    std::regex r3(R"(<sub[^>]*>)");
+//    xml = std::regex_replace(xml, r3, "");
+//
+//    std::regex r4(R"(</sub>)");
+//    xml = std::regex_replace(xml, r4, "");
+//
+//    std::regex r5(R"(<sup[^>]*>)");
+//    xml = std::regex_replace(xml, r5, "");
+//
+//    std::regex r6(R"(</sup>)");
+//    xml = std::regex_replace(xml, r6, "");
     
+#if 0
     std::regex r6a(R"(')");
     xml = std::regex_replace(xml, r6a, "&apos;"); // to prevent errors when inserting into sqlite table
-    
-    // This is time consuming and maybe unnecessary (TBC)
+#endif
+
     // The Java version seems to be using Jsoup and EscapeMode.xhtml
     // Don't convert &lt; &gt; &apos;
-#ifdef USE_BOOST_FOR_REPLACEMENTS
     boost::replace_all(xml, "&nbsp;",   " ");
-    boost::replace_all(xml, "&micro;",  "µ");
-    boost::replace_all(xml, "&auml;",   "ä");
-    boost::replace_all(xml, "&ouml;",   "ö");
-    boost::replace_all(xml, "&Ouml;",   "Ö");
-    boost::replace_all(xml, "&uuml;",   "ü");
-    boost::replace_all(xml, "&Uuml;",   "Ü");
     boost::replace_all(xml, "&ge;",     "≥");
     boost::replace_all(xml, "&le;",     "≤");
     boost::replace_all(xml, "&agrave;", "à");
+    boost::replace_all(xml, "&acirc;",  "â");
+    boost::replace_all(xml, "&auml;",   "ä");
+    boost::replace_all(xml, "&Auml;",   "Ä");
+    boost::replace_all(xml, "&egrave;", "è");
+    boost::replace_all(xml, "&eacute;", "é");
+    boost::replace_all(xml, "&iuml;",   "ï");
+    boost::replace_all(xml, "&ouml;",   "ö");
+    boost::replace_all(xml, "&Ouml;",   "Ö");
+    boost::replace_all(xml, "&Ograve;", "Ò");
+    boost::replace_all(xml, "&uuml;",   "ü");
+    boost::replace_all(xml, "&Uuml;",   "Ü");
     boost::replace_all(xml, "&middot;", "–");
     boost::replace_all(xml, "&bdquo;",  "„");
     boost::replace_all(xml, "&ldquo;",  "“");
     boost::replace_all(xml, "&rsquo;",  "’");
     boost::replace_all(xml, "&beta;",   "β");
     boost::replace_all(xml, "&gamma;",  "γ");
+    boost::replace_all(xml, "&micro;",  "µ");
     boost::replace_all(xml, "&frac12;", "½");
     boost::replace_all(xml, "&ndash;",  "–");
     boost::replace_all(xml, "&bull;",   "•"); // See rn 63182. Where is this in the Java code ?
     boost::replace_all(xml, "&reg;",    "®");
     boost::replace_all(xml, "&trade;",  "™");
-    boost::replace_all(xml, "&acirc;",  "â");
-    boost::replace_all(xml, "&egrave;", "è");
-    boost::replace_all(xml, "&eacute;", "é");
     boost::replace_all(xml, "&laquo;",  "«");
     boost::replace_all(xml, "&raquo;",  "»");
-    boost::replace_all(xml, "&Ograve;", "Ò");
-    boost::replace_all(xml, "&iuml;",   "ï");
     boost::replace_all(xml, "&mu;",     "μ");
     boost::replace_all(xml, "&deg;",    "°");
     boost::replace_all(xml, "&sup2;",   "²");
     boost::replace_all(xml, "&sup3;",   "³");
     boost::replace_all(xml, "&times;",  "×");
-#else
-    std::regex r7(R"(&nbsp;)");
-    xml = std::regex_replace(xml, r7, " ");
-    
-    std::regex r8(R"(&micro;)");
-    xml = std::regex_replace(xml, r8, "µ");
+    boost::replace_all(xml, "&szlig;",  "ß");
 
-    std::regex r9(R"(&auml;)");
-    xml = std::regex_replace(xml, r9, "ä");
+    // Cleanup XML post-replacements (still pre-parsing)
 
-    std::regex r10(R"(&ouml;)");
-    xml = std::regex_replace(xml, r10, "ö");
-    
-    std::regex r11(R"(&uuml;)");
-    xml = std::regex_replace(xml, r11, "ü");
-    
-    std::regex r11a(R"(&Uuml;)");
-    xml = std::regex_replace(xml, r11a, "Ü");
-    
-    std::regex r12(R"(&ge;)");
-    xml = std::regex_replace(xml, r12, "≥");
-
-    std::regex r13(R"(&le;)");
-    xml = std::regex_replace(xml, r13, "≤");
-    
-    std::regex r14(R"(&agrave;)");
-    xml = std::regex_replace(xml, r14, "à");
-    
-    std::regex r15(R"(&middot;)");
-    xml = std::regex_replace(xml, r15, "–");
-    
-    std::regex r16(R"(&bdquo;)");
-    xml = std::regex_replace(xml, r16, "„");
-    
-    std::regex r17(R"(&ldquo;)");
-    xml = std::regex_replace(xml, r17, "“");
-    
-    std::regex r17a(R"(&rsquo;)");
-    xml = std::regex_replace(xml, r17a, "’");
-    
-    std::regex r18(R"(&beta;)");
-    xml = std::regex_replace(xml, r18, "β");
-
-    std::regex r19(R"(&gamma;)");
-    xml = std::regex_replace(xml, r19, "γ");
-
-    std::regex r20(R"(&frac12;)");
-    xml = std::regex_replace(xml, r20, "½");
-
-    std::regex r21(R"(&ndash;)");
-    xml = std::regex_replace(xml, r21, "–");
-    
-    std::regex r22(R"(&bull;)");
-    xml = std::regex_replace(xml, r22, "•");    // See rn 63182. Where is this in the Java code ?
-    
-    std::regex r23(R"(&reg;)");
-    xml = std::regex_replace(xml, r23, "®");
-    
-    std::regex r24(R"(&trade;)");
-    xml = std::regex_replace(xml, r24, "™");
-    
-    std::regex r25(R"(&acirc;)");
-    xml = std::regex_replace(xml, r25, "â");
-    
-    std::regex r26(R"(&egrave;)");
-    xml = std::regex_replace(xml, r26, "è");
-    
-    std::regex r27(R"(&eacute;)");
-    xml = std::regex_replace(xml, r27, "é");
-    
-    // TODO:
-    //boost::replace_all(xml, "&laquo;",  "«");
-    //boost::replace_all(xml, "&raquo;",  "»");
-    //boost::replace_all(xml, "&Ograve;", "Ò");
-    //boost::replace_all(xml, "&iuml;",   "ï");
-    //boost::replace_all(xml, "&mu;",     "μ");
-    //boost::replace_all(xml, "&deg;",    "°");
-    //boost::replace_all(xml, "&sup2;",   "²");
-    //boost::replace_all(xml, "&sup3;",   "³");
-    //boost::replace_all(xml, "&times;",  "×");
-#endif
-
-    //std::clog << xml << std::endl;
+    // For section titles.
+    // Make the child XML tag content part of the parent.
+    // Also, the Reg mark is already "sup"
+    boost::replace_all(xml, "<sup class=\"s3\">®</sup>", "®");
 #endif
 
     pt::ptree tree;
@@ -322,6 +246,8 @@ void getHtmlFromXml(std::string &xml,
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("div")) {
   
             std::string tagContent = v.second.data(); // unfortunately it changes &lt; into <
+
+            // Don't skip tags with empty content because all tables are like that
 //            if (tagContent.empty()) {
 //                std::clog << basename((char *)__FILE__) << ":" << __LINE__ << std::endl;
 //                continue;
@@ -340,18 +266,8 @@ void getHtmlFromXml(std::string &xml,
             std::regex r2(">");
             tagContent = std::regex_replace(tagContent, r2, "&gt;");
             
-            std::regex r3("'");
-            tagContent = std::regex_replace(tagContent, r3, "&apos;");
-#endif
-
-#if 0
-            std::clog
-            << basename((char *)__FILE__) << ":" << __LINE__
-            << ", seq " << ++seq
-            << ", # children: " << v.second.size()
-            << ", key <" << v.first.data() << ">"
-            << ", val <" << tagContent << ">"
-            << std::endl;
+            //std::regex r3("'");
+            //tagContent = std::regex_replace(tagContent, r3, "&apos;");
 #endif
             
             if (v.first == "p")
@@ -362,6 +278,7 @@ void getHtmlFromXml(std::string &xml,
                 std::string section;
                 try {
                     section = v.second.get<std::string>("<xmlattr>.id");
+
 #if 0
                     if (section.substr(1,6) != "ection") // section or Section
                         std::cout
@@ -375,8 +292,9 @@ void getHtmlFromXml(std::string &xml,
 
                     // Append the section name to a vector to be used in column "titles_str"
                     // Make sure it doesn't already contain the separator ";"
-                    boost::replace_all(xml, "Ò",  "®"); // see HtmlUtils.java:636
-                    boost::replace_all(xml, "â",  "®");
+                    boost::replace_all(tagContent, "Ò",  "®"); // see HtmlUtils.java:636
+                    boost::replace_all(tagContent, "â",  "®");
+                    boost::replace_all(tagContent, "&apos;",   "'");
                     if (tagContent.find(SECTION_TITLES_SEPARATOR) != std::string::npos) {
                         if (verbose)
                             std::clog
@@ -385,7 +303,9 @@ void getHtmlFromXml(std::string &xml,
                             << ", found embedded section_title_separator <" << tagContent << ">"
                             << std::endl;
                         
-                        // TODO: replace ";" with something else (not ',' because it's the decimal point separator)
+                        // Replace section separator ";" with something else
+                        // (not ',' because it's the decimal point separator on some locales)
+                        boost::replace_all(tagContent, ";",  "•"); // alternatively &middot; "·"
                     }
 
                     sectionTitle.push_back(tagContent);
@@ -572,10 +492,10 @@ void getHtmlFromXml(std::string &xml,
                 tree.add_child("table", v.second);
                 pt::write_xml(ss, tree);
                 
-                // Clean up the "serialized" string
                 std::string table = ss.str();
-                boost::replace_all(table, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
 
+                // Clean up the "serialized" string
+                boost::replace_all(table, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
 #if 0
                 std::clog
                 << basename((char *)__FILE__) << ":" << __LINE__
