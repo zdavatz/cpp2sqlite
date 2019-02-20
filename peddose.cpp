@@ -22,13 +22,6 @@ namespace pt = boost::property_tree;
 
 namespace PED
 {
-    struct codeAtc {
-        std::string description;    // TODO: localize
-        std::string recStatus;
-    };
-    
-    std::map<std::string, codeAtc> codeAtcMap; // key is CodeValue
-
     unsigned int statsCasesCount = 0;
     unsigned int statsIndicationsCount = 0;
     unsigned int statsCodesCount = 0;
@@ -44,11 +37,12 @@ namespace PED
     unsigned int statsCodeRoa = 0;
     unsigned int statsCodeZEIT = 0;
     
-    std::set<std::string> caseCaseID;
-    std::set<std::string> caseAtcCode;
-    std::set<std::string> caseRoaCode;
-
-    //std::set<std::string> codeAtcCode;
+    std::map<std::string, _cases> caseMap; // key is atcCode
+    std::set<std::string> caseCaseID; // TODO: obsolete
+    std::set<std::string> caseAtcCode;// TODO: obsolete
+    std::set<std::string> caseRoaCode;// TODO: obsolete
+    
+    std::map<std::string, _codes> codeAtcMap; // key is CodeValue
     std::set<std::string> codeRoaCode;
 
     std::set<std::string> dosageCaseID;
@@ -105,6 +99,11 @@ void parseXML(const std::string &filename,
                 caseCaseID.insert(v.second.get("CaseID", ""));
                 caseAtcCode.insert(v.second.get("ATCCode", ""));
                 caseRoaCode.insert(v.second.get("ROACode", ""));
+                
+                _cases ca {v.second.get("CaseID", ""),
+                           v.second.get("IndicationKey", ""),
+                           v.second.get("ROACode", "")};
+                caseMap.insert(std::make_pair(v.second.get("ATCCode", ""), ca));
             }
         } // FOREACH Cases
 
@@ -151,9 +150,9 @@ void parseXML(const std::string &filename,
                         std::clog << "\n\t ATC N02BA01 at: " << statsCodeAtc << std::endl;
 
                     statsCodeAtc++;
-                    codeAtc ca {v.second.get("DescriptionD", ""),  // TODO: localize
-                                v.second.get("RecStatus", "")};
-                    codeAtcMap.insert(std::make_pair(v.second.get("CodeValue", ""), ca));
+                    _codes co {v.second.get("DescriptionD", ""),  // TODO: localize
+                               v.second.get("RecStatus", "")};
+                    codeAtcMap.insert(std::make_pair(v.second.get("CodeValue", ""), co));
                 }
                 else if (codeType == "DOSISTYP")
                     statsCodeDOSISTYP++;
@@ -236,8 +235,13 @@ void parseXML(const std::string &filename,
     
 std::string getDescriptionByAtc(const std::string &atc)
 {
-    auto ca = codeAtcMap[atc];
-    return ca.description;
+    return codeAtcMap[atc].description;
 }
+
+_cases getCaseByAtc(const std::string &atc)
+{
+    return caseMap[atc];
+}
+    
 
 }

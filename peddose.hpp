@@ -12,7 +12,23 @@
 
 namespace PED
 {
-    void parseXML(const std::string &filename);
+    struct _cases {
+        std::string caseId;
+        //std::string atcCode;
+        std::string indicationKey;
+        std::string RoaCode;
+    };
+    
+    struct _codes {
+        std::string description;    // TODO: localize
+        std::string recStatus;
+    };
+
+    void parseXML(const std::string &filename,
+                  const std::string &language);
+
+    _cases getCaseByAtc(const std::string &atc);
+    std::string getDescriptionByAtc(const std::string &atc);
 }
 
 #endif /* peddose_hpp */

@@ -185,8 +185,6 @@ std::string getFirstAtc(const std::string atcs)
 {
     std::vector<std::string> atcVector;
     boost::algorithm::split(atcVector, atcs, boost::is_any_of(","), boost::token_compress_on);
-    if (atcVector.size() > 1)
-        std::cout << "break here";
 
     return atcVector[0];
 }
