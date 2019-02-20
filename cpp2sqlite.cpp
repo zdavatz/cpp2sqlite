@@ -148,9 +148,14 @@ void removeTagFromXml(std::string &xml, const std::string &tag)
     
 }
 
-void cleanupXml(std::string &xml)
+void cleanupXml(std::string &xml,
+                const std::string regnrs)
 {
-    // cleanup: see also HtmlUtils.java:934
+    bool xmlHeaderPresent = false;
+    if (boost::starts_with(xml, "<?xml version"))
+        xmlHeaderPresent = true;
+
+    // See also HtmlUtils.java:934
     std::regex r1(R"(<span[^>]*>)");
     xml = std::regex_replace(xml, r1, "");
     
@@ -167,6 +172,7 @@ void cleanupXml(std::string &xml)
     boost::replace_all(xml, "&nbsp;",   " ");
     boost::replace_all(xml, "&ge;",     "≥");
     boost::replace_all(xml, "&le;",     "≤");
+    boost::replace_all(xml, "&plusmn;", "±"); // used in rn 58868 table 6
     boost::replace_all(xml, "&agrave;", "à");
     boost::replace_all(xml, "&acirc;",  "â");
     boost::replace_all(xml, "&auml;",   "ä");
@@ -190,6 +196,7 @@ void cleanupXml(std::string &xml)
     boost::replace_all(xml, "&micro;",  "µ");
     boost::replace_all(xml, "&mu;",     "μ");
     boost::replace_all(xml, "&Phi;",    "Φ");
+    boost::replace_all(xml, "&tau;",    "τ");
     boost::replace_all(xml, "&frac12;", "½");
     boost::replace_all(xml, "&ndash;",  "–");
     boost::replace_all(xml, "&bull;",   "•"); // See rn 63182. Where is this in the Java code ?
@@ -198,6 +205,7 @@ void cleanupXml(std::string &xml)
     boost::replace_all(xml, "&laquo;",  "«");
     boost::replace_all(xml, "&raquo;",  "»");
     boost::replace_all(xml, "&deg;",    "°");
+    boost::replace_all(xml, "&sup1;",   "¹");
     boost::replace_all(xml, "&sup2;",   "²");
     boost::replace_all(xml, "&sup3;",   "³");
     boost::replace_all(xml, "&times;",  "×");
@@ -207,7 +215,11 @@ void cleanupXml(std::string &xml)
     boost::replace_all(xml, "&Dagger;", "‡");
     boost::replace_all(xml, "&sect;",   "§");
     boost::replace_all(xml, "&THORN;",  "Þ");
-    
+    boost::replace_all(xml, "&para;",   "¶");
+    boost::replace_all(xml, "&amp;",    "&");
+    boost::replace_all(xml, "&frasl;",  "⁄");  // see rn 36083
+    boost::replace_all(xml, "&yen;",    "¥");
+
     // Cleanup XML post-replacements (still pre-parsing)
     
     // For section titles.
@@ -255,6 +267,8 @@ void cleanupXml(std::string &xml)
 #endif // DEBUG_SUB_SUP
     
 #ifdef WORKAROUND_SUB_SUP
+    // Temporarily alter these XML (HTML) tags so that
+    // the boost parser doesn't treat them as "children"
     std::regex r12(R"(<sup[^>]*>)");
     xml = std::regex_replace(xml, r12, ESCAPED_SUP_L);
     
@@ -267,7 +281,7 @@ void cleanupXml(std::string &xml)
     std::regex r11(R"(</sub>)");
     xml = std::regex_replace(xml, r11, ESCAPED_SUB_R);
     
-#ifdef DEBUG_SUB_SUP
+#ifdef DEBUG_SUB_SUP_TRACE
     posSup.clear();
     pos = xml.find(ESCAPED_SUP_L);
     while (pos != std::string::npos) {
@@ -318,11 +332,7 @@ void getHtmlFromXml(std::string &xml,
     
     //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << regnrs << std::endl;
 
-    bool xmlHeaderPresent = false;
-    if (boost::starts_with(xml, "<?xml version"))
-        xmlHeaderPresent = true;
-
-    cleanupXml(xml);
+    cleanupXml(xml, regnrs);
 
     pt::ptree tree;
     std::stringstream ss;
@@ -350,7 +360,7 @@ void getHtmlFromXml(std::string &xml,
 //                continue;
 //            }
 
-#ifdef DEBUG_SUB_SUP
+#ifdef DEBUG_SUB_SUP_TRACE
             std::string::size_type pos = tagContent.find(ESCAPED_SUP_L);
             if (pos != std::string::npos) {
                 std::clog
