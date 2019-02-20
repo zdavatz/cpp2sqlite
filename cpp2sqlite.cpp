@@ -28,6 +28,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
 //#include <boost/program_options/errors.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include "aips.hpp"
 #include "refdata.hpp"
@@ -42,6 +43,13 @@
 #include "peddose.hpp"
 
 #include "ean13/functii.h"
+
+// Fool boost parser so it doesn't create children for <sub> and <sup>
+#define WORKAROUND_SUB_SUP
+#define ESCAPED_SUB_L         "[[[[sub]]]]"  // "&lt;sub&gt;" would be altered by boost parser
+#define ESCAPED_SUB_R         "[[[[/sub]]]]"
+#define ESCAPED_SUP_L         "[[[[sup]]]]"
+#define ESCAPED_SUP_R         "[[[[/sup]]]]"
 
 #define WITH_PROGRESS_BAR
 #define USE_BOOST_FOR_REPLACEMENTS // faster than with std::regex
@@ -140,48 +148,20 @@ void removeTagFromXml(std::string &xml, const std::string &tag)
     
 }
 
-// see RealExpertInfo.java:1065
-void getHtmlFromXml(std::string &xml,
-                    std::string &html,
-                    std::string regnrs,
-                    std::string ownerCompany,
-                    const GTIN::oneFachinfoPackages &packages, // for barcodes
-                    std::vector<std::string> &sectionId,
-                    std::vector<std::string> &sectionTitle,
-                    bool verbose)
+void cleanupXml(std::string &xml)
 {
-#ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
-    html = xml;
-    return;
-#endif
-    
-    //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << regnrs << std::endl;
-
-#if 1
     // cleanup: see also HtmlUtils.java:934
     std::regex r1(R"(<span[^>]*>)");
     xml = std::regex_replace(xml, r1, "");
     
     std::regex r2(R"(</span>)");
     xml = std::regex_replace(xml, r2, "");
-
-//    std::regex r3(R"(<sub[^>]*>)");
-//    xml = std::regex_replace(xml, r3, "");
-//
-//    std::regex r4(R"(</sub>)");
-//    xml = std::regex_replace(xml, r4, "");
-//
-//    std::regex r5(R"(<sup[^>]*>)");
-//    xml = std::regex_replace(xml, r5, "");
-//
-//    std::regex r6(R"(</sup>)");
-//    xml = std::regex_replace(xml, r6, "");
     
 #if 0
     std::regex r6a(R"(')");
     xml = std::regex_replace(xml, r6a, "&apos;"); // to prevent errors when inserting into sqlite table
 #endif
-
+    
     // The Java version seems to be using Jsoup and EscapeMode.xhtml
     // Don't convert &lt; &gt; &apos;
     boost::replace_all(xml, "&nbsp;",   " ");
@@ -199,13 +179,17 @@ void getHtmlFromXml(std::string &xml,
     boost::replace_all(xml, "&Ograve;", "Ò");
     boost::replace_all(xml, "&uuml;",   "ü");
     boost::replace_all(xml, "&Uuml;",   "Ü");
-    boost::replace_all(xml, "&middot;", "–");
+    boost::replace_all(xml, "&middot;", "–"); // the true middot is "·"
     boost::replace_all(xml, "&bdquo;",  "„");
     boost::replace_all(xml, "&ldquo;",  "“");
     boost::replace_all(xml, "&rsquo;",  "’");
+    boost::replace_all(xml, "&alpha;",  "α");
     boost::replace_all(xml, "&beta;",   "β");
     boost::replace_all(xml, "&gamma;",  "γ");
+    boost::replace_all(xml, "&kappa;",  "κ");
     boost::replace_all(xml, "&micro;",  "µ");
+    boost::replace_all(xml, "&mu;",     "μ");
+    boost::replace_all(xml, "&Phi;",    "Φ");
     boost::replace_all(xml, "&frac12;", "½");
     boost::replace_all(xml, "&ndash;",  "–");
     boost::replace_all(xml, "&bull;",   "•"); // See rn 63182. Where is this in the Java code ?
@@ -213,20 +197,132 @@ void getHtmlFromXml(std::string &xml,
     boost::replace_all(xml, "&trade;",  "™");
     boost::replace_all(xml, "&laquo;",  "«");
     boost::replace_all(xml, "&raquo;",  "»");
-    boost::replace_all(xml, "&mu;",     "μ");
     boost::replace_all(xml, "&deg;",    "°");
     boost::replace_all(xml, "&sup2;",   "²");
     boost::replace_all(xml, "&sup3;",   "³");
     boost::replace_all(xml, "&times;",  "×");
     boost::replace_all(xml, "&szlig;",  "ß");
-
+    boost::replace_all(xml, "&infin;",  "∞");
+    boost::replace_all(xml, "&dagger;", "†");
+    boost::replace_all(xml, "&Dagger;", "‡");
+    boost::replace_all(xml, "&sect;",   "§");
+    boost::replace_all(xml, "&THORN;",  "Þ");
+    
     // Cleanup XML post-replacements (still pre-parsing)
-
+    
     // For section titles.
     // Make the child XML tag content part of the parent.
     // Also, the Reg mark is already "sup"
     boost::replace_all(xml, "<sup class=\"s3\">®</sup>", "®");
+    
+#ifdef DEBUG_SUB_SUP
+    std::string::size_type pos;
+    
+    std::vector<size_t> posSup;
+    pos = xml.find("<sup");
+    while (pos != std::string::npos) {
+        posSup.push_back(pos);
+        pos = xml.find("<sup", pos+1);
+    }
+    
+    for (auto p : posSup) {
+        std::clog
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", xml type " << xmlHeaderPresent
+        << ", found \"" << xml.substr(p,28) << "\""
+        << ", rn:" << regnrs
+        << ", pos:" << p
+        << std::endl;
+    }
+    
+    std::vector<size_t> posSub;
+    pos = xml.find("<sub");
+    while (pos != std::string::npos) {
+        posSub.push_back(pos);
+        pos = xml.find("<sub", pos+1);
+    }
+    
+    for (auto p : posSub) {
+        std::clog
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", xml type " << xmlHeaderPresent
+        << ", found \"" << xml.substr(p,28) << "\""
+        << ", rn:" << regnrs
+        << ", pos:" << p
+        << std::endl;
+    }
+    
+#endif // DEBUG_SUB_SUP
+    
+#ifdef WORKAROUND_SUB_SUP
+    std::regex r12(R"(<sup[^>]*>)");
+    xml = std::regex_replace(xml, r12, ESCAPED_SUP_L);
+    
+    std::regex r13(R"(</sup>)");
+    xml = std::regex_replace(xml, r13, ESCAPED_SUP_R);
+    
+    std::regex r10(R"(<sub[^>]*>)");
+    xml = std::regex_replace(xml, r10, ESCAPED_SUB_L);
+    
+    std::regex r11(R"(</sub>)");
+    xml = std::regex_replace(xml, r11, ESCAPED_SUB_R);
+    
+#ifdef DEBUG_SUB_SUP
+    posSup.clear();
+    pos = xml.find(ESCAPED_SUP_L);
+    while (pos != std::string::npos) {
+        posSup.push_back(pos);
+        pos = xml.find(ESCAPED_SUP_L, pos+1);
+    }
+    
+    for (auto p : posSup) {
+        std::clog
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", xml becomes \"" << xml.substr(p,28) << "\""
+        << ", pos:" << p
+        << std::endl;
+    }
+    
+    posSub.clear();
+    pos = xml.find(ESCAPED_SUB_L);
+    while (pos != std::string::npos) {
+        posSub.push_back(pos);
+        pos = xml.find(ESCAPED_SUB_L, pos+1);
+    }
+    
+    for (auto p : posSub) {
+        std::clog
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", xml becomes \"" << xml.substr(p,28) << "\""
+        << ", pos:" << p
+        << std::endl;
+    }
+#endif // DEBUG_SUB_SUP
+#endif // WORKAROUND_SUB_SUP
+}
+
+// see RealExpertInfo.java:1065
+void getHtmlFromXml(std::string &xml,
+                    std::string &html,
+                    std::string regnrs,
+                    std::string ownerCompany,
+                    const GTIN::oneFachinfoPackages &packages, // for barcodes
+                    std::vector<std::string> &sectionId,
+                    std::vector<std::string> &sectionTitle,
+                    bool verbose)
+{
+#ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
+    html = xml;
+    return;
 #endif
+    
+    //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << regnrs << std::endl;
+
+    bool xmlHeaderPresent = false;
+    if (boost::starts_with(xml, "<?xml version"))
+        xmlHeaderPresent = true;
+
+    cleanupXml(xml);
 
     pt::ptree tree;
     std::stringstream ss;
@@ -245,7 +341,8 @@ void getHtmlFromXml(std::string &xml,
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("div")) {
   
-            std::string tagContent = v.second.data(); // unfortunately it changes &lt; into <
+            // The following call changes &lt; into <
+            std::string tagContent = v.second.data();
 
             // Don't skip tags with empty content because all tables are like that
 //            if (tagContent.empty()) {
@@ -253,12 +350,41 @@ void getHtmlFromXml(std::string &xml,
 //                continue;
 //            }
 
+#ifdef DEBUG_SUB_SUP
+            std::string::size_type pos = tagContent.find(ESCAPED_SUP_L);
+            if (pos != std::string::npos) {
+                std::clog
+                << basename((char *)__FILE__) << ":" << __LINE__
+                << ", found \"" << tagContent.substr(pos,28) << "\""
+                << ", pos:" << pos
+                << std::endl;
+            }
+
+            pos = tagContent.find("<sup>");
+            if (pos != std::string::npos) {
+                std::clog
+                << basename((char *)__FILE__) << ":" << __LINE__
+                << ", found \"" << tagContent.substr(pos,28) << "\""
+                << ", pos:" << pos
+                << std::endl;
+            }
+#endif
+
             // Undo then undesired replacements done by boost xml_parser
             // because they cause problems inserting the data into sqlite tables
 #ifdef USE_BOOST_FOR_REPLACEMENTS
+            // Modify the content, not the HTML tags
             boost::replace_all(tagContent, "<", "&lt;");
             boost::replace_all(tagContent, ">", "&gt;");
             boost::replace_all(tagContent, "'", "&apos;");
+            
+#ifdef WORKAROUND_SUB_SUP
+            // Restore
+            boost::replace_all(tagContent, ESCAPED_SUP_L, "<sup>");
+            boost::replace_all(tagContent, ESCAPED_SUP_R, "</sup>");
+            boost::replace_all(tagContent, ESCAPED_SUB_L, "<sub>");
+            boost::replace_all(tagContent, ESCAPED_SUB_R, "</sub>");
+#endif
 #else
             std::regex r1("<");
             tagContent = std::regex_replace(tagContent, r1, "&lt;");
@@ -300,12 +426,12 @@ void getHtmlFromXml(std::string &xml,
                             std::clog
                             << basename((char *)__FILE__) << ":" << __LINE__
                             << ", Warning - rn " << regnrs
-                            << ", found embedded section_title_separator <" << tagContent << ">"
+                            << ", found embedded section_title_separator \"" << tagContent << "\""
                             << std::endl;
                         
                         // Replace section separator ";" with something else
                         // (not ',' because it's the decimal point separator on some locales)
-                        boost::replace_all(tagContent, ";",  "·"); // alternatively &middot; "·"
+                        boost::replace_all(tagContent, ";",  "·"); // &middot;
                     }
 
                     sectionTitle.push_back(tagContent);
@@ -496,13 +622,13 @@ void getHtmlFromXml(std::string &xml,
 
                 // Clean up the "serialized" string
                 boost::replace_all(table, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
-#if 0
-                std::clog
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << ", table" << table
-                << std::endl;
+#ifdef WORKAROUND_SUB_SUP
+                // Restore
+                boost::replace_all(table, ESCAPED_SUB_L, "<sub>");
+                boost::replace_all(table, ESCAPED_SUB_R, "</sub>");
+                boost::replace_all(table, ESCAPED_SUP_L, "<sup>");
+                boost::replace_all(table, ESCAPED_SUP_R, "</sup>");
 #endif
-
                 html += table + "\n";
             } // if table
         } // BOOST div
