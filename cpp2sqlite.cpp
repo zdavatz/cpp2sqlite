@@ -195,12 +195,15 @@ void cleanupXml(std::string &xml,
     boost::replace_all(xml, "&kappa;",  "κ");
     boost::replace_all(xml, "&micro;",  "µ");
     boost::replace_all(xml, "&mu;",     "μ");
+    boost::replace_all(xml, "&phi;",    "φ");
     boost::replace_all(xml, "&Phi;",    "Φ");
     boost::replace_all(xml, "&tau;",    "τ");
     boost::replace_all(xml, "&frac12;", "½");
+    boost::replace_all(xml, "&mdash;",  "—");
     boost::replace_all(xml, "&ndash;",  "–");
     boost::replace_all(xml, "&bull;",   "•"); // See rn 63182. Where is this in the Java code ?
     boost::replace_all(xml, "&reg;",    "®");
+    boost::replace_all(xml, "&copy;",   "©");
     boost::replace_all(xml, "&trade;",  "™");
     boost::replace_all(xml, "&laquo;",  "«");
     boost::replace_all(xml, "&raquo;",  "»");
@@ -209,16 +212,21 @@ void cleanupXml(std::string &xml,
     boost::replace_all(xml, "&sup2;",   "²");
     boost::replace_all(xml, "&sup3;",   "³");
     boost::replace_all(xml, "&times;",  "×");
+    boost::replace_all(xml, "&pi;",     "π");
     boost::replace_all(xml, "&szlig;",  "ß");
     boost::replace_all(xml, "&infin;",  "∞");
     boost::replace_all(xml, "&dagger;", "†");
     boost::replace_all(xml, "&Dagger;", "‡");
     boost::replace_all(xml, "&sect;",   "§");
+    boost::replace_all(xml, "&spades;", "♠"); // rn 63285, table 2
     boost::replace_all(xml, "&THORN;",  "Þ");
+    boost::replace_all(xml, "&Oslash;", "Ø");
     boost::replace_all(xml, "&para;",   "¶");
     boost::replace_all(xml, "&amp;",    "&");
-    boost::replace_all(xml, "&frasl;",  "⁄");  // see rn 36083
+    boost::replace_all(xml, "&frasl;",  "⁄"); // see rn 36083
+    boost::replace_all(xml, "&curren;", "¤");
     boost::replace_all(xml, "&yen;",    "¥");
+    boost::replace_all(xml, "&pound;",  "£");
 
     // Cleanup XML post-replacements (still pre-parsing)
     
