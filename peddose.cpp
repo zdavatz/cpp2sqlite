@@ -8,6 +8,8 @@
 //
 
 #include <iostream>
+#include <set>
+#include <map>
 #include <libgen.h>     // for basename()
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -20,6 +22,13 @@ namespace pt = boost::property_tree;
 
 namespace PED
 {
+    struct codeAtc {
+        std::string description;    // TODO: localize
+        std::string recStatus;
+    };
+    
+    std::map<std::string, codeAtc> codeAtcMap; // key is CodeValue
+
     unsigned int statsCasesCount = 0;
     unsigned int statsIndicationsCount = 0;
     unsigned int statsCodesCount = 0;
@@ -39,12 +48,13 @@ namespace PED
     std::set<std::string> caseAtcCode;
     std::set<std::string> caseRoaCode;
 
-    std::set<std::string> codeAtcCode;
+    //std::set<std::string> codeAtcCode;
     std::set<std::string> codeRoaCode;
 
     std::set<std::string> dosageCaseID;
 
-void parseXML(const std::string &filename)
+void parseXML(const std::string &filename,
+              const std::string &language)
 {
     pt::ptree tree;
     
@@ -141,7 +151,9 @@ void parseXML(const std::string &filename)
                         std::clog << "\n\t ATC N02BA01 at: " << statsCodeAtc << std::endl;
 
                     statsCodeAtc++;
-                    codeAtcCode.insert(v.second.get("CodeValue", ""));
+                    codeAtc ca {v.second.get("DescriptionD", ""),  // TODO: localize
+                                v.second.get("RecStatus", "")};
+                    codeAtcMap.insert(std::make_pair(v.second.get("CodeValue", ""), ca));
                 }
                 else if (codeType == "DOSISTYP")
                     statsCodeDOSISTYP++;
@@ -207,7 +219,7 @@ void parseXML(const std::string &filename)
     << ", CaseID size: " << dosageCaseID.size()
     << std::endl
     << "Codes: " << statsCodesCount
-    << ", # ATCCode: " << codeAtcCode.size()
+    << ", # ATCCode: " << codeAtcMap.size()
     << ", # ROA Code: " << codeRoaCode.size()
     << std::endl
     << "  <CodeType>\n\t_ALTERRELATION: " << statsCode_ALTERRELATION
@@ -220,6 +232,12 @@ void parseXML(const std::string &filename)
     << "\n\tROA: " << statsCodeRoa
     << "\n\tZEIT: " << statsCodeZEIT
     << std::endl;
+}
+    
+std::string getDescriptionByAtc(const std::string &atc)
+{
+    auto ca = codeAtcMap[atc];
+    return ca.description;
 }
 
 }
