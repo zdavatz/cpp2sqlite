@@ -125,7 +125,7 @@ MedicineList & parseXML(const std::string &filename,
                     
                     // Add ";" and localized text from 'atc_codes_multi_lingual.txt'
                     if (!Med.atc.empty()) {
-                        std::string atcText = ATC::getTextByAtc(Med.atc);
+                        std::string atcText = ATC::getTextByAtcs(Med.atc);
                         if (!atcText.empty()) {
                             statsAtcTextFoundCount++;
                             Med.atc += ";" + atcText;

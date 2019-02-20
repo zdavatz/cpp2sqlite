@@ -55,7 +55,7 @@
 #define USE_BOOST_FOR_REPLACEMENTS // faster than with std::regex
 //#define DEBUG_SHOW_RAW_XML_IN_DB_FILE
 
-#define SECTION_TITLES_SEPARATOR    ";"
+#define TITLES_STR_SEPARATOR    ";"
 
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
@@ -331,7 +331,8 @@ void getHtmlFromXml(std::string &xml,
                     const GTIN::oneFachinfoPackages &packages, // for barcodes
                     std::vector<std::string> &sectionId,
                     std::vector<std::string> &sectionTitle,
-                    bool verbose)
+                    const std::string atc,
+                    bool verbose = false)
 {
 #ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
     html = xml;
@@ -439,12 +440,12 @@ void getHtmlFromXml(std::string &xml,
                     boost::replace_all(tagContent, "Ò",  "®"); // see HtmlUtils.java:636
                     boost::replace_all(tagContent, "â",  "®");
                     boost::replace_all(tagContent, "&apos;",   "'");
-                    if (tagContent.find(SECTION_TITLES_SEPARATOR) != std::string::npos) {
+                    if (tagContent.find(TITLES_STR_SEPARATOR) != std::string::npos) {
                         if (verbose)
                             std::clog
                             << basename((char *)__FILE__) << ":" << __LINE__
                             << ", Warning - rn " << regnrs
-                            << ", found embedded section_title_separator \"" << tagContent << "\""
+                            << ", replacing title_str separator in \"" << tagContent << "\""
                             << std::endl;
                         
                         // Replace section separator ";" with something else
@@ -840,7 +841,7 @@ int main(int argc, char **argv)
             //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << "regnrs size: " << regnrs.size() << std::endl;
 
             // atc_class
-            std::string atcClass = ATC::getClassByAtc(m.atc);
+            std::string atcClass = ATC::getClassByAtcColumn(m.atc);
             AIPS::bindText("amikodb", statement, 6, atcClass);
 
             // tindex_str
@@ -916,6 +917,7 @@ int main(int argc, char **argv)
             AIPS::bindText("amikodb", statement, 12, "");
 
             // content
+            auto firstAtc = ATC::getFirstAtcInAtcColumn(m.atc);
             std::vector<std::string> sectionId;    // HTML section IDs
             std::vector<std::string> sectionTitle; // HTML section titles
             {
@@ -924,6 +926,7 @@ int main(int argc, char **argv)
                                packages,        // for barcodes
                                sectionId,       // for ids_str
                                sectionTitle,    // for titles_str
+                               firstAtc,        // for pedDose
                                flagVerbose);
                 AIPS::bindText("amikodb", statement, 15, html);
             }
@@ -936,7 +939,7 @@ int main(int argc, char **argv)
 
             // titles_str
             {
-                std::string titles_str = boost::algorithm::join(sectionTitle, SECTION_TITLES_SEPARATOR);
+                std::string titles_str = boost::algorithm::join(sectionTitle, TITLES_STR_SEPARATOR);
                 AIPS::bindText("amikodb", statement, 14, titles_str);
             }
 

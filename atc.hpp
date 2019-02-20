@@ -20,7 +20,10 @@ namespace ATC
                   std::string &name);
     
     std::string getTextByAtc(const std::string atc);
-    std::string getClassByAtc(const std::string atc);
+    std::string getTextByAtcs(const std::string atc);
+    std::string getClassByAtcColumn(const std::string atcColumn);
+    std::string getFirstAtcInAtcColumn(const std::string atcColumn);
+    std::string getFirstAtc(const std::string atc);
 
     void printStats();
 }

@@ -34,6 +34,15 @@ namespace PED
     unsigned int statsCodeEVIDENZ = 0;
     unsigned int statsCodeRoa = 0;
     unsigned int statsCodeZEIT = 0;
+    
+    std::set<std::string> caseCaseID;
+    std::set<std::string> caseAtcCode;
+    std::set<std::string> caseRoaCode;
+
+    std::set<std::string> codeAtcCode;
+    std::set<std::string> codeRoaCode;
+
+    std::set<std::string> dosageCaseID;
 
 void parseXML(const std::string &filename)
 {
@@ -83,6 +92,9 @@ void parseXML(const std::string &filename)
                 << ", CaseTitle <" << v.second.get("CaseTitle", "") << ">"
                 << std::endl;
 #endif
+                caseCaseID.insert(v.second.get("CaseID", ""));
+                caseAtcCode.insert(v.second.get("ATCCode", ""));
+                caseRoaCode.insert(v.second.get("ROACode", ""));
             }
         } // FOREACH Cases
 
@@ -129,6 +141,7 @@ void parseXML(const std::string &filename)
                         std::clog << "\n\t ATC N02BA01 at: " << statsCodeAtc << std::endl;
 
                     statsCodeAtc++;
+                    codeAtcCode.insert(v.second.get("CodeValue", ""));
                 }
                 else if (codeType == "DOSISTYP")
                     statsCodeDOSISTYP++;
@@ -136,8 +149,10 @@ void parseXML(const std::string &filename)
                     statsCodeDOSISUNIT++;
                 else if (codeType == "EVIDENZ")
                     statsCodeEVIDENZ++;
-                else if (codeType == "ROA")
+                else if (codeType == "ROA") {
                     statsCodeRoa++;
+                    codeRoaCode.insert(v.second.get("CodeValue", ""));
+                }
                 else if (codeType == "ZEIT")
                     statsCodeZEIT++;
 
@@ -166,6 +181,8 @@ void parseXML(const std::string &filename)
                 << ", DoseRangeUnit <" << v.second.get("DoseRangeUnit", "") << ">"
                 << std::endl;
 #endif
+                dosageCaseID.insert(v.second.get("CaseID", ""));
+
             }
         } // FOREACH Dosages
     } // try
@@ -178,12 +195,22 @@ void parseXML(const std::string &filename)
     
     std::clog
     << basename((char *)__FILE__) << ":" << __LINE__
-    << ", Cases: " << statsCasesCount
-    << ", Indications: " << statsIndicationsCount
-    << ", Codes: " << statsCodesCount
-    << ", Dosages: " << statsDosagesCount
     << std::endl
-    << "CodeType\n\t_ALTERRELATION: " << statsCode_ALTERRELATION
+    << "Cases: " << statsCasesCount
+    << ", # CaseID: " << caseCaseID.size()
+    << ", # ATC Code: " << caseAtcCode.size()
+    << ", # ROA Code: " << caseRoaCode.size()
+    << std::endl
+    << "Indications: " << statsIndicationsCount
+    << std::endl
+    << "Dosages: " << statsDosagesCount
+    << ", CaseID size: " << dosageCaseID.size()
+    << std::endl
+    << "Codes: " << statsCodesCount
+    << ", # ATCCode: " << codeAtcCode.size()
+    << ", # ROA Code: " << codeRoaCode.size()
+    << std::endl
+    << "  <CodeType>\n\t_ALTERRELATION: " << statsCode_ALTERRELATION
     << "\n\t_FG: " << statsCode_FG
     << "\n\t_GEWICHT: " << statsCode_GEWICHT
     << "\n\tATC: " << statsCodeAtc

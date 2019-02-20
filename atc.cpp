@@ -104,20 +104,24 @@ void validate(const std::string &regnrs, std::string &atc)
     atc = outputAtc;
 }
 
+// The input string is a single atc
 std::string getTextByAtc(const std::string atc)
 {
     std::string text;
-    
-    // The input parameter 'atc' could be a list of comma separated ATCs
-    // Use just the first one
-    std::vector<std::string> atcVector;
-    boost::algorithm::split(atcVector, atc, boost::is_any_of(","), boost::token_compress_on);
-    
-    auto search = atcMap.find(atcVector[0]);
+    auto search = atcMap.find(atc);
     if (search != atcMap.end())
         text = search->second;
-
+    
     return text;
+}
+
+// The input string is in the format "atccode[,atccode]*"
+std::string getTextByAtcs(const std::string atcs)
+{
+    std::string text;
+    std::string firstAtc = getFirstAtc(atcs);
+
+    return getTextByAtc(firstAtc);
 }
     
 static
@@ -155,11 +159,10 @@ std::string getTextByAtc(const std::string atc, const int n)
     return s;
 }
 
-// The input string is in the format "atccode;text"
-std::string getClassByAtc(const std::string atcColumn)
+// The input string is in the format "atccode[,atccode]*;text"
+std::string getClassByAtcColumn(const std::string atcColumn)
 {
-    std::string::size_type len = atcColumn.find(";");
-    auto atc = atcColumn.substr(0, len); // pos, len
+    auto atc = getFirstAtcInAtcColumn(atcColumn);
 
     std::string s1 = getTextByAtc(atc, 1);
     std::string s3 = getTextByAtc(atc, 3);
@@ -167,6 +170,25 @@ std::string getClassByAtc(const std::string atcColumn)
     std::string s5 = getTextByAtc(atc, 5);
 
     return s1 + ";" + s3 + ";" + s4 + "#" + s5 + "#";
+}
+
+std::string getFirstAtcInAtcColumn(const std::string atcColumn)
+{
+    std::string::size_type len = atcColumn.find(";");
+    auto atcs = atcColumn.substr(0, len); // pos, len
+    return getFirstAtc(atcs);
+}
+
+// The input parameter 'atcs' could be a list of comma separated ATCs
+// Return the first one
+std::string getFirstAtc(const std::string atcs)
+{
+    std::vector<std::string> atcVector;
+    boost::algorithm::split(atcVector, atcs, boost::is_any_of(","), boost::token_compress_on);
+    if (atcVector.size() > 1)
+        std::cout << "break here";
+
+    return atcVector[0];
 }
 
 void printStats()
