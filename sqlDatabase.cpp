@@ -25,15 +25,20 @@ void createIndex(const std::string &tableName,
                  const std::string &prefix,
                  const std::vector<std::string> &keys)
 {
+    char *errmsg;
     for (std::string k : keys) {
         std::string indexName = prefix + k;
 
         std::ostringstream sqlStream;
         sqlStream << "CREATE INDEX " << indexName << " ON " << tableName << "(" << k << ");";
         //std::cout << "Line: " << __LINE__ << " " << sqlStream.str() << std::endl;
-        int rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, NULL);
+        int rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, &errmsg);
         if (rc != SQLITE_OK)
-            std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
+            std::cerr
+            << basename((char *)__FILE__) << ":" << __LINE__
+            << ", error " << rc
+            << ", " << errmsg
+            << std::endl;
     }
 }
 
@@ -42,7 +47,10 @@ void destroyStatement(sqlite3_stmt * statement)
     // Destroy the object
     int rc = sqlite3_finalize(statement);
     if ((rc != SQLITE_OK) && (rc != SQLITE_DONE))
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", error " << rc << std::endl;
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", error " << rc
+        << std::endl;
 }
 
 void runStatement(const std::string &tableName,
@@ -50,11 +58,17 @@ void runStatement(const std::string &tableName,
 {
     // Run the SQL
     int rc = sqlite3_step(statement);
-    if ((rc != SQLITE_OK) && (rc != SQLITE_DONE))
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__
-                  << ", statement: " << sqlite3_expanded_sql(statement)
-                  << ", error: " << rc << std::endl;
-    
+    if ((rc != SQLITE_OK) && (rc != SQLITE_DONE)) {
+        char *exp = sqlite3_expanded_sql(statement);
+        std::string expString(exp);
+        sqlite3_free(exp);
+
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", error " << rc
+        << ", statement: " << expString.substr(0,200)
+        << std::endl;
+    }
 
     rc = sqlite3_reset(statement);
 }
@@ -69,7 +83,10 @@ void bindText(const std::string &tableName,
 
     int rc = sqlite3_bind_text(statement, pos, text.c_str(), -1, SQLITE_TRANSIENT);
     if (rc != SQLITE_OK)
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", error " << rc << std::endl;
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", error " << rc
+        << std::endl;
 }
 
 void prepareStatement(const std::string &tableName,
@@ -83,7 +100,10 @@ void prepareStatement(const std::string &tableName,
     
     int rc = sqlite3_prepare_v2(db, sqlStream.str().c_str(), -1, statement, NULL);
     if (rc != SQLITE_OK)
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", error " << rc << std::endl;
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", error " << rc
+        << std::endl;
 }
 
 void insertInto(const std::string &tableName,
@@ -91,16 +111,21 @@ void insertInto(const std::string &tableName,
                 const std::string &values)
 {
     std::ostringstream sqlStream;
+    int rc;
+    char *errmsg;
+
     sqlStream << "INSERT INTO " << tableName
               << " (" << keys << ") "
               << "VALUES (" << values << ");";
     //std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " " << sqlStream.str() << std::endl;
-    int rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, NULL);
+    rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, &errmsg);
     if (rc != SQLITE_OK) {
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__
-                  << ", sqlite3_exec error " << rc
-                  << ", " << sqlStream.str()
-                  << std::endl;
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", error " << rc
+        << ", " << errmsg
+        << ", " << sqlStream.str().substr(0,100)
+        << std::endl;
     }
 }
 
@@ -108,30 +133,46 @@ void createTable(const std::string &tableName, const std::string &keys)
 {
     std::ostringstream sqlStream;
     int rc;
+    char *errmsg;
 
     sqlStream << "PRAGMA user_version=" << FI_DB_VERSION << ";";
-    rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, NULL);
+    rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, &errmsg);
     if (rc != SQLITE_OK)
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", error " << rc
+        << ", " << errmsg
+        << std::endl;
     
     sqlStream << "DROP TABLE IF EXISTS " << tableName << ";";
-    rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, NULL);
+    rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, &errmsg);
     if (rc != SQLITE_OK)
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", error " << rc
+        << ", " << errmsg
+        << std::endl;
     
     // See SqlDatabase.java 207
     sqlStream.str("");
     sqlStream << "CREATE TABLE " << tableName << "(" << keys.c_str() << ");";
-    rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, NULL);
+    rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, &errmsg);
     if (rc != SQLITE_OK)
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", error " << rc
+        << ", " << errmsg
+        << std::endl;
 }
 
 sqlite3 * createDB(const std::string &filename)
 {
     int rc = sqlite3_open(filename.c_str(), &db);
     if (rc != SQLITE_OK)
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", error " << rc
+        << std::endl;
 
     createTable("amikodb", "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, auth TEXT, atc TEXT, substances TEXT, regnrs TEXT, atc_class TEXT, tindex_str TEXT, application_str TEXT, indications_str TEXT, customer_id INTEGER, pack_info_str TEXT, add_info_str TEXT, ids_str TEXT, titles_str TEXT, content TEXT, style_str TEXT, packages TEXT");
     createIndex("amikodb", "idx_", {"title", "auth", "atc", "substances", "regnrs", "atc_class"});
