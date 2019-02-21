@@ -31,6 +31,8 @@ namespace PED
     };
 
     struct _dosage {
+        std::string key;
+
         std::string ageFrom;
         std::string ageFromUnit;
 
@@ -60,6 +62,10 @@ namespace PED
         std::string maxDailyDoseUnit;
         std::string maxDailyDoseUnitRef1;
         std::string maxDailyDoseUnitRef2;
+
+        std::string remarks;
+
+        std::string caseId;
     };
     
     void parseXML(const std::string &filename,
@@ -69,7 +75,7 @@ namespace PED
     std::string getDescriptionByAtc(const std::string &atc);
     std::string getIndicationByKey(const std::string &key);
 
-    _dosage getDosageById(const std::string &id);
+    void getDosageById(const std::string &id, std::vector<_dosage> &dosages);
     
     //std::string getRoaDescription(const std::string &codeValue);
     

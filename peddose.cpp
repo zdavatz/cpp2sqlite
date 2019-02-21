@@ -48,7 +48,8 @@ namespace PED
     std::vector<_code> codeRoaVec;
     std::set<std::string> codeRoaCodeSet;
 
-    std::map<std::string, _dosage> dosageMap; // key is DosageKey
+    //std::map<std::string, _dosage> dosageMap; // key is DosageKey
+    std::vector<_dosage> dosageVec;
     std::set<std::string> dosageCaseID;// TODO: obsolete
 
 void parseXML(const std::string &filename,
@@ -219,6 +220,8 @@ void parseXML(const std::string &filename,
                 dosageCaseID.insert(v.second.get("CaseID", ""));
                 
                 _dosage dos;
+                dos.key = v.second.get("DosageKey", "");
+
                 dos.ageFrom = v.second.get("AgeFrom", "");
                 dos.ageFromUnit = v.second.get("AgeFromUnit", "");
                 dos.ageTo = v.second.get("AgeTo", "");
@@ -243,7 +246,19 @@ void parseXML(const std::string &filename,
                 dos.maxDailyDoseUnitRef1 = v.second.get("MaxDailyDoseReferenceUnit1", "");
                 dos.maxDailyDoseUnitRef2 = v.second.get("MaxDailyDoseReferenceUnit2", "");
 
-                dosageMap.insert(std::make_pair(v.second.get("CaseID", ""), dos));
+                if (language == "de")
+                    dos.remarks = v.second.get("RemarksD", "");
+                else if (language == "fr")
+                    dos.remarks = v.second.get("RemarksF", "");
+                else if (language == "it")
+                    dos.remarks = v.second.get("RemarksI", "");
+                else //if (language == "en")
+                    dos.remarks = v.second.get("RemarksE", "");
+
+                dos.caseId = v.second.get("CaseID", "");
+
+                dosageVec.push_back(dos);
+                //dosageMap.insert(std::make_pair(v.second.get("CaseID", ""), dos));
             }
         } // FOREACH Dosages
     } // try
@@ -267,7 +282,8 @@ void parseXML(const std::string &filename,
     << std::endl
     << "Dosages: " << statsDosagesCount
     << ", CaseID size: " << dosageCaseID.size()
-    << ", # dosage map: " << dosageMap.size()
+    //<< ", # dosage map: " << dosageMap.size()
+    << ", # dosage vec: " << dosageVec.size()
     << std::endl
     << "Codes: " << statsCodesCount
     << ", # ATCCode map: " << codeAtcMap.size()
@@ -304,9 +320,12 @@ std::string getIndicationByKey(const std::string &key)
     return indicationMap[key].name;
 }
 
-_dosage getDosageById(const std::string &id)
+//_dosage getDosageById(const std::string &id)
+void getDosageById(const std::string &id, std::vector<_dosage> &dosages)
 {
-    return dosageMap[id];
+    for (auto d : dosageVec)
+        if (d.caseId == id)
+            dosages.push_back(d);
 }
 
 void showPedDoseByAtc(std::string atc)
@@ -324,22 +343,33 @@ void showPedDoseByAtc(std::string atc)
     for (auto ca : cases) {
         auto description = PED::getDescriptionByAtc(atc);
         auto indication = PED::getIndicationByKey(ca.indicationKey);
-        auto dosage = PED::getDosageById(ca.caseId);
+        
+        std::vector<_dosage> dosages;
+        PED::getDosageById(ca.caseId, dosages);
         
         std::cout
         << "\t caseId: " << ca.caseId
         << "\n\t\t desc: " << description << " (" << ca.RoaCode << ")"
         << "\n\t\t ind: " << indication
-        << "\n\t\t age: " << dosage.ageFrom << " " << dosage.ageFromUnit
-        << ", to: " << dosage.ageTo << " " << dosage.ageToUnit
-        << "\n\t\t dosage: " << dosage.doseLow << " - " << dosage.doseHigh << " " << dosage.doseUnit << "/" << dosage.doseUnitRef1 << "/" << dosage.doseUnitRef2
-        << "\n\t\t daily repetitions: " << dosage.dailyRepetitionsLow << " - " << dosage.dailyRepetitionsHigh
-
-        << "\n\t\t max single dose: " << dosage.maxSingleDose << " " << dosage.maxSingleDoseUnit << "/" << dosage.maxSingleDoseUnitRef1 << "/" << dosage.maxSingleDoseUnitRef2
-
-        << "\n\t\t max daily dose: " << dosage.maxDailyDose << " " << dosage.maxDailyDoseUnit << "/" << dosage.maxDailyDoseUnitRef1 << "/" << dosage.maxDailyDoseUnitRef2
-
         << std::endl;
+
+        for (auto dosage : dosages) {
+            std::cout
+            << "\t\t dosage recommendation: " << dosage.key
+            << "\n\t\t\t age: " << dosage.ageFrom << " " << dosage.ageFromUnit
+            << ", to: " << dosage.ageTo << " " << dosage.ageToUnit
+            << "\n\t\t\t dosage: " << dosage.doseLow << " - " << dosage.doseHigh << " " << dosage.doseUnit << "/" << dosage.doseUnitRef1 << "/" << dosage.doseUnitRef2
+            << "\n\t\t\t daily repetitions: " << dosage.dailyRepetitionsLow << " - " << dosage.dailyRepetitionsHigh
+            
+            << "\n\t\t\t max single dose: " << dosage.maxSingleDose << " " << dosage.maxSingleDoseUnit << "/" << dosage.maxSingleDoseUnitRef1 << "/" << dosage.maxSingleDoseUnitRef2
+            
+            << "\n\t\t\t max daily dose: " << dosage.maxDailyDose << " " << dosage.maxDailyDoseUnit << "/" << dosage.maxDailyDoseUnitRef1 << "/" << dosage.maxDailyDoseUnitRef2;
+
+            if (!dosage.remarks.empty())
+                std::cout << "\n\t\t\t remarks: " << dosage.remarks;
+
+            std::cout << std::endl;
+        }
     }
 }
 }

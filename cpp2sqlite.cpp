@@ -781,7 +781,6 @@ int main(int argc, char **argv)
                   opt_language);
     PED::showPedDoseByAtc("N02BA01");
     PED::showPedDoseByAtc("J05AB01");
-    return EXIT_SUCCESS;
 
     // Read swissmedic next, because aips might need to get missing ATC codes from it
     SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");
