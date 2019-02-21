@@ -221,6 +221,10 @@ void parseXML(const std::string &filename,
                 dos.ageTo = v.second.get("AgeTo", "");
                 dos.ageToUnit = v.second.get("AgeToUnit", "");
 
+                dos.ageWeightRelation = v.second.get("AgeWeightRelation", "");
+                dos.weightFrom = v.second.get("WeightFrom", "");
+                dos.weightTo = v.second.get("WeightTo", "");
+
                 dos.doseLow = v.second.get("LowerDoseRange", "");
                 dos.doseHigh = v.second.get("UpperDoseRange", "");
                 dos.doseUnit = v.second.get("DoseRangeUnit", "");
@@ -341,42 +345,86 @@ std::string getHtmlByAtc(const std::string atc)
         auto description = PED::getDescriptionByAtc(atc);
         auto indication = PED::getIndicationByKey(ca.indicationKey);
 
-        html += "\nATC-Code: " + atc + "\n" + description + "\n";
-        html += "Indication: " + indication + "\n";
+        html += "<br>\n<br>\n" + description + "<br>\n";
+        html += "\nATC-Code: " + atc + "<br>\n";
+        html += "Indication: " + indication + "<br>\n";
 
         std::vector<_dosage> dosages;
         PED::getDosageById(ca.caseId, dosages);
-        
-        if (dosages.size() > 0)
-            html += "<b>Age\t Weight\t Type of use\t Dosage\t Daily repetitions\t ROA\t Max. daily dose</b>\n";
 
-        for (auto dosage : dosages) {
-            html += dosage.ageFrom + dosage.ageFromUnit + " to " + dosage.ageTo + dosage.ageToUnit;
+        std::string tableHeader;
+        tableHeader.clear();
+        if (dosages.size() > 0) {
+            tableHeader += "<th>Age</th>";
+            tableHeader += "<th>Weight</th>";
+            tableHeader += "<th>Type of use</th>";
+            tableHeader += "<th>Dosage</th>";
+            tableHeader += "<th>Daily repetitions</th>";
+            tableHeader += "<th>ROA</th>";
+            tableHeader += "<th>Max. daily dose</th>";
+            tableHeader += "\n"; // for readability
 
-            html += "\t TODO_WEIGHT";
-            html += "\t TODO_TYPE";
-
-            html += "\t" + dosage.doseLow + " - " + dosage.doseHigh + " " + dosage.doseUnit;
-            if (!dosage.doseUnitRef1.empty())
-                html += "/" + dosage.doseUnitRef1;
-            if (!dosage.doseUnitRef2.empty())
-                html += "/" + dosage.doseUnitRef2;
-
-            html += "\t" + dosage.dailyRepetitionsLow + " - " + dosage.dailyRepetitionsHigh + " x daily";
-
-            html += "\t" + ca.RoaCode;
-            
-            html += "\t" + dosage.maxDailyDose + " " + dosage.maxDailyDoseUnit;
-            if (!dosage.maxDailyDoseUnitRef1.empty())
-                html += "/" + dosage.maxDailyDoseUnitRef1;
-            if (!dosage.maxDailyDoseUnitRef2.empty())
-                html += "/" + dosage.maxDailyDoseUnitRef2;
-
-            html += "\n";
+            tableHeader = "<tr>" + tableHeader + "</tr>";
+            tableHeader = "<thead>" + tableHeader + "</thead>";
         }
-    }
+        
+        std::string tableBody;
+        tableBody.clear();
+        for (auto dosage : dosages) {
+            std::string tableRow;
+            tableRow += "<td>";
+            tableRow += dosage.ageFrom + dosage.ageFromUnit;
+            tableRow += " to " + dosage.ageTo + dosage.ageToUnit;
+            tableRow += " " + dosage.ageWeightRelation;
+            tableRow += "</td>";
 
-    html = "<pre>" + html + "</pre>";
+            tableRow += "<td>";
+            tableRow += dosage.weightFrom + " to " + dosage.weightTo;
+            tableRow += "</td>";
+
+            tableRow += "<td>";
+            tableRow += "TYPE";
+            tableRow += "</td>";
+
+            tableRow += "<td>";
+            tableRow += dosage.doseLow + " - " + dosage.doseHigh + " " + dosage.doseUnit;
+            if (!dosage.doseUnitRef1.empty())
+                tableRow += "/" + dosage.doseUnitRef1;
+            if (!dosage.doseUnitRef2.empty())
+                tableRow += "/" + dosage.doseUnitRef2;
+            tableRow += "</td>";
+
+            tableRow += "<td>";
+            tableRow += dosage.dailyRepetitionsLow + " - " + dosage.dailyRepetitionsHigh + " x daily";
+            tableRow += "</td>";
+
+            tableRow += "<td>";
+            tableRow += ca.RoaCode;
+            tableRow += "</td>";
+
+            tableRow += "<td>";
+            tableRow += dosage.maxDailyDose + " " + dosage.maxDailyDoseUnit;
+            if (!dosage.maxDailyDoseUnitRef1.empty())
+                tableRow += "/" + dosage.maxDailyDoseUnitRef1;
+            if (!dosage.maxDailyDoseUnitRef2.empty())
+                tableRow += "/" + dosage.maxDailyDoseUnitRef2;
+            tableRow += "</td>";
+
+            tableRow += "\n";  // for readability
+
+            tableRow = "<tr>" + tableRow + "</tr>";
+            tableBody += tableRow;
+        } // for dosages
+        
+        tableBody = "<tbody>" + tableBody + "</tbody>";
+
+        std::string table = tableHeader + tableBody;
+        table = "<table border=\"1\">" + table + "</table>";
+
+        html += table;
+    } // for cases
+
+    html = "<p>" + html + "</p>";
 
     return html;
 }

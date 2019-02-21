@@ -42,7 +42,7 @@ namespace PED
         std::string ageWeightRelation;
 
         std::string weightFrom;
-        std::string weightFromUnit;
+        std::string weightTo;
 
         std::string doseLow;
         std::string doseHigh;
