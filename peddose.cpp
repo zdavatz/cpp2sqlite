@@ -45,7 +45,8 @@ namespace PED
     std::map<std::string, _indication> indicationMap; // key is IndicationKey
 
     std::map<std::string, _code> codeAtcMap; // key is CodeValue
-    std::set<std::string> codeRoaCode;
+    std::vector<_code> codeRoaVec;
+    std::set<std::string> codeRoaCodeSet;
 
     std::map<std::string, _dosage> dosageMap; // key is DosageKey
     std::set<std::string> dosageCaseID;// TODO: obsolete
@@ -63,7 +64,7 @@ void parseXML(const std::string &filename,
         std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
     }
     
-    std::clog << "Analyzing Ped" << std::endl;
+    std::clog << "Analyzing Ped " << language << std::endl;
     int i=0;
 
     try {
@@ -131,7 +132,13 @@ void parseXML(const std::string &filename,
                 << std::endl;
 #endif
                 _indication in;
-                in.name = v.second.get("IndicationNameD", "");
+                if (language == "de")
+                    in.name = v.second.get("IndicationNameD", "");
+                else if (language == "fr")
+                    in.name = v.second.get("IndicationNameF", "");
+                else
+                    in.name = v.second.get("IndikationNameE", ""); // English has a K
+
                 in.recStatus = v.second.get("RecStatus", "");
                 indicationMap.insert(std::make_pair(v.second.get("IndicationKey", ""), in));
             }
@@ -160,6 +167,7 @@ void parseXML(const std::string &filename,
 
                     statsCodeAtc++;
                     _code co;
+                    co.value = v.second.get("CodeValue", ""); // redundant for the map
                     co.description = v.second.get("DescriptionD", "");  // TODO: localize
                     co.recStatus = v.second.get("RecStatus", "");
                     codeAtcMap.insert(std::make_pair(v.second.get("CodeValue", ""), co));
@@ -172,7 +180,13 @@ void parseXML(const std::string &filename,
                     statsCodeEVIDENZ++;
                 else if (codeType == "ROA") {
                     statsCodeRoa++;
-                    codeRoaCode.insert(v.second.get("CodeValue", ""));
+                    codeRoaCodeSet.insert(v.second.get("CodeValue", ""));
+
+                    _code co;
+                    co.value = v.second.get("CodeValue", "");
+                    co.description = v.second.get("DescriptionD", "");  // TODO: localize
+                    co.recStatus = v.second.get("RecStatus", "");
+                    codeRoaVec.push_back(co);
                 }
                 else if (codeType == "ZEIT")
                     statsCodeZEIT++;
@@ -209,8 +223,26 @@ void parseXML(const std::string &filename,
                 dos.ageFromUnit = v.second.get("AgeFromUnit", "");
                 dos.ageTo = v.second.get("AgeTo", "");
                 dos.ageToUnit = v.second.get("AgeToUnit", "");
+
+                dos.doseLow = v.second.get("LowerDoseRange", "");
+                dos.doseHigh = v.second.get("UpperDoseRange", "");
+                dos.doseUnit = v.second.get("DoseRangeUnit", "");
+                dos.doseUnitRef1 = v.second.get("DoseRangeReferenceUnit1", "");
+                dos.doseUnitRef2 = v.second.get("DoseRangeReferenceUnit2", "");
+
+                dos.dailyRepetitionsLow = v.second.get("LowerRangeDailyRepetitions", "");
+                dos.dailyRepetitionsHigh = v.second.get("UpperRangeDailyRepetitions", "");
+
+                dos.maxSingleDose = v.second.get("MaxSingleDose", "");
+                dos.maxSingleDoseUnit = v.second.get("MaxSingleDoseUnit", "");
+                dos.maxSingleDoseUnitRef1 = v.second.get("MaxSingleDoseReferenceUnit1", "");
+                dos.maxSingleDoseUnitRef2 = v.second.get("MaxSingleDoseReferenceUnit2", "");
+
                 dos.maxDailyDose = v.second.get("MaxDailyDose", "");
                 dos.maxDailyDoseUnit = v.second.get("MaxDailyDoseUnit", "");
+                dos.maxDailyDoseUnitRef1 = v.second.get("MaxDailyDoseReferenceUnit1", "");
+                dos.maxDailyDoseUnitRef2 = v.second.get("MaxDailyDoseReferenceUnit2", "");
+
                 dosageMap.insert(std::make_pair(v.second.get("CaseID", ""), dos));
             }
         } // FOREACH Dosages
@@ -239,7 +271,7 @@ void parseXML(const std::string &filename,
     << std::endl
     << "Codes: " << statsCodesCount
     << ", # ATCCode map: " << codeAtcMap.size()
-    << ", # ROA Code: " << codeRoaCode.size()
+    << ", # ROA Code: " << codeRoaCodeSet.size()
     << std::endl
     << "  <CodeType>\n\t_ALTERRELATION: " << statsCode_ALTERRELATION
     << "\n\t_FG: " << statsCode_FG
@@ -296,11 +328,17 @@ void showPedDoseByAtc(std::string atc)
         
         std::cout
         << "\t caseId: " << ca.caseId
-        << "\n\t\t desc: " << description
+        << "\n\t\t desc: " << description << " (" << ca.RoaCode << ")"
         << "\n\t\t ind: " << indication
-        << "\n\t\t age from: " << dosage.ageFrom << " " << dosage.ageFromUnit
+        << "\n\t\t age: " << dosage.ageFrom << " " << dosage.ageFromUnit
         << ", to: " << dosage.ageTo << " " << dosage.ageToUnit
-        << "\n\t\t max daily: " << dosage.maxDailyDose << " " << dosage.maxDailyDoseUnit
+        << "\n\t\t dosage: " << dosage.doseLow << " - " << dosage.doseHigh << " " << dosage.doseUnit << "/" << dosage.doseUnitRef1 << "/" << dosage.doseUnitRef2
+        << "\n\t\t daily repetitions: " << dosage.dailyRepetitionsLow << " - " << dosage.dailyRepetitionsHigh
+
+        << "\n\t\t max single dose: " << dosage.maxSingleDose << " " << dosage.maxSingleDoseUnit << "/" << dosage.maxSingleDoseUnitRef1 << "/" << dosage.maxSingleDoseUnitRef2
+
+        << "\n\t\t max daily dose: " << dosage.maxDailyDose << " " << dosage.maxDailyDoseUnit << "/" << dosage.maxDailyDoseUnitRef1 << "/" << dosage.maxDailyDoseUnitRef2
+
         << std::endl;
     }
 }

@@ -25,6 +25,7 @@ namespace PED
     };
     
     struct _code {
+        std::string value;
         std::string description;    // TODO: localize
         std::string recStatus;
     };
@@ -41,8 +42,24 @@ namespace PED
         std::string weightFrom;
         std::string weightFromUnit;
 
+        std::string doseLow;
+        std::string doseHigh;
+        std::string doseUnit;
+        std::string doseUnitRef1;
+        std::string doseUnitRef2; // <DoseRangeReferenceUnit2>
+
+        std::string dailyRepetitionsLow;
+        std::string dailyRepetitionsHigh;
+
+        std::string maxSingleDose;
+        std::string maxSingleDoseUnit;
+        std::string maxSingleDoseUnitRef1;
+        std::string maxSingleDoseUnitRef2;
+
         std::string maxDailyDose;
         std::string maxDailyDoseUnit;
+        std::string maxDailyDoseUnitRef1;
+        std::string maxDailyDoseUnitRef2;
     };
     
     void parseXML(const std::string &filename,
@@ -53,6 +70,8 @@ namespace PED
     std::string getIndicationByKey(const std::string &key);
 
     _dosage getDosageById(const std::string &id);
+    
+    //std::string getRoaDescription(const std::string &codeValue);
     
     void showPedDoseByAtc(std::string atc);
 }
