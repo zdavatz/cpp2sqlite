@@ -657,14 +657,6 @@ void getHtmlFromXml(std::string &xml,
     }
 
     // TODO: peddose
-    auto ca = PED::getCaseByAtc(atc);
-    auto description = PED::getDescriptionByAtc(atc);
-#if 0
-    std::cout << "Ped Dose, ATC: " << atc
-    << ", caseId: " << ca.caseId
-    << ", desc: " << description
-    << std::endl;
-#endif
 
     // section21
     {
@@ -787,6 +779,7 @@ int main(int argc, char **argv)
 
     PED::parseXML(opt_downloadDirectory + "/swisspeddosepublication-2019-02-07.xml",
                   opt_language);
+    PED::showPedDoseByAtc("J05AB01");
 
     // Read swissmedic next, because aips might need to get missing ATC codes from it
     SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");

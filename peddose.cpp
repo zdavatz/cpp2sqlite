@@ -37,15 +37,18 @@ namespace PED
     unsigned int statsCodeRoa = 0;
     unsigned int statsCodeZEIT = 0;
     
-    std::map<std::string, _cases> caseMap; // key is atcCode
+    std::vector<_case> caseVec;
     std::set<std::string> caseCaseID; // TODO: obsolete
     std::set<std::string> caseAtcCode;// TODO: obsolete
     std::set<std::string> caseRoaCode;// TODO: obsolete
     
-    std::map<std::string, _codes> codeAtcMap; // key is CodeValue
+    std::map<std::string, _indication> indicationMap; // key is IndicationKey
+
+    std::map<std::string, _code> codeAtcMap; // key is CodeValue
     std::set<std::string> codeRoaCode;
 
-    std::set<std::string> dosageCaseID;
+    std::map<std::string, _dosage> dosageMap; // key is DosageKey
+    std::set<std::string> dosageCaseID;// TODO: obsolete
 
 void parseXML(const std::string &filename,
               const std::string &language)
@@ -100,10 +103,12 @@ void parseXML(const std::string &filename,
                 caseAtcCode.insert(v.second.get("ATCCode", ""));
                 caseRoaCode.insert(v.second.get("ROACode", ""));
                 
-                _cases ca {v.second.get("CaseID", ""),
-                           v.second.get("IndicationKey", ""),
-                           v.second.get("ROACode", "")};
-                caseMap.insert(std::make_pair(v.second.get("ATCCode", ""), ca));
+                _case ca;
+                ca.caseId = v.second.get("CaseID", "");
+                ca.atcCode = v.second.get("ATCCode", "");
+                ca.indicationKey = v.second.get("IndicationKey", "");
+                ca.RoaCode = v.second.get("ROACode", "");
+                caseVec.push_back(ca);
             }
         } // FOREACH Cases
 
@@ -125,6 +130,10 @@ void parseXML(const std::string &filename,
                 << ", IndicationNameD <" << v.second.get("IndicationNameD", "") << ">"
                 << std::endl;
 #endif
+                _indication in;
+                in.name = v.second.get("IndicationNameD", "");
+                in.recStatus = v.second.get("RecStatus", "");
+                indicationMap.insert(std::make_pair(v.second.get("IndicationKey", ""), in));
             }
         } // FOREACH Indications
 
@@ -150,8 +159,9 @@ void parseXML(const std::string &filename,
                         std::clog << "\n\t ATC N02BA01 at: " << statsCodeAtc << std::endl;
 
                     statsCodeAtc++;
-                    _codes co {v.second.get("DescriptionD", ""),  // TODO: localize
-                               v.second.get("RecStatus", "")};
+                    _code co;
+                    co.description = v.second.get("DescriptionD", "");  // TODO: localize
+                    co.recStatus = v.second.get("RecStatus", "");
                     codeAtcMap.insert(std::make_pair(v.second.get("CodeValue", ""), co));
                 }
                 else if (codeType == "DOSISTYP")
@@ -193,7 +203,15 @@ void parseXML(const std::string &filename,
                 << std::endl;
 #endif
                 dosageCaseID.insert(v.second.get("CaseID", ""));
-
+                
+                _dosage dos;
+                dos.ageFrom = v.second.get("AgeFrom", "");
+                dos.ageFromUnit = v.second.get("AgeFromUnit", "");
+                dos.ageTo = v.second.get("AgeTo", "");
+                dos.ageToUnit = v.second.get("AgeToUnit", "");
+                dos.maxDailyDose = v.second.get("MaxDailyDose", "");
+                dos.maxDailyDoseUnit = v.second.get("MaxDailyDoseUnit", "");
+                dosageMap.insert(std::make_pair(v.second.get("CaseID", ""), dos));
             }
         } // FOREACH Dosages
     } // try
@@ -213,12 +231,14 @@ void parseXML(const std::string &filename,
     << ", # ROA Code: " << caseRoaCode.size()
     << std::endl
     << "Indications: " << statsIndicationsCount
+    << ", # indications map: " << indicationMap.size()
     << std::endl
     << "Dosages: " << statsDosagesCount
     << ", CaseID size: " << dosageCaseID.size()
+    << ", # dosage map: " << dosageMap.size()
     << std::endl
     << "Codes: " << statsCodesCount
-    << ", # ATCCode: " << codeAtcMap.size()
+    << ", # ATCCode map: " << codeAtcMap.size()
     << ", # ROA Code: " << codeRoaCode.size()
     << std::endl
     << "  <CodeType>\n\t_ALTERRELATION: " << statsCode_ALTERRELATION
@@ -238,10 +258,44 @@ std::string getDescriptionByAtc(const std::string &atc)
     return codeAtcMap[atc].description;
 }
 
-_cases getCaseByAtc(const std::string &atc)
+// There could be multiple cases for the same ATC. Return a vector
+void getCasesByAtc(const std::string &atc, std::vector<_case> &cases)
 {
-    return caseMap[atc];
+    for (auto c : caseVec) {
+        if (c.atcCode == atc)
+            cases.push_back(c);
+    }
 }
     
+std::string getIndicationByKey(const std::string &key)
+{
+    return indicationMap[key].name;
+}
 
+_dosage getDosageById(const std::string &id)
+{
+    return dosageMap[id];
+}
+
+void showPedDoseByAtc(std::string atc)
+{
+    std::vector<_case> cases;
+    PED::getCasesByAtc(atc, cases);
+
+    for (auto ca : cases) {
+        auto description = PED::getDescriptionByAtc(atc);
+        auto indication = PED::getIndicationByKey(ca.indicationKey);
+        auto dosage = PED::getDosageById(ca.caseId);
+        
+        std::cout
+        << "Ped Dose, ATC: " << atc
+        << "\n\t caseId: " << ca.caseId
+        << "\n\t desc: " << description
+        << "\n\t ind: " << indication
+        << "\n\t age from: " << dosage.ageFrom << " " << dosage.ageFromUnit
+        << ", to: " << dosage.ageTo << " " << dosage.ageToUnit
+        << "\n\t max daily: " << dosage.maxDailyDose << " " << dosage.maxDailyDoseUnit
+        << std::endl;
+    }
+}
 }

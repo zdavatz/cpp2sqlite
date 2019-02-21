@@ -12,23 +12,49 @@
 
 namespace PED
 {
-    struct _cases {
+    struct _case {
         std::string caseId;
-        //std::string atcCode;
+        std::string atcCode;
         std::string indicationKey;
         std::string RoaCode;
     };
     
-    struct _codes {
+    struct _indication {
+        std::string name;    // TODO: localize
+        std::string recStatus;
+    };
+    
+    struct _code {
         std::string description;    // TODO: localize
         std::string recStatus;
     };
 
+    struct _dosage {
+        std::string ageFrom;
+        std::string ageFromUnit;
+
+        std::string ageTo;
+        std::string ageToUnit;
+
+        std::string ageWeightRelation;
+
+        std::string weightFrom;
+        std::string weightFromUnit;
+
+        std::string maxDailyDose;
+        std::string maxDailyDoseUnit;
+    };
+    
     void parseXML(const std::string &filename,
                   const std::string &language);
 
-    _cases getCaseByAtc(const std::string &atc);
+    void getCasesByAtc(const std::string &atc, std::vector<_case> &cases);
     std::string getDescriptionByAtc(const std::string &atc);
+    std::string getIndicationByKey(const std::string &key);
+
+    _dosage getDosageById(const std::string &id);
+    
+    void showPedDoseByAtc(std::string atc);
 }
 
 #endif /* peddose_hpp */
