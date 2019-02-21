@@ -281,6 +281,13 @@ void showPedDoseByAtc(std::string atc)
 {
     std::vector<_case> cases;
     PED::getCasesByAtc(atc, cases);
+    
+    if (cases.empty()) {
+        std::cout << "No cases for ATC: " << atc << std::endl;
+        return;
+    }
+
+    std::cout << "Ped Dose, ATC: " << atc << std::endl;
 
     for (auto ca : cases) {
         auto description = PED::getDescriptionByAtc(atc);
@@ -288,13 +295,12 @@ void showPedDoseByAtc(std::string atc)
         auto dosage = PED::getDosageById(ca.caseId);
         
         std::cout
-        << "Ped Dose, ATC: " << atc
-        << "\n\t caseId: " << ca.caseId
-        << "\n\t desc: " << description
-        << "\n\t ind: " << indication
-        << "\n\t age from: " << dosage.ageFrom << " " << dosage.ageFromUnit
+        << "\t caseId: " << ca.caseId
+        << "\n\t\t desc: " << description
+        << "\n\t\t ind: " << indication
+        << "\n\t\t age from: " << dosage.ageFrom << " " << dosage.ageFromUnit
         << ", to: " << dosage.ageTo << " " << dosage.ageToUnit
-        << "\n\t max daily: " << dosage.maxDailyDose << " " << dosage.maxDailyDoseUnit
+        << "\n\t\t max daily: " << dosage.maxDailyDose << " " << dosage.maxDailyDoseUnit
         << std::endl;
     }
 }

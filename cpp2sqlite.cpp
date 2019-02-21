@@ -779,6 +779,7 @@ int main(int argc, char **argv)
 
     PED::parseXML(opt_downloadDirectory + "/swisspeddosepublication-2019-02-07.xml",
                   opt_language);
+    PED::showPedDoseByAtc("N02BA01");
     PED::showPedDoseByAtc("J05AB01");
 
     // Read swissmedic next, because aips might need to get missing ATC codes from it
