@@ -162,8 +162,13 @@ void parseXML(const std::string &filename,
                 else if (codeType == "ATC") {
                     statsCodeAtc++;
                     _code co;
-                    co.value = v.second.get("CodeValue", ""); // redundant for the map
-                    co.description = v.second.get("DescriptionD", "");  // TODO: localize
+                    co.value = v.second.get("CodeValue", "");
+                    if (language == "de")
+                        co.description = v.second.get("DescriptionD", "");
+                    else if (language == "fr")
+                        co.description = v.second.get("DecsriptionF", "");  // Note: spelling mistake
+                    else //if (language == "en")
+                        co.description = v.second.get("DecriptionE", "");
                     co.recStatus = v.second.get("RecStatus", "");
                     codeAtcMap.insert(std::make_pair(v.second.get("CodeValue", ""), co));
                 }
@@ -375,11 +380,15 @@ std::string getHtmlByAtc(const std::string atc)
             tableRow += "<td>";
             tableRow += dosage.ageFrom + dosage.ageFromUnit;
             tableRow += " to " + dosage.ageTo + dosage.ageToUnit;
-            tableRow += " " + dosage.ageWeightRelation;
+            if (!dosage.ageWeightRelation.empty())
+                tableRow += " " + dosage.ageWeightRelation;
             tableRow += "</td>";
 
             tableRow += "<td>";
-            tableRow += dosage.weightFrom + " to " + dosage.weightTo;
+            tableRow += dosage.weightFrom;
+            if (dosage.weightFrom != dosage.weightTo)
+                tableRow += " to " + dosage.weightTo;
+            tableRow += " kg";
             tableRow += "</td>";
 
             tableRow += "<td>";
@@ -387,7 +396,10 @@ std::string getHtmlByAtc(const std::string atc)
             tableRow += "</td>";
 
             tableRow += "<td>";
-            tableRow += dosage.doseLow + " - " + dosage.doseHigh + " " + dosage.doseUnit;
+            tableRow += dosage.doseLow;
+            if (dosage.doseLow != dosage.doseHigh)
+                tableRow += " - " + dosage.doseHigh;
+            tableRow += " " + dosage.doseUnit;
             if (!dosage.doseUnitRef1.empty())
                 tableRow += "/" + dosage.doseUnitRef1;
             if (!dosage.doseUnitRef2.empty())
@@ -395,7 +407,10 @@ std::string getHtmlByAtc(const std::string atc)
             tableRow += "</td>";
 
             tableRow += "<td>";
-            tableRow += dosage.dailyRepetitionsLow + " - " + dosage.dailyRepetitionsHigh + " x daily";
+            tableRow += dosage.dailyRepetitionsLow;
+            if (dosage.dailyRepetitionsLow != dosage.dailyRepetitionsHigh)
+                tableRow += " - " + dosage.dailyRepetitionsHigh;
+            tableRow += + " x daily";
             tableRow += "</td>";
 
             tableRow += "<td>";
@@ -419,7 +434,7 @@ std::string getHtmlByAtc(const std::string atc)
         tableBody = "<tbody>" + tableBody + "</tbody>";
 
         std::string table = tableHeader + tableBody;
-        table = "<table border=\"1\">" + table + "</table>";
+        table = "<table border=\"1\" bgcolor=\"#EEEEEE\">" + table + "</table>";
 
         html += table;
     } // for cases
