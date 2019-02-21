@@ -79,7 +79,10 @@ namespace PED
     
     //std::string getRoaDescription(const std::string &codeValue);
     
-    void showPedDoseByAtc(std::string atc);
+    std::string getHtmlByAtc(const std::string atc);
+    void showPedDoseByAtc(const std::string atc);
+    
+    void printStats();
 }
 
 #endif /* peddose_hpp */

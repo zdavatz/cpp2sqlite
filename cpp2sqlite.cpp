@@ -656,7 +656,23 @@ void getHtmlFromXml(std::string &xml,
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
     }
 
-    // TODO: peddose
+    // PedDose
+    {
+        std::string pedHtml = PED::getHtmlByAtc(atc);
+        if (!pedHtml.empty()) {
+            
+            static int kk=0;
+            if (kk++ < 10)
+                std::cout
+                << basename((char *)__FILE__) << ":" << __LINE__
+                << ", " << atc
+                << std::endl;
+            
+            html += "   <div class=\"paragraph\" id=\"section22\">";  // TODO: calculate section
+            html += pedHtml;
+            html += "   </div>\n";
+        }
+    }
 
     // section21
     {
@@ -779,8 +795,11 @@ int main(int argc, char **argv)
 
     PED::parseXML(opt_downloadDirectory + "/swisspeddosepublication-2019-02-07.xml",
                   opt_language);
+#ifdef DEBUG_PED_DOSE
     PED::showPedDoseByAtc("N02BA01");
     PED::showPedDoseByAtc("J05AB01");
+    PED::showPedDoseByAtc("N02BE01"); // Acetalgin, RN 34186,62355,49493
+#endif
 
     // Read swissmedic next, because aips might need to get missing ATC codes from it
     SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");
@@ -1033,6 +1052,8 @@ int main(int argc, char **argv)
         BAG::printStats();
         if (flagVerbose)
             ATC::printStats();
+
+        PED::printStats();
 
         if (statsRegnrsNotFound.size() > 0) {
             if (flagVerbose) {

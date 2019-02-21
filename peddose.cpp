@@ -22,6 +22,7 @@ namespace pt = boost::property_tree;
 
 namespace PED
 {
+    // Parse-phase stats
     unsigned int statsCasesCount = 0;
     unsigned int statsIndicationsCount = 0;
     unsigned int statsCodesCount = 0;
@@ -37,6 +38,10 @@ namespace PED
     unsigned int statsCodeRoa = 0;
     unsigned int statsCodeZEIT = 0;
     
+    // Usage stats
+    unsigned int statsCasesForAtcFoundCount = 0;
+    unsigned int statsCasesForAtcNotFoundCount = 0;
+
     std::vector<_case> caseVec;
     std::set<std::string> caseCaseID; // TODO: obsolete
     std::set<std::string> caseAtcCode;// TODO: obsolete
@@ -148,14 +153,6 @@ void parseXML(const std::string &filename,
         i = 0;
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Codes")) {
             if (v.first == "Code") {
-                /*
-                 <CodeType>ROA</CodeType>
-                 <CodeValue>PO</CodeValue>
-                 
-                 <CodeType>ATC</CodeType>
-                 <CodeValue>N02BA01</CodeValue>
-                 <DecriptionE>Acetylsalicylsäure, inkl. Lysinacetylsalicylat</DecriptionE>
-                 */
                 std::string codeType = v.second.get("CodeType", "");
                 std::string codeValue = v.second.get("CodeValue", "");
                 if (codeType == "_ALTERRELATION")
@@ -163,9 +160,6 @@ void parseXML(const std::string &filename,
                 else if (codeType == "_FG")
                     statsCode_FG++;
                 else if (codeType == "ATC") {
-                    if (codeValue == "N02BA01")
-                        std::clog << "\n\t ATC N02BA01 at: " << statsCodeAtc << std::endl;
-
                     statsCodeAtc++;
                     _code co;
                     co.value = v.second.get("CodeValue", ""); // redundant for the map
@@ -328,7 +322,66 @@ void getDosageById(const std::string &id, std::vector<_dosage> &dosages)
             dosages.push_back(d);
 }
 
-void showPedDoseByAtc(std::string atc)
+std::string getHtmlByAtc(const std::string atc)
+{
+    std::string html;
+    std::vector<_case> cases;
+    PED::getCasesByAtc(atc, cases);
+    
+    if (cases.empty()) {
+        statsCasesForAtcNotFoundCount++;
+        return {};  // empty string
+    }
+
+    statsCasesForAtcFoundCount++;
+
+    html.clear();
+
+    for (auto ca : cases) {
+        auto description = PED::getDescriptionByAtc(atc);
+        auto indication = PED::getIndicationByKey(ca.indicationKey);
+
+        html += "\nATC-Code: " + atc + "\n" + description + "\n";
+        html += "Indication: " + indication + "\n";
+
+        std::vector<_dosage> dosages;
+        PED::getDosageById(ca.caseId, dosages);
+        
+        if (dosages.size() > 0)
+            html += "<b>Age\t Weight\t Type of use\t Dosage\t Daily repetitions\t ROA\t Max. daily dose</b>\n";
+
+        for (auto dosage : dosages) {
+            html += dosage.ageFrom + dosage.ageFromUnit + " to " + dosage.ageTo + dosage.ageToUnit;
+
+            html += "\t TODO_WEIGHT";
+            html += "\t TODO_TYPE";
+
+            html += "\t" + dosage.doseLow + " - " + dosage.doseHigh + " " + dosage.doseUnit;
+            if (!dosage.doseUnitRef1.empty())
+                html += "/" + dosage.doseUnitRef1;
+            if (!dosage.doseUnitRef2.empty())
+                html += "/" + dosage.doseUnitRef2;
+
+            html += "\t" + dosage.dailyRepetitionsLow + " - " + dosage.dailyRepetitionsHigh + " x daily";
+
+            html += "\t" + ca.RoaCode;
+            
+            html += "\t" + dosage.maxDailyDose + " " + dosage.maxDailyDoseUnit;
+            if (!dosage.maxDailyDoseUnitRef1.empty())
+                html += "/" + dosage.maxDailyDoseUnitRef1;
+            if (!dosage.maxDailyDoseUnitRef2.empty())
+                html += "/" + dosage.maxDailyDoseUnitRef2;
+
+            html += "\n";
+        }
+    }
+
+    html = "<pre>" + html + "</pre>";
+
+    return html;
+}
+
+void showPedDoseByAtc(const std::string atc)
 {
     std::vector<_case> cases;
     PED::getCasesByAtc(atc, cases);
@@ -349,8 +402,8 @@ void showPedDoseByAtc(std::string atc)
         
         std::cout
         << "\t caseId: " << ca.caseId
-        << "\n\t\t desc: " << description << " (" << ca.RoaCode << ")"
-        << "\n\t\t ind: " << indication
+        << "\n\t\t " << description << " (" << ca.RoaCode << ")"
+        << "\n\t\t indication: " << indication
         << std::endl;
 
         for (auto dosage : dosages) {
@@ -358,7 +411,9 @@ void showPedDoseByAtc(std::string atc)
             << "\t\t dosage recommendation: " << dosage.key
             << "\n\t\t\t age: " << dosage.ageFrom << " " << dosage.ageFromUnit
             << ", to: " << dosage.ageTo << " " << dosage.ageToUnit
+
             << "\n\t\t\t dosage: " << dosage.doseLow << " - " << dosage.doseHigh << " " << dosage.doseUnit << "/" << dosage.doseUnitRef1 << "/" << dosage.doseUnitRef2
+
             << "\n\t\t\t daily repetitions: " << dosage.dailyRepetitionsLow << " - " << dosage.dailyRepetitionsHigh
             
             << "\n\t\t\t max single dose: " << dosage.maxSingleDose << " " << dosage.maxSingleDoseUnit << "/" << dosage.maxSingleDoseUnitRef1 << "/" << dosage.maxSingleDoseUnitRef2
@@ -372,4 +427,13 @@ void showPedDoseByAtc(std::string atc)
         }
     }
 }
+    
+void printStats()
+{
+    std::cout
+    << "PED ATC with cases: " << statsCasesForAtcFoundCount
+    << ", ATC without cases: " << statsCasesForAtcNotFoundCount
+    << std::endl;
+}
+
 }
