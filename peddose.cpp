@@ -74,6 +74,7 @@ namespace PED
     std::map<std::string, _code> codeAtcMap; // key is CodeValue
     std::map<std::string, _code> codeDosisUnitMap; // key is CodeValue
     std::map<std::string, _code> codeRoaMap; // key is CodeValue
+    std::map<std::string, _code> codeZeitMap; // key is CodeValue
     //std::vector<_code> codeRoaVec;
     std::set<std::string> codeRoaCodeSet;
 
@@ -215,6 +216,7 @@ void parseXML(const std::string &filename,
                 }
                 else if (codeType == "ZEIT") {  // Time
                     statsCodeZEIT++;
+                    codeZeitMap.insert(std::make_pair(co.value, co));
                 }
             }
         } // FOREACH Codes
@@ -411,8 +413,10 @@ std::string getHtmlByAtc(const std::string atc)
         for (auto dosage : dosages) {
             std::string tableRow;
             tableRow += TAG_TD_L;
-            tableRow += dosage.ageFrom + dosage.ageFromUnit;
-            tableRow += " to " + dosage.ageTo + dosage.ageToUnit;
+            tableRow += dosage.ageFrom;
+            tableRow += " " + codeZeitMap[dosage.ageFromUnit].description;
+            tableRow += " to " + dosage.ageTo;
+            tableRow += " " + codeZeitMap[dosage.ageToUnit].description;
             if (!dosage.ageWeightRelation.empty())
                 tableRow += " " + codeAlterMap[dosage.ageWeightRelation].description;
             tableRow += TAG_TD_R;
