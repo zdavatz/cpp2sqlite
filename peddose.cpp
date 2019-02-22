@@ -45,30 +45,33 @@ namespace PED
     unsigned int statsCasesForAtcNotFoundCount = 0;
 
     std::vector<_case> caseVec;
-    std::set<std::string> caseCaseID; // TODO: obsolete
-    std::set<std::string> caseAtcCode;// TODO: obsolete
-    std::set<std::string> caseRoaCode;// TODO: obsolete
+    std::set<std::string> caseCaseIDSet; // TODO: obsolete
+    std::set<std::string> caseAtcCodeSet;// TODO: obsolete
+    std::set<std::string> caseRoaCodeSet;// TODO: obsolete
     
     std::map<std::string, _indication> indicationMap; // key is IndicationKey
 
+    std::map<std::string, _code> codeAlterMap; // key is CodeValue
     std::map<std::string, _code> codeAtcMap; // key is CodeValue
+    std::map<std::string, _code> codeDosisUnitMap; // key is CodeValue
     std::vector<_code> codeRoaVec;
     std::set<std::string> codeRoaCodeSet;
 
     std::vector<_dosage> dosageVec;
-    std::set<std::string> dosageCaseID;// TODO: obsolete
+    std::set<std::string> dosageCaseIDSet;// TODO: obsolete
     
     std::map<std::string, std::string> abbreviationsLookup = {
         {"Dosis", "dose"},
-        {"Gramm", "g"},
+        {"Gramm", "g"}, // TODO: see <Code><CodeType>DOSISUNIT</CodeType><CodeValue>Gramm</CodeValue>
+                        // see also  <Code><CodeType>_GEWICHT</CodeType><CodeValue>Gramm</CodeValue>
         {"Kilogramm", "kg"},
         {"Milligramm", "mg"},
         {"Tag", "day"}
     };
     
-static
-std::string getAbbreviation(const std::string s)
+static std::string getAbbreviation(const std::string s)
 {
+    // TODO: use codeDosisUnitMap instead
     std::map<std::string, std::string>::iterator it;
     it = abbreviationsLookup.find(s);
     if (it != abbreviationsLookup.end())
@@ -126,9 +129,9 @@ void parseXML(const std::string &filename,
                 << ", CaseTitle <" << v.second.get("CaseTitle", "") << ">"
                 << std::endl;
 #endif
-                caseCaseID.insert(v.second.get("CaseID", ""));
-                caseAtcCode.insert(v.second.get("ATCCode", ""));
-                caseRoaCode.insert(v.second.get("ROACode", ""));
+                caseCaseIDSet.insert(v.second.get("CaseID", ""));
+                caseAtcCodeSet.insert(v.second.get("ATCCode", ""));
+                caseRoaCodeSet.insert(v.second.get("ROACode", ""));
                 
                 _case ca;
                 ca.caseId = v.second.get("CaseID", "");
@@ -174,49 +177,56 @@ void parseXML(const std::string &filename,
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Codes")) {
             if (v.first == "Code") {
                 std::string codeType = v.second.get("CodeType", "");
-                std::string codeValue = v.second.get("CodeValue", "");
-                if (codeType == "_ALTERRELATION")
+                
+                _code co;
+                co.value = v.second.get("CodeValue", "");
+                if (language == "de")
+                    co.description = v.second.get("DescriptionD", "");
+                else if (language == "fr")
+                    co.description = v.second.get("DecsriptionF", "");  // Note: spelling mistake
+                else //if (language == "en")
+                    co.description = v.second.get("DecriptionE", "");
+                co.recStatus = v.second.get("RecStatus", "");
+
+                if (codeType == "_ALTERRELATION") {
                     statsCode_ALTERRELATION++;
-                else if (codeType == "_FG")
+                }
+                else if (codeType == "_FG") {
                     statsCode_FG++;
+                }
                 else if (codeType == "ATC") {
                     statsCodeAtc++;
-                    _code co;
-                    co.value = v.second.get("CodeValue", "");
-                    if (language == "de")
-                        co.description = v.second.get("DescriptionD", "");
-                    else if (language == "fr")
-                        co.description = v.second.get("DecsriptionF", "");  // Note: spelling mistake
-                    else //if (language == "en")
-                        co.description = v.second.get("DecriptionE", "");
-                    co.recStatus = v.second.get("RecStatus", "");
-                    codeAtcMap.insert(std::make_pair(v.second.get("CodeValue", ""), co));
+                    codeAtcMap.insert(std::make_pair(co.value, co));
                 }
-                else if (codeType == "DOSISTYP")
+                else if (codeType == "DOSISTYP") {
                     statsCodeDOSISTYP++;
-                else if (codeType == "DOSISUNIT")
+                }
+                else if (codeType == "DOSISUNIT") {
                     statsCodeDOSISUNIT++;
-                else if (codeType == "EVIDENZ")
+                    codeDosisUnitMap.insert(std::make_pair(co.value, co));
+                }
+                else if (codeType == "EVIDENZ") {
                     statsCodeEVIDENZ++;
+                }
                 else if (codeType == "ROA") {
                     statsCodeRoa++;
-                    codeRoaCodeSet.insert(v.second.get("CodeValue", ""));
-
-                    _code co;
-                    co.value = v.second.get("CodeValue", "");
-                    co.description = v.second.get("DescriptionD", "");  // TODO: localize
-                    co.recStatus = v.second.get("RecStatus", "");
+                    
+                    // Both the following are still unused
+                    // One of them will be used to fetch the localized description if required
+                    // So far we are just using the ROA from the cases struct instead.
+                    codeRoaCodeSet.insert(co.value);
                     codeRoaVec.push_back(co);
                 }
-                else if (codeType == "ZEIT")
+                else if (codeType == "ZEIT") {
                     statsCodeZEIT++;
+                }
 
 #if 0
                 std::clog
                 << basename((char *)__FILE__) << ":" << __LINE__
                 << ", i: " << i++
                 << ", # children: " << v.second.size()
-                << ", CodeValue <" << v.second.get("CodeValue", "") << ">"
+                << ", CodeValue <" << co.value << ">"
                 << std::endl;
 #endif
             }
@@ -225,18 +235,7 @@ void parseXML(const std::string &filename,
         i = 0;
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Dosages")) {
             if (v.first == "Dosage") {
-                
-#if 0
-                std::clog
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << ", i: " << i++
-                << ", # children: " << v.second.size()
-                << ", AgeFrom <" << v.second.get("AgeFrom", "") << ">"
-                << ", AgeTo <" << v.second.get("AgeTo", "") << ">"
-                << ", DoseRangeUnit <" << v.second.get("DoseRangeUnit", "") << ">"
-                << std::endl;
-#endif
-                dosageCaseID.insert(v.second.get("CaseID", ""));
+                dosageCaseIDSet.insert(v.second.get("CaseID", ""));
                 
                 _dosage dos;
                 dos.key = v.second.get("DosageKey", "");
@@ -296,29 +295,26 @@ void parseXML(const std::string &filename,
     << basename((char *)__FILE__) << ":" << __LINE__
     << std::endl
     << "Cases: " << statsCasesCount
-    << ", # CaseID: " << caseCaseID.size()
-    << ", # ATC Code: " << caseAtcCode.size()
-    << ", # ROA Code: " << caseRoaCode.size()
+    << ", # CaseID set: " << caseCaseIDSet.size()
+    << ", # ATC Code set: " << caseAtcCodeSet.size()
+    << ", # ROA Code set: " << caseRoaCodeSet.size()
     << std::endl
     << "Indications: " << statsIndicationsCount
     << ", # indications map: " << indicationMap.size()
     << std::endl
     << "Dosages: " << statsDosagesCount
-    << ", CaseID size: " << dosageCaseID.size()
-    << ", # dosage vec: " << dosageVec.size()
+    << ", set: " << dosageCaseIDSet.size()
+    << ", vec: " << dosageVec.size()
     << std::endl
     << "Codes: " << statsCodesCount
-    << ", # ATCCode map: " << codeAtcMap.size()
-    << ", # ROA Code: " << codeRoaCodeSet.size()
-    << std::endl
-    << "  <CodeType>\n\t_ALTERRELATION: " << statsCode_ALTERRELATION
+    << "\n  <CodeType>\n\t_ALTERRELATION: " << statsCode_ALTERRELATION
     << "\n\t_FG: " << statsCode_FG
     << "\n\t_GEWICHT: " << statsCode_GEWICHT
-    << "\n\tATC: " << statsCodeAtc
+    << "\n\tATC: " << statsCodeAtc << ", map: " << codeAtcMap.size()
     << "\n\tDOSISTYP: " << statsCodeDOSISTYP
-    << "\n\tDOSISUNIT: " << statsCodeDOSISUNIT
+    << "\n\tDOSISUNIT: " << statsCodeDOSISUNIT << ", map: " << codeDosisUnitMap.size()
     << "\n\tEVIDENZ: " << statsCodeEVIDENZ
-    << "\n\tROA: " << statsCodeRoa
+    << "\n\tROA: " << statsCodeRoa << ", set: " << codeRoaCodeSet.size() << ", vec: " << codeRoaVec.size()
     << "\n\tZEIT: " << statsCodeZEIT
     << std::endl;
 }
