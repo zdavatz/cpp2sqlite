@@ -18,6 +18,8 @@
 
 #include "peddose.hpp"
 
+//#define WITH_SEPARATE_TABLE_HEADER
+
 namespace pt = boost::property_tree;
 
 namespace PED
@@ -53,9 +55,27 @@ namespace PED
     std::vector<_code> codeRoaVec;
     std::set<std::string> codeRoaCodeSet;
 
-    //std::map<std::string, _dosage> dosageMap; // key is DosageKey
     std::vector<_dosage> dosageVec;
     std::set<std::string> dosageCaseID;// TODO: obsolete
+    
+    std::map<std::string, std::string> abbreviationsLookup = {
+        {"Dosis", "dose"},
+        {"Gramm", "g"},
+        {"Kilogramm", "kg"},
+        {"Milligramm", "mg"},
+        {"Tag", "day"}
+    };
+    
+static
+std::string getAbbreviation(const std::string s)
+{
+    std::map<std::string, std::string>::iterator it;
+    it = abbreviationsLookup.find(s);
+    if (it != abbreviationsLookup.end())
+        return it->second;
+    
+    return s;
+}
 
 void parseXML(const std::string &filename,
               const std::string &language)
@@ -262,7 +282,6 @@ void parseXML(const std::string &filename,
                 dos.type = v.second.get("TypeOfCase", "");
 
                 dosageVec.push_back(dos);
-                //dosageMap.insert(std::make_pair(v.second.get("CaseID", ""), dos));
             }
         } // FOREACH Dosages
     } // try
@@ -286,7 +305,6 @@ void parseXML(const std::string &filename,
     << std::endl
     << "Dosages: " << statsDosagesCount
     << ", CaseID size: " << dosageCaseID.size()
-    //<< ", # dosage map: " << dosageMap.size()
     << ", # dosage vec: " << dosageVec.size()
     << std::endl
     << "Codes: " << statsCodesCount
@@ -358,73 +376,102 @@ std::string getHtmlByAtc(const std::string atc)
         std::vector<_dosage> dosages;
         PED::getDosageById(ca.caseId, dosages);
 
+#define TAG_TABLE_L     "<table class=\"s14\">"
+#define TAG_TABLE_R     "</table>"
+#define TAG_TD_L        "<td class=\"s13\"><p class=\"s11\">"
+#define TAG_TD_R        "</p><div class=\"s12\"/></td>"
+
+#ifdef WITH_SEPARATE_TABLE_HEADER
+#define TAG_TH_L        "<th>"
+#define TAG_TH_R        "</th>"
+#else
+#define TAG_TH_L        TAG_TD_L
+#define TAG_TH_R        TAG_TD_R
+#endif
+        
+#define NUM_COLUMNS     7
+
+        std::string tableColGroup;
+        for (int i=0; i<NUM_COLUMNS; i++) {
+            // TODO: width
+            //tableColGroup += "<col style=\"width:33.333336%25;background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>";
+            tableColGroup += "<col style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>";        }
+
+        tableColGroup = "<colgroup>" + tableColGroup + "</colgroup>";
+
         std::string tableHeader;
         tableHeader.clear();
+
+        std::string tableBody;
+        tableBody.clear();
+        
         if (dosages.size() > 0) {
-            tableHeader += "<th>Age</th>";
-            tableHeader += "<th>Weight</th>";
-            tableHeader += "<th>Type of use</th>";
-            tableHeader += "<th>Dosage</th>";
-            tableHeader += "<th>Daily repetitions</th>";
-            tableHeader += "<th>ROA</th>";
-            tableHeader += "<th>Max. daily dose</th>";
+            tableHeader += TAG_TH_L + std::string("Age") + TAG_TH_R;
+            tableHeader += TAG_TH_L + std::string("Weight") + TAG_TH_R;
+            tableHeader += TAG_TH_L + std::string("Type of use") + TAG_TH_R;
+            tableHeader += TAG_TH_L + std::string("Dosage") + TAG_TH_R;
+            tableHeader += TAG_TH_L + std::string("Daily repetitions") + TAG_TH_R;
+            tableHeader += TAG_TH_L + std::string("ROA") + TAG_TH_R;
+            tableHeader += TAG_TH_L + std::string("Max. daily dose") + TAG_TH_R;
             tableHeader += "\n"; // for readability
 
             tableHeader = "<tr>" + tableHeader + "</tr>";
+#ifdef WITH_SEPARATE_TABLE_HEADER
             tableHeader = "<thead>" + tableHeader + "</thead>";
+#else
+            tableBody += tableHeader;
+#endif
         }
-        
-        std::string tableBody;
-        tableBody.clear();
+
         for (auto dosage : dosages) {
             std::string tableRow;
-            tableRow += "<td>";
+            tableRow += TAG_TD_L;
             tableRow += dosage.ageFrom + dosage.ageFromUnit;
             tableRow += " to " + dosage.ageTo + dosage.ageToUnit;
             if (!dosage.ageWeightRelation.empty())
                 tableRow += " " + dosage.ageWeightRelation;
-            tableRow += "</td>";
+            tableRow += TAG_TD_R;
 
-            tableRow += "<td>";
+            tableRow += TAG_TD_L;
             tableRow += dosage.weightFrom;
             if (dosage.weightFrom != dosage.weightTo)
                 tableRow += " to " + dosage.weightTo;
             tableRow += " kg";
-            tableRow += "</td>";
+            tableRow += TAG_TD_R;
 
-            tableRow += "<td>";
+            tableRow += TAG_TD_L;
             tableRow += dosage.type;
-            tableRow += "</td>";
+            tableRow += TAG_TD_R;
 
-            tableRow += "<td>";
+            tableRow += TAG_TD_L;
             tableRow += dosage.doseLow;
             if (dosage.doseLow != dosage.doseHigh)
                 tableRow += " - " + dosage.doseHigh;
-            tableRow += " " + dosage.doseUnit;
+            tableRow += " " + getAbbreviation(dosage.doseUnit);
             if (!dosage.doseUnitRef1.empty())
-                tableRow += "/" + dosage.doseUnitRef1;
+                tableRow += "/" + getAbbreviation(dosage.doseUnitRef1);
             if (!dosage.doseUnitRef2.empty())
-                tableRow += "/" + dosage.doseUnitRef2;
-            tableRow += "</td>";
+                tableRow += "/" + getAbbreviation(dosage.doseUnitRef2);
+            tableRow += TAG_TD_R;
 
-            tableRow += "<td>";
+            tableRow += TAG_TD_L;
             tableRow += dosage.dailyRepetitionsLow;
             if (dosage.dailyRepetitionsLow != dosage.dailyRepetitionsHigh)
                 tableRow += " - " + dosage.dailyRepetitionsHigh;
             tableRow += + " x daily";
-            tableRow += "</td>";
+            tableRow += TAG_TD_R;
 
-            tableRow += "<td>";
+            tableRow += TAG_TD_L;
             tableRow += ca.RoaCode;
-            tableRow += "</td>";
+            tableRow += TAG_TD_R;
 
-            tableRow += "<td>";
-            tableRow += dosage.maxDailyDose + " " + dosage.maxDailyDoseUnit;
+            tableRow += TAG_TD_L;
+            tableRow += dosage.maxDailyDose + " " + getAbbreviation(dosage.maxDailyDoseUnit);
             if (!dosage.maxDailyDoseUnitRef1.empty())
-                tableRow += "/" + dosage.maxDailyDoseUnitRef1;
+                tableRow += "/" + getAbbreviation(dosage.maxDailyDoseUnitRef1);
             if (!dosage.maxDailyDoseUnitRef2.empty())
-                tableRow += "/" + dosage.maxDailyDoseUnitRef2;
-            tableRow += "</td>";
+                tableRow += "/" + getAbbreviation(dosage.maxDailyDoseUnitRef2);
+            tableRow += TAG_TD_R;
 
             tableRow += "\n";  // for readability
 
@@ -434,8 +481,12 @@ std::string getHtmlByAtc(const std::string atc)
         
         tableBody = "<tbody>" + tableBody + "</tbody>";
 
+#ifdef WITH_SEPARATE_TABLE_HEADER
         std::string table = tableHeader + tableBody;
-        table = "<table border=\"1\" bgcolor=\"#EEEEEE\">" + table + "</table>";
+#else
+        std::string table = tableColGroup + tableBody;
+#endif
+        table = TAG_TABLE_L + table + TAG_TABLE_R;
 
         html += table;
     } // for cases

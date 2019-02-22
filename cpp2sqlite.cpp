@@ -175,6 +175,7 @@ void cleanupXml(std::string &xml,
     boost::replace_all(xml, "&plusmn;", "±"); // used in rn 58868 table 6
     boost::replace_all(xml, "&agrave;", "à");
     boost::replace_all(xml, "&acirc;",  "â");
+    boost::replace_all(xml, "&Acirc;",  "Â");
     boost::replace_all(xml, "&auml;",   "ä");
     boost::replace_all(xml, "&Auml;",   "Ä");
     boost::replace_all(xml, "&egrave;", "è");
@@ -661,12 +662,14 @@ void getHtmlFromXml(std::string &xml,
         std::string pedHtml = PED::getHtmlByAtc(atc);
         if (!pedHtml.empty()) {
             
+#ifdef DEBUG_PED_DOSE
             static int kk=0;
-            if (kk++ < 10)
+            if (kk++ < 20)
                 std::cout
                 << basename((char *)__FILE__) << ":" << __LINE__
                 << ", " << atc
                 << std::endl;
+#endif
             
             html += "   <div class=\"paragraph\" id=\"section22\">";  // TODO: calculate section
             html += pedHtml;
