@@ -32,13 +32,13 @@ namespace PED
 
     unsigned int statsCode_ALTERRELATION = 0;
     unsigned int statsCode_FG = 0;
-    unsigned int statsCode_GEWICHT = 0;
+    unsigned int statsCode_GEWICHT = 0; // Weight
     unsigned int statsCodeAtc = 0;
     unsigned int statsCodeDOSISTYP = 0;
     unsigned int statsCodeDOSISUNIT = 0;
     unsigned int statsCodeEVIDENZ = 0;
     unsigned int statsCodeRoa = 0;
-    unsigned int statsCodeZEIT = 0;
+    unsigned int statsCodeZEIT = 0; // Time
     
     // Usage stats
     unsigned int statsCasesForAtcFoundCount = 0;
@@ -63,7 +63,6 @@ namespace PED
     std::map<std::string, std::string> abbreviationsLookup = {
         {"Dosis", "dose"},
         {"Gramm", "g"}, // TODO: see <Code><CodeType>DOSISUNIT</CodeType><CodeValue>Gramm</CodeValue>
-                        // see also  <Code><CodeType>_GEWICHT</CodeType><CodeValue>Gramm</CodeValue>
         {"Kilogramm", "kg"},
         {"Milligramm", "mg"},
         {"Tag", "day"}
@@ -71,13 +70,7 @@ namespace PED
     
 static std::string getAbbreviation(const std::string s)
 {
-    // TODO: use codeDosisUnitMap instead
-    std::map<std::string, std::string>::iterator it;
-    it = abbreviationsLookup.find(s);
-    if (it != abbreviationsLookup.end())
-        return it->second;
-    
-    return s;
+    return codeDosisUnitMap[s].description;
 }
 
 void parseXML(const std::string &filename,
@@ -190,6 +183,10 @@ void parseXML(const std::string &filename,
 
                 if (codeType == "_ALTERRELATION") {
                     statsCode_ALTERRELATION++;
+                    codeAlterMap.insert(std::make_pair(co.value, co));
+                }
+                else if (codeType == "_GEWICHT") { // Weight
+                    statsCode_GEWICHT++;
                 }
                 else if (codeType == "_FG") {
                     statsCode_FG++;
@@ -217,7 +214,7 @@ void parseXML(const std::string &filename,
                     codeRoaCodeSet.insert(co.value);
                     codeRoaVec.push_back(co);
                 }
-                else if (codeType == "ZEIT") {
+                else if (codeType == "ZEIT") {  // Time
                     statsCodeZEIT++;
                 }
 
@@ -295,9 +292,9 @@ void parseXML(const std::string &filename,
     << basename((char *)__FILE__) << ":" << __LINE__
     << std::endl
     << "Cases: " << statsCasesCount
-    << ", # CaseID set: " << caseCaseIDSet.size()
-    << ", # ATC Code set: " << caseAtcCodeSet.size()
-    << ", # ROA Code set: " << caseRoaCodeSet.size()
+    << ", CaseID set: " << caseCaseIDSet.size()
+    << ", ATC Code set: " << caseAtcCodeSet.size()
+    << ", ROA Code set: " << caseRoaCodeSet.size()
     << std::endl
     << "Indications: " << statsIndicationsCount
     << ", # indications map: " << indicationMap.size()
@@ -430,7 +427,7 @@ std::string getHtmlByAtc(const std::string atc)
             tableRow += dosage.ageFrom + dosage.ageFromUnit;
             tableRow += " to " + dosage.ageTo + dosage.ageToUnit;
             if (!dosage.ageWeightRelation.empty())
-                tableRow += " " + dosage.ageWeightRelation;
+                tableRow += " " + codeAlterMap[dosage.ageWeightRelation].description;
             tableRow += TAG_TD_R;
 
             tableRow += TAG_TD_L;
@@ -441,7 +438,7 @@ std::string getHtmlByAtc(const std::string atc)
             tableRow += TAG_TD_R;
 
             tableRow += TAG_TD_L;
-            tableRow += dosage.type;
+            tableRow += dosage.type;  // TODO: maybe use <Code><CodeType>DOSISTYP</CodeType>
             tableRow += TAG_TD_R;
 
             tableRow += TAG_TD_L;
