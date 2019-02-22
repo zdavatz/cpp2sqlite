@@ -18,7 +18,7 @@
 
 #include "peddose.hpp"
 
-//#define WITH_SEPARATE_TABLE_HEADER
+#define WITH_SEPARATE_TABLE_HEADER
 
 namespace pt = boost::property_tree;
 
@@ -369,7 +369,7 @@ std::string getHtmlByAtc(const std::string atc)
         auto description = PED::getDescriptionByAtc(atc);
         auto indication = PED::getIndicationByKey(ca.indicationKey);
 
-        html += "<br>\n<br>\n" + description + "<br>\n";
+        html += "<br>\n" + description + "<br>\n";
         html += "\nATC-Code: " + atc + "<br>\n";
         html += "Indication: " + indication + "<br>\n";
 
@@ -391,11 +391,16 @@ std::string getHtmlByAtc(const std::string atc)
         
 #define NUM_COLUMNS     7
 
+#if 1
+        std::string tableColGroup("<col span=\"7\" style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>");
+#else
         std::string tableColGroup;
         for (int i=0; i<NUM_COLUMNS; i++) {
             // TODO: width
             //tableColGroup += "<col style=\"width:33.333336%25;background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>";
-            tableColGroup += "<col style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>";        }
+            tableColGroup += "<col style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>";
+        }
+#endif
 
         tableColGroup = "<colgroup>" + tableColGroup + "</colgroup>";
 
@@ -481,10 +486,11 @@ std::string getHtmlByAtc(const std::string atc)
         
         tableBody = "<tbody>" + tableBody + "</tbody>";
 
+        std::string table = tableColGroup;
 #ifdef WITH_SEPARATE_TABLE_HEADER
-        std::string table = tableHeader + tableBody;
+        table += tableHeader + tableBody;
 #else
-        std::string table = tableColGroup + tableBody;
+        table += tableBody;
 #endif
         table = TAG_TABLE_L + table + TAG_TABLE_R;
 
