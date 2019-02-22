@@ -54,20 +54,13 @@ namespace PED
     std::map<std::string, _code> codeAlterMap; // key is CodeValue
     std::map<std::string, _code> codeAtcMap; // key is CodeValue
     std::map<std::string, _code> codeDosisUnitMap; // key is CodeValue
-    std::vector<_code> codeRoaVec;
+    std::map<std::string, _code> codeRoaMap; // key is CodeValue
+    //std::vector<_code> codeRoaVec;
     std::set<std::string> codeRoaCodeSet;
 
     std::vector<_dosage> dosageVec;
     std::set<std::string> dosageCaseIDSet;// TODO: obsolete
-    
-    std::map<std::string, std::string> abbreviationsLookup = {
-        {"Dosis", "dose"},
-        {"Gramm", "g"}, // TODO: see <Code><CodeType>DOSISUNIT</CodeType><CodeValue>Gramm</CodeValue>
-        {"Kilogramm", "kg"},
-        {"Milligramm", "mg"},
-        {"Tag", "day"}
-    };
-    
+
 static std::string getAbbreviation(const std::string s)
 {
     return codeDosisUnitMap[s].description;
@@ -138,21 +131,7 @@ void parseXML(const std::string &filename,
         i = 0;
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Indications")) {
             if (v.first == "Indication") {
-                
-                /* D German, F French, E English
-                 
-                 <IndicationKey>641</IndicationKey>
-                 <IndikationNameE>Treatment of mild to moderately severe, acute pain</IndikationNameE>
-                 */
-#if 0
 
-                std::clog
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << ", i: " << i++
-                << ", # children: " << v.second.size()
-                << ", IndicationNameD <" << v.second.get("IndicationNameD", "") << ">"
-                << std::endl;
-#endif
                 _indication in;
                 if (language == "de")
                     in.name = v.second.get("IndicationNameD", "");
@@ -164,7 +143,7 @@ void parseXML(const std::string &filename,
                 in.recStatus = v.second.get("RecStatus", "");
                 indicationMap.insert(std::make_pair(v.second.get("IndicationKey", ""), in));
             }
-        } // FOREACH Indications
+        }
 
         i = 0;
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Codes")) {
@@ -212,20 +191,12 @@ void parseXML(const std::string &filename,
                     // One of them will be used to fetch the localized description if required
                     // So far we are just using the ROA from the cases struct instead.
                     codeRoaCodeSet.insert(co.value);
-                    codeRoaVec.push_back(co);
+                    //codeRoaVec.push_back(co);
+                    codeRoaMap.insert(std::make_pair(co.value, co));
                 }
                 else if (codeType == "ZEIT") {  // Time
                     statsCodeZEIT++;
                 }
-
-#if 0
-                std::clog
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << ", i: " << i++
-                << ", # children: " << v.second.size()
-                << ", CodeValue <" << co.value << ">"
-                << std::endl;
-#endif
             }
         } // FOREACH Codes
 
@@ -311,7 +282,7 @@ void parseXML(const std::string &filename,
     << "\n\tDOSISTYP: " << statsCodeDOSISTYP
     << "\n\tDOSISUNIT: " << statsCodeDOSISUNIT << ", map: " << codeDosisUnitMap.size()
     << "\n\tEVIDENZ: " << statsCodeEVIDENZ
-    << "\n\tROA: " << statsCodeRoa << ", set: " << codeRoaCodeSet.size() << ", vec: " << codeRoaVec.size()
+    << "\n\tROA: " << statsCodeRoa << ", set: " << codeRoaCodeSet.size() << ", map: " << codeRoaMap.size()
     << "\n\tZEIT: " << statsCodeZEIT
     << std::endl;
 }
@@ -362,7 +333,7 @@ std::string getHtmlByAtc(const std::string atc)
         auto description = PED::getDescriptionByAtc(atc);
         auto indication = PED::getIndicationByKey(ca.indicationKey);
 
-        html += "<br>\n" + description + "<br>\n";
+        html += "<br>\n" + description + " (" + ca.RoaCode + ": "+ codeRoaMap[ca.RoaCode].description + ")<br>\n";
         html += "\nATC-Code: " + atc + "<br>\n";
         html += "Indication: " + indication + "<br>\n";
 
