@@ -333,7 +333,7 @@ std::string getHtmlByAtc(const std::string atc)
         auto description = PED::getDescriptionByAtc(atc);
         auto indication = PED::getIndicationByKey(ca.indicationKey);
 
-        html += "<br>\n" + description + " (" + ca.RoaCode + ": "+ codeRoaMap[ca.RoaCode].description + ")<br>\n";
+        html += "<br>\n" + description + " (" + ca.RoaCode + ") " + codeRoaMap[ca.RoaCode].description + "<br>\n";
         html += "\nATC-Code: " + atc + "<br>\n";
         html += "Indication: " + indication + "<br>\n";
 
