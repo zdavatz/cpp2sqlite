@@ -259,6 +259,7 @@ void parseXML(const std::string &filename,
                     dos.remarks = v.second.get("RemarksE", "");
 
                 dos.caseId = v.second.get("CaseID", "");
+                dos.type = v.second.get("TypeOfCase", "");
 
                 dosageVec.push_back(dos);
                 //dosageMap.insert(std::make_pair(v.second.get("CaseID", ""), dos));
@@ -392,7 +393,7 @@ std::string getHtmlByAtc(const std::string atc)
             tableRow += "</td>";
 
             tableRow += "<td>";
-            tableRow += "TYPE";
+            tableRow += dosage.type;
             tableRow += "</td>";
 
             tableRow += "<td>";

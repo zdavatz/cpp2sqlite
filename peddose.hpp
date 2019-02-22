@@ -66,6 +66,7 @@ namespace PED
         std::string remarks;
 
         std::string caseId;
+        std::string type;
     };
     
     void parseXML(const std::string &filename,
