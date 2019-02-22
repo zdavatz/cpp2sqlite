@@ -72,6 +72,7 @@ namespace PED
     void parseXML(const std::string &filename,
                   const std::string &language);
 
+    std::string getTextByAtcs(const std::string atcs);
     void getCasesByAtc(const std::string &atc, std::vector<_case> &cases);
     std::string getDescriptionByAtc(const std::string &atc);
     std::string getIndicationByKey(const std::string &key);

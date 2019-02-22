@@ -18,6 +18,7 @@
 #include "atc.hpp"
 #include "epha.hpp"
 #include "swissmedic.hpp"
+#include "peddose.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -29,6 +30,7 @@ namespace AIPS
     unsigned int statsAtcFromSwissmedicCount = 0;
     unsigned int statsAtcNotFoundCount = 0;
     unsigned int statsAtcTextFoundCount = 0;
+    unsigned int statsPedTextFoundCount = 0;
     unsigned int statsAtcTextNotFoundCount = 0;
 
 MedicineList & parseXML(const std::string &filename,
@@ -131,14 +133,21 @@ MedicineList & parseXML(const std::string &filename,
                             Med.atc += ";" + atcText;
                         }
                         else {
-                            // TODO: fallback get text from substances column
-                            statsAtcTextNotFoundCount++;
-                            if (verbose) {
-                                std::clog
-                                << "[" << statsAtcTextNotFoundCount << "]"
-                                << " no text for ATC: <" << Med.atc << ">"
-                                << " (first rn: " << rnVector[0] << ")"
-                                << std::endl;
+                            // Fallback 1
+                            atcText = PED::getTextByAtcs(Med.atc);
+                            if (!atcText.empty()) {
+                                statsPedTextFoundCount++;
+                                Med.atc += ";" + atcText;
+                            }
+                            else {
+                                statsAtcTextNotFoundCount++;
+                                if (verbose) {
+                                    std::clog
+                                    << "[" << statsAtcTextNotFoundCount << "]"
+                                    << " no text for ATC: <" << Med.atc << ">"
+                                    << " (first rn: " << rnVector[0] << ")"
+                                    << std::endl;
+                                }
                             }
                         }
                     }
@@ -166,6 +175,7 @@ MedicineList & parseXML(const std::string &filename,
         << " (total " << (statsAtcFromEphaCount + statsAtcFromAipsCount + statsAtcFromSwissmedicCount + statsAtcNotFoundCount) << ")"
         << std::endl
         << "ATC text found: " << statsAtcTextFoundCount
+        << ", found in peddose: " << statsPedTextFoundCount
         << ", not found: " << statsAtcTextNotFoundCount
         << std::endl;
     }

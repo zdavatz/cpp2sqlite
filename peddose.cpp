@@ -17,8 +17,26 @@
 #include <boost/algorithm/string.hpp>
 
 #include "peddose.hpp"
+#include "atc.hpp"
 
 #define WITH_SEPARATE_TABLE_HEADER
+
+////////////////////////////////////////////////////////////////////////////////
+#define TAG_TABLE_L     "<table class=\"s14\">"
+#define TAG_TABLE_R     "</table>"
+#define TAG_TD_L        "<td class=\"s13\"><p class=\"s11\">"
+#define TAG_TD_R        "</p><div class=\"s12\"/></td>"
+
+#ifdef WITH_SEPARATE_TABLE_HEADER
+#define TAG_TH_L        "<th>"
+#define TAG_TH_R        "</th>"
+#else
+#define TAG_TH_L        TAG_TD_L
+#define TAG_TH_R        TAG_TD_R
+#endif
+
+#define NUM_COLUMNS     7
+////////////////////////////////////////////////////////////////////////////////
 
 namespace pt = boost::property_tree;
 
@@ -43,6 +61,7 @@ namespace PED
     // Usage stats
     unsigned int statsCasesForAtcFoundCount = 0;
     unsigned int statsCasesForAtcNotFoundCount = 0;
+    unsigned int statsTablesCount = 0;
 
     std::vector<_case> caseVec;
     std::set<std::string> caseCaseIDSet; // TODO: obsolete
@@ -292,6 +311,15 @@ std::string getDescriptionByAtc(const std::string &atc)
     return codeAtcMap[atc].description;
 }
 
+// The input string is in the format "atccode[,atccode]*"
+std::string getTextByAtcs(const std::string atcs)
+{
+    std::string text;
+    std::string firstAtc = ATC::getFirstAtc(atcs);
+    
+    return codeAtcMap[firstAtc].description;
+}
+
 // There could be multiple cases for the same ATC. Return a vector
 void getCasesByAtc(const std::string &atc, std::vector<_case> &cases)
 {
@@ -314,6 +342,9 @@ void getDosageById(const std::string &id, std::vector<_dosage> &dosages)
             dosages.push_back(d);
 }
 
+// Each "case" generates one table
+// One ATC can have mnay cases and therefore mutliple tables
+//
 std::string getHtmlByAtc(const std::string atc)
 {
     std::string html;
@@ -339,21 +370,6 @@ std::string getHtmlByAtc(const std::string atc)
 
         std::vector<_dosage> dosages;
         PED::getDosageById(ca.caseId, dosages);
-
-#define TAG_TABLE_L     "<table class=\"s14\">"
-#define TAG_TABLE_R     "</table>"
-#define TAG_TD_L        "<td class=\"s13\"><p class=\"s11\">"
-#define TAG_TD_R        "</p><div class=\"s12\"/></td>"
-
-#ifdef WITH_SEPARATE_TABLE_HEADER
-#define TAG_TH_L        "<th>"
-#define TAG_TH_R        "</th>"
-#else
-#define TAG_TH_L        TAG_TD_L
-#define TAG_TH_R        TAG_TD_R
-#endif
-        
-#define NUM_COLUMNS     7
 
 #if 1
         std::string tableColGroup("<col span=\"7\" style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>");
@@ -457,8 +473,8 @@ std::string getHtmlByAtc(const std::string atc)
         table += tableBody;
 #endif
         table = TAG_TABLE_L + table + TAG_TABLE_R;
-
         html += table;
+        statsTablesCount++;
     } // for cases
 
     html = "<p>" + html + "</p>";
@@ -518,6 +534,7 @@ void printStats()
     std::cout
     << "PED ATC with cases: " << statsCasesForAtcFoundCount
     << ", ATC without cases: " << statsCasesForAtcNotFoundCount
+    << ", tables created: "<< statsTablesCount
     << std::endl;
 }
 
