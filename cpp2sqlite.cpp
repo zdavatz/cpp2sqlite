@@ -661,6 +661,8 @@ void getHtmlFromXml(std::string &xml,
     {
         std::string pedHtml = PED::getHtmlByAtc(atc);
         if (!pedHtml.empty()) {
+            std::string sectionPedDose("section22"); // TODO: calculate section number
+            std::string sectionPedDoseName("Swisspeddose");
             
 #ifdef DEBUG_PED_DOSE
             static int kk=0;
@@ -671,9 +673,14 @@ void getHtmlFromXml(std::string &xml,
                 << std::endl;
 #endif
             
-            html += "   <div class=\"paragraph\" id=\"section22\">";  // TODO: calculate section
+            html += "   <div class=\"paragraph\" id=\"" + sectionPedDose + "\">";
+            html += "<div class=\"absTitle\">" + sectionPedDoseName + "</div>";
             html += pedHtml;
             html += "   </div>\n";
+
+            // Append 'section#' to a vector to be used in column "ids_str"
+            sectionId.push_back(sectionPedDose);
+            sectionTitle.push_back(sectionPedDoseName);
         }
     }
 
