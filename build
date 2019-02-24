@@ -1,4 +1,6 @@
 git pull
+git submodule init
+git submodule update
 sudo rm -rf /home/zeno/.software/cpp2sqlite/cpp2sqlite-build
 mkdir /home/zeno/.software/cpp2sqlite/cpp2sqlite-build
 cd /home/zeno/.software/cpp2sqlite/cpp2sqlite-build
