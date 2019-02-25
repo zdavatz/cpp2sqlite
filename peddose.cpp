@@ -418,6 +418,7 @@ std::string getHtmlByAtc(const std::string atc)
             {TH_KEY_WEIGHT, false},
             {TH_KEY_TYPE, false},
             {TH_KEY_MAX, false},
+            {TH_KEY_REPEAT, false},
             {TH_KEY_REM, false}
         };
         int numColumns = th_key.size() - optionalColumnMap.size();
@@ -458,6 +459,14 @@ std::string getHtmlByAtc(const std::string atc)
                 optionalColumnMap[TH_KEY_MAX] = true;
                 numColumns++;
             }
+            
+            if (!optionalColumnMap[TH_KEY_REPEAT] &&
+                ((dosage.dailyRepetitionsLow != "0") ||
+                 (dosage.dailyRepetitionsHigh != "0")))
+            {
+                optionalColumnMap[TH_KEY_REPEAT] = true;
+                numColumns++;
+            }
         }
 
         // Start defining the HTML code
@@ -488,7 +497,9 @@ std::string getHtmlByAtc(const std::string atc)
                 tableHeader += TAG_TH_L + thTitleMap[TH_KEY_TYPE] + TAG_TH_R;
 
             tableHeader += TAG_TH_L + thTitleMap[TH_KEY_DOSE] + TAG_TH_R;
-            tableHeader += TAG_TH_L + thTitleMap[TH_KEY_REPEAT] + TAG_TH_R;
+            
+            if (optionalColumnMap[TH_KEY_REPEAT])
+                tableHeader += TAG_TH_L + thTitleMap[TH_KEY_REPEAT] + TAG_TH_R;
 
             if (optionalColumnMap[TH_KEY_ROA])
                 tableHeader += TAG_TH_L + thTitleMap[TH_KEY_ROA] + TAG_TH_R;
@@ -546,11 +557,13 @@ std::string getHtmlByAtc(const std::string atc)
                 tableRow += "/" + getAbbreviation(dosage.doseUnitRef2);
             tableRow += TAG_TD_R;
 
-            tableRow += TAG_TD_L;
-            tableRow += dosage.dailyRepetitionsLow;
-            if (dosage.dailyRepetitionsLow != dosage.dailyRepetitionsHigh)
-                tableRow += " - " + dosage.dailyRepetitionsHigh;
-            tableRow += TAG_TD_R;
+            if (optionalColumnMap[TH_KEY_REPEAT]) {
+                tableRow += TAG_TD_L;
+                tableRow += dosage.dailyRepetitionsLow;
+                if (dosage.dailyRepetitionsLow != dosage.dailyRepetitionsHigh)
+                    tableRow += " - " + dosage.dailyRepetitionsHigh;
+                tableRow += TAG_TD_R;
+            }
 
             if (optionalColumnMap[TH_KEY_ROA]) {
                 tableRow += TAG_TD_L;
