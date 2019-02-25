@@ -63,6 +63,7 @@ namespace PED
         std::string maxDailyDoseUnitRef1;
         std::string maxDailyDoseUnitRef2;
 
+        std::string roaCode;
         std::string remarks;
 
         std::string caseId;

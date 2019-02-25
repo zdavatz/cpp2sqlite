@@ -803,7 +803,7 @@ int main(int argc, char **argv)
     EPHA::parseJSON(opt_downloadDirectory + jsonFilename, flagVerbose);
 #endif
 
-    PED::parseXML(opt_downloadDirectory + "/swisspeddosepublication-2019-02-07.xml",
+    PED::parseXML(opt_downloadDirectory + "/swisspeddosepublication-2019-02-21.xml",
                   opt_language);
 #ifdef DEBUG_PED_DOSE
     PED::showPedDoseByAtc("N02BA01");

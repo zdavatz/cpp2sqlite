@@ -35,7 +35,6 @@
 #define TAG_TH_R        TAG_TD_R
 #endif
 
-#define NUM_COLUMNS     7
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace pt = boost::property_tree;
@@ -81,6 +80,33 @@ namespace PED
     std::vector<_dosage> dosageVec;
     std::set<std::string> dosageCaseIDSet;// TODO: obsolete
 
+#define TH_KEY_AGE      "age"
+#define TH_KEY_WEIGHT   "weight"
+#define TH_KEY_TYPE     "type"
+#define TH_KEY_DOSE     "dose"
+#define TH_KEY_REPEAT   "repeat"
+#define TH_KEY_ROA      "roa"
+#define TH_KEY_MAX      "max"
+#define TH_KEY_REM      "remark"
+
+    const std::vector<std::string> th_key = {
+        TH_KEY_AGE, TH_KEY_WEIGHT, TH_KEY_TYPE, TH_KEY_DOSE,
+        TH_KEY_REPEAT, TH_KEY_ROA, TH_KEY_MAX, TH_KEY_REM
+    };
+    std::vector<std::string> th_de = {
+        "Alter", "Gewicht", "Art der Anwendung", "Dosierung",
+        "Tägliche Wiederholungen", "ROA", "Max. tägliche Dosis", "Remark"
+    };
+    std::vector<std::string> th_fr = {
+        "Âge", "Poids", "Type d'utilisation", "Posologie",
+        "Répétitions quotidiennes", "ROA", "Dose quotidienne maximale", "Remark"
+    };
+    std::vector<std::string> th_en = {
+        "Age", "Weight", "Type of use", "Dosage",
+        "Daily repetitions", "ROA", "Max. daily dose", "Remark"
+    };
+    std::map<std::string, std::string> thTitleMap;
+
 static std::string getAbbreviation(const std::string s)
 {
     return codeDosisUnitMap[s].description;
@@ -89,6 +115,18 @@ static std::string getAbbreviation(const std::string s)
 void parseXML(const std::string &filename,
               const std::string &language)
 {
+    {
+        // Define localized lookup table for pedDose table header
+        std::vector<std::string> &th = th_en;
+        if (language == "de")
+            th = th_de;
+        else if (language == "fr")
+            th = th_fr;
+        
+        for (int i=0; i< th_key.size(); i++)
+            thTitleMap.insert(std::make_pair(th_key[i], th[i]));
+    }
+
     pt::ptree tree;
     
     try {
@@ -266,6 +304,7 @@ void parseXML(const std::string &filename,
                 else //if (language == "en")
                     dos.remarks = v.second.get("RemarksE", "");
 
+                dos.roaCode = v.second.get("ROACode", "");
                 dos.caseId = v.second.get("CaseID", "");
                 dos.type = v.second.get("TypeOfCase", "");
 
@@ -281,7 +320,6 @@ void parseXML(const std::string &filename,
     }
     
     std::clog
-    << basename((char *)__FILE__) << ":" << __LINE__
     << std::endl
     << "Cases: " << statsCasesCount
     << ", CaseID set: " << caseCaseIDSet.size()
@@ -365,24 +403,51 @@ std::string getHtmlByAtc(const std::string atc)
     for (auto ca : cases) {
         auto description = PED::getDescriptionByAtc(atc);
         auto indication = PED::getIndicationByKey(ca.indicationKey);
-
-        html += "<br>\n" + description + " (" + ca.RoaCode + ") " + codeRoaMap[ca.RoaCode].description + "<br>\n";
-        html += "\nATC-Code: " + atc + "<br>\n";
-        html += "Indication: " + indication + "<br>\n";
-
         std::vector<_dosage> dosages;
         PED::getDosageById(ca.caseId, dosages);
+        
+        // Check for optional columns
+        std::map<std::string, bool> optionalColumnMap = {
+            {TH_KEY_ROA, false},
+            {TH_KEY_WEIGHT, false},
+            {TH_KEY_TYPE, false},
+            {TH_KEY_REM, false}
+        };
+        int numColumns = th_key.size() - optionalColumnMap.size();
+        for (auto dosage : dosages) {
+            if (dosage.roaCode != ca.RoaCode) {
+                optionalColumnMap[TH_KEY_ROA] = true;
+                numColumns++;
+            }
+            
+            if (dosage.type != dosages[0].type) {
+                optionalColumnMap[TH_KEY_TYPE] = true;
+                numColumns++;
+            }
 
-#if 1
-        std::string tableColGroup("<col span=\"7\" style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>");
-#else
-        std::string tableColGroup;
-        for (int i=0; i<NUM_COLUMNS; i++) {
-            // TODO: width
-            //tableColGroup += "<col style=\"width:33.333336%25;background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>";
-            tableColGroup += "<col style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>";
+            if (!dosage.remarks.empty()) {
+                optionalColumnMap[TH_KEY_REM] = true;
+                numColumns++;
+            }
+
+            // Check if all weights are 0 to also skip weight column
+            if ((dosage.weightFrom != "0") ||
+                (dosage.weightTo != "0"))
+            {
+                optionalColumnMap[TH_KEY_WEIGHT] = true;
+                numColumns++;
+            }
         }
-#endif
+
+        // Start defining the HTML code
+        html += description + " (" + ca.RoaCode + ") " + codeRoaMap[ca.RoaCode].description + "<br>\n";
+        html += "\nATC-Code: " + atc + "<br>\n";
+        html += "Indication: " + indication + "<br>\n";  // TODO: localize
+
+        if (!optionalColumnMap[TH_KEY_TYPE] && !dosages[0].type.empty())
+            html += thTitleMap[TH_KEY_TYPE] + ": " + dosages[0].type + "<br>\n";
+
+        std::string tableColGroup("<col span=\"" + std::to_string(numColumns) + "\" style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>");
 
         tableColGroup = "<colgroup>" + tableColGroup + "</colgroup>";
 
@@ -393,13 +458,23 @@ std::string getHtmlByAtc(const std::string atc)
         tableBody.clear();
         
         if (dosages.size() > 0) {
-            tableHeader += TAG_TH_L + std::string("Age") + TAG_TH_R;
-            tableHeader += TAG_TH_L + std::string("Weight") + TAG_TH_R;
-            tableHeader += TAG_TH_L + std::string("Type of use") + TAG_TH_R;
-            tableHeader += TAG_TH_L + std::string("Dosage") + TAG_TH_R;
-            tableHeader += TAG_TH_L + std::string("Daily repetitions") + TAG_TH_R;
-            tableHeader += TAG_TH_L + std::string("ROA") + TAG_TH_R;
-            tableHeader += TAG_TH_L + std::string("Max. daily dose") + TAG_TH_R;
+            tableHeader += TAG_TH_L + thTitleMap[TH_KEY_AGE] + TAG_TH_R;
+            
+            if (optionalColumnMap[TH_KEY_WEIGHT])
+                tableHeader += TAG_TH_L + thTitleMap[TH_KEY_WEIGHT] + TAG_TH_R;
+
+            if (optionalColumnMap[TH_KEY_TYPE])
+                tableHeader += TAG_TH_L + thTitleMap[TH_KEY_TYPE] + TAG_TH_R;
+
+            tableHeader += TAG_TH_L + thTitleMap[TH_KEY_DOSE] + TAG_TH_R;
+            tableHeader += TAG_TH_L + thTitleMap[TH_KEY_REPEAT] + TAG_TH_R;
+            if (optionalColumnMap[TH_KEY_ROA])
+                tableHeader += TAG_TH_L + thTitleMap[TH_KEY_ROA] + TAG_TH_R;
+
+            tableHeader += TAG_TH_L + thTitleMap[TH_KEY_MAX] + TAG_TH_R;
+            if (optionalColumnMap[TH_KEY_REM])
+                tableHeader += TAG_TH_L + thTitleMap[TH_KEY_REM] + TAG_TH_R;
+
             tableHeader += "\n"; // for readability
 
             tableHeader = "<tr>" + tableHeader + "</tr>";
@@ -415,22 +490,26 @@ std::string getHtmlByAtc(const std::string atc)
             tableRow += TAG_TD_L;
             tableRow += dosage.ageFrom;
             tableRow += " " + codeZeitMap[dosage.ageFromUnit].description;
-            tableRow += " to " + dosage.ageTo;
+            tableRow += " - " + dosage.ageTo;
             tableRow += " " + codeZeitMap[dosage.ageToUnit].description;
             if (!dosage.ageWeightRelation.empty())
                 tableRow += " " + codeAlterMap[dosage.ageWeightRelation].description;
             tableRow += TAG_TD_R;
 
-            tableRow += TAG_TD_L;
-            tableRow += dosage.weightFrom;
-            if (dosage.weightFrom != dosage.weightTo)
-                tableRow += " to " + dosage.weightTo;
-            tableRow += " kg";
-            tableRow += TAG_TD_R;
+            if (optionalColumnMap[TH_KEY_WEIGHT]) {
+                tableRow += TAG_TD_L;
+                tableRow += dosage.weightFrom;
+                if (dosage.weightFrom != dosage.weightTo)
+                    tableRow += " - " + dosage.weightTo;
+                tableRow += " kg";
+                tableRow += TAG_TD_R;
+            }
 
-            tableRow += TAG_TD_L;
-            tableRow += dosage.type;  // TODO: maybe use <Code><CodeType>DOSISTYP</CodeType>
-            tableRow += TAG_TD_R;
+            if (optionalColumnMap[TH_KEY_TYPE]) {
+                tableRow += TAG_TD_L;
+                tableRow += dosage.type;
+                tableRow += TAG_TD_R;
+            }
 
             tableRow += TAG_TD_L;
             tableRow += dosage.doseLow;
@@ -447,12 +526,13 @@ std::string getHtmlByAtc(const std::string atc)
             tableRow += dosage.dailyRepetitionsLow;
             if (dosage.dailyRepetitionsLow != dosage.dailyRepetitionsHigh)
                 tableRow += " - " + dosage.dailyRepetitionsHigh;
-            tableRow += + " x daily";
             tableRow += TAG_TD_R;
 
-            tableRow += TAG_TD_L;
-            tableRow += ca.RoaCode;
-            tableRow += TAG_TD_R;
+            if (optionalColumnMap[TH_KEY_ROA]) {
+                tableRow += TAG_TD_L;
+                tableRow += dosage.roaCode;
+                tableRow += TAG_TD_R;
+            }
 
             tableRow += TAG_TD_L;
             tableRow += dosage.maxDailyDose + " " + getAbbreviation(dosage.maxDailyDoseUnit);
@@ -461,6 +541,12 @@ std::string getHtmlByAtc(const std::string atc)
             if (!dosage.maxDailyDoseUnitRef2.empty())
                 tableRow += "/" + getAbbreviation(dosage.maxDailyDoseUnitRef2);
             tableRow += TAG_TD_R;
+
+            if (optionalColumnMap[TH_KEY_REM]) {
+                tableRow += TAG_TD_L;
+                tableRow += dosage.remarks;
+                tableRow += TAG_TD_R;
+            }
 
             tableRow += "\n";  // for readability
 
