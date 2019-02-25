@@ -104,6 +104,26 @@ int countBagGtinInRefdata(std::vector<std::string> &list)
     return count;
 }
 
+static
+std::string getBarcodesFromGtins(const GTIN::oneFachinfoPackages &packages)
+{
+    std::string html;
+    int i=0;
+    for (auto gtin : packages.gtin) {
+        
+        if (i < packages.name.size()) // possibly redundant check
+            html += "  <p class=\"spacing1\">" + packages.name[i++] + "</p>\n";
+        
+        std::string svg = EAN13::createSvg("", gtin);
+        // TODO: onmouseup="addShoppingCart(this)"
+        html += "<p class=\"barcode\">" + svg + "</p>\n";
+    }
+
+    return html;
+
+}
+
+
 // Modify <colgroup>, see HtmlUtils.java:525
 // Add all the values first into a `sum` variable,
 // then each value is multiplied by 100 and divided by `sum`
@@ -359,29 +379,23 @@ void getHtmlFromXml(std::string &xml,
 #endif
         
         // Extract chapter list
-        std::string::size_type posDivFrom;
-        std::string::size_type posIdFrom;
-        std::string::size_type posIdTo;
-        std::string::size_type posTitleFrom;
-        std::string::size_type posTitleTo;
-        
         const std::string sectIdText("id=\"Section");
         const std::string sectTitleText("<div class=\"absTitle\">");
-        const std::string divFrom("<div class=\"paragraph\" id=\"Section");
+        const std::string divFromText("<div class=\"paragraph\" id=\"Section");
 
-        posDivFrom = xml.find(divFrom);
+        std::string::size_type posDivFrom = xml.find(divFromText);
         while (posDivFrom != std::string::npos) {
             
             // Append 'section#' to a vector to be used in column "ids_str"
-            posIdFrom = xml.find("Section", posDivFrom);
-            posIdTo   = xml.find("\">", posIdFrom);
+            std::string::size_type posIdFrom = xml.find("Section", posDivFrom);
+            std::string::size_type posIdTo   = xml.find("\">", posIdFrom);
             std::string sId = xml.substr(posIdFrom, posIdTo - posIdFrom);
             sectionNumber = std::stoi(sId.substr(7)); // "Section"
             sectionId.push_back(sId);
 
             // Append the section name to a vector to be used in column "titles_str"
-            posTitleFrom = xml.find(sectTitleText, posDivFrom+divFrom.length());
-            posTitleTo   = xml.find("</div>", posTitleFrom);
+            std::string::size_type posTitleFrom = xml.find(sectTitleText, posDivFrom + divFromText.length());
+            std::string::size_type posTitleTo   = xml.find("</div>", posTitleFrom);
             std::string::size_type from = posTitleFrom + sectTitleText.length();
             std::string sTitle = xml.substr(from, posTitleTo - from);
             sectionTitle.push_back(sTitle);
@@ -391,13 +405,20 @@ void getHtmlFromXml(std::string &xml,
 #endif
 
             // Next
-            posDivFrom = xml.find(divFrom, posDivFrom + divFrom.length());
+            posDivFrom = xml.find(divFromText, posDivFrom + divFromText.length());
         }
         
-        // TODO: insert barcodes after "<div class=\"absTitle\">Packungen</div>"
+        // Insert barcodes
+        std::string htmlBarcodes = getBarcodesFromGtins(packages);
+        const std::string barcodeFromText("<div class=\"absTitle\">Packungen</div>");
+        std::string::size_type posBarcodeFrom = xml.find(barcodeFromText);
+        std::string::size_type from = posBarcodeFrom + barcodeFromText.length();
+        std::string::size_type posBarcodeTo = xml.find("</div>", from);
+        xml.replace(from, posBarcodeTo - from, htmlBarcodes);
         
         // This type of XML requires very little processing
         html += xml;
+
         goto doPedDose;
     }
 
@@ -538,17 +559,7 @@ void getHtmlFromXml(std::string &xml,
                     // see RealExpertInfo.java:1562
                     // see BarCode.java:77
                     if (sectionNumber == 18) {
-                        int i=0;
-                        for (auto gtin : packages.gtin) {
-                            
-                            if (i < packages.name.size()) // possibly redundant check
-                                html += "  <p class=\"spacing1\">" + packages.name[i++] + "</p>\n";
-
-                            std::string svg = EAN13::createSvg("", gtin);
-                            // TODO: onmouseup="addShoppingCart(this)"
-                            html += "<p class=\"barcode\">" + svg + "</p>\n";
-                        }
-
+                        html += getBarcodesFromGtins(packages);
                         section18Done = true;
                     }
                     
