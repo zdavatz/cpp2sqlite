@@ -95,17 +95,18 @@ namespace PED
     };
     std::vector<std::string> th_de = {
         "Alter", "Gewicht", "Art der Anwendung", "Dosierung",
-        "Tägliche Wiederholungen", "ROA", "Max. tägliche Dosis", "Remark"
+        "Tägliche Wiederholungen", "ROA", "Max. tägliche Dosis", "Bemerkung"
     };
     std::vector<std::string> th_fr = {
         "Âge", "Poids", "Type d'utilisation", "Posologie",
-        "Répétitions quotidiennes", "ROA", "Dose quotidienne maximale", "Remark"
+        "Répétitions quotidiennes", "ROA", "Dose quotidienne maximale", "Remarque"
     };
     std::vector<std::string> th_en = {
         "Age", "Weight", "Type of use", "Dosage",
         "Daily repetitions", "ROA", "Max. daily dose", "Remark"
     };
     std::map<std::string, std::string> thTitleMap;
+    std::string indicationTitle;
 
 static std::string getAbbreviation(const std::string s)
 {
@@ -118,10 +119,15 @@ void parseXML(const std::string &filename,
     {
         // Define localized lookup table for pedDose table header
         std::vector<std::string> &th = th_en;
-        if (language == "de")
+        indicationTitle = "Indication";
+        if (language == "de") {
             th = th_de;
-        else if (language == "fr")
+            indicationTitle = "Indikation";
+        }
+        else if (language == "fr") {
             th = th_fr;
+            indicationTitle = "Indication";
+        }
         
         for (int i=0; i< th_key.size(); i++)
             thTitleMap.insert(std::make_pair(th_key[i], th[i]));
@@ -411,30 +417,45 @@ std::string getHtmlByAtc(const std::string atc)
             {TH_KEY_ROA, false},
             {TH_KEY_WEIGHT, false},
             {TH_KEY_TYPE, false},
+            {TH_KEY_MAX, false},
             {TH_KEY_REM, false}
         };
         int numColumns = th_key.size() - optionalColumnMap.size();
         for (auto dosage : dosages) {
-            if (dosage.roaCode != ca.RoaCode) {
+            if (!optionalColumnMap[TH_KEY_ROA] &&
+                (dosage.roaCode != ca.RoaCode))
+            {
                 optionalColumnMap[TH_KEY_ROA] = true;
                 numColumns++;
             }
-            
-            if (dosage.type != dosages[0].type) {
+
+            if (!optionalColumnMap[TH_KEY_TYPE] &&
+                (dosage.type != dosages[0].type))
+            {
                 optionalColumnMap[TH_KEY_TYPE] = true;
                 numColumns++;
             }
 
-            if (!dosage.remarks.empty()) {
+            if (!optionalColumnMap[TH_KEY_REM] &&
+                !dosage.remarks.empty())
+            {
                 optionalColumnMap[TH_KEY_REM] = true;
                 numColumns++;
             }
 
             // Check if all weights are 0 to also skip weight column
-            if ((dosage.weightFrom != "0") ||
-                (dosage.weightTo != "0"))
+            if (!optionalColumnMap[TH_KEY_WEIGHT] &&
+                ((dosage.weightFrom != "0") ||
+                (dosage.weightTo != "0")))
             {
                 optionalColumnMap[TH_KEY_WEIGHT] = true;
+                numColumns++;
+            }
+            
+            if (!optionalColumnMap[TH_KEY_MAX] &&
+                (dosage.maxDailyDose != "0"))
+            {
+                optionalColumnMap[TH_KEY_MAX] = true;
                 numColumns++;
             }
         }
@@ -442,7 +463,7 @@ std::string getHtmlByAtc(const std::string atc)
         // Start defining the HTML code
         html += description + " (" + ca.RoaCode + ") " + codeRoaMap[ca.RoaCode].description + "<br>\n";
         html += "\nATC-Code: " + atc + "<br>\n";
-        html += "Indication: " + indication + "<br>\n";  // TODO: localize
+        html += indicationTitle + ": " + indication + "<br>\n";
 
         if (!optionalColumnMap[TH_KEY_TYPE] && !dosages[0].type.empty())
             html += thTitleMap[TH_KEY_TYPE] + ": " + dosages[0].type + "<br>\n";
@@ -468,10 +489,13 @@ std::string getHtmlByAtc(const std::string atc)
 
             tableHeader += TAG_TH_L + thTitleMap[TH_KEY_DOSE] + TAG_TH_R;
             tableHeader += TAG_TH_L + thTitleMap[TH_KEY_REPEAT] + TAG_TH_R;
+
             if (optionalColumnMap[TH_KEY_ROA])
                 tableHeader += TAG_TH_L + thTitleMap[TH_KEY_ROA] + TAG_TH_R;
 
-            tableHeader += TAG_TH_L + thTitleMap[TH_KEY_MAX] + TAG_TH_R;
+            if (optionalColumnMap[TH_KEY_MAX])
+                tableHeader += TAG_TH_L + thTitleMap[TH_KEY_MAX] + TAG_TH_R;
+
             if (optionalColumnMap[TH_KEY_REM])
                 tableHeader += TAG_TH_L + thTitleMap[TH_KEY_REM] + TAG_TH_R;
 
@@ -534,13 +558,15 @@ std::string getHtmlByAtc(const std::string atc)
                 tableRow += TAG_TD_R;
             }
 
-            tableRow += TAG_TD_L;
-            tableRow += dosage.maxDailyDose + " " + getAbbreviation(dosage.maxDailyDoseUnit);
-            if (!dosage.maxDailyDoseUnitRef1.empty())
-                tableRow += "/" + getAbbreviation(dosage.maxDailyDoseUnitRef1);
-            if (!dosage.maxDailyDoseUnitRef2.empty())
-                tableRow += "/" + getAbbreviation(dosage.maxDailyDoseUnitRef2);
-            tableRow += TAG_TD_R;
+            if (optionalColumnMap[TH_KEY_MAX]) {
+                tableRow += TAG_TD_L;
+                tableRow += dosage.maxDailyDose + " " + getAbbreviation(dosage.maxDailyDoseUnit);
+                if (!dosage.maxDailyDoseUnitRef1.empty())
+                    tableRow += "/" + getAbbreviation(dosage.maxDailyDoseUnitRef1);
+                if (!dosage.maxDailyDoseUnitRef2.empty())
+                    tableRow += "/" + getAbbreviation(dosage.maxDailyDoseUnitRef2);
+                tableRow += TAG_TD_R;
+            }
 
             if (optionalColumnMap[TH_KEY_REM]) {
                 tableRow += TAG_TD_L;
@@ -566,8 +592,6 @@ std::string getHtmlByAtc(const std::string atc)
         html += table;
         statsTablesCount++;
     } // for cases
-
-    html = "<p>" + html + "</p>";
 
     return html;
 }
