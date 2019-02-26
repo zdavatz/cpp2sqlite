@@ -11,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <set>
+#include <map>
 #include <exception>
 #include <regex>
 //#include <clocale>
@@ -62,6 +63,7 @@ namespace po = boost::program_options;
 namespace pt = boost::property_tree;
 
 static std::string appName;
+std::map<std::string, std::string> statsTitleStrSeparatorMap;
 
 void on_version()
 {
@@ -517,12 +519,15 @@ void getHtmlFromXml(std::string &xml,
                     boost::replace_all(tagContent, "â",  "®");
                     boost::replace_all(tagContent, "&apos;",   "'");
                     if (tagContent.find(TITLES_STR_SEPARATOR) != std::string::npos) {
+                        statsTitleStrSeparatorMap.insert(std::make_pair(regnrs, tagContent));
+#ifdef DEBUG
                         if (verbose)
                             std::clog
                             << basename((char *)__FILE__) << ":" << __LINE__
                             << ", Warning - rn " << regnrs
                             << ", replacing title_str separator in \"" << tagContent << "\""
                             << std::endl;
+#endif
                         
                         // Replace section separator ";" with something else
                         // (not ',' because it's the decimal point separator on some locales)
@@ -613,12 +618,16 @@ void getHtmlFromXml(std::string &xml,
                                     img += " Alt=\"" + alt + "\"";
                             }
                             catch (std::exception &e) {
-                                if (verbose)
+                                AIPS::addStatsMissingAlt(regnrs,sectionNumber);
+#ifdef DEBUG
+                                if (verbose) {
                                     std::cerr
                                     << basename((char *)__FILE__) << ":" << __LINE__
                                     << ", regnrs: " << regnrs
                                     << ", section " << sectionNumber
                                     << ", <img> Warning " << e.what() << std::endl;
+                                }
+#endif
                             }
 
                             img += " />";
@@ -865,7 +874,7 @@ int main(int argc, char **argv)
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
 
-    REP::init("./", "amiko_owner_report_" + opt_language + ".html");
+    REP::init("./", "amiko_owner_report_" + opt_language + ".html", flagVerbose);
     REP::html_start_ul();
     for (int i=0; i<argc; i++)
         REP::html_li(argv[i]);
@@ -904,15 +913,13 @@ int main(int argc, char **argv)
     REFDATA::parseXML(opt_downloadDirectory + "/refdata_pharma_xml.xml", opt_language);
 
     BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml", opt_language, flagVerbose);
-    if (flagVerbose) {
+    {
         std::vector<std::string> bagList = BAG::getGtinList();
+        REP::html_h4("Cross-reference");
         REP::html_start_ul();
         REP::html_li(std::to_string(countBagGtinInSwissmedic(bagList)) + " GTIN are also in swissmedic");
         REP::html_li(std::to_string(countBagGtinInRefdata(bagList)) + " GTIN are also in refdata");
         REP::html_end_ul();
-
-        std::cerr << "bag " << countBagGtinInSwissmedic(bagList) << " GTIN are also in swissmedic" << std::endl;
-        std::cerr << "bag " << countBagGtinInRefdata(bagList) << " GTIN are also in refdata" << std::endl;
     }
 
     if (flagXml) {
@@ -1144,20 +1151,26 @@ int main(int argc, char **argv)
         REP::html_li("in bag: " + std::to_string(statsRnFoundBagCount) + "/" + std::to_string(statsRnNotFoundBagCount) + " (" + std::to_string(statsRnFoundBagCount + statsRnNotFoundBagCount) + ")");
         REP::html_li("not found anywhere: " + std::to_string(statsRegnrsNotFound.size()));
         REP::html_end_ul();
-        if (statsRegnrsNotFound.size() > 0) {
-            if (flagVerbose)
-                REP::html_div(boost::algorithm::join(statsRegnrsNotFound, ", "));
-            else
-                std::cerr << "Run with --verbose to see REGNRS not found" << std::endl;
+        if (statsRegnrsNotFound.size() > 0)
+            REP::html_div(boost::algorithm::join(statsRegnrsNotFound, ", "));
+        
+        if (statsTitleStrSeparatorMap.size() > 0) {
+            REP::html_h3("XML");
+            REP::html_p("title_str separator '" + std::string(TITLES_STR_SEPARATOR) + "' was replaced for rgnrs");
+            REP::html_start_ul();
+            for (auto s : statsTitleStrSeparatorMap)
+                REP::html_li(s.first + " \"" + s.second + "\"");
+            
+            REP::html_end_ul();
         }
 
+        AIPS::printUsageStats();
         REFDATA::printUsageStats();
         SWISSMEDIC::printUsageStats();
         BAG::printUsageStats();
-        if (flagVerbose)
-            ATC::printUsageStats();
-
+        ATC::printUsageStats();
         PED::printUsageStats();
+
         AIPS::destroyStatement(statement);
 
         int rc = sqlite3_close(db);

@@ -18,6 +18,9 @@ namespace AIPS
                             const std::string &language,
                             const std::string &type,
                             bool verbose);
+    void addStatsMissingAlt(const std::string &regnrs,
+                            const int sectionNumber);
+    void printUsageStats();
 }
 
 #endif /* aips_hpp */

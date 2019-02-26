@@ -15,7 +15,9 @@
 
 namespace REP
 {
-    void init(std::string logDir, std::string filename);
+    void init(std::string logDir,
+              std::string filename,
+              bool verbose=false);
     void terminate();
 
     void html_h1(const std::string &msg);

@@ -40,10 +40,12 @@ namespace SWISSMEDIC
     std::vector<std::string> gtin;
     
     // TODO: change it to a map for better performance
-    std::vector<std::string> category;
+    std::vector<std::string> categoryVec;
 
     // TODO: change them to a map for better performance
     std::vector<dosageUnits> duVec;
+
+    // Parse-phase stats
 
     // Usage stats
     unsigned int statsAugmentedRegnCount = 0;
@@ -112,7 +114,7 @@ void parseXLXS(const std::string &filename)
         if ((cat == "A") && (aSingleRow[COLUMN_W] == "a"))
             cat += "+";
         
-        category.push_back(cat);
+        categoryVec.push_back(cat);
         }
         
         // Precalculate dosage and units
@@ -165,7 +167,7 @@ int getAdditionalNames(const std::string &rn,
             //  "a.H." --> "ev.nn.i.H."
             //  "p.c." --> "ev.ep.e.c."
             std::string fromSwissmedic("ev.nn.i.H.");
-            std::string paf = BAG::getPricesAndFlags(g13, fromSwissmedic, category[rowInt]);
+            std::string paf = BAG::getPricesAndFlags(g13, fromSwissmedic, categoryVec[rowInt]);
             if (!paf.empty())
                 onePackageInfo += paf;
 
@@ -258,7 +260,7 @@ std::string getCategoryByGtin(const std::string &g)
 
     for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++)
         if (gtin[rowInt] == g) {
-            cat = category[rowInt];
+            cat = categoryVec[rowInt];
             break;
         }
 

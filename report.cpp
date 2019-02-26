@@ -27,16 +27,26 @@ namespace REP
 {
     std::ofstream ofs2;
     std::vector<std::string> ul;
+    bool verboseFlag;
 
-static
-void sanitize(std::string &msg)
+static void sanitize(std::string &msg)
 {
     boost::replace_all(msg, "<", "&lt;");
     boost::replace_all(msg, ">", "&gt;");
 }
 
-void init(std::string logDir, std::string filename)
+static void toConsole(const std::string &msg)
 {
+    if (verboseFlag)
+        std::cerr << msg << std::endl;
+}
+
+void init(std::string logDir,
+          std::string filename,
+          bool verbose)
+{
+    verboseFlag = verbose;
+
     std::string fullFilename(logDir);
     fullFilename += filename;
 
@@ -46,6 +56,7 @@ void init(std::string logDir, std::string filename)
 
     ofs2 << "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />";
     ofs2 << "<style>";
+    ofs2 << "body {font-family: verdana,arial,sans-serif; font-size: 13px;}";
     ofs2 << "h1 {text-align: center;}";
     ofs2 << "table { font-family: verdana,arial,sans-serif; font-size: 13px; color: #333333; border-width: 1px; border-color: #666666; border-collapse: collapse; width: 100% } ";
     ofs2 << "th { border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} ";
@@ -72,31 +83,51 @@ void html_end_ul()
     
 void html_h1(const std::string &msg)
 {
-    ofs2 << "<hr><h1>" << msg << "</h1>" << std::endl;
+    toConsole(msg);
+
+    std::string s(msg);
+    sanitize(s);
+    ofs2 << "<hr><h1>" << s << "</h1>" << std::endl;
 }
 
 void html_h2(const std::string &msg)
 {
-    ofs2 << "<hr><h2>" << msg << "</h2>" << std::endl;
+    toConsole(msg);
+
+    std::string s(msg);
+    sanitize(s);
+    ofs2 << "<hr><h2>" << s << "</h2>" << std::endl;
 }
 
 void html_h3(const std::string &msg)
 {
-    ofs2 << "<h3>" << msg << "</h3>" << std::endl;
+    toConsole(msg);
+
+    std::string s(msg);
+    sanitize(s);
+    ofs2 << "<h3>" << s << "</h3>" << std::endl;
 }
 
 void html_h4(const std::string &msg)
 {
-    ofs2 << "<h4>" << msg << "</h4>" << std::endl;
+    toConsole(msg);
+
+    std::string s(msg);
+    sanitize(s);
+    ofs2 << "<h4>" << s << "</h4>" << std::endl;
 }
 
 void html_p(const std::string &msg)
 {
+    toConsole(msg);
+
     ofs2 << "<p>" << msg << "</p>" << std::endl;
 }
 
 void html_div(const std::string &msg)
 {
+    toConsole(msg);
+
     std::string s(msg);
     sanitize(s);
     ofs2 << "<div>" << s << "</div>" << std::endl;
@@ -104,6 +135,8 @@ void html_div(const std::string &msg)
 
 void html_li(const std::string &msg)
 {
+    toConsole("• " + msg);
+
     std::string s(msg);
     sanitize(s);
     ul.push_back("<li>" + s + "</li>");

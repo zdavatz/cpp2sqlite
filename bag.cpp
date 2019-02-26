@@ -28,10 +28,12 @@ namespace BAG
     PreparationList prepList;
     PackageMap packMap;
     
+    // Parse-phase stats
     unsigned int statsPackCount = 0;
     unsigned int statsPackWithoutGtinCount = 0;
     unsigned int statsPackRecoveredGtinCount = 0;
     unsigned int statsPackNotRecoveredGtinCount = 0;
+    std::vector<std::string> statsSm8EmptyVec;
  
     // Usage stats
     unsigned int statsTotalGtinCount = 0;
@@ -50,6 +52,15 @@ void printFileStats(const std::string &filename)
     REP::html_li("recovered GTIN: " + std::to_string(statsPackRecoveredGtinCount));
     REP::html_li("unrecovered GTIN: " + std::to_string(statsPackNotRecoveredGtinCount));
     REP::html_end_ul();
+    
+    if (statsSm8EmptyVec.size() > 0) {
+        REP::html_h3("<SwissmedicNo8> empty");
+        REP::html_start_ul();
+        for (auto s : statsSm8EmptyVec)
+            REP::html_li(s);
+        
+        REP::html_end_ul();
+    }
 }
 
 void printUsageStats()
@@ -124,6 +135,8 @@ void parseXML(const std::string &filename,
                             }
                             else {
                                 statsPackNotRecoveredGtinCount++;
+                                statsSm8EmptyVec.push_back("<" + nameTag + "> " + v.second.get(nameTag, "") + ", <" + descriptionTag + "> " + v.second.get(descriptionTag, ""));
+#ifdef DEBUG
                                 if (verbose) {
                                     std::cerr
                                     << basename((char *)__FILE__) << ":" << __LINE__
@@ -133,6 +146,7 @@ void parseXML(const std::string &filename,
                                     << ", <" << descriptionTag << "> " << v.second.get(descriptionTag, "")
                                     << std::endl;
                                 }
+#endif
                             }
                         }
                         else

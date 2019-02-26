@@ -8,6 +8,8 @@
 //
 
 #include <iostream>
+#include <vector>
+#include <set>
 #include <libgen.h>     // for basename()
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -35,12 +37,19 @@ namespace AIPS
     unsigned int statsPedTextFoundCount = 0;
     unsigned int statsAtcTextNotFoundCount = 0;
     
-    std::vector<std::string> statsDuplicateRegnrs;
+    std::vector<std::string> statsDuplicateRegnrsVec;
+    std::set<std::string> statsMissingImgAltSet;
+
+void addStatsMissingAlt(const std::string &regnrs, const int sectionNumber)
+{
+    // TODO: add the section number to a set
+    statsMissingImgAltSet.insert(regnrs);
+}
 
 static
-    void printFileStats(const std::string &filename,
-                        const std::string &language,
-                        const std::string &type)
+void printFileStats(const std::string &filename,
+                    const std::string &language,
+                    const std::string &type)
 {
     REP::html_h2("AIPS");
     REP::html_p(filename);
@@ -57,13 +66,25 @@ static
     REP::html_li("no ATC code in atc_columns: " + std::to_string(statsAtcNotFoundCount));
     REP::html_end_ul();
     
-    if (statsDuplicateRegnrs.size() > 0) {
+    if (statsDuplicateRegnrsVec.size() > 0) {
         REP::html_h3("rgnrs that contained duplicates");
         REP::html_start_ul();
-        for (auto s : statsDuplicateRegnrs) {
+        for (auto s : statsDuplicateRegnrsVec)
             REP::html_li(s);
-        }
 
+        REP::html_end_ul();
+    }
+}
+    
+void printUsageStats()
+{
+    if (statsMissingImgAltSet.size() > 0) {
+        REP::html_h3("XML");
+        REP::html_p("For these rgnrs, <img> has no \"alt\" attribute");
+        REP::html_start_ul();
+        for (auto s : statsMissingImgAltSet)
+            REP::html_li(s);
+        
         REP::html_end_ul();
     }
 }
@@ -129,7 +150,7 @@ MedicineList & parseXML(const std::string &filename,
                             Med.regnrs = boost::algorithm::join(rnVector, ",");
                             int sizeAfter = rnVector.size();
                             if (sizeBefore != sizeAfter)
-                                statsDuplicateRegnrs.push_back(Med.regnrs);
+                                statsDuplicateRegnrsVec.push_back(Med.regnrs);
                         }
                     }
                     

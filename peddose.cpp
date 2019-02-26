@@ -144,11 +144,24 @@ void printFileStats(const std::string &filename)
     REP::html_li("_ALTERRELATION: " + std::to_string(statsCode_ALTERRELATION));
     REP::html_li("_FG: " + std::to_string(statsCode_FG));
     REP::html_li("_GEWICHT: " + std::to_string(statsCode_GEWICHT));
-    REP::html_li("ATC: " + std::to_string(statsCodeAtc) + ", <CodeValue> map: "+ std::to_string(codeAtcMap.size()));
+    REP::html_li("ATC: " + std::to_string(statsCodeAtc)
+#ifdef DEBUG
+                 + ", <CodeValue> map: " + std::to_string(codeAtcMap.size())
+#endif
+                 );
     REP::html_li("DOSISTYP: " + std::to_string(statsCodeDOSISTYP));
-    REP::html_li("DOSISUNIT: " + std::to_string(statsCodeDOSISUNIT)+ ", <CodeValue> map: "+ std::to_string(codeDosisUnitMap.size()));
+    REP::html_li("DOSISUNIT: " + std::to_string(statsCodeDOSISUNIT)
+#ifdef DEBUG
+                 + ", <CodeValue> map: " + std::to_string(codeDosisUnitMap.size())
+#endif
+                 );
     REP::html_li("EVIDENZ: " + std::to_string(statsCodeEVIDENZ));
-    REP::html_li("ROA: " + std::to_string(statsCodeRoa) + ", <CodeValue> set: " + std::to_string(codeRoaCodeSet.size()) + ", <CodeValue> map: "+ std::to_string(codeRoaMap.size()));
+    REP::html_li("ROA: " + std::to_string(statsCodeRoa)
+#ifdef DEBUG
+                 + ", <CodeValue> set: " + std::to_string(codeRoaCodeSet.size())
+                 + ", <CodeValue> map: " + std::to_string(codeRoaMap.size())
+#endif
+                 );
     REP::html_li("ZEIT: " + std::to_string(statsCodeZEIT));
     REP::html_end_ul();
 }
