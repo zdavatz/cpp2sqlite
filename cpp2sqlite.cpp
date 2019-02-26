@@ -417,6 +417,14 @@ void getHtmlFromXml(std::string &xml,
         std::string::size_type posBarcodeTo = xml.find("</div>", from);
         xml.replace(from, posBarcodeTo - from, htmlBarcodes);
         
+#ifdef WORKAROUND_SUB_SUP
+        // Restore
+        boost::replace_all(xml, ESCAPED_SUP_L, "<sup>");
+        boost::replace_all(xml, ESCAPED_SUP_R, "</sup>");
+        boost::replace_all(xml, ESCAPED_SUB_L, "<sub>");
+        boost::replace_all(xml, ESCAPED_SUB_R, "</sub>");
+#endif
+        
         // This type of XML requires very little processing
         html += xml;
 
