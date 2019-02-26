@@ -121,7 +121,9 @@ void html_p(const std::string &msg)
 {
     toConsole(msg);
 
-    ofs2 << "<p>" << msg << "</p>" << std::endl;
+    std::string s(msg);
+    sanitize(s);
+    ofs2 << "<p>" << s << "</p>" << std::endl;
 }
 
 void html_div(const std::string &msg)
