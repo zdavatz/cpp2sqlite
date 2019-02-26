@@ -13,6 +13,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <ctime>
 #include <libgen.h>     // for basename()
 
 #include <boost/filesystem.hpp>
@@ -34,9 +35,8 @@ void sanitize(std::string &msg)
     boost::replace_all(msg, ">", "&gt;");
 }
 
-void log_init(std::string logDir, std::string filename)
+void init(std::string logDir, std::string filename)
 {
-
     std::string fullFilename(logDir);
     fullFilename += filename;
 
@@ -45,7 +45,12 @@ void log_init(std::string logDir, std::string filename)
     ofs2 << "<head>";
 
     ofs2 << "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />";
-    ofs2 << "<style>body { background-color: #dedede;} table { font-family: verdana,arial,sans-serif; font-size: 13px; color: #333333; border-width: 1px; border-color: #666666; border-collapse: collapse; width: 100% } th { border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} td { border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff;}</style>";
+    ofs2 << "<style>";
+    ofs2 << "h1 {text-align: center;}";
+    ofs2 << "table { font-family: verdana,arial,sans-serif; font-size: 13px; color: #333333; border-width: 1px; border-color: #666666; border-collapse: collapse; width: 100% } ";
+    ofs2 << "th { border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} ";
+    ofs2 << "td { border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff;}";
+    ofs2 << "</style>";
 
     ofs2 << "</head>";
     ofs2 << "<body>" << std::endl;
@@ -72,7 +77,7 @@ void html_h1(const std::string &msg)
 
 void html_h2(const std::string &msg)
 {
-    ofs2 << "<h2>" << msg << "</h2>" << std::endl;
+    ofs2 << "<hr><h2>" << msg << "</h2>" << std::endl;
 }
 
 void html_h3(const std::string &msg)
@@ -104,14 +109,13 @@ void html_li(const std::string &msg)
     ul.push_back("<li>" + s + "</li>");
 }
 
-void log_msg(const std::string &msg)
+void terminate()
 {
-    ofs2 << msg << std::endl;
-    ofs2.flush();
-}
+    // footer
+    ofs2 << "<hr>\n";
+    std::time_t seconds = std::time(nullptr);
+    html_p(std::asctime(std::localtime( &seconds )));
 
-void log_terminate()
-{
     ofs2 << "</body>";
     ofs2 << "</html>";
     ofs2.close();

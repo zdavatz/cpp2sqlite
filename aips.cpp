@@ -26,6 +26,7 @@ namespace pt = boost::property_tree;
 namespace AIPS
 {
     MedicineList medList;
+
     unsigned int statsAtcFromEphaCount = 0;
     unsigned int statsAtcFromAipsCount = 0;
     unsigned int statsAtcFromSwissmedicCount = 0;
@@ -33,6 +34,39 @@ namespace AIPS
     unsigned int statsAtcTextFoundCount = 0;
     unsigned int statsPedTextFoundCount = 0;
     unsigned int statsAtcTextNotFoundCount = 0;
+    
+    std::vector<std::string> statsDuplicateRegnrs;
+
+static
+    void printFileStats(const std::string &filename,
+                        const std::string &language,
+                        const std::string &type)
+{
+    REP::html_h2("AIPS");
+    REP::html_p(filename);
+    
+    REP::html_start_ul();
+    REP::html_li("medicalInformation " + type + " " + language + " " + std::to_string(medList.size()));
+    REP::html_end_ul();
+    
+    REP::html_h3("ATC codes " + std::to_string(statsAtcFromEphaCount + statsAtcFromAipsCount + statsAtcFromSwissmedicCount + statsAtcNotFoundCount));
+    REP::html_start_ul();
+    REP::html_li("from aips: " + std::to_string(statsAtcFromAipsCount));
+    REP::html_li("from swissmedic: " + std::to_string(statsAtcFromSwissmedicCount));
+    // There will be no ATC code in atc_columns
+    REP::html_li("no ATC code in atc_columns: " + std::to_string(statsAtcNotFoundCount));
+    REP::html_end_ul();
+    
+    if (statsDuplicateRegnrs.size() > 0) {
+        REP::html_h3("rgnrs that contained duplicates");
+        REP::html_start_ul();
+        for (auto s : statsDuplicateRegnrs) {
+            REP::html_li(s);
+        }
+
+        REP::html_end_ul();
+    }
+}
 
 MedicineList & parseXML(const std::string &filename,
                         const std::string &language,
@@ -95,10 +129,7 @@ MedicineList & parseXML(const std::string &filename,
                             Med.regnrs = boost::algorithm::join(rnVector, ",");
                             int sizeAfter = rnVector.size();
                             if (sizeBefore != sizeAfter)
-                                std::clog
-                                << basename((char *)__FILE__) << ":" << __LINE__
-                                << ", Warning - duplicate regnrs have been compacted to: " << Med.regnrs
-                                << std::endl;
+                                statsDuplicateRegnrs.push_back(Med.regnrs);
                         }
                     }
                     
@@ -165,35 +196,8 @@ MedicineList & parseXML(const std::string &filename,
                 }
             }
         }
-        
-        REP::html_h2("AIPS");
-        REP::html_p(filename);
 
-        REP::html_start_ul();
-        REP::html_li("medicalInformation " + type + " " + language + " " + std::to_string(medList.size()));
-        REP::html_end_ul();
-
-        REP::html_h3("ATC codes");
-        REP::html_start_ul();
-        REP::html_li(" from aips: " + std::to_string(statsAtcFromAipsCount));
-        REP::html_li("from swissmedic: " + std::to_string(statsAtcFromSwissmedicCount));
-        REP::html_li("not found: " + std::to_string(statsAtcNotFoundCount));
-        REP::html_li("(total " + std::to_string(statsAtcFromEphaCount + statsAtcFromAipsCount + statsAtcFromSwissmedicCount + statsAtcNotFoundCount) + ")");
-        REP::html_end_ul();
-    
-        std::cout
-        << "aips medicalInformation " << type << " " << language << " " << medList.size()
-        << std::endl << "ATC codes"
-        //<< " from epha: " << statsAtcFromEphaCount
-        << " from aips: " << statsAtcFromAipsCount
-        << ", from swissmedic: " << statsAtcFromSwissmedicCount
-        << ", not found: " << statsAtcNotFoundCount
-        << " (total " << (statsAtcFromEphaCount + statsAtcFromAipsCount + statsAtcFromSwissmedicCount + statsAtcNotFoundCount) << ")"
-        << std::endl
-        << "ATC text found: " << statsAtcTextFoundCount
-        << ", found in peddose: " << statsPedTextFoundCount
-        << ", not found: " << statsAtcTextNotFoundCount
-        << std::endl;
+        printFileStats(filename, language, type);
     }
     catch (std::exception &e) {
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;

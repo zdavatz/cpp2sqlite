@@ -148,7 +148,7 @@ void printFileStats(const std::string &filename)
     REP::html_li("DOSISTYP: " + std::to_string(statsCodeDOSISTYP));
     REP::html_li("DOSISUNIT: " + std::to_string(statsCodeDOSISUNIT)+ ", <CodeValue> map: "+ std::to_string(codeDosisUnitMap.size()));
     REP::html_li("EVIDENZ: " + std::to_string(statsCodeEVIDENZ));
-    REP::html_li("ROA: " + std::to_string(statsCodeRoa) + ", set: " + std::to_string(codeRoaCodeSet.size()) + ", <CodeValue> map: "+ std::to_string(codeRoaMap.size()));
+    REP::html_li("ROA: " + std::to_string(statsCodeRoa) + ", <CodeValue> set: " + std::to_string(codeRoaCodeSet.size()) + ", <CodeValue> map: "+ std::to_string(codeRoaMap.size()));
     REP::html_li("ZEIT: " + std::to_string(statsCodeZEIT));
     REP::html_end_ul();
 }

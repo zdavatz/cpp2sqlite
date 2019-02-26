@@ -857,16 +857,12 @@ int main(int argc, char **argv)
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
 
-    REP::log_init(opt_downloadDirectory + "/", "amiko_owner_report_de.html");
-    //REP::log_msg(appName + " " + opt_language);
+    REP::init("./", "amiko_owner_report_" + opt_language + ".html");
     REP::html_start_ul();
     for (int i=0; i<argc; i++)
         REP::html_li(argv[i]);
 
     REP::html_end_ul();
-    
-    std::time_t seconds = std::time(nullptr);
-    REP::html_p(std::asctime(std::localtime( &seconds )));
     
     // TODO: create index with links to expected h1 titles
     REP::html_h1("File Analysis");
@@ -890,12 +886,15 @@ int main(int argc, char **argv)
 
     ATC::parseTXT(opt_downloadDirectory + "/../input/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
 
-    AIPS::MedicineList &list = AIPS::parseXML(opt_downloadDirectory + "/aips_xml.xml", opt_language, type, flagVerbose);
+    AIPS::MedicineList &list = AIPS::parseXML(opt_downloadDirectory + "/aips_xml.xml",
+                                              opt_language,
+                                              type,
+                                              flagVerbose);
+
+    REP::html_p("Swissmedic has " + std::to_string(countAipsPackagesInSwissmedic(list)) + " matching packages");
     
     REFDATA::parseXML(opt_downloadDirectory + "/refdata_pharma_xml.xml", opt_language);
-    
-    std::cerr << "swissmedic has " << countAipsPackagesInSwissmedic(list) << " packages matching AIPS" << std::endl;
-    
+
     BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml", opt_language, flagVerbose);
     if (flagVerbose) {
         std::vector<std::string> bagList = BAG::getGtinList();
@@ -1137,6 +1136,12 @@ int main(int argc, char **argv)
         REP::html_li("in bag: " + std::to_string(statsRnFoundBagCount) + "/" + std::to_string(statsRnNotFoundBagCount) + " (" + std::to_string(statsRnFoundBagCount + statsRnNotFoundBagCount) + ")");
         REP::html_li("not found anywhere: " + std::to_string(statsRegnrsNotFound.size()));
         REP::html_end_ul();
+        if (statsRegnrsNotFound.size() > 0) {
+            if (flagVerbose)
+                REP::html_div(boost::algorithm::join(statsRegnrsNotFound, ", "));
+            else
+                std::cerr << "Run with --verbose to see REGNRS not found" << std::endl;
+        }
 
         REFDATA::printUsageStats();
         SWISSMEDIC::printUsageStats();
@@ -1145,25 +1150,17 @@ int main(int argc, char **argv)
             ATC::printUsageStats();
 
         PED::printUsageStats();
-
-        if (statsRegnrsNotFound.size() > 0) {
-            if (flagVerbose) {
-                REP::html_h2("REGNRS not found anywhere");
-                REP::html_div(boost::algorithm::join(statsRegnrsNotFound, ", "));
-            }
-            else {
-                std::cerr << "Run with --verbose to see REGNRS not found" << std::endl;
-            }
-        }
-
         AIPS::destroyStatement(statement);
 
         int rc = sqlite3_close(db);
         if (rc != SQLITE_OK)
-            std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
+            std::cerr
+            << basename((char *)__FILE__) << ":" << __LINE__
+            << ", rc" << rc
+            << std::endl;
     }
 
-    REP::log_terminate();
+    REP::terminate();
 
     return EXIT_SUCCESS;
 }

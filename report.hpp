@@ -15,8 +15,8 @@
 
 namespace REP
 {
-    void log_init(std::string logDir, std::string filename);
-    void log_msg(const std::string &msg);
+    void init(std::string logDir, std::string filename);
+    void terminate();
 
     void html_h1(const std::string &msg);
     void html_h2(const std::string &msg);
@@ -27,8 +27,6 @@ namespace REP
     void html_start_ul();
     void html_end_ul();
     void html_li(const std::string &msg);
-
-    void log_terminate();
     
 //    // http://www.drdobbs.com/cpp/logging-in-c/201804215
 //    class Log
