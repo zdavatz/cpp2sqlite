@@ -18,6 +18,7 @@
 #include "gtin.hpp"
 #include "bag.hpp"
 #include "beautify.hpp"
+#include "report.hpp"
 
 #define COLUMN_A        0   // GTIN (5 digits)
 #define COLUMN_C        2   // name
@@ -44,10 +45,32 @@ namespace SWISSMEDIC
     // TODO: change them to a map for better performance
     std::vector<dosageUnits> duVec;
 
+    // Usage stats
     unsigned int statsAugmentedRegnCount = 0;
-    unsigned int statsAugmentedGtinCount = 0;
+    unsigned int statsAugmentedGtinCount = 0;    
     unsigned int statsTotalGtinCount = 0;
     unsigned int statsRecoveredDosage = 0;
+
+static
+void printFileStats(const std::string &filename)
+{
+    REP::html_h2("Swissmedic");
+    //REP::html_p(std::string(basename((char *)filename.c_str())));
+    REP::html_p(filename);
+    REP::html_start_ul();
+    REP::html_li("rows: " + std::to_string(theWholeSpreadSheet.size()));
+    REP::html_end_ul();
+}
+
+void printUsageStats()
+{
+    REP::html_h2("Swissmedic");
+    
+    REP::html_start_ul();
+    REP::html_li("GTINs used: " + std::to_string(statsTotalGtinCount));
+    REP::html_li("recovered dosage " + std::to_string(statsRecoveredDosage));
+    REP::html_end_ul();
+}
 
 void parseXLXS(const std::string &filename)
 {
@@ -99,9 +122,9 @@ void parseXLXS(const std::string &filename)
         duVec.push_back(du);
     }
 
-    std::clog << "swissmedic rows: " << theWholeSpreadSheet.size() << std::endl;
+    printFileStats(filename);
 }
- 
+
 // Return count added
 int getAdditionalNames(const std::string &rn,
                              std::set<std::string> &gtinUsed,
@@ -253,14 +276,6 @@ dosageUnits getByGtin(const std::string &g)
         }
 
     return du;
-}
-
-void printStats()
-{
-    std::cout
-    << "GTINs used from swissmedic " << statsTotalGtinCount
-    << ", recovered dosage " << statsRecoveredDosage
-    << std::endl;
 }
     
 }

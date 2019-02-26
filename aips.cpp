@@ -19,6 +19,7 @@
 #include "epha.hpp"
 #include "swissmedic.hpp"
 #include "peddose.hpp"
+#include "report.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -165,6 +166,21 @@ MedicineList & parseXML(const std::string &filename,
             }
         }
         
+        REP::html_h2("AIPS");
+        REP::html_p(filename);
+
+        REP::html_start_ul();
+        REP::html_li("medicalInformation " + type + " " + language + " " + std::to_string(medList.size()));
+        REP::html_end_ul();
+
+        REP::html_h3("ATC codes");
+        REP::html_start_ul();
+        REP::html_li(" from aips: " + std::to_string(statsAtcFromAipsCount));
+        REP::html_li("from swissmedic: " + std::to_string(statsAtcFromSwissmedicCount));
+        REP::html_li("not found: " + std::to_string(statsAtcNotFoundCount));
+        REP::html_li("(total " + std::to_string(statsAtcFromEphaCount + statsAtcFromAipsCount + statsAtcFromSwissmedicCount + statsAtcNotFoundCount) + ")");
+        REP::html_end_ul();
+    
         std::cout
         << "aips medicalInformation " << type << " " << language << " " << medList.size()
         << std::endl << "ATC codes"

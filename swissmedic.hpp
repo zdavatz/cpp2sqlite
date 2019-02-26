@@ -32,7 +32,8 @@ namespace SWISSMEDIC
     bool findGtin(const std::string &gtin);
     std::string getCategoryByGtin(const std::string &gtin);
     dosageUnits getByGtin(const std::string &gtin);
-    void printStats();
+
+    void printUsageStats();
 }
 
 #endif /* swissmedic_hpp */

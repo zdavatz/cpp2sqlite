@@ -21,6 +21,7 @@
 
 #include "atc.hpp"
 #include "swissmedic.hpp"
+#include "report.hpp"
 
 namespace ATC
 {
@@ -28,6 +29,29 @@ namespace ATC
     std::string statsFilename;
     std::set<std::string> atcMissingSet;
 
+static
+void printFileStats(const std::string &filename)
+{
+    REP::html_h2("Atc");
+    //REP::html_p(std::string(basename((char *)filename.c_str())));
+    REP::html_p(filename);
+
+    REP::html_start_ul();
+    REP::html_li("# lines: " + std::to_string(atcMap.size()));
+    REP::html_end_ul();
+}
+
+void printUsageStats()
+{
+    REP::html_h2("Atc");
+    
+    REP::html_start_ul();
+    REP::html_li(std::to_string(atcMissingSet.size()) + " missing branches from " + statsFilename);
+    REP::html_end_ul();
+    
+    REP::html_div(boost::algorithm::join(atcMissingSet, ", "));
+}
+    
 void parseTXT(const std::string &filename,
               const std::string &language,
               bool verbose)
@@ -62,10 +86,7 @@ void parseTXT(const std::string &filename,
         << std::endl;
     }
     
-    std::clog
-    << basename((char *)__FILE__) << ":" << __LINE__
-    << " # lines: " << atcMap.size()
-    << std::endl;
+    printFileStats(filename);
 }
 
 // This is required for ATC originating from aips, because they have lots of
@@ -187,16 +208,6 @@ std::string getFirstAtc(const std::string atcs)
     boost::algorithm::split(atcVector, atcs, boost::is_any_of(","), boost::token_compress_on);
 
     return atcVector[0];
-}
-
-void printStats()
-{
-    std::cout
-    << "ATC: " << atcMissingSet.size()
-    << " missing branches from " << statsFilename
-    << std::endl;
-    
-    std::cerr << boost::algorithm::join(atcMissingSet, ", ") << std::endl;
 }
 
 }

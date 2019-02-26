@@ -25,7 +25,7 @@ namespace ATC
     std::string getFirstAtcInAtcColumn(const std::string atcColumn);
     std::string getFirstAtc(const std::string atc);
 
-    void printStats();
+    void printUsageStats();
 }
 
 #endif /* atc_hpp */

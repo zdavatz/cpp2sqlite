@@ -30,6 +30,18 @@ namespace EPHA
     unsigned int statsTotalDocWithoutAtcCount = 0;
     unsigned int statsTotalRnCount = 0;
 
+static
+void printFileStats(const std::string &filename)
+{
+    std::clog
+    << basename((char *)__FILE__) << ":" << __LINE__
+    << ", # documents: " << statsTotalDocCount
+    << " (with atc: " << statsTotalDocWithAtcCount
+    << ", without atc: " << statsTotalDocWithoutAtcCount << ")"
+    << ", # distinct rn: " << statsTotalRnCount
+    << std::endl;
+}
+
 void parseJSON(const std::string &filename, bool verbose)
 {
     pt::ptree tree;
@@ -97,13 +109,7 @@ void parseJSON(const std::string &filename, bool verbose)
         }
     }
     
-    std::clog
-    << basename((char *)__FILE__) << ":" << __LINE__
-    << ", # documents: " << statsTotalDocCount
-    << " (with atc: " << statsTotalDocWithAtcCount
-    << ", without atc: " << statsTotalDocWithoutAtcCount << ")"
-    << ", # distinct rn: " << statsTotalRnCount
-    << std::endl;
+    printFileStats(filename);
 }
 
 std::string getAtcFromSingleRn(const std::string &rn)

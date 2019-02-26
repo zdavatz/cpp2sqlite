@@ -19,14 +19,42 @@
 #include "bag.hpp"
 #include "swissmedic.hpp"
 #include "beautify.hpp"
+#include "report.hpp"
 
 namespace pt = boost::property_tree;
 
 namespace REFDATA
 {
     ArticleList artList;
-    unsigned int statsTotalGtinCount = 0;
     
+    unsigned int statsArticleChildCount = 0;
+    unsigned int statsItemCount = 0;
+
+    unsigned int statsTotalGtinCount = 0;
+
+static
+void printFileStats(const std::string &filename)
+{
+    REP::html_h2("RefData");
+    //REP::html_p(std::string(basename((char *)filename.c_str())));
+    REP::html_p(filename);
+    
+    REP::html_start_ul();
+    REP::html_li("PHARMA items: " + std::to_string(statsItemCount));
+    REP::html_li("PHARMA items with GTIN starting with \"7680\": " + std::to_string(artList.size()));
+    REP::html_li("articles: " + std::to_string(statsArticleChildCount));
+    REP::html_end_ul();
+}
+
+void printUsageStats()
+{
+    REP::html_h2("RefData");
+    
+    REP::html_start_ul();
+    REP::html_li("GTINs used: " + std::to_string(statsTotalGtinCount));
+    REP::html_end_ul();
+}
+
 void parseXML(const std::string &filename,
               const std::string &language)
 {
@@ -43,8 +71,6 @@ void parseXML(const std::string &filename,
     
     std::clog << "Analyzing refdata" << std::endl;
 
-    unsigned int statsArticleChildCount = 0;
-    unsigned int statsItemCount = 0;
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ARTICLE")) {
             statsArticleChildCount++;
@@ -80,11 +106,7 @@ void parseXML(const std::string &filename,
 //            }
         }
 
-        std::cout
-        << "refdata PHARMA items with GTIN starting with \"7680\", count: " << artList.size()
-        << " of " << statsItemCount
-        //<< " (" << statsArticleChildCount << " articles)"
-        << std::endl;
+        printFileStats(filename);
     }
     catch (std::exception &e) {
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
@@ -146,13 +168,6 @@ std::string getPharByGtin(const std::string &gtin)
         }
     
     return phar;
-}
-
-void printStats()
-{
-    std::cout
-    << "GTINs used from refdata " << statsTotalGtinCount
-    << std::endl;
 }
 
 }

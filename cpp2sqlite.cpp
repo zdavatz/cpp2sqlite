@@ -41,6 +41,7 @@
 #include "epha.hpp"
 #include "gtin.hpp"
 #include "peddose.hpp"
+#include "report.hpp"
 
 #include "ean13/functii.h"
 
@@ -762,7 +763,7 @@ doPedDose:
 int main(int argc, char **argv)
 {
     //std::setlocale(LC_ALL, "en_US.utf8");
-
+    
     appName = boost::filesystem::basename(argv[0]);
 
     std::string opt_downloadDirectory;
@@ -856,6 +857,20 @@ int main(int argc, char **argv)
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
 
+    REP::log_init(opt_downloadDirectory + "/", "amiko_owner_report_de.html");
+    //REP::log_msg(appName + " " + opt_language);
+    REP::html_start_ul();
+    for (int i=0; i<argc; i++)
+        REP::html_li(argv[i]);
+
+    REP::html_end_ul();
+    
+    std::time_t seconds = std::time(nullptr);
+    REP::html_p(std::asctime(std::localtime( &seconds )));
+    
+    // TODO: create index with links to expected h1 titles
+    REP::html_h1("File Analysis");
+
 #if 0
     // Read epha first, because aips needs to get missing ATC codes from it
     std::string jsonFilename = "/epha_products_" + opt_language + "_json.json";
@@ -884,6 +899,11 @@ int main(int argc, char **argv)
     BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml", opt_language, flagVerbose);
     if (flagVerbose) {
         std::vector<std::string> bagList = BAG::getGtinList();
+        REP::html_start_ul();
+        REP::html_li(std::to_string(countBagGtinInSwissmedic(bagList)) + " GTIN are also in swissmedic");
+        REP::html_li(std::to_string(countBagGtinInRefdata(bagList)) + " GTIN are also in refdata");
+        REP::html_end_ul();
+
         std::cerr << "bag " << countBagGtinInSwissmedic(bagList) << " GTIN are also in swissmedic" << std::endl;
         std::cerr << "bag " << countBagGtinInRefdata(bagList) << " GTIN are also in refdata" << std::endl;
     }
@@ -1108,29 +1128,28 @@ int main(int argc, char **argv)
 #ifdef WITH_PROGRESS_BAR
         std::cerr << "\r100 %" << std::endl;
 #endif
-        std::clog
-        << "aips REGNRS (found/not found)" << std::endl
-        << "\tin refdata: " << statsRnFoundRefdataCount << "/" << statsRnNotFoundRefdataCount << " (" << (statsRnFoundRefdataCount + statsRnNotFoundRefdataCount) << ")" << std::endl
-        << "\tin swissmedic: " << statsRnFoundSwissmedicCount << "/" << statsRnNotFoundSwissmedicCount << " (" << (statsRnFoundSwissmedicCount + statsRnNotFoundSwissmedicCount) << ")" << std::endl
-        << "\tin bag: " << statsRnFoundBagCount << "/" << statsRnNotFoundBagCount << " (" << (statsRnFoundBagCount + statsRnNotFoundBagCount) << ")" << std::endl
-        << "\tnot found anywhere: " << statsRegnrsNotFound.size()
-        << std::endl;
+        REP::html_h1("Usage");
+        
+        REP::html_h2("aips REGNRS (found/not found)");
+        REP::html_start_ul();
+        REP::html_li("in refdata: " + std::to_string(statsRnFoundRefdataCount) + "/" + std::to_string(statsRnNotFoundRefdataCount) + " (" + std::to_string(statsRnFoundRefdataCount + statsRnNotFoundRefdataCount) + ")");
+        REP::html_li("in swissmedic: " + std::to_string(statsRnFoundSwissmedicCount) + "/" + std::to_string(statsRnNotFoundSwissmedicCount) + " (" + std::to_string(statsRnFoundSwissmedicCount + statsRnNotFoundSwissmedicCount) + ")");
+        REP::html_li("in bag: " + std::to_string(statsRnFoundBagCount) + "/" + std::to_string(statsRnNotFoundBagCount) + " (" + std::to_string(statsRnFoundBagCount + statsRnNotFoundBagCount) + ")");
+        REP::html_li("not found anywhere: " + std::to_string(statsRegnrsNotFound.size()));
+        REP::html_end_ul();
 
-        REFDATA::printStats();
-        SWISSMEDIC::printStats();
-        BAG::printStats();
+        REFDATA::printUsageStats();
+        SWISSMEDIC::printUsageStats();
+        BAG::printUsageStats();
         if (flagVerbose)
-            ATC::printStats();
+            ATC::printUsageStats();
 
-        PED::printStats();
+        PED::printUsageStats();
 
         if (statsRegnrsNotFound.size() > 0) {
             if (flagVerbose) {
-                std::cout << "REGNRS not found anywhere:" << std::endl;
-                for (auto s : statsRegnrsNotFound)
-                    std::cout << s << ", ";
-                
-                std::cout << std::endl;
+                REP::html_h2("REGNRS not found anywhere");
+                REP::html_div(boost::algorithm::join(statsRegnrsNotFound, ", "));
             }
             else {
                 std::cerr << "Run with --verbose to see REGNRS not found" << std::endl;
@@ -1143,6 +1162,8 @@ int main(int argc, char **argv)
         if (rc != SQLITE_OK)
             std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", rc" << rc << std::endl;
     }
+
+    REP::log_terminate();
 
     return EXIT_SUCCESS;
 }

@@ -85,7 +85,7 @@ namespace PED
     std::string getHtmlByAtc(const std::string atc);
     void showPedDoseByAtc(const std::string atc);
     
-    void printStats();
+    void printUsageStats();
 }
 
 #endif /* peddose_hpp */

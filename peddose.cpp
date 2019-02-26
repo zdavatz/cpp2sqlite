@@ -18,6 +18,7 @@
 
 #include "peddose.hpp"
 #include "atc.hpp"
+#include "report.hpp"
 
 #define WITH_SEPARATE_TABLE_HEADER
 
@@ -113,6 +114,56 @@ static std::string getAbbreviation(const std::string s)
     return codeDosisUnitMap[s].description;
 }
 
+static
+void printFileStats(const std::string &filename)
+{
+    REP::html_h2("PedDose");
+    //REP::html_p(std::string(basename((char *)filename.c_str())));
+    REP::html_p(filename);
+    
+    REP::html_h3("Cases " + std::to_string(statsCasesCount));
+    REP::html_start_ul();
+    REP::html_li("<CaseID> set: " + std::to_string(caseCaseIDSet.size()));
+    REP::html_li("<ATCCode> set: " + std::to_string(caseAtcCodeSet.size()));
+    REP::html_li("<ROACode> set: " + std::to_string(caseRoaCodeSet.size()));
+    REP::html_end_ul();
+    
+    REP::html_h3("Indications " + std::to_string(statsIndicationsCount));
+    REP::html_start_ul();
+    REP::html_li("<IndicationKey> map: " + std::to_string(indicationMap.size()));
+    REP::html_end_ul();
+    
+    REP::html_h3("Dosages " + std::to_string(statsDosagesCount));
+    REP::html_start_ul();
+    REP::html_li("<CaseId> set: " + std::to_string(dosageCaseIDSet.size()));
+    REP::html_li("vec: " + std::to_string(dosageVec.size()));
+    REP::html_end_ul();
+    
+    REP::html_h3("Codes " + std::to_string(statsCodesCount));
+    REP::html_start_ul();
+    REP::html_li("_ALTERRELATION: " + std::to_string(statsCode_ALTERRELATION));
+    REP::html_li("_FG: " + std::to_string(statsCode_FG));
+    REP::html_li("_GEWICHT: " + std::to_string(statsCode_GEWICHT));
+    REP::html_li("ATC: " + std::to_string(statsCodeAtc) + ", <CodeValue> map: "+ std::to_string(codeAtcMap.size()));
+    REP::html_li("DOSISTYP: " + std::to_string(statsCodeDOSISTYP));
+    REP::html_li("DOSISUNIT: " + std::to_string(statsCodeDOSISUNIT)+ ", <CodeValue> map: "+ std::to_string(codeDosisUnitMap.size()));
+    REP::html_li("EVIDENZ: " + std::to_string(statsCodeEVIDENZ));
+    REP::html_li("ROA: " + std::to_string(statsCodeRoa) + ", set: " + std::to_string(codeRoaCodeSet.size()) + ", <CodeValue> map: "+ std::to_string(codeRoaMap.size()));
+    REP::html_li("ZEIT: " + std::to_string(statsCodeZEIT));
+    REP::html_end_ul();
+}
+    
+void printUsageStats()
+{
+    REP::html_h2("PedDose");
+    
+    REP::html_start_ul();
+    REP::html_li("ATC with <Case>: " + std::to_string(statsCasesForAtcFoundCount));
+    REP::html_li("ATC without <Case>: " + std::to_string(statsCasesForAtcNotFoundCount));
+    REP::html_li("tables created: " + std::to_string(statsTablesCount));
+    REP::html_end_ul();
+}
+
 void parseXML(const std::string &filename,
               const std::string &language)
 {
@@ -165,10 +216,6 @@ void parseXML(const std::string &filename,
         i = 0;
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Cases")) {
             if (v.first == "Case") {
-                /*
-                 <ATCCode>J01CA04</ATCCode>
-                 <IndicationKey>339</IndicationKey>
-                 */
 #if 0
 
                 std::clog
@@ -324,32 +371,8 @@ void parseXML(const std::string &filename,
         << ", Error " << e.what()
         << std::endl;
     }
-    
-    std::clog
-    << std::endl
-    << "Cases: " << statsCasesCount
-    << ", CaseID set: " << caseCaseIDSet.size()
-    << ", ATC Code set: " << caseAtcCodeSet.size()
-    << ", ROA Code set: " << caseRoaCodeSet.size()
-    << std::endl
-    << "Indications: " << statsIndicationsCount
-    << ", # indications map: " << indicationMap.size()
-    << std::endl
-    << "Dosages: " << statsDosagesCount
-    << ", set: " << dosageCaseIDSet.size()
-    << ", vec: " << dosageVec.size()
-    << std::endl
-    << "Codes: " << statsCodesCount
-    << "\n  <CodeType>\n\t_ALTERRELATION: " << statsCode_ALTERRELATION
-    << "\n\t_FG: " << statsCode_FG
-    << "\n\t_GEWICHT: " << statsCode_GEWICHT
-    << "\n\tATC: " << statsCodeAtc << ", map: " << codeAtcMap.size()
-    << "\n\tDOSISTYP: " << statsCodeDOSISTYP
-    << "\n\tDOSISUNIT: " << statsCodeDOSISUNIT << ", map: " << codeDosisUnitMap.size()
-    << "\n\tEVIDENZ: " << statsCodeEVIDENZ
-    << "\n\tROA: " << statsCodeRoa << ", set: " << codeRoaCodeSet.size() << ", map: " << codeRoaMap.size()
-    << "\n\tZEIT: " << statsCodeZEIT
-    << std::endl;
+
+    printFileStats(filename);
 }
     
 std::string getDescriptionByAtc(const std::string &atc)
@@ -654,15 +677,6 @@ void showPedDoseByAtc(const std::string atc)
             std::cout << std::endl;
         }
     }
-}
-    
-void printStats()
-{
-    std::cout
-    << "PED ATC with cases: " << statsCasesForAtcFoundCount
-    << ", ATC without cases: " << statsCasesForAtcNotFoundCount
-    << ", tables created: "<< statsTablesCount
-    << std::endl;
 }
 
 }

@@ -38,7 +38,7 @@ namespace REFDATA
 
     std::string getPharByGtin(const std::string &gtin);
 
-    void printStats();
+    void printUsageStats();
 }
 
 #endif /* refdata_hpp */

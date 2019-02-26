@@ -44,6 +44,7 @@ add_executable(cpp2sqlite
 	atc.hpp atc.cpp
 	epha.hpp epha.cpp
 	peddose.hpp peddose.cpp
+    report.hpp report.cpp
 	ean13/functii.cpp ean13/functii.h
 	medicine.h)
 

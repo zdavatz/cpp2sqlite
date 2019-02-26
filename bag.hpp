@@ -70,7 +70,7 @@ namespace BAG
 
     packageFields getPackageFieldsByGtin(const std::string &gtin);
 
-    void printStats();
+    void printUsageStats();
 }
 
 #endif /* bag_hpp */

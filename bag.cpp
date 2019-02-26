@@ -19,6 +19,7 @@
 #include "bag.hpp"
 #include "gtin.hpp"
 #include "swissmedic.hpp"
+#include "report.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -26,7 +27,39 @@ namespace BAG
 {
     PreparationList prepList;
     PackageMap packMap;
+    
+    unsigned int statsPackCount = 0;
+    unsigned int statsPackWithoutGtinCount = 0;
+    unsigned int statsPackRecoveredGtinCount = 0;
+    unsigned int statsPackNotRecoveredGtinCount = 0;
+ 
+    // Usage stats
     unsigned int statsTotalGtinCount = 0;
+
+static
+void printFileStats(const std::string &filename)
+{
+    REP::html_h2("Bag");
+    //REP::html_p(std::string(basename((char *)filename.c_str())));
+    REP::html_p(filename);
+    
+    REP::html_start_ul();
+    REP::html_li("preparations: " + std::to_string(prepList.size()));
+    REP::html_li("packs: " + std::to_string(statsPackCount));
+    REP::html_li("packs without GTIN: " + std::to_string(statsPackWithoutGtinCount));
+    REP::html_li("recovered GTIN: " + std::to_string(statsPackRecoveredGtinCount));
+    REP::html_li("unrecovered GTIN: " + std::to_string(statsPackNotRecoveredGtinCount));
+    REP::html_end_ul();
+}
+
+void printUsageStats()
+{
+    REP::html_h2("Bag");
+    
+    REP::html_start_ul();
+    REP::html_li("GTINs used: " + std::to_string(statsTotalGtinCount));
+    REP::html_end_ul();
+}
 
 void parseXML(const std::string &filename,
               const std::string &language,
@@ -49,10 +82,6 @@ void parseXML(const std::string &filename,
     
     std::clog << "Analyzing bag" << std::endl;
 
-    unsigned int statsPackCount = 0;
-    unsigned int statsPackWithoutGtinCount = 0;
-    unsigned int statsPackRecoveredGtinCount = 0;
-    unsigned int statsPackNotRecoveredGtinCount = 0;
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("Preparations")) {
             if (v.first == "Preparation") {
@@ -175,13 +204,8 @@ void parseXML(const std::string &filename,
                 prepList.push_back(prep);
             }
         }
-        
-        std::cout << "bag preparations: " << prepList.size()
-        << ", packs: " << statsPackCount
-        << ", packs without GTIN: " << statsPackWithoutGtinCount
-        << ", recovered GTIN: " << statsPackRecoveredGtinCount
-        << ", unrecovered GTIN: " << statsPackNotRecoveredGtinCount
-        << std::endl;
+
+        printFileStats(filename);
     }
     catch (std::exception &e) {
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
@@ -359,10 +383,4 @@ packageFields getPackageFieldsByGtin(const std::string &gtin)
     return packMap[gtin];
 }
 
-void printStats()
-{
-    std::cout
-    << "GTINs used from bag " << statsTotalGtinCount
-    << std::endl;
-}
 }
