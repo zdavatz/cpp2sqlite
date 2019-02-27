@@ -168,7 +168,7 @@ void printFileStats(const std::string &filename)
     
 void printUsageStats()
 {
-    REP::html_h2("PedDose");
+    REP::html_h2("swisspeddose.ch");
     
     REP::html_start_ul();
     REP::html_li("ATC with <Case>: " + std::to_string(statsCasesForAtcFoundCount));
