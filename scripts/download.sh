@@ -24,7 +24,7 @@ mkdir -p $DOWNLOAD_DIR ; cd $DOWNLOAD_DIR
 #-------------------------------------------------------------------------------
 # swissmedic
 FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_ham.xlsx.download.xlsx/Zugelassene_Packungen%20HAM_31012019.xlsx"
-wget -N $FILE1 -O swissmedic_packages_xlsx.xlsx
+wget -N $FILE1 -O swissmedic_packages.xlsx
 
 #-------------------------------------------------------------------------------
 # refdata
@@ -39,8 +39,15 @@ wget --post-file "$WD/ref.xml" \
     --header "SOAPAction: $URL/Pharma/Download" \
     "$URL/Service/Article.asmx" -O temp.xml
 
-xmllint --format temp.xml > refdata_pharma_xml.xml
+xmllint --format temp.xml > refdata_pharma.xml
 rm temp.xml
+
+#-------------------------------------------------------------------------------
+# bag
+wget http://bag.e-mediat.net/SL2007.Web.External/File.axd?file=XMLPublications.zip -O XMLPublications.zip
+unzip XMLPublications.zip Preparations.xml
+mv -f Preparations.xml bag_preparations.xml
+rm XMLPublications.zip
 exit 0
 
 #-------------------------------------------------------------------------------
