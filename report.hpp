@@ -27,7 +27,9 @@ namespace REP
     void html_p(const std::string &msg);
     void html_div(const std::string &msg);
     void html_start_ul();
+    void html_start_ol();
     void html_end_ul();
+    void html_end_ol();
     void html_li(const std::string &msg);
     
 //    // http://www.drdobbs.com/cpp/logging-in-c/201804215

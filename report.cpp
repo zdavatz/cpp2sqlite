@@ -73,12 +73,26 @@ void html_start_ul()
     ofs2 << "<ul>" << std::endl;
 }
 
+void html_start_ol()
+{
+    ul.clear();
+    ofs2 << "<ol>" << std::endl;
+}
+
 void html_end_ul()
 {
     for (auto bullet : ul)
         ofs2 << bullet << std::endl;
 
     ofs2 << "</ul>" << std::endl;
+}
+    
+void html_end_ol()
+{
+    for (auto bullet : ul)
+        ofs2 << bullet << std::endl;
+    
+    ofs2 << "</ol>" << std::endl;
 }
     
 void html_h1(const std::string &msg)

@@ -49,17 +49,17 @@ void printFileStats(const std::string &filename)
     REP::html_li("preparations: " + std::to_string(prepList.size()));
     REP::html_li("packs: " + std::to_string(statsPackCount));
     REP::html_li("packs without GTIN: " + std::to_string(statsPackWithoutGtinCount));
-    REP::html_li("recovered GTIN: " + std::to_string(statsPackRecoveredGtinCount));
-    REP::html_li("unrecovered GTIN: " + std::to_string(statsPackNotRecoveredGtinCount));
+    REP::html_li("GTIN recovered from <SwissmedicNo8>: " + std::to_string(statsPackRecoveredGtinCount));
+    REP::html_li("GTIN unrecoverable from <SwissmedicNo8>: " + std::to_string(statsPackNotRecoveredGtinCount));
     REP::html_end_ul();
     
     if (statsSm8EmptyVec.size() > 0) {
         REP::html_h3("<SwissmedicNo8> empty");
-        REP::html_start_ul();
+        REP::html_start_ol();
         for (auto s : statsSm8EmptyVec)
             REP::html_li(s);
         
-        REP::html_end_ul();
+        REP::html_end_ol();
     }
 }
 
