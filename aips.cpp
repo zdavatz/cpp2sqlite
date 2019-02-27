@@ -29,14 +29,17 @@ namespace AIPS
 {
     MedicineList medList;
 
+    // Parse-phase stats
     unsigned int statsAtcFromEphaCount = 0;
     unsigned int statsAtcFromAipsCount = 0;
     unsigned int statsAtcFromSwissmedicCount = 0;
     unsigned int statsAtcNotFoundCount = 0;
+
     unsigned int statsAtcTextFoundCount = 0;
     unsigned int statsPedTextFoundCount = 0;
     unsigned int statsAtcTextNotFoundCount = 0;
     
+    // Usage stats
     std::vector<std::string> statsDuplicateRegnrsVec;
     std::set<std::string> statsMissingImgAltSet;
 
@@ -65,7 +68,14 @@ void printFileStats(const std::string &filename,
     // There will be no ATC code in atc_columns
     REP::html_li("no ATC code in atc_columns: " + std::to_string(statsAtcNotFoundCount));
     REP::html_end_ul();
-    
+
+    REP::html_h3("ATC code text");
+    REP::html_start_ul();
+    REP::html_li("from aips: " + std::to_string(statsAtcTextFoundCount));
+    REP::html_li("from peddose: " + std::to_string(statsPedTextFoundCount));
+    REP::html_li("no text found: " + std::to_string(statsAtcTextNotFoundCount));
+    REP::html_end_ul();
+
     if (statsDuplicateRegnrsVec.size() > 0) {
         REP::html_h3("rgnrs that contained duplicates");
         REP::html_start_ul();
