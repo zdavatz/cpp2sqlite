@@ -1,3 +1,4 @@
 .DS_Store
 cpp2sqlite-build/
 amiko_db_full_idx_de.db
+download/

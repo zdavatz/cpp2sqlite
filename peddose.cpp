@@ -117,7 +117,7 @@ static std::string getAbbreviation(const std::string s)
 static
 void printFileStats(const std::string &filename)
 {
-    REP::html_h2("PedDose");
+    REP::html_h2("swisspeddose.ch");
     //REP::html_p(std::string(basename((char *)filename.c_str())));
     REP::html_p(filename);
     

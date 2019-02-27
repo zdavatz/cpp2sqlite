@@ -41,7 +41,7 @@ namespace BAG
 static
 void printFileStats(const std::string &filename)
 {
-    REP::html_h2("Bag");
+    REP::html_h2("BAG");
     //REP::html_p(std::string(basename((char *)filename.c_str())));
     REP::html_p(filename);
     
@@ -65,7 +65,7 @@ void printFileStats(const std::string &filename)
 
 void printUsageStats()
 {
-    REP::html_h2("Bag");
+    REP::html_h2("BAG");
     
     REP::html_start_ul();
     REP::html_li("GTINs used: " + std::to_string(statsTotalGtinCount));
