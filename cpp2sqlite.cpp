@@ -874,7 +874,7 @@ int main(int argc, char **argv)
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
 
-    REP::init("./", "amiko_owner_report_" + opt_language + ".html", flagVerbose);
+    REP::init("./", "amiko_report_" + opt_language + ".html", flagVerbose);
     REP::html_start_ul();
     for (int i=0; i<argc; i++)
         REP::html_li(argv[i]);
