@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://refdatabase.refdata.ch/Article_in" xmlns:ns2="http://refdatabase.refdata.ch/">
+  <SOAP-ENV:Body>
+    <ns2:DownloadArticleInput>
+      <ns1:ATYPE>NONPHARMA</ns1:ATYPE>
+    </ns2:DownloadArticleInput>
+  </SOAP-ENV:Body>
+  </SOAP-ENV:Envelope>
+</ns1:ATYPE></ns2:DownloadArticleInput></SOAP-ENV:Body>
