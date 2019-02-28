@@ -292,7 +292,7 @@ A12AA04: Calciumcarbonat; Calcium carbonate
 A12AA06: Calciumlactogluconat; Calcium gluconolactate
 A12AA12: Calciumacetat, wasserfrei; Calcium acétate anhydré
 A12AA: Calcium; Calcium
-A12AX01: Calciumcarbonat und Colecalciferol; 
+A12AX01: Calciumcarbonat und Colecalciferol; Calciumcarbonat et Collecalciférol
 A12AX: Calcium, Kombinationen mit Vitamin D und/oder anderen Mitteln; Calcium en association avec d’autres substances
 A12B: KALIUM; POTASSIUM
 A12BA01: Kaliumchlorid; Potassium chlorure
@@ -2244,7 +2244,7 @@ R02AB02: Tyrothricin; Tyrothricine
 R02AB03: Fusafungin; Fusafungine
 R02AB: Antibiotika; Antibiotiques
 R02AX01: Flurbiprofen; Flurbiprofène
-R02AX: Andere Hals- und Rachentherapeutika; 
+R02AX: Andere Hals- und Rachentherapeutika; Autres thérapies pour la gorge et la gorge
 R03: MITTEL BEI OBSTRUKTIVEN ATEMWEGSERKRANKUNGEN; Antiasthmatiques
 R03A: INHALATIVE SYMPATHOMIMETIKA; SYMPATHOMIMÉTIQUES PAR INHALATION
 R03AC02: Salbutamol; Salbutamol
