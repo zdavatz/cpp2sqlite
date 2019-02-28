@@ -2,7 +2,7 @@
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://refdatabase.refdata.ch/Article_in" xmlns:ns2="http://refdatabase.refdata.ch/">
   <SOAP-ENV:Body>
     <ns2:DownloadArticleInput>
-      <ns1:ATYPE>PHARMA</ns1:ATYPE>
+      <ns1:ATYPE>ALL</ns1:ATYPE>
     </ns2:DownloadArticleInput>
   </SOAP-ENV:Body>
   </SOAP-ENV:Envelope>
