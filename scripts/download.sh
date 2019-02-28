@@ -57,10 +57,10 @@ rm XMLPublications.zip
 #-------------------------------------------------------------------------------
 # swisspeddose
 
-if [ ! -f passwords ] ; then
+if [ ! -f $WD/passwords ] ; then
     echo "swisspeddose passwords file not found"
 else
-source passwords
+source $WD/passwords
 URL="https://db.swisspeddose.ch"
 FILE3="$URL/app/uploads/xml_publication/swisspeddosepublication-2019-02-21.xml"
 

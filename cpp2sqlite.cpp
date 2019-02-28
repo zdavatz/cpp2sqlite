@@ -783,7 +783,8 @@ int main(int argc, char **argv)
     
     appName = boost::filesystem::basename(argv[0]);
 
-    std::string opt_downloadDirectory;
+    std::string opt_inputDirectory;
+    std::string opt_workDirectory;  // for downloads subdirectory
     std::string opt_language;
     bool flagXml = false;
     bool flagVerbose = false;
@@ -824,7 +825,8 @@ int main(int argc, char **argv)
         ("plain", "does not update the package section")
         ("test", "starts in test mode")
         ("stats", po::value<float>(), "generates statistics for given user")
-        ("inDir", po::value<std::string>( &opt_downloadDirectory )->required(), "download directory (without trailing /)")
+        ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
+        ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
         ;
     
     po::variables_map vm;
@@ -873,8 +875,19 @@ int main(int argc, char **argv)
         type = "pi";
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
+    
+    if (!vm.count("workDir")) {
+        opt_workDirectory = opt_inputDirectory + "/..";
+    }
+    
+#if 0
+    std::cerr
+    << " inputDirectory: " << opt_inputDirectory << std::endl
+    << " workDirectory: " << opt_workDirectory << std::endl;
+    return EXIT_SUCCESS;
+#endif
 
-    REP::init("./", "amiko_report_" + opt_language + ".html", flagVerbose);
+    REP::init(opt_workDirectory + "/output/", "amiko_report_" + opt_language + ".html", flagVerbose);
     REP::html_start_ul();
     for (int i=0; i<argc; i++)
         REP::html_li(argv[i]);
@@ -887,10 +900,10 @@ int main(int argc, char **argv)
 #if 0
     // Read epha first, because aips needs to get missing ATC codes from it
     std::string jsonFilename = "/epha_products_" + opt_language + "_json.json";
-    EPHA::parseJSON(opt_downloadDirectory + jsonFilename, flagVerbose);
+    EPHA::parseJSON(opt_workDirectory + "/downloads" + jsonFilename, flagVerbose);
 #endif
 
-    PED::parseXML(opt_downloadDirectory + "/swisspeddosepublication-2019-02-21.xml",
+    PED::parseXML(opt_workDirectory + "/downloads/swisspeddosepublication-2019-02-21.xml",
                   opt_language);
 #ifdef DEBUG_PED_DOSE
     PED::showPedDoseByAtc("N02BA01");
@@ -899,20 +912,20 @@ int main(int argc, char **argv)
 #endif
 
     // Read swissmedic next, because aips might need to get missing ATC codes from it
-    SWISSMEDIC::parseXLXS(opt_downloadDirectory + "/swissmedic_packages_xlsx.xlsx");
+    SWISSMEDIC::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages_xlsx.xlsx");
 
-    ATC::parseTXT(opt_downloadDirectory + "/../input/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
+    ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
 
-    AIPS::MedicineList &list = AIPS::parseXML(opt_downloadDirectory + "/aips_xml.xml",
+    AIPS::MedicineList &list = AIPS::parseXML(opt_workDirectory + "/downloads/aips_xml.xml",
                                               opt_language,
                                               type,
                                               flagVerbose);
 
     REP::html_p("Swissmedic has " + std::to_string(countAipsPackagesInSwissmedic(list)) + " matching packages");
     
-    REFDATA::parseXML(opt_downloadDirectory + "/refdata_pharma_xml.xml", opt_language);
+    REFDATA::parseXML(opt_workDirectory + "/downloads/refdata_pharma_xml.xml", opt_language);
 
-    BAG::parseXML(opt_downloadDirectory + "/bag_preparations_xml.xml", opt_language, flagVerbose);
+    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations_xml.xml", opt_language, flagVerbose);
     {
         std::vector<std::string> bagList = BAG::getGtinList();
         REP::html_h4("Cross-reference");
