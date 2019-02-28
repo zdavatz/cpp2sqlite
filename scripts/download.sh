@@ -4,17 +4,11 @@
 WD=$(pwd)
 SRC_DIR=../
 
-if [ "$#" -lt 2 ] ; then
-    echo -e "Usage:\n\t$0 username password"
-    exit 0
-fi
+source passwords
 
-if [ ! -z "$3" ] ; then
-    SRC_DIR=$3
+if [ ! -z "$1" ] ; then
+    SRC_DIR=$1
 fi
-
-USERNAME=$1
-PASSWORD=$2
 
 BLD_DIR=$SRC_DIR/build
 BIN_DIR=$BLD_DIR
@@ -29,9 +23,6 @@ mkdir -p $DOWNLOAD_DIR ; cd $DOWNLOAD_DIR
 #echo "SRC_DIR: $SRC_DIR"
 #echo "DOWNLOAD_DIR: $DOWNLOAD_DIR"
 #echo "OUTPUT_DIR: $OUTPUT_DIR"
-
-unzip AipsDownload.zip
-exit 0
 
 #-------------------------------------------------------------------------------
 # epha no longer needed
