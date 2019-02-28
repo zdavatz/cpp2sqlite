@@ -45,6 +45,12 @@ wget --post-file "$WD/ref.xml" \
     "$URL/Service/Article.asmx" -O temp.xml
 
 xmllint --format temp.xml > refdata_pharma.xml
+
+# Clean up soap tags, and xmlns
+sed -i -e '/<soap:/d'  refdata_pharma.xml
+sed -i -e '/<\/soap:/d'  refdata_pharma.xml
+sed -i -e 's/xmlns="[^"]*"//'  refdata_pharma.xml
+
 rm temp.xml
 
 #-------------------------------------------------------------------------------
