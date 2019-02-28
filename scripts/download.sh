@@ -12,7 +12,7 @@ BLD_DIR=$SRC_DIR/build
 BIN_DIR=$BLD_DIR
 
 # Issue #3 specifications:
-DOWNLOAD_DIR=$SRC_DIR/download
+DOWNLOAD_DIR=$SRC_DIR/downloads
 OUTPUT_DIR=$SRC_DIR/output
 
 mkdir -p $OUTPUT_DIR
@@ -58,7 +58,7 @@ rm XMLPublications.zip
 # swisspeddose
 
 if [ ! -f passwords ] ; then
-    echo "swisspeddose password file not found"
+    echo "swisspeddose passwords file not found"
 else
 source passwords
 URL="https://db.swisspeddose.ch"
@@ -133,7 +133,6 @@ wget --header 'Host: download.swissmedicinfo.ch' \
     --body-data "$BODY_DATA" \
 	$URL \
 	--output-document 'AipsDownload.zip'
-
 
 unzip AipsDownload.zip -d temp
 mv "$(ls temp/AipsDownload_*.xml)" aips.xml
