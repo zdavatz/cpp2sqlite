@@ -4,8 +4,6 @@
 WD=$(pwd)
 SRC_DIR=../
 
-source passwords
-
 if [ ! -z "$1" ] ; then
     SRC_DIR=$1
 fi
@@ -60,6 +58,10 @@ rm XMLPublications.zip
 #-------------------------------------------------------------------------------
 # swisspeddose
 
+if [ ! -f passwords ] ; then
+    echo "swisspeddose password file not found"
+else
+source passwords
 URL="https://db.swisspeddose.ch"
 FILE3="$URL/app/uploads/xml_publication/swisspeddosepublication-2019-02-21.xml"
 
@@ -89,6 +91,7 @@ wget --header "Host: db.swisspeddose.ch" \
 	$FILE3 -O swisspeddosepublication.xml
 
 rm cookies.txt
+fi
 
 #-------------------------------------------------------------------------------
 # AIPS
@@ -132,8 +135,12 @@ wget --header 'Host: download.swissmedicinfo.ch' \
 	$URL \
 	--output-document 'AipsDownload.zip'
 
-# TODO: unzip AipsDownload.zip
 
-rm index.html
+unzip AipsDownload.zip -d temp
+mv "$(ls temp/AipsDownload_*.xml)" aips.xml
+rm -r temp
+rm AipsDownload.zip
+
+rm index.html*
 rm cookie.txt
 
