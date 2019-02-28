@@ -30,8 +30,7 @@ mkdir -p $DOWNLOAD_DIR ; cd $DOWNLOAD_DIR
 
 #-------------------------------------------------------------------------------
 # swissmedic
-# TODO: the timestamp could change
-FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/listen/excel-version_zugelasseneverpackungen.xlsx.download.xlsx/excel-version_zugelasseneverpackungen.xlsx"
+FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_ham.xlsx"
 wget -N $FILE1 -O swissmedic_packages.xlsx
 
 #-------------------------------------------------------------------------------
