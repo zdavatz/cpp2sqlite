@@ -6,6 +6,7 @@ SRC_DIR=../
 
 if [ "$#" -lt 2 ] ; then
     echo -e "Usage:\n\t$0 username password"
+    exit 0
 fi
 
 if [ ! -z "$3" ] ; then
@@ -28,6 +29,9 @@ mkdir -p $DOWNLOAD_DIR ; cd $DOWNLOAD_DIR
 #echo "SRC_DIR: $SRC_DIR"
 #echo "DOWNLOAD_DIR: $DOWNLOAD_DIR"
 #echo "OUTPUT_DIR: $OUTPUT_DIR"
+
+unzip AipsDownload.zip
+exit 0
 
 #-------------------------------------------------------------------------------
 # epha no longer needed
