@@ -879,13 +879,6 @@ int main(int argc, char **argv)
     if (!vm.count("workDir")) {
         opt_workDirectory = opt_inputDirectory + "/..";
     }
-    
-#if 0
-    std::cerr
-    << " inputDirectory: " << opt_inputDirectory << std::endl
-    << " workDirectory: " << opt_workDirectory << std::endl;
-    return EXIT_SUCCESS;
-#endif
 
     REP::init(opt_workDirectory + "/output/", "amiko_report_" + opt_language + ".html", flagVerbose);
     REP::html_start_ul();
@@ -903,7 +896,7 @@ int main(int argc, char **argv)
     EPHA::parseJSON(opt_workDirectory + "/downloads" + jsonFilename, flagVerbose);
 #endif
 
-    PED::parseXML(opt_workDirectory + "/downloads/swisspeddosepublication-2019-02-21.xml",
+    PED::parseXML(opt_workDirectory + "/downloads/swisspeddosepublication.xml",
                   opt_language);
 #ifdef DEBUG_PED_DOSE
     PED::showPedDoseByAtc("N02BA01");
@@ -912,20 +905,20 @@ int main(int argc, char **argv)
 #endif
 
     // Read swissmedic next, because aips might need to get missing ATC codes from it
-    SWISSMEDIC::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages_xlsx.xlsx");
+    SWISSMEDIC::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages.xlsx");
 
     ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
 
-    AIPS::MedicineList &list = AIPS::parseXML(opt_workDirectory + "/downloads/aips_xml.xml",
+    AIPS::MedicineList &list = AIPS::parseXML(opt_workDirectory + "/downloads/aips.xml",
                                               opt_language,
                                               type,
                                               flagVerbose);
 
     REP::html_p("Swissmedic has " + std::to_string(countAipsPackagesInSwissmedic(list)) + " matching packages");
     
-    REFDATA::parseXML(opt_workDirectory + "/downloads/refdata_pharma_xml.xml", opt_language);
+    REFDATA::parseXML(opt_workDirectory + "/downloads/refdata_pharma.xml", opt_language);
 
-    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations_xml.xml", opt_language, flagVerbose);
+    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", opt_language, flagVerbose);
     {
         std::vector<std::string> bagList = BAG::getGtinList();
         REP::html_h4("Cross-reference");
@@ -939,7 +932,7 @@ int main(int argc, char **argv)
         std::cerr << "Creating XML not yet implemented" << std::endl;
     }
     else {
-        std::string dbFilename = "amiko_db_full_idx_" + opt_language + ".db";
+        std::string dbFilename = opt_workDirectory + "/output/amiko_db_full_idx_" + opt_language + ".db";
         sqlite3 *db = AIPS::createDB(dbFilename);
 
         sqlite3_stmt *statement;
