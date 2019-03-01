@@ -255,7 +255,8 @@ static void cleanupXml(std::string &xml,
     // Make the child XML tag content part of the parent.
     // Also, the Reg mark is already "sup"
     boost::replace_all(xml, "<sup class=\"s3\">®</sup>", "®");
-    
+    boost::replace_all(xml, "<sup class=\"s3\">® </sup>", "®");
+
 #ifdef DEBUG_SUB_SUP
     std::string::size_type pos;
     
@@ -519,9 +520,9 @@ void getHtmlFromXml(std::string &xml,
 
                     // Append the section name to a vector to be used in column "titles_str"
                     // Make sure it doesn't already contain the separator ";"
-                    boost::replace_all(tagContent, "Ò",  "®"); // see HtmlUtils.java:636
-                    boost::replace_all(tagContent, "â",  "®");
-                    boost::replace_all(tagContent, "&apos;",   "'");
+                    boost::replace_all(tagContent, "Ò", "®"); // see HtmlUtils.java:636
+                    boost::replace_all(tagContent, "â", "®");
+                    boost::replace_all(tagContent, "&apos;", "'");
                     if (tagContent.find(TITLES_STR_SEPARATOR) != std::string::npos) {
                         statsTitleStrSeparatorMap.insert(std::make_pair(regnrs, tagContent));
 #ifdef DEBUG
@@ -538,7 +539,11 @@ void getHtmlFromXml(std::string &xml,
                         boost::replace_all(tagContent, ";",  "·"); // &middot;
                     }
 
-                    sectionTitle.push_back(tagContent);
+                    // HTML superscript tags are not supported in chapter list
+                    std::string chapterName = tagContent;
+                    boost::replace_all(chapterName, "<sup>", "");
+                    boost::replace_all(chapterName, "</sup>", "");
+                    sectionTitle.push_back(chapterName);
                     
                     std::string divClass;
                     if (sectionNumber == 1) {
