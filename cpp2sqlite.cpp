@@ -534,7 +534,9 @@ void getHtmlFromXml(std::string &xml,
                     // Append the section name to a vector to be used in column "titles_str"
                     // Make sure it doesn't already contain the separator ";"
                     boost::replace_all(tagContent, "Ò", "®"); // see HtmlUtils.java:636
-                    boost::replace_all(tagContent, "â", "®");
+                    if (language == "de")
+                        boost::replace_all(tagContent, "â", "®");
+
                     boost::replace_all(tagContent, "&apos;", "'");
                     if (tagContent.find(TITLES_STR_SEPARATOR) != std::string::npos) {
                         statsTitleStrSeparatorMap.insert(std::make_pair(regnrs, tagContent));
