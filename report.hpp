@@ -16,7 +16,7 @@
 namespace REP
 {
     void init(std::string logDir,
-              std::string filename,
+              std::string language,
               bool verbose=false);
     void terminate();
 

@@ -889,7 +889,7 @@ int main(int argc, char **argv)
         opt_workDirectory = opt_inputDirectory + "/..";
     }
 
-    REP::init(opt_workDirectory + "/output/", "amiko_report_" + opt_language + ".html", flagVerbose);
+    REP::init(opt_workDirectory + "/output/", opt_language, flagVerbose);
     REP::html_start_ul();
     for (int i=0; i<argc; i++)
         REP::html_li(argv[i]);
