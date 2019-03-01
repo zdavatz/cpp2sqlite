@@ -4,13 +4,11 @@ git pull
 git submodule init
 git submodule update
 
-SRC_DIR=$(pwd)
+./download.sh
+
+SRC_DIR=$(pwd)/..
 BLD_DIR="$SRC_DIR/build"
 BIN_DIR=/usr/local/bin/
-
-pushd scripts
-./download.sh
-popd
 
 sudo rm -rf $BLD_DIR
 mkdir -p $BLD_DIR
