@@ -1,8 +1,10 @@
 #!/bin/bash
 
-git pull
+pushd ../
+git pull        # dangerous: it could update this build.sh file
 git submodule init
 git submodule update
+popd
 
 ./download.sh
 
@@ -10,7 +12,7 @@ SRC_DIR=$(pwd)/..
 BLD_DIR="$SRC_DIR/build"
 BIN_DIR=/usr/local/bin/
 
-sudo rm -rf $BLD_DIR
+rm -rf $BLD_DIR
 mkdir -p $BLD_DIR
 cd $BLD_DIR
 
