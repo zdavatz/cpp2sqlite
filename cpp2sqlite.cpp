@@ -809,31 +809,31 @@ int main(int argc, char **argv)
         ("help,h", "print this message")
         ("version,v", "print the version information and exit")
         ("verbose", "be extra verbose") // Show errors and logs
-        ("nodown", "no download, parse only")
+//        ("nodown", "no download, parse only")
         ("lang", po::value<std::string>( &opt_language )->default_value("de"), "use given language (de/fr)")
-        ("alpha", po::value<std::string>( &opt_aplha ), "only include titles which start with arg value")  // Med title
-        ("regnr", po::value<std::string>( &opt_regnr ), "only include medications which start with arg value") // Med regnr
-        ("owner", po::value<std::string>( &opt_owner ), "only include medications owned by arg value") // Med owner
-        ("pseudo", "adds pseudo expert infos to db") // Pseudo fi
-        ("inter", "adds drug interactions to db")
-        ("pinfo", "generate patient info htmls") // Generate pi
-        ("xml", "generate xml file")
-        ("gln", "generate csv file with Swiss gln codes") // Shopping cart
-        ("shop", "generate encrypted files for shopping cart")
-        ("onlyshop", "skip generation of sqlite database")
-        ("zurrose", "generate zur Rose full article database or stock/like files (fulldb/atcdb/quick)") // Zur Rose DB
-        ("desitin", "generate encrypted files for Desitin")
-        ("onlydesitin", "skip generation of sqlite database") // Only Desitin DB
-        ("takeda", po::value<float>(), "generate sap/gln matching file")
-        ("dailydrugcosts", "calculates the daily drug costs")
-        ("smsequence", "generates swissmedic sequence csv")
-        ("packageparse", "extract dosage information from package name")
-        ("zip", "generate zipped big files (sqlite or xml)")
-        ("reports", "generates various reports")
-        ("indications", "generates indications section keywords report")
-        ("plain", "does not update the package section")
-        ("test", "starts in test mode")
-        ("stats", po::value<float>(), "generates statistics for given user")
+//        ("alpha", po::value<std::string>( &opt_aplha ), "only include titles which start with arg value")  // Med title
+//        ("regnr", po::value<std::string>( &opt_regnr ), "only include medications which start with arg value") // Med regnr
+//        ("owner", po::value<std::string>( &opt_owner ), "only include medications owned by arg value") // Med owner
+//        ("pseudo", "adds pseudo expert infos to db") // Pseudo fi
+//        ("inter", "adds drug interactions to db")
+//        ("pinfo", "generate patient info htmls") // Generate pi
+//        ("xml", "generate xml file")
+//        ("gln", "generate csv file with Swiss gln codes") // Shopping cart
+//        ("shop", "generate encrypted files for shopping cart")
+//        ("onlyshop", "skip generation of sqlite database")
+//        ("zurrose", "generate zur Rose full article database or stock/like files (fulldb/atcdb/quick)") // Zur Rose DB
+//        ("desitin", "generate encrypted files for Desitin")
+//        ("onlydesitin", "skip generation of sqlite database") // Only Desitin DB
+//        ("takeda", po::value<float>(), "generate sap/gln matching file")
+//        ("dailydrugcosts", "calculates the daily drug costs")
+//        ("smsequence", "generates swissmedic sequence csv")
+//        ("packageparse", "extract dosage information from package name")
+//        ("zip", "generate zipped big files (sqlite or xml)")
+//        ("reports", "generates various reports")
+//        ("indications", "generates indications section keywords report")
+//        ("plain", "does not update the package section")
+//        ("test", "starts in test mode")
+//        ("stats", po::value<float>(), "generates statistics for given user")
         ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
         ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
         ;
