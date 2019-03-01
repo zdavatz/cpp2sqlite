@@ -38,6 +38,7 @@ namespace SWISSMEDIC
     std::vector<std::string> regnrs;        // padded to 5 characters (digits)
     std::vector<std::string> packingCode;   // padded to 3 characters (digits)
     std::vector<std::string> gtin;
+    std::string fromSwissmedic("ev.nn.i.H.");
     
     // TODO: change it to a map for better performance
     std::vector<std::string> categoryVec;
@@ -129,8 +130,9 @@ void parseXLXS(const std::string &filename)
 
 // Return count added
 int getAdditionalNames(const std::string &rn,
-                             std::set<std::string> &gtinUsed,
-                             GTIN::oneFachinfoPackages &packages)
+                       std::set<std::string> &gtinUsed,
+                       GTIN::oneFachinfoPackages &packages,
+                       const std::string &language)
 {
     std::set<std::string>::iterator it;
     int countAdded = 0;
@@ -166,7 +168,9 @@ int getAdditionalNames(const std::string &rn,
             // See ReakExpertInfo.java:1544
             //  "a.H." --> "ev.nn.i.H."
             //  "p.c." --> "ev.ep.e.c."
-            std::string fromSwissmedic("ev.nn.i.H.");
+            if (language == "fr")
+                fromSwissmedic = "ev.ep.e.c.";
+
             std::string paf = BAG::getPricesAndFlags(g13, fromSwissmedic, categoryVec[rowInt]);
             if (!paf.empty())
                 onePackageInfo += paf;

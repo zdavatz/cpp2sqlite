@@ -1019,7 +1019,7 @@ int main(int argc, char **argv)
                     statsRnFoundRefdataCount++;
 
                 // Search in swissmedic
-                nAdd = SWISSMEDIC::getAdditionalNames(rn, gtinUsedSet, packages);
+                nAdd = SWISSMEDIC::getAdditionalNames(rn, gtinUsedSet, packages, opt_language);
                 if (nAdd == 0)
                     statsRnNotFoundSwissmedicCount++;
                 else
