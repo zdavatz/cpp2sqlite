@@ -199,6 +199,7 @@ static void cleanupXml(std::string &xml,
     boost::replace_all(xml, "&Auml;",   "Ä");
     boost::replace_all(xml, "&egrave;", "è");
     boost::replace_all(xml, "&eacute;", "é");
+    boost::replace_all(xml, "&Eacute;", "É");
     boost::replace_all(xml, "&iuml;",   "ï");
     boost::replace_all(xml, "&ouml;",   "ö");
     boost::replace_all(xml, "&Ouml;",   "Ö");
