@@ -8,13 +8,13 @@ SRC_DIR=$(pwd)
 BLD_DIR="$SRC_DIR/build"
 BIN_DIR=/usr/local/bin/
 
-sudo rm -rf $BLD_DIR
-mkdir -p $BLD_DIR
-cd $BLD_DIR
-
 pushd scripts
 ./download.sh
 popd
+
+sudo rm -rf $BLD_DIR
+mkdir -p $BLD_DIR
+cd $BLD_DIR
 
 cmake -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=$BIN_DIR \
