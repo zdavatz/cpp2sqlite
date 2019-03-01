@@ -38,20 +38,22 @@ wget -N $FILE1 -O swissmedic_packages.xlsx
 # http://refdatabase.refdata.ch/Service/Article.asmx?op=Download
 
 URL="http://refdatabase.refdata.ch"  # article and partner
+TARGET=refdata_pharma.xml
 
 wget --post-file "$WD/ref.xml" \
     --header "content-type: text/xml;charset=utf-8" \
     --header "SOAPAction: $URL/Pharma/Download" \
     "$URL/Service/Article.asmx" -O temp.xml
 
-xmllint --format temp.xml > refdata_pharma.xml
+xmllint --format temp.xml > $TARGET
 
 # Clean up soap tags, and xmlns
-sed -i -e '/<soap:/d'  refdata_pharma.xml
-sed -i -e '/<\/soap:/d'  refdata_pharma.xml
-sed -i -e 's/xmlns="[^"]*"//' refdata_pharma.xml
+sed -i -e '/<soap:/d' $TARGET
+sed -i -e '/<\/soap:/d' $TARGET
+sed -i -e 's/xmlns="[^"]*"//' $TARGET
 
 rm temp.xml
+rm $TARGET-e
 
 #-------------------------------------------------------------------------------
 # bag
