@@ -163,9 +163,8 @@ int getAdditionalNames(const std::string &rn,
                 onePackageInfo += " " + duVec[rowInt].dosage;
                 onePackageInfo += " " + duVec[rowInt].units;
             }
-            
-            // TODO: localize
-            // See ReakExpertInfo.java:1544
+
+            // See RealExpertInfo.java:1544
             //  "a.H." --> "ev.nn.i.H."
             //  "p.c." --> "ev.ep.e.c."
             if (language == "fr")

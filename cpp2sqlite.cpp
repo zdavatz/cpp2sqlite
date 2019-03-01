@@ -351,6 +351,7 @@ void getHtmlFromXml(std::string &xml,
                     std::vector<std::string> &sectionId,
                     std::vector<std::string> &sectionTitle,
                     const std::string atc,
+                    const std::string language,
                     bool verbose = false)
 {
 #ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
@@ -414,7 +415,9 @@ void getHtmlFromXml(std::string &xml,
         
         // Insert barcodes
         std::string htmlBarcodes = getBarcodesFromGtins(packages);
-        const std::string barcodeFromText("<div class=\"absTitle\">Packungen</div>");
+        std::string barcodeFromText("<div class=\"absTitle\">Packungen</div>");
+        if (language == "fr")
+            barcodeFromText = "<div class=\"absTitle\">Présentation</div>";
         std::string::size_type posBarcodeFrom = xml.find(barcodeFromText);
         std::string::size_type from = posBarcodeFrom + barcodeFromText.length();
         std::string::size_type posBarcodeTo = xml.find("</div>", from);
@@ -1061,6 +1064,7 @@ int main(int argc, char **argv)
                                sectionId,       // for ids_str
                                sectionTitle,    // for titles_str
                                firstAtc,        // for pedDose
+                               opt_language,    // for barcode section
                                flagVerbose);
                 AIPS::bindText("amikodb", statement, 15, html);
             }
