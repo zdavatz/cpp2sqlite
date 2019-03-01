@@ -12,7 +12,8 @@ sudo rm -rf $BLD_DIR
 mkdir -p $BLD_DIR
 cd $BLD_DIR
 
-$HOME/.software/cpp2sqlite/scripts/download.sh
+cd $HOME/.software/cpp2sqlite/scripts
+./download.sh
 
 cmake -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=$BIN_DIR \
