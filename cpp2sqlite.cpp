@@ -392,6 +392,43 @@ void getHtmlFromXml(std::string &xml,
         std::clog << "XML TYPE 2, regnrs " << regnrs << std::endl;
 #endif
         
+#if 1
+        // Title
+        // All we have to do for XML "type 2" is add an attribute
+        // id="section1" end clean up the "<br />"
+
+        // Extract the title
+        std::regex rgx(R"(<div class=\"MonTitle\">(.*)</div>)");    // tested at https://regex101.com
+        std::smatch match;
+        if (std::regex_search(xml, match, rgx)) {
+            std::string title = match[match.size() - 1];
+            
+            // All titles terminate with "<br />"
+            size_t lastindex = title.rfind("<br />");
+            if (lastindex != std::string::npos) {
+                // Remove the "<br />" suffix
+                title = title.substr(0, lastindex);
+
+                // Some titles have another "<br /> in the middle"
+                // Leave it there for the HTML
+            }
+
+            std::string titleDiv = "   <div class=\"MonTitle\" id=\"Section1\">\n";
+            titleDiv += title + "\n";
+            titleDiv += "   </div>\n";
+            xml = std::regex_replace(xml, rgx, titleDiv);
+
+            // ownerCompany is a separate div between section 1 and section 2
+            // It's alread there for XML type 2
+
+            sectionId.push_back("Section1");
+            // Some titles have another "<br /> in the middle"
+            // Remove it for the chapter name
+            boost::replace_first(title, "<br />",  " ");
+            sectionTitle.push_back(title);
+        }
+#endif
+
         // Extract chapter list
         const std::string sectIdText("id=\"Section");
         const std::string sectTitleText("<div class=\"absTitle\">");
