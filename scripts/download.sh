@@ -104,6 +104,7 @@ fi
 # AIPS
 
 URL="http://download.swissmedicinfo.ch"
+TARGET=AipsDownload.zip
 
 # <input type="submit" name="ctl00$MainContent$btnOK" value="Ja, ich akzeptiere / Oui, j’accepte / Sì, accetto" id="MainContent_btnOK" />
 POST_DATA="ctl00$MainContent$btnOK=Ja, ich akzeptiere / Oui, j’accepte / Sì, accetto"
@@ -124,7 +125,7 @@ BTN_YES="ctl00%24MainContent%24BtnYes=Ja"
 BODY_DATA="${VS}&${VSG}&${EVVAL}&${BTN_YES}"
 
 COOKIE1='ASP.NET_SessionId=tq1lpqudjurbf41p53vkxq3d' # in cookie.txt
-COOKIE2='.ASPXAUTH=F8371FB0AD90759CC025EC3D8236112BD865A3210322FABE16AD5895423FA5EE1E6FBDDCDA9C1C2CD2C9B0B5F9BD963BBEB00A0B19B59A195A4116FDC749D59953DC76138E28834E4CFB498F60C7C28359DB889E1A1D2052AA5AA98614169939327FAA374D22FE8083FD3C35FBB4D9B418639D2FB835F36C41C2D238BADAC35B'
+COOKIE2='.ASPXAUTH=2514A8299808F4151CD9C70A484C9F06BDBD64CF72F97B29BA10263674AFC5A90ED5AA59CBB6000DCD631F80A887AC80BE0636DFDB37E7A3E802D2CE3B8F38486DF0833C9D6506F59AE1A2EB38059630E29565486A30A662E657ACAC01342D8A36A66F7F52BAE6B5AAAE071566EB9045786CBDA2610B3456C035190B68CF5EC6'
 #COOKIES="Cookie: ${COOKIE1}; ${COOKIE2}"
 COOKIES="Cookie: ${COOKIE2}"
 
@@ -140,12 +141,14 @@ wget --header 'Host: download.swissmedicinfo.ch' \
 	--method POST \
     --body-data "$BODY_DATA" \
 	$URL \
-	--output-document 'AipsDownload.zip'
+	--output-document $TARGET
 
-unzip AipsDownload.zip -d temp
+#file --brief $TARGET | grep "Zip archive data" # Check that we got a zip file with:
+
+unzip $TARGET -d temp
 mv "$(ls temp/AipsDownload_*.xml)" aips.xml
 rm -r temp
-rm AipsDownload.zip
+rm $TARGET
 
 rm index.html*
 rm cookie.txt
