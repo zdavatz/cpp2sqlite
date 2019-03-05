@@ -23,7 +23,7 @@ cmake -DCMAKE_BUILD_TYPE=Release \
     $SRC_DIR
 
 make -j9
-sudo make install
+#sudo make install
 
 cd $BLD_DIR  # it should be $BIN_DIR otherwise there is no point in doing make install
 time cpp2sqlite --verbose --lang=fr --inDir $SRC_DIR/input
