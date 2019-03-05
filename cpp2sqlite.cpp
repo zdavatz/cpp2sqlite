@@ -46,12 +46,13 @@
 
 #include "ean13/functii.h"
 
-// Fool boost parser so it doesn't create children for <sub> and <sup>
-#define WORKAROUND_SUB_SUP
+// Fool boost parser so it doesn't create children for "<sub>" and "<sup>" and "<br />"
+#define WORKAROUND_SUB_SUP_BR
 #define ESCAPED_SUB_L         "[[[[sub]]]]"  // "&lt;sub&gt;" would be altered by boost parser
 #define ESCAPED_SUB_R         "[[[[/sub]]]]"
 #define ESCAPED_SUP_L         "[[[[sup]]]]"
 #define ESCAPED_SUP_R         "[[[[/sup]]]]"
+#define ESCAPED_BR            "[[[[br]]]]"   // Issue #30, rn 66547, section20, French
 
 #define WITH_PROGRESS_BAR
 #define USE_BOOST_FOR_REPLACEMENTS // faster than with std::regex
@@ -171,23 +172,13 @@ void removeTagFromXml(std::string &xml, const std::string &tag)
     
 }
 
-static void cleanupXml(std::string &xml,
-                       const std::string regnrs)
+// TODO: instead of calling it for XML (tags and contents)
+// call it only for tables (tags and content), chapter titles (contents), and xml "type 2" (tags and contents)
+//
+// The Java version seems to be using Jsoup and EscapeMode.xhtml
+// Don't convert &lt; &gt; &apos;
+static void cleanupForNonHtmlUsage(std::string &xml)
 {
-    // See also HtmlUtils.java:934
-    std::regex r1(R"(<span[^>]*>)");
-    xml = std::regex_replace(xml, r1, "");
-    
-    std::regex r2(R"(</span>)");
-    xml = std::regex_replace(xml, r2, "");
-    
-#if 0
-    std::regex r6a(R"(')");
-    xml = std::regex_replace(xml, r6a, "&apos;"); // to prevent errors when inserting into sqlite table
-#endif
-    
-    // The Java version seems to be using Jsoup and EscapeMode.xhtml
-    // Don't convert &lt; &gt; &apos;
     boost::replace_all(xml, "&nbsp;",   " ");
     boost::replace_all(xml, "&ge;",     "≥");
     boost::replace_all(xml, "&le;",     "≤");
@@ -249,13 +240,57 @@ static void cleanupXml(std::string &xml,
     boost::replace_all(xml, "&THORN;",  "Þ");
     boost::replace_all(xml, "&Oslash;", "Ø");
     boost::replace_all(xml, "&para;",   "¶");
-    boost::replace_all(xml, "&amp;",    "&");
+
     boost::replace_all(xml, "&frasl;",  "⁄"); // see rn 36083
     boost::replace_all(xml, "&curren;", "¤");
     boost::replace_all(xml, "&yen;",    "¥");
     boost::replace_all(xml, "&pound;",  "£");
     boost::replace_all(xml, "&ordf;",   "ª");
     boost::replace_all(xml, "&ccedil;", "ç");
+}
+
+// Here we modify only the HTML contents, not the tags
+static void cleanupTitle(std::string &title,
+                         const std::string regnrs)
+{
+    boost::replace_all(title, "&amp;", "&"); // rn 66547, section 20, French
+    
+    // rn 66547, section 20, French
+    size_t lastindex = title.find("<br />");
+    if (lastindex != std::string::npos) {
+        // Keep only up to the first "<br />"
+        title = title.substr(0, lastindex);
+    }
+
+    // HTML superscript tags are not supported in the chapter list
+    boost::replace_all(title, "<sup>", "");
+    boost::replace_all(title, "</sup>", "");
+    
+    if (title.find(TITLES_STR_SEPARATOR) != std::string::npos) {
+        statsTitleStrSeparatorMap.insert(std::make_pair(regnrs, title));
+        
+        // Replace section separator ";" with something else
+        // (not ',' because it's the decimal point separator on some locales)
+        boost::replace_all(title, TITLES_STR_SEPARATOR,  "·"); // &middot;
+    }
+}
+
+static void cleanupXml(std::string &xml,
+                       const std::string regnrs)
+{
+    // See also HtmlUtils.java:934
+    std::regex r1(R"(<span[^>]*>)");
+    xml = std::regex_replace(xml, r1, "");
+    
+    std::regex r2(R"(</span>)");
+    xml = std::regex_replace(xml, r2, "");
+    
+#if 0
+    std::regex r6a(R"(')");
+    xml = std::regex_replace(xml, r6a, "&apos;"); // to prevent errors when inserting into sqlite table
+#endif
+    
+    cleanupForNonHtmlUsage(xml); // unescapeContentForNonHtmlUsage
 
     // Cleanup XML post-replacements (still pre-parsing)
     
@@ -299,24 +334,26 @@ static void cleanupXml(std::string &xml,
         << ", pos:" << p
         << std::endl;
     }
-    
 #endif // DEBUG_SUB_SUP
     
-#ifdef WORKAROUND_SUB_SUP
+#ifdef WORKAROUND_SUB_SUP_BR
     // Temporarily alter these XML (HTML) tags so that
     // the boost parser doesn't treat them as "children"
-    std::regex r12(R"(<sup[^>]*>)");
-    xml = std::regex_replace(xml, r12, ESCAPED_SUP_L);
+    std::regex r10(R"(<sup[^>]*>)");
+    xml = std::regex_replace(xml, r10, ESCAPED_SUP_L);
     
-    std::regex r13(R"(</sup>)");
-    xml = std::regex_replace(xml, r13, ESCAPED_SUP_R);
+    std::regex r11(R"(</sup>)");
+    xml = std::regex_replace(xml, r11, ESCAPED_SUP_R);
     
-    std::regex r10(R"(<sub[^>]*>)");
-    xml = std::regex_replace(xml, r10, ESCAPED_SUB_L);
+    std::regex r12(R"(<sub[^>]*>)");
+    xml = std::regex_replace(xml, r12, ESCAPED_SUB_L);
     
-    std::regex r11(R"(</sub>)");
-    xml = std::regex_replace(xml, r11, ESCAPED_SUB_R);
+    std::regex r13(R"(</sub>)");
+    xml = std::regex_replace(xml, r13, ESCAPED_SUB_R);
     
+    std::regex r14(R"(<br />)");
+    xml = std::regex_replace(xml, r14, ESCAPED_BR);
+
 #ifdef DEBUG_SUB_SUP_TRACE
     posSup.clear();
     pos = xml.find(ESCAPED_SUP_L);
@@ -348,7 +385,7 @@ static void cleanupXml(std::string &xml,
         << std::endl;
     }
 #endif // DEBUG_SUB_SUP
-#endif // WORKAROUND_SUB_SUP
+#endif // WORKAROUND_SUB_SUP_BR
 }
 
 // see RealExpertInfo.java:1065
@@ -389,7 +426,7 @@ void getHtmlFromXml(std::string &xml,
     if (!hasXmlHeader) {
 
 #ifdef DEBUG
-        std::clog << "XML TYPE 2, regnrs " << regnrs << std::endl;
+        //std::clog << "XML TYPE 2, regnrs " << regnrs << std::endl;
 #endif
         
 #if 1
@@ -403,13 +440,13 @@ void getHtmlFromXml(std::string &xml,
         if (std::regex_search(xml, match, rgx)) {
             std::string title = match[match.size() - 1];
             
-            // All titles terminate with "<br />"
+            // All titles in XML "type 2" terminate with "<br />"
             size_t lastindex = title.rfind("<br />");
             if (lastindex != std::string::npos) {
                 // Remove the "<br />" suffix
                 title = title.substr(0, lastindex);
 
-                // Some titles have another "<br /> in the middle"
+                // Some titles have another "<br />" in the middle
                 // Leave it there for the HTML
             }
 
@@ -422,8 +459,9 @@ void getHtmlFromXml(std::string &xml,
             // It's alread there for XML type 2
 
             sectionId.push_back("Section1");
-            // Some titles have another "<br /> in the middle"
+            // Some titles have another "<br />" in the middle
             // Remove it for the chapter name
+            // For other section numbers see 'cleanupTitle()'
             boost::replace_first(title, "<br />",  " ");
             sectionTitle.push_back(title);
         }
@@ -452,7 +490,7 @@ void getHtmlFromXml(std::string &xml,
             sectionTitle.push_back(sTitle);
           
 #ifdef DEBUG
-            std::clog << sId << ", " << sTitle << ", " << sectionNumber << std::endl;
+            //std::clog << sId << ", " << sTitle << ", " << sectionNumber << std::endl;
 #endif
 
             // Next
@@ -469,12 +507,13 @@ void getHtmlFromXml(std::string &xml,
         std::string::size_type posBarcodeTo = xml.find("</div>", from);
         xml.replace(from, posBarcodeTo - from, "\n" + htmlBarcodes);
         
-#ifdef WORKAROUND_SUB_SUP
-        // Restore
+#ifdef WORKAROUND_SUB_SUP_BR
+        // Restore children
         boost::replace_all(xml, ESCAPED_SUP_L, "<sup>");
         boost::replace_all(xml, ESCAPED_SUP_R, "</sup>");
         boost::replace_all(xml, ESCAPED_SUB_L, "<sub>");
         boost::replace_all(xml, ESCAPED_SUB_R, "</sub>");
+        boost::replace_all(xml, ESCAPED_BR,    "<br />");
 #endif
 
         // Remove the closing "</div>".
@@ -494,9 +533,11 @@ void getHtmlFromXml(std::string &xml,
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("div")) {
   
             // The following call changes &lt; into <
+            // "&amp;" into "&"
+            // and maybe "<br />" into "\n"
             std::string tagContent = v.second.data();
 
-            // Don't skip tags with empty content because all tables are like that
+            // Don't skip XML tags with empty content because all tables are like that
 //            if (tagContent.empty()) {
 //                std::clog << basename((char *)__FILE__) << ":" << __LINE__ << std::endl;
 //                continue;
@@ -523,19 +564,22 @@ void getHtmlFromXml(std::string &xml,
 #endif
 
             // Undo then undesired replacements done by boost xml_parser
-            // because they cause problems inserting the data into sqlite tables
 #ifdef USE_BOOST_FOR_REPLACEMENTS
             // Modify the content, not the HTML tags
-            boost::replace_all(tagContent, "<", "&lt;");
-            boost::replace_all(tagContent, ">", "&gt;");
-            boost::replace_all(tagContent, "'", "&apos;");
-            
-#ifdef WORKAROUND_SUB_SUP
-            // Restore
+            if (!tagContent.empty()) {
+                boost::replace_all(tagContent, "<", "&lt;");
+                boost::replace_all(tagContent, ">", "&gt;");
+                boost::replace_all(tagContent, "'", "&apos;");
+                boost::replace_all(tagContent, " & ", " &amp; "); // rn 66547, section 20, French
+            }
+
+#ifdef WORKAROUND_SUB_SUP_BR
+            // Restore children
             boost::replace_all(tagContent, ESCAPED_SUP_L, "<sup>");
             boost::replace_all(tagContent, ESCAPED_SUP_R, "</sup>");
             boost::replace_all(tagContent, ESCAPED_SUB_L, "<sub>");
             boost::replace_all(tagContent, ESCAPED_SUB_R, "</sub>");
+            boost::replace_all(tagContent, ESCAPED_BR,    "<br />");
 #endif
 #else
             std::regex r1("<");
@@ -575,26 +619,25 @@ void getHtmlFromXml(std::string &xml,
                         boost::replace_all(tagContent, "â", "®");
 
                     boost::replace_all(tagContent, "&apos;", "'");
-                    if (tagContent.find(TITLES_STR_SEPARATOR) != std::string::npos) {
-                        statsTitleStrSeparatorMap.insert(std::make_pair(regnrs, tagContent));
-#ifdef DEBUG
-                        if (verbose)
-                            std::clog
-                            << basename((char *)__FILE__) << ":" << __LINE__
-                            << ", Warning - rn " << regnrs
-                            << ", replacing title_str separator in \"" << tagContent << "\""
-                            << std::endl;
-#endif
-                        
-                        // Replace section separator ";" with something else
-                        // (not ',' because it's the decimal point separator on some locales)
-                        boost::replace_all(tagContent, ";",  "·"); // &middot;
-                    }
 
-                    // HTML superscript tags are not supported in chapter list
+//                    if (tagContent.find(TITLES_STR_SEPARATOR) != std::string::npos) {
+//                        statsTitleStrSeparatorMap.insert(std::make_pair(regnrs, tagContent));
+//#ifdef DEBUG
+//                        if (verbose)
+//                            std::clog
+//                            << basename((char *)__FILE__) << ":" << __LINE__
+//                            << ", Warning - rn " << regnrs
+//                            << ", replacing title_str separator in \"" << tagContent << "\""
+//                            << std::endl;
+//#endif
+//
+//                        // Replace section separator ";" with something else
+//                        // (not ',' because it's the decimal point separator on some locales)
+//                        boost::replace_all(tagContent, ";",  "·"); // &middot;
+//                    }
+
                     std::string chapterName = tagContent;
-                    boost::replace_all(chapterName, "<sup>", "");
-                    boost::replace_all(chapterName, "</sup>", "");
+                    cleanupTitle(chapterName, regnrs);
                     sectionTitle.push_back(chapterName);
                     
                     std::string divClass;
@@ -680,15 +723,6 @@ void getHtmlFromXml(std::string &xml,
                             }
                             catch (std::exception &e) {
                                 AIPS::addStatsMissingAlt(regnrs,sectionNumber);
-#ifdef DEBUG
-                                if (verbose) {
-                                    std::cerr
-                                    << basename((char *)__FILE__) << ":" << __LINE__
-                                    << ", regnrs: " << regnrs
-                                    << ", section " << sectionNumber
-                                    << ", <img> Warning " << e.what() << std::endl;
-                                }
-#endif
                             }
 
                             img += " />";
@@ -777,12 +811,13 @@ void getHtmlFromXml(std::string &xml,
 
                 // Clean up the "serialized" string
                 boost::replace_all(table, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
-#ifdef WORKAROUND_SUB_SUP
-                // Restore
+#ifdef WORKAROUND_SUB_SUP_BR
+                // Restore children
                 boost::replace_all(table, ESCAPED_SUB_L, "<sub>");
                 boost::replace_all(table, ESCAPED_SUB_R, "</sub>");
                 boost::replace_all(table, ESCAPED_SUP_L, "<sup>");
                 boost::replace_all(table, ESCAPED_SUP_R, "</sup>");
+                boost::replace_all(table, ESCAPED_BR,    "<br />");
 #endif
                 html += table + "\n";
             } // if table

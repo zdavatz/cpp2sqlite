@@ -20,13 +20,13 @@ namespace PED
     };
     
     struct _indication {
-        std::string name;    // TODO: localize
+        std::string name;
         std::string recStatus;
     };
     
     struct _code {
         std::string value;
-        std::string description;    // TODO: localize
+        std::string description;
         std::string recStatus;
     };
 
