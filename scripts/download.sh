@@ -106,13 +106,29 @@ fi
 URL="http://download.swissmedicinfo.ch"
 TARGET=AipsDownload.zip
 
+# First get index.html and the first cookie
+wget --save-cookies cookieA.txt --keep-session-cookies $URL
+VS_VALUE=$(grep -w __VIEWSTATE index.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
+VSG_VALUE=$(grep -w __EVENTVALIDATION index.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
+
+#TODO: urlencode VS_VALUE and VS_VALUE, unless we use curl with --data-urlencode
+
+VS="__VIEWSTATE=%2FwEPDwUKLTkxMjA1NTgxMw9kFgJmD2QWAgIDD2QWAgILDxYCHgtfIUl0ZW1Db3VudAIEFghmD2QWBGYPFQEIP0xhbmc9REVkAgEPDxYIHgRUZXh0BQJERR4HVG9vbFRpcAUCREUeCUZvbnRfQm9sZGceBF8hU0ICgBBkZAICD2QWBGYPFQEIP0xhbmc9RlJkAgEPDxYIHwEFAkZSHwIFAkZSHwNoHwQCgBBkZAIED2QWBGYPFQEIP0xhbmc9SVRkAgEPDxYIHwEFAklUHwIFAklUHwNoHwQCgBBkZAIGD2QWBGYPFQEIP0xhbmc9RU5kAgEPDxYIHwEFAkVOHwIFAkVOHwNoHwQCgBBkZGTf8viEbNH%2BU5hct1qkIKm40VZIczde0UmrB8uKthDRfw%3D%3D"
+VSG="__VIEWSTATEGENERATOR=00755B7A"
+EVVAL="__EVENTVALIDATION=%2FwEdAANTsiydmKsT92ChvmVOI45WqQpu%2FuYI9Zz7LH5%2Fck56li%2FbiPuDFfzjQuE3we9OsCUymhv8KEiKku4r32Hzf4GgvLVw9Kzr7zSWCRzoiY1FcQ%3D%3D"
+BTN_YES="ctl00%24MainContent%24btnOK=Ja%2C+ich+akzeptiere+%2F+Oui%2C+j%E2%80%99accepte+%2F+S%C3%AC%2C+accetto"
+BODY_DATA="${VS}&${VSG}&${EVVAL}&${BTN_YES}"
+
 # <input type="submit" name="ctl00$MainContent$btnOK" value="Ja, ich akzeptiere / Oui, j’accepte / Sì, accetto" id="MainContent_btnOK" />
-POST_DATA="ctl00$MainContent$btnOK=Ja, ich akzeptiere / Oui, j’accepte / Sì, accetto"
-#POST_DATA="ctl00%24MainContent%24btnOK=Ja, ich akzeptiere / Oui, j’accepte / Sì, accetto"
-#POST_DATA="ctl00$MainContent$btnOK"
-wget --post-data=$POST_DATA \
-    --user-agent 'Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0' \
-	"$URL" --save-cookies cookie.txt --keep-session-cookies
+#POST_DATA="ctl00$MainContent$btnOK=Ja, ich akzeptiere / Oui, j’accepte / Sì, accetto"
+wget --header 'Host: download.swissmedicinfo.ch' \
+    --user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0.3' \
+	--header 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+   	--referer 'http://download.swissmedicinfo.ch/Accept.aspx?ReturnUrl=%2f' \
+    --load-cookies=cookieA.txt \
+    --header 'Upgrade-Insecure-Requests: 1' \
+    --post-data="$BODY_DATA" \
+	"$URL/Accept.aspx?ReturnUrl=%2f" --save-cookies cookieB.txt --keep-session-cookies
 
 # TODO: Extract data from index.html hidden fields to be used in POST
 # / becomes %2F
@@ -124,19 +140,14 @@ EVVAL="__EVENTVALIDATION=%2FwEdAAP75S3dOZ6sf0G6ruN2nzl0Ys46t3fbHVLzSTNxrdjIh8RrV
 BTN_YES="ctl00%24MainContent%24BtnYes=Ja"
 BODY_DATA="${VS}&${VSG}&${EVVAL}&${BTN_YES}"
 
-COOKIE1='ASP.NET_SessionId=tq1lpqudjurbf41p53vkxq3d' # in cookie.txt
-COOKIE2='.ASPXAUTH=2514A8299808F4151CD9C70A484C9F06BDBD64CF72F97B29BA10263674AFC5A90ED5AA59CBB6000DCD631F80A887AC80BE0636DFDB37E7A3E802D2CE3B8F38486DF0833C9D6506F59AE1A2EB38059630E29565486A30A662E657ACAC01342D8A36A66F7F52BAE6B5AAAE071566EB9045786CBDA2610B3456C035190B68CF5EC6'
-#COOKIES="Cookie: ${COOKIE1}; ${COOKIE2}"
-COOKIES="Cookie: ${COOKIE2}"
-
 wget --header 'Host: download.swissmedicinfo.ch' \
 	--user-agent 'Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0' \
 	--header 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' \
 	--header 'Accept-Language: de,en-US;q=0.7,en;q=0.3' \
 	--referer 'http://download.swissmedicinfo.ch/' \
 	--header 'Content-Type: application/x-www-form-urlencoded' \
-    --load-cookies=cookie.txt \
-	--header "$COOKIES" \
+    --load-cookies=cookieA.txt \
+    --load-cookies=cookieB.txt \
 	--header 'Upgrade-Insecure-Requests: 1' \
 	--method POST \
     --body-data "$BODY_DATA" \
@@ -148,8 +159,8 @@ wget --header 'Host: download.swissmedicinfo.ch' \
 unzip $TARGET -d temp
 mv "$(ls temp/AipsDownload_*.xml)" aips.xml
 rm -r temp
+rm "Accept.aspx?ReturnUrl=%2F"
 rm $TARGET
 
 rm index.html*
-rm cookie.txt
-
+rm cookie*.txt
