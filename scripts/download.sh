@@ -23,6 +23,22 @@ mkdir -p $DOWNLOAD_DIR ; cd $DOWNLOAD_DIR
 #echo "OUTPUT_DIR: $OUTPUT_DIR"
 
 #-------------------------------------------------------------------------------
+function urlencode() {
+# urlencode <string>
+    old_lc_collate=$LC_COLLATE
+    LC_COLLATE=C
+local length="${#1}"
+for (( i = 0; i < length; i++ )); do
+local c="${1:i:1}"
+case $c in
+            [a-zA-Z0-9.~_-]) printf "$c" ;;
+*) printf '%%%02X' "'$c" ;;
+esac
+done
+    LC_COLLATE=$old_lc_collate
+}
+
+#-------------------------------------------------------------------------------
 # epha no longer needed
 #wget -N http://download.epha.ch/cleaned/produkte.json -O epha_products_de_json.json
 
@@ -109,15 +125,19 @@ TARGET=AipsDownload.zip
 # First get index.html and the first cookie
 wget --save-cookies cookieA.txt --keep-session-cookies $URL
 VS_VALUE=$(grep -w __VIEWSTATE index.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
-VSG_VALUE=$(grep -w __EVENTVALIDATION index.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
+EVVAL_VALUE=$(grep -w __EVENTVALIDATION index.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
 
-#TODO: urlencode VS_VALUE and VS_VALUE, unless we use curl with --data-urlencode
+# urlencode VS_VALUE and VS_VALUE, alternatively use curl with --data-urlencode
+echo "EVVAL_VALUE before: $EVVAL_VALUE\n"
+VS_VALUE=$(urlencode $VS_VALUE)
+EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
+echo "EVVAL_VALUE  after: $EVVAL_VALUE"
 
-VS="__VIEWSTATE=%2FwEPDwUKLTkxMjA1NTgxMw9kFgJmD2QWAgIDD2QWAgILDxYCHgtfIUl0ZW1Db3VudAIEFghmD2QWBGYPFQEIP0xhbmc9REVkAgEPDxYIHgRUZXh0BQJERR4HVG9vbFRpcAUCREUeCUZvbnRfQm9sZGceBF8hU0ICgBBkZAICD2QWBGYPFQEIP0xhbmc9RlJkAgEPDxYIHwEFAkZSHwIFAkZSHwNoHwQCgBBkZAIED2QWBGYPFQEIP0xhbmc9SVRkAgEPDxYIHwEFAklUHwIFAklUHwNoHwQCgBBkZAIGD2QWBGYPFQEIP0xhbmc9RU5kAgEPDxYIHwEFAkVOHwIFAkVOHwNoHwQCgBBkZGTf8viEbNH%2BU5hct1qkIKm40VZIczde0UmrB8uKthDRfw%3D%3D"
+VS="__VIEWSTATE=$VS_VALUE"
+EVVAL="__EVENTVALIDATION=$EVVAL_VALUE"
 VSG="__VIEWSTATEGENERATOR=00755B7A"
-EVVAL="__EVENTVALIDATION=%2FwEdAANTsiydmKsT92ChvmVOI45WqQpu%2FuYI9Zz7LH5%2Fck56li%2FbiPuDFfzjQuE3we9OsCUymhv8KEiKku4r32Hzf4GgvLVw9Kzr7zSWCRzoiY1FcQ%3D%3D"
-BTN_YES="ctl00%24MainContent%24btnOK=Ja%2C+ich+akzeptiere+%2F+Oui%2C+j%E2%80%99accepte+%2F+S%C3%AC%2C+accetto"
-BODY_DATA="${VS}&${VSG}&${EVVAL}&${BTN_YES}"
+BTN_OK="ctl00%24MainContent%24btnOK=Ja%2C+ich+akzeptiere+%2F+Oui%2C+j%E2%80%99accepte+%2F+S%C3%AC%2C+accetto"
+BODY_DATA="${VS}&${VSG}&${EVVAL}&${BTN_OK}"
 
 # <input type="submit" name="ctl00$MainContent$btnOK" value="Ja, ich akzeptiere / Oui, j’accepte / Sì, accetto" id="MainContent_btnOK" />
 #POST_DATA="ctl00$MainContent$btnOK=Ja, ich akzeptiere / Oui, j’accepte / Sì, accetto"
