@@ -30,7 +30,3 @@ make -j9
 cd $BLD_DIR  # it should be $BIN_DIR otherwise there is no point in doing make install
 time ./cpp2sqlite --verbose --lang=fr --inDir $SRC_DIR/input&
 time ./cpp2sqlite --verbose --inDir $SRC_DIR/input&
-
-cd $SRC_DIR/ouput
-zip amiko_db_full_idx_de.db.zip amiko_db_full_idx_de.db
-zip amiko_db_full_idx_fr.db.zip amiko_db_full_idx_fr.db
