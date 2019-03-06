@@ -440,6 +440,8 @@ void getHtmlFromXml(std::string &xml,
         if (std::regex_search(xml, match, rgx)) {
             std::string title = match[match.size() - 1];
             
+            boost::replace_all(title, ESCAPED_BR, "<br />"); // restore children
+            
             // All titles in XML "type 2" terminate with "<br />"
             size_t lastindex = title.rfind("<br />");
             if (lastindex != std::string::npos) {
@@ -462,7 +464,7 @@ void getHtmlFromXml(std::string &xml,
             // Some titles have another "<br />" in the middle
             // Remove it for the chapter name
             // For other section numbers see 'cleanupTitle()'
-            boost::replace_first(title, "<br />",  " ");
+            boost::replace_first(title, "<br />", " ");
             sectionTitle.push_back(title);
         }
 #endif
@@ -532,9 +534,8 @@ void getHtmlFromXml(std::string &xml,
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("div")) {
   
-            // The following call changes &lt; into <
+            // The following call changes "&lt;" into "<"
             // "&amp;" into "&"
-            // and maybe "<br />" into "\n"
             std::string tagContent = v.second.data();
 
             // Don't skip XML tags with empty content because all tables are like that
