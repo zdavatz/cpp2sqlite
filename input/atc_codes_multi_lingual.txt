@@ -58,7 +58,7 @@ A03AA: Synthetische Anticholinergika, Ester mit tertiären Aminogruppen; Anticho
 A03AE04: Prucaloprid; Prucalopride
 A03AX04: Pinaverium; Pinavérium
 A03AX13: Silikone; Silicones
-A03AX: Andere Mittel bei funktionellen gastrointestinalen Störungen: Autres remèdes pour les troubles gastro-intestinaux fonctionnels
+A03AX: Andere Mittel bei funktionellen gastrointestinalen Störungen; Autres remèdes pour les troubles gastro-intestinaux fonctionnels
 A03B: BELLADONNA UND DERIVATE, REIN; BELLADONE ET DÉRIVÉS, PURE
 A03BA01: Atropin; Atropine
 A03BA: Belladonna-Alkaloide, tertiäre Amine; Alcaloïdes de Belladone, amines tertiaires
@@ -194,7 +194,7 @@ A10AC01: Insulin (human); Insuline humaine intermédiaire
 A10AC: Insuline und Analoga zur Injektion, intermediär wirkend; Insulines et analogues pour injection, à action intermédiaire
 A10AD05: Insulin aspart; Insuline aspart intermédiaire à début rapide
 A10AD06: Insulin degludec und Insulin aspart; Insuline degludec et linsuline aspart
-A10AD: Insuline und Analoga zur Injektion, intermediär oder lang wirkend: Insulines et analogues pour injection, à action intermédiaire ou prolongée
+A10AD: Insuline und Analoga zur Injektion, intermediär oder lang wirkend; Insulines et analogues pour injection, à action intermédiaire ou prolongée
 A10AE04: Insulin glargin; Insuline glargine
 A10AE05: Insulin detemir; Insuline détémir
 A10AE06: Insulin degludec; Insuline degludec
@@ -323,7 +323,7 @@ A14A: ANABOLE STEROIDE; STÉROÏDES ANABOLISANTS
 A14AB01: Nandrolon; Nandrolone
 A14AB: Estren-Derivate; Dérivés de l'estrène
 A16: ANDERE MITTEL FÜR DAS ALIMENTÄRE SYSTEM UND DEN STOFFWECHSEL; Autres médicaments des voies digestives et du métabolisme
-A16A: ANDERE MITTEL FÜR DAS ALIMENTÄRE SYSTEM UND DEN STOFFWECHSEL: D'AUTRES MOYENS DU SYSTÈME ALIMENTAIRE ET DU MÉTABOLISME
+A16A: ANDERE MITTEL FÜR DAS ALIMENTÄRE SYSTEM UND DEN STOFFWECHSEL; D'AUTRES MOYENS DU SYSTÈME ALIMENTAIRE ET DU MÉTABOLISME
 A16AA01: Levocarnitin; L-carnitine
 A16AA: Aminosäuren und Derivate; Acides aminés et dérivés
 A16AB02: Imiglucerase; Imiglucérase
@@ -611,7 +611,7 @@ C04AE01: Ergoloidmesylat; Ergoloïde mésylates
 C04AX21: Naftidrofuryl; Naftidrofuryl
 C04AX: Andere periphere Vasodilatatoren; Autres vasodilatateurs périphériques
 C05: VASOPROTEKTOREN; Vasculoprotecteurs
-C05A: MITTEL ZUR BEHANDLUNG VON HÄMORRHOIDEN UND ANALFISSUREN ZUR TOPISCHEN: AGENT POUR LE TRAITEMENT DES HÉMORROÏDES ET DES FISSURES ANALES POUR LES TRAITEMENTS TOPIQUES
+C05A: MITTEL ZUR BEHANDLUNG VON HÄMORRHOIDEN UND ANALFISSUREN ZUR TOPISCHEN; AGENT POUR LE TRAITEMENT DES HÉMORROÏDES ET DES FISSURES ANALES POUR LES TRAITEMENTS TOPIQUES
 C05AA04: Prednisolon; Prednisolone
 C05AA09: Dexamethason; Dexaméthasone
 C05AA10: Fluocinolonacetonid; Fluocinolone acétonide
@@ -790,7 +790,7 @@ C10BA02: Simvastatin und Ezetimib; Simvastatine et ézétimibe
 C10BA04: Simvastatin und Fenofibrat; Simvastatine et fénofibrate
 C10BA05: Atorvastatin und Ezetimib; Atorvastatine et ézétimibe
 C10BA06: Rosuvastatin und Ezetimib; Rosuvastatine et ézétimibe
-C10BA: HMG-CoA-Reduktasehemmer in Kombination mit anderen Mitteln, die den Lipidstoffwechsel: Inhibiteurs de l'HMG-CoA réductase en combinaison avec d'autres agents qui inhibent le métabolisme des lipides
+C10BA: HMG-CoA-Reduktasehemmer in Kombination mit anderen Mitteln, die den Lipidstoffwechsel; Inhibiteurs de l'HMG-CoA réductase en combinaison avec d'autres agents qui inhibent le métabolisme des lipides
 C10BX03: Atorvastatin und Amlodipin; Atorvastatine et amlodipine
 C10BX11: Atorvastatin, Amlodipin und Perindopril; Atorvastatine, amlodipine et périndopril
 C10BX: HMG-CoA-Reduktasehemmer, andere Kombinationen; Inhibiteurs de l'HMG-CoA réductase, autres combinaisons
@@ -962,7 +962,7 @@ D10AF51: Clindamycin, Kombinationen; Clindamycine en association
 D10AF: Antiinfektiva zur Behandlung der Akne; Anti-infectieux pour le traitement de l'acné
 D10AX03: Azelainsäure; Acide azélaïque
 D10AX30: Verschiedene Kombinationen; Associations diverses antiacnéiques
-D10AX: Andere Aknemittel zur topischen Anwendung: Autres agents contre l'acné pour application topique
+D10AX: Andere Aknemittel zur topischen Anwendung; Autres agents contre l'acné pour application topique
 D10B: AKNEMITTEL ZUR SYSTEMISCHEN ANWENDUNG; AGENT CONTRE L'ACNÉ POUR APPLICATION SYSTÉMIQUE
 D10BA01: Isotretinoin; Isotrétinoïne
 D10BA: Retinoide zur Behandlung der Akne; Rétinoïdes pour le traitement de l'acné
@@ -1386,7 +1386,7 @@ J05AP09: Dasabuvir; Dasabuvir
 J05AP53: Ombitasvir, Paritaprevir und Ritonavir; Ombitasvir, Paritaprevir et Ritonavir
 J05AP56: Sofosbuvir, Velpatasvir und Voxilaprevir; Sofosbuvir, Velpatasvir et Voxilaprevir
 J05AP57: Glecaprevir und Pibrentasvir; Glecaprevir et Pibrentasvir
-J05AP: Antivirale Mittel zur Behandlung von Hepatitis C Infektionen: Agents antiviraux pour le traitement des infections de l'hépatite C
+J05AP: Antivirale Mittel zur Behandlung von Hepatitis C Infektionen; Agents antiviraux pour le traitement des infections de l'hépatite C
 J05AR01: Zidovudin und Lamivudin; Zidovudine et lamivudine
 J05AR02: Lamivudin und Abacavir; Lamivudine et abacavir
 J05AR03: Tenofovir disoproxil und Emtricitabin; Ténofovir, disoproxil et emtricitabine
@@ -1400,7 +1400,7 @@ J05AR17: Emtricitabin und Tenofoviralafenamid; Emtricitabine et ténofoviralafé
 J05AR18: Emtricitabin, Tenofoviralafenamid, Elvitegravir und Cobicistat; Emtricitabine, ténofoviralafénamid, Elvitegravir et Cobicistat
 J05AR19: Emtricitabin, Tenofoviralafenamid und Rilpivirin; Emtricitabine, ténofoviralafénamid et rilpivirine
 J05AR21: Dolutegravir und Rilpivirin; Dolute Gravir et Rilpivirine
-J05AR: Antivirale Mittel zur Behandlung von HIV Infektionen, Kombinationen: Agents antiviraux pour le traitement des infections à VIH, combinaisons de ceux-ci
+J05AR: Antivirale Mittel zur Behandlung von HIV Infektionen, Kombinationen; Agents antiviraux pour le traitement des infections à VIH, combinaisons de ceux-ci
 J05AX07: Enfuvirtid; Enfuvirtide
 J05AX08: Raltegravir; Raltégravir
 J05AX09: Maraviroc; Maraviroc
@@ -1810,7 +1810,7 @@ M04AB01: Probenecid; Probénécide
 M04AB05: Lesinurad; Roue de lecture
 M04AB: Urikosurika; Urikosurica
 M05: MITTEL ZUR BEHANDLUNG VON KNOCHENERKRANKUNGEN; Médicaments pour le traitement des désordres osseux
-M05B: MITTEL MIT EINFLUSS AUF DIE KNOCHENSTRUKTUR UND DIE MINERALISATION: MILIEU AYANT UNE INFLUENCE SUR LA STRUCTURE OSSEUSE ET LA MINÉRALISATION
+M05B: MITTEL MIT EINFLUSS AUF DIE KNOCHENSTRUKTUR UND DIE MINERALISATION; MILIEU AYANT UNE INFLUENCE SUR LA STRUCTURE OSSEUSE ET LA MINÉRALISATION
 M05B: MITTEL MIT EINFLUSS AUF DIE KNOCHENSTRUKTUR UND DIE MINERALISATION; MILIEU AYANT UNE INFLUENCE SUR LA STRUCTURE OSSEUSE ET LA MINÉRALISATION
 M05BA02: Clodronsäure; Acide clodronique
 M05BA03: Pamidronsäure; Acide pamidronique
@@ -1826,15 +1826,12 @@ M05BC: Knochenmorphogene Proteine; Protéines morphogéniques osseuses
 M05BX02: Aluminiumhydroxychlorid; Aluminium chlorhydrate
 M05BX04: Denosumab; Dénosumab
 M05BX: Andere Mittel mit Einfluss auf die Knochenstruktur und die Mineralisation; Autres agents affectant la structure osseuse et la minéralisation
-M05BX: Andere Mittel mit Einfluss auf die Knochenstruktur und die: D'autres agents ayant une influence sur la structure osseuse et l'ostéosynthèse.
 M09: ANDERE MITTEL GEGEN STÖRUNGEN DES MUSKEL- UND SKELETTSYSTEMS; Autres médicaments des désordres musculo-squelettiques
-M09A: ANDERE MITTEL GEGEN STÖRUNGEN DES MUSKEL- UND SKELETTSYSTEMS: D'AUTRES MOYENS DE LUTTE CONTRE LES TROUBLES DU SYSTÈME MUSCULAIRE ET SQUELETTIQUE
 M09A: ANDERE MITTEL GEGEN STÖRUNGEN DES MUSKEL- UND SKELETTSYSTEMS; D'AUTRES MOYENS DE LUTTE CONTRE LES TROUBLES DU SYSTÈME MUSCULAIRE ET SQUELETTIQUE
 M09AB02: Kollagenase aus Clostridium histolyticum; Collagénase clostridium histolyticum
 M09AB: Enzyme; Enzymes
 M09AX02: Autologe Chondrozyten; Chondrocytes autologues
 M09AX07: Nusinersen; Nusinersen
-M09AX: Andere Mittel gegen Störungen des Muskel- und Skelettsystems: Autres remèdes pour les troubles musculo-squelettiques
 M09AX: Andere Mittel gegen Störungen des Muskel- und Skelettsystems; Autres remèdes pour les troubles musculo-squelettiques
 M: MUSKEL- UND SKELETTSYSTEM; Muscle et squelette
 N01: ANÄSTHETIKA; Anesthésiques
@@ -2097,7 +2094,7 @@ N06AX25: Hyperici herba; Hyperici herba
 N06AX26: Vortioxetin; Vortioxétine
 N06AX99: Pflanzliches Antidepressivum; Antidépresseur végétal
 N06AX: Andere Antidepressiva; Autres antidépresseurs
-N06B: PSYCHOSTIMULANZIEN, MITTEL ZUR BEHANDLUNG DER ADHS UND NOOTROPIKA: PSYCHOSTIMULANTS, MOYENS DE TRAITEMENT DES ADHÉRENTS ET DES NOOTROPES
+N06B: PSYCHOSTIMULANZIEN, MITTEL ZUR BEHANDLUNG DER ADHS UND NOOTROPIKA; PSYCHOSTIMULANTS, MOYENS DE TRAITEMENT DES ADHÉRENTS ET DES NOOTROPES
 N06BA04: Methylphenidat; Méthylphénidate
 N06BA07: Modafinil; Modafinil
 N06BA09: Atomoxetin; Atomoxétine
@@ -2261,7 +2258,7 @@ R03AK06: Salmeterol und Fluticason; Salmétérol et Fluticasone
 R03AK07: Formoterol und andere Mittel bei obstruktiven Atemwegserkrankungen; Formotérol et autres anti-asthmatiques
 R03AK10: Vilanterol und Fluticasonfuroat; Vilanterol et furoate de fluticasone
 R03AK11: Formoterol und Fluticason; Formotérol et Fluticasone
-R03AK: Sympathomimetika in Kombination mit Corticosteroiden oder anderen Mitteln, exkl.: Sympathomimétiques en association avec des corticostéroïdes ou d'autres agents, à l'exclusion de la warfarine.
+R03AK: Sympathomimetika in Kombination mit Corticosteroiden oder anderen Mitteln, exkl. Anticholinergika; Sympathomimétiques en association avec des corticostéroïdes ou d'autres agents, sauf anticholinergiques
 R03AL02: Salbutamol und Ipratropiumbromid; Salbutamol et bromure d'ipratropium
 R03AL03: Vilanterol und Umeclidiniumbromid; Vilanterol et bromure d'umeclidinium
 R03AL04: Indacaterol und Glycopyrroniumbromid; Indacatérol et bromure de glycopyrronium
@@ -2289,7 +2286,7 @@ R03CA: Alpha- und Beta-Adrenozeptoragonisten; Agonistes des récepteurs alpha et
 R03CC02: Salbutamol; Salbutamol
 R03CC05: Hexoprenalin; Hexoprénaline
 R03CC: Selektive Beta2-Adrenozeptoragonisten; Agonistes sélectifs des récepteurs bêta-2-adrénergiques
-R03D: ANDERE MITTEL BEI OBSTRUKTIVEN ATEMWEGSERKRANKUNGEN ZUR SYSTEMISCHEN ANWENDUNG: AUTRES MOYENS D'UTILISATION SYSTÉMIQUE DANS LA MALADIE PULMONAIRE OBSTRUCTIVE
+R03D: ANDERE MITTEL BEI OBSTRUKTIVEN ATEMWEGSERKRANKUNGEN ZUR SYSTEMISCHEN ANWENDUNG; AUTRES MOYENS D'UTILISATION SYSTÉMIQUE DANS LA MALADIE PULMONAIRE OBSTRUCTIVE
 R03DA04: Theophyllin; Théophylline
 R03DA05: Aminophyllin; Aminophylline
 R03DA: Xanthine; Xanthine
@@ -2301,7 +2298,7 @@ R03DX07: Roflumilast; Roflumilast
 R03DX08: Reslizumab; Reslicumab
 R03DX09: Mepolizumab; Mépolizumab
 R03DX10: Benralizumab; Benralizumab
-R03DX: Andere Mittel bei obstruktiven Atemwegserkrankungen zur systemischen Anwendung: Autres agents à usage systémique dans la maladie pulmonaire obstructive
+R03DX: Andere Mittel bei obstruktiven Atemwegserkrankungen zur systemischen Anwendung; Autres agents à usage systémique dans la maladie pulmonaire obstructive
 R05: HUSTEN- UND ERKÄLTUNGSMITTEL; REMÈDES CONTRE LA TOUX ET LE RHUME
 R05: HUSTEN- UND ERKÄLTUNGSPRÄPARATE; Médicaments du rhume et de la toux
 R05C: EXPEKTORANZIEN, EXKL. KOMBINATIONEN MIT ANTITUSSIVA; EXPEKTORANZIEN, EXCL. COMBINAISONS AVEC ANTITUSSIFS
