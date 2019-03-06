@@ -1055,6 +1055,21 @@ int main(int argc, char **argv)
                 std::cerr << "\r" << 100*ii/n << " % ";
 #endif
 
+            // For each regnr in the vector add the name(s) from refdata
+            std::vector<std::string> regnrs;
+            boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+            //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << ", regnrs size: " << regnrs.size() << std::endl;
+            
+            if (regnrs[0] == "00000") {
+#ifdef DEBUG
+                std::clog
+                << basename((char *)__FILE__) << ":" << __LINE__
+                << ", skip: " << m.title
+                << std::endl;
+#endif
+                continue;
+            }
+
             // See DispoParse.java:164 addArticleDB()
             // See SqlDatabase.java:347 addExpertDB()
             AIPS::bindText("amikodb", statement, 1, m.title);
@@ -1063,11 +1078,6 @@ int main(int argc, char **argv)
             AIPS::bindText("amikodb", statement, 4, m.subst);
             AIPS::bindText("amikodb", statement, 5, m.regnrs);
             
-            // For each regnr in the vector add the name(s) from refdata
-            std::vector<std::string> regnrs;
-            boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
-            //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << "regnrs size: " << regnrs.size() << std::endl;
-
             // atc_class
             std::string atcClass = ATC::getClassByAtcColumn(m.atc);
             AIPS::bindText("amikodb", statement, 6, atcClass);

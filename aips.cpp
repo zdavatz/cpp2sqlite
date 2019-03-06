@@ -38,7 +38,8 @@ namespace AIPS
     unsigned int statsAtcTextFoundCount = 0;
     unsigned int statsPedTextFoundCount = 0;
     unsigned int statsAtcTextNotFoundCount = 0;
-    
+    std::vector<std::string> statsTitlesWithRnZeroVec;
+
     // Usage stats
     std::vector<std::string> statsDuplicateRegnrsVec;
     std::set<std::string> statsMissingImgAltSet;
@@ -82,6 +83,15 @@ void printFileStats(const std::string &filename,
         for (auto s : statsDuplicateRegnrsVec)
             REP::html_li(s);
 
+        REP::html_end_ul();
+    }
+    
+    if (statsTitlesWithRnZeroVec.size() > 0) {
+        REP::html_h3("titles with rn 00000 (ignored)");
+        REP::html_start_ul();
+        for (auto s : statsTitlesWithRnZeroVec)
+            REP::html_li(s);
+        
         REP::html_end_ul();
     }
 }
@@ -148,6 +158,9 @@ MedicineList & parseXML(const std::string &filename,
                     {
                         Med.regnrs = v.second.get("authNrs", "");
                         boost::algorithm::split(rnVector, Med.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+                        
+                        if (rnVector[0] == "00000")
+                            statsTitlesWithRnZeroVec.push_back(Med.title);
 
                         int sizeBefore = rnVector.size();
                         if (sizeBefore > 1) {
