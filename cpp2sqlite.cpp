@@ -184,6 +184,7 @@ static void cleanupForNonHtmlUsage(std::string &xml)
     boost::replace_all(xml, "&le;",     "≤");
     boost::replace_all(xml, "&plusmn;", "±"); // used in rn 58868 table 6
     boost::replace_all(xml, "&agrave;", "à");
+    boost::replace_all(xml, "&Agrave;", "À");
     boost::replace_all(xml, "&acirc;",  "â");
     boost::replace_all(xml, "&Acirc;",  "Â");
     boost::replace_all(xml, "&auml;",   "ä");
