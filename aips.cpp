@@ -161,6 +161,16 @@ MedicineList & parseXML(const std::string &filename,
                         
                         if (rnVector[0] == "00000")
                             statsTitlesWithRnZeroVec.push_back(Med.title);
+#ifdef DEBUG
+                        // Check that there are no non-numeric characters
+                        // See HTML for rn 51908 ("Numéro d’autorisation 51'908")
+                        if (Med.regnrs.find_first_not_of("0123456789, ") != std::string::npos)
+                            std::clog
+                            << basename((char *)__FILE__) << ":" << __LINE__
+                            << ", rn: <" << Med.regnrs + ">"
+                            << ", title: <" << Med.title + ">"
+                            << std::endl;
+#endif
 
                         int sizeBefore = rnVector.size();
                         if (sizeBefore > 1) {

@@ -202,6 +202,8 @@ static void cleanupForNonHtmlUsage(std::string &xml)
     boost::replace_all(xml, "&Ograve;", "Ò");
     boost::replace_all(xml, "&uuml;",   "ü");
     boost::replace_all(xml, "&Uuml;",   "Ü");
+    boost::replace_all(xml, "&oelig;",   "œ");
+    boost::replace_all(xml, "&OElig;",   "Œ");
     boost::replace_all(xml, "&middot;", "–"); // the true middot is "·"
     boost::replace_all(xml, "&bdquo;",  "„");
     boost::replace_all(xml, "&ldquo;",  "“");
@@ -1060,15 +1062,8 @@ int main(int argc, char **argv)
             boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
             //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << ", regnrs size: " << regnrs.size() << std::endl;
             
-            if (regnrs[0] == "00000") {
-#ifdef DEBUG
-                std::clog
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << ", skip: " << m.title
-                << std::endl;
-#endif
+            if (regnrs[0] == "00000")
                 continue;
-            }
 
             // See DispoParse.java:164 addArticleDB()
             // See SqlDatabase.java:347 addExpertDB()

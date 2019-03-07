@@ -503,15 +503,19 @@ std::string getHtmlByAtc(const std::string atc)
                 optionalColumnMap[TH_KEY_REPEAT] = true;
                 numColumns++;
             }
-        }
+        } // for dosages
 
         // Start defining the HTML code
-        html += description + " (" + ca.RoaCode + ") " + codeRoaMap[ca.RoaCode].description + "<br>\n";
-        html += "\nATC-Code: " + atc + "<br>\n";
-        html += indicationTitle + ": " + indication + "<br>\n";
+        std::string textBeforeTable;
+        {
+            textBeforeTable = description + " (" + ca.RoaCode + ") " + codeRoaMap[ca.RoaCode].description + "<br>\n";
+            textBeforeTable += "\nATC-Code: " + atc + "<br>\n";
+            textBeforeTable += indicationTitle + ": " + indication;
 
-        if (!optionalColumnMap[TH_KEY_TYPE] && !dosages[0].type.empty())
-            html += thTitleMap[TH_KEY_TYPE] + ": " + dosages[0].type + "<br>\n";
+            if (!optionalColumnMap[TH_KEY_TYPE] && !dosages[0].type.empty())
+                textBeforeTable += "<br>\n" + thTitleMap[TH_KEY_TYPE] + ": " + dosages[0].type;
+        }
+        html += "<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
 
         std::string tableColGroup("<col span=\"" + std::to_string(numColumns) + "\" style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>");
 
@@ -554,7 +558,7 @@ std::string getHtmlByAtc(const std::string atc)
 #else
             tableBody += tableHeader;
 #endif
-        }
+        } // if dosages.size()
 
         for (auto dosage : dosages) {
             std::string tableRow;
