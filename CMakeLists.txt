@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
-project(cpp2sqlite)
+project(cpp2sqlite VERSION "1.0.228")
+
+configure_file(config.h.in config.h)
+include_directories(${CMAKE_BINARY_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
 

@@ -43,6 +43,7 @@
 #include "gtin.hpp"
 #include "peddose.hpp"
 #include "report.hpp"
+#include "config.h"
 
 #include "ean13/functii.h"
 
@@ -76,6 +77,7 @@ void on_version()
     std::cout << "C++ " << __cplusplus << std::endl;
     std::cout << "SQLITE_VERSION: " << SQLITE_VERSION << std::endl;
     std::cout << "BOOST_VERSION: " << BOOST_LIB_VERSION << std::endl;
+    std::cout << PROJECT_NAME << ": " << PROJECT_VER << std::endl;
 }
 
 int countAipsPackagesInSwissmedic(AIPS::MedicineList &list)
