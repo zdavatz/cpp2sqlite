@@ -508,12 +508,12 @@ std::string getHtmlByAtc(const std::string atc)
         // Start defining the HTML code
         std::string textBeforeTable;
         {
-            textBeforeTable = description + " (" + ca.RoaCode + ") " + codeRoaMap[ca.RoaCode].description + "<br>\n";
-            textBeforeTable += "ATC-Code: " + atc + "<br>\n";
+            textBeforeTable = description + " (" + ca.RoaCode + ") " + codeRoaMap[ca.RoaCode].description + "<br />\n";
+            textBeforeTable += "ATC-Code: " + atc + "<br />\n";
             textBeforeTable += indicationTitle + ": " + indication;
 
             if (!optionalColumnMap[TH_KEY_TYPE] && !dosages[0].type.empty())
-                textBeforeTable += "<br>\n" + thTitleMap[TH_KEY_TYPE] + ": " + dosages[0].type;
+                textBeforeTable += "<br />\n" + thTitleMap[TH_KEY_TYPE] + ": " + dosages[0].type;
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
 

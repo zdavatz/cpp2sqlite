@@ -203,8 +203,8 @@ static void cleanupForNonHtmlUsage(std::string &xml)
     boost::replace_all(xml, "&Ograve;", "Ò");
     boost::replace_all(xml, "&uuml;",   "ü");
     boost::replace_all(xml, "&Uuml;",   "Ü");
-    boost::replace_all(xml, "&oelig;",   "œ");
-    boost::replace_all(xml, "&OElig;",   "Œ");
+    boost::replace_all(xml, "&oelig;",  "œ");
+    boost::replace_all(xml, "&OElig;",  "Œ");
     boost::replace_all(xml, "&middot;", "–"); // the true middot is "·"
     boost::replace_all(xml, "&bdquo;",  "„");
     boost::replace_all(xml, "&ldquo;",  "“");
