@@ -33,7 +33,7 @@ link_directories(${XLNT_LIBRARY_DIRS})
 include_directories("${CMAKE_SOURCE_DIR}")
 
 #-------------------------------------------------------------------------------
-source_group(barcode FILES ean13/functii.cpp ean13/functii.h)
+source_group(barcode FILES src/c2s/ean13/functii.cpp src/c2s/ean13/functii.h)
 
 add_executable(cpp2sqlite
 	src/c2s/cpp2sqlite.cpp
@@ -56,11 +56,11 @@ target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_
 #set_target_properties(cpp2sqlite PROPERTIES CXX_STANDARD 17)
 
 #-------------------------------------------------------------------------------
-
 add_executable(interaction
 	src/int/main.cpp)
 
 target_include_directories(interaction PUBLIC "${CMAKE_SOURCE_DIR}/src/int")
+target_link_libraries(interaction ${Boost_LIBRARIES})
 	
 #-------------------------------------------------------------------------------
 
