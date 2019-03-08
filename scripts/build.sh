@@ -24,7 +24,7 @@ cmake -G"Unix Makefiles" \
     -D XLNT_DIR=$BIN_XLNT \
     $SRC_DIR
 
-make -j9
+make -j9 all
 #sudo make install
 
 cd $BLD_DIR  # it should be $BIN_DIR otherwise there is no point in doing make install

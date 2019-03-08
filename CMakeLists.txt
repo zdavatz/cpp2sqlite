@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(cpp2sqlite VERSION "1.0.229")
+project(AIPS VERSION "1.0.229")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -36,24 +36,33 @@ include_directories("${CMAKE_SOURCE_DIR}")
 source_group(barcode FILES ean13/functii.cpp ean13/functii.h)
 
 add_executable(cpp2sqlite
-	cpp2sqlite.cpp
-	sqlDatabase.hpp sqlDatabase.cpp
-	aips.hpp aips.cpp
-	refdata.hpp refdata.cpp
-	swissmedic.hpp swissmedic.cpp
-	bag.hpp bag.cpp
-	gtin.hpp gtin.cpp
-	beautify.hpp beautify.cpp
-	atc.hpp atc.cpp
-	epha.hpp epha.cpp
-	peddose.hpp peddose.cpp
-    report.hpp report.cpp
-	ean13/functii.cpp ean13/functii.h
-	medicine.h)
+	src/c2s/cpp2sqlite.cpp
+	src/c2s/sqlDatabase.hpp src/c2s/sqlDatabase.cpp
+	src/c2s/aips.hpp src/c2s/aips.cpp
+	src/c2s/refdata.hpp src/c2s/refdata.cpp
+	src/c2s/swissmedic.hpp src/c2s/swissmedic.cpp
+	src/c2s/bag.hpp src/c2s/bag.cpp
+	src/c2s/gtin.hpp src/c2s/gtin.cpp
+	src/c2s/beautify.hpp src/c2s/beautify.cpp
+	src/c2s/atc.hpp src/c2s/atc.cpp
+	src/c2s/epha.hpp src/c2s/epha.cpp
+	src/c2s/peddose.hpp src/c2s/peddose.cpp
+    src/c2s/report.hpp src/c2s/report.cpp
+	src/c2s/ean13/functii.cpp src/c2s/ean13/functii.h
+	src/c2s/medicine.h)
 
+target_include_directories(cpp2sqlite PUBLIC "${CMAKE_SOURCE_DIR}/src/c2s")
 target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})
 #set_target_properties(cpp2sqlite PROPERTIES CXX_STANDARD 17)
 
 #-------------------------------------------------------------------------------
 
-install(TARGETS cpp2sqlite RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
+add_executable(interaction
+	src/int/main.cpp)
+
+target_include_directories(interaction PUBLIC "${CMAKE_SOURCE_DIR}/src/int")
+	
+#-------------------------------------------------------------------------------
+
+
+install(TARGETS cpp2sqlite interaction RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
