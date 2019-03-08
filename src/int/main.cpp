@@ -54,10 +54,15 @@ void outputInteraction(std::ofstream &ofs,
     else
         legend = "Unknown section";
 
-    std::string outColumnE = "<div><div class=\"paragraph" + inColumnI + "\" id=\"" + inColumnA + "-" + inColumnC + "\"><div class=\"absTitle\">" + inColumnA + " [" + inColumnB + "] &rarr;";
-    
-    outColumnE += " " + inColumnC + " [" + inColumnD + "]</div></div><p class=\"spacing2\"><i>" + nameSection1 + ":</i> " + legend + " (" + inColumnI + ")</p><p class=\"spacing2\"><i>" + nameSection2 + ":</i> " + inColumnE + "</p><p class=\"spacing2\"><i>" + nameSection3 + ":</i> " + inColumnF + "</p><p class=\"spacing2\"><i>" + nameSection4 + ":</i> " + inColumnH + "</p></div>";
+    std::string outColumnE = "<div class=\"paragraph" + inColumnI + "\" id=\"" + inColumnA + "-" + inColumnC + "\">";
+    outColumnE += "<div class=\"absTitle\">" + inColumnA + " [" + inColumnB + "] &rarr; " + inColumnC + " [" + inColumnD + "]</div>";
+    outColumnE += "</div>";
+    outColumnE += "<p class=\"spacing2\"><i>" + nameSection1 + ":</i> " + legend + " (" + inColumnI + ")</p>";
+    outColumnE += "<p class=\"spacing2\"><i>" + nameSection2 + ":</i> " + inColumnE + "</p>";
+    outColumnE += "<p class=\"spacing2\"><i>" + nameSection3 + ":</i> " + inColumnF + "</p>";
+    outColumnE += "<p class=\"spacing2\"><i>" + nameSection4 + ":</i> " + inColumnH + "</p>";
 
+    outColumnE = "<div>" + outColumnE + "</div>";
 #if 0
     std::clog
 #else
