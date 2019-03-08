@@ -63,6 +63,9 @@
 
 // Additional sections, not in the XML
 // If you change these numbers also update smartinfo.py near line 74
+// Note: AmiKo (macOS) expects
+//      prefix "section" for numbers <= 100
+//      prefix "Section" for numbers > 100
 #define SECTION_NUMBER_PEDDOSE    9050
 #define SECTION_NUMBER_FOOTER     9051
 
@@ -74,10 +77,12 @@ std::map<std::string, std::string> statsTitleStrSeparatorMap;
 
 void on_version()
 {
+    std::cout << PROJECT_NAME << " " << PROJECT_VER
+              << ", " << __DATE__ << " " << __TIME__ << std::endl;
+
     std::cout << "C++ " << __cplusplus << std::endl;
     std::cout << "SQLITE_VERSION: " << SQLITE_VERSION << std::endl;
     std::cout << "BOOST_VERSION: " << BOOST_LIB_VERSION << std::endl;
-    std::cout << PROJECT_NAME << ": " << PROJECT_VER << std::endl;
 }
 
 int countAipsPackagesInSwissmedic(AIPS::MedicineList &list)
@@ -139,7 +144,7 @@ std::string getBarcodesFromGtins(const GTIN::oneFachinfoPackages &packages)
 // Add all the values first into a `sum` variable,
 // then each value is multiplied by 100 and divided by `sum`
 //
-// Special cases to be tested:
+// TODO: special cases to be tested:
 //  rn 65553 has an empty table before section 1
 //  rn 56885 has only one col
 void modifyColgroup(pt::ptree &colgroup)
@@ -227,6 +232,7 @@ static void cleanupForNonHtmlUsage(std::string &xml)
     boost::replace_all(xml, "&Phi;",    "Φ");
     boost::replace_all(xml, "&tau;",    "τ");
     boost::replace_all(xml, "&frac12;", "½");
+    boost::replace_all(xml, "&minus;",  "−");
     boost::replace_all(xml, "&mdash;",  "—");
     boost::replace_all(xml, "&ndash;",  "–");
     boost::replace_all(xml, "&bull;",   "•"); // See rn 63182. Where is this in the Java code ?
@@ -257,24 +263,57 @@ static void cleanupForNonHtmlUsage(std::string &xml)
     boost::replace_all(xml, "&pound;",  "£");
     boost::replace_all(xml, "&ordf;",   "ª");
     boost::replace_all(xml, "&ccedil;", "ç");
+
+    boost::replace_all(xml, "&larr;", "←");
+    boost::replace_all(xml, "&uarr;", "↑");
+    boost::replace_all(xml, "&rarr;", "→");
+    boost::replace_all(xml, "&darr;", "↓");
+    boost::replace_all(xml, "&harr;", "↔");
 }
 
-// Here we modify only the HTML contents, not the tags
-static void cleanupTitle(std::string &title,
-                         const std::string regnrs)
+// Here we modify the HTML contents and possibly children tags, not the parent tags
+static void cleanupTitle(std::string &title)
 {
     boost::replace_all(title, "&amp;", "&"); // rn 66547, section 20, French
+    // HTML superscript tags are not supported in the chapter list
+    boost::replace_all(title, "<sub>", "");
+    boost::replace_all(title, "</sub>", "");
+    boost::replace_all(title, "<sup>", "");
+    boost::replace_all(title, "</sup>", "");
+}
+
+static void cleanupSection_1_Title(std::string &title)
+{
+    cleanupTitle(title);
     
+    // All titles in XML "type 2" terminate with "<br />". Remove it
+    size_t lastindex = title.rfind("<br />");
+    if (lastindex != std::string::npos) {
+        // Remove the "<br />" suffix
+        title = title.substr(0, lastindex);
+        
+        // Some titles have another "<br />" in the middle
+        // Leave it there for the HTML
+    }
+}
+
+// Maybe it should be treated the same as section 1 (TBC)
+static void cleanupSection_not1_Title(std::string &title)
+{
+    cleanupTitle(title);
+
     // rn 66547, section 20, French
     size_t lastindex = title.find("<br />");
     if (lastindex != std::string::npos) {
         // Keep only up to the first "<br />"
         title = title.substr(0, lastindex);
     }
+}
 
-    // HTML superscript tags are not supported in the chapter list
-    boost::replace_all(title, "<sup>", "");
-    boost::replace_all(title, "</sup>", "");
+static void cleanupSection_not1_Title(std::string &title,
+                                      const std::string regnrs)
+{
+    cleanupSection_not1_Title(title);
     
     if (title.find(TITLES_STR_SEPARATOR) != std::string::npos) {
         statsTitleStrSeparatorMap.insert(std::make_pair(regnrs, title));
@@ -285,6 +324,7 @@ static void cleanupTitle(std::string &title,
     }
 }
 
+// Cleanup and also escape some children tags
 static void cleanupXml(std::string &xml,
                        const std::string regnrs)
 {
@@ -417,7 +457,7 @@ void getHtmlFromXml(std::string &xml,
     
     //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << regnrs << std::endl;
 
-    cleanupXml(xml, regnrs);
+    cleanupXml(xml, regnrs);  // and escape some children tags
 
     pt::ptree tree;
     std::stringstream ss;
@@ -438,8 +478,7 @@ void getHtmlFromXml(std::string &xml,
 #ifdef DEBUG
         //std::clog << "XML TYPE 2, regnrs " << regnrs << std::endl;
 #endif
-        
-#if 1
+
         // Title
         // All we have to do for XML "type 2" is add an attribute
         // id="section1" end clean up the "<br />"
@@ -450,34 +489,35 @@ void getHtmlFromXml(std::string &xml,
         if (std::regex_search(xml, match, rgx)) {
             std::string title = match[match.size() - 1];
             
-            boost::replace_all(title, ESCAPED_BR, "<br />"); // restore children
-            
-            // All titles in XML "type 2" terminate with "<br />"
-            size_t lastindex = title.rfind("<br />");
-            if (lastindex != std::string::npos) {
-                // Remove the "<br />" suffix
-                title = title.substr(0, lastindex);
+            // Note: the title from "MonTitle" is used in two places in AmiKo,
+            // in the middle pane (HTML), and on the right pane (chapter name)
 
-                // Some titles have another "<br />" in the middle
-                // Leave it there for the HTML
-            }
-
-            std::string titleDiv = "   <div class=\"MonTitle\" id=\"Section1\">\n";
+            // Restore children tags
+            boost::replace_all(title, ESCAPED_SUB_L, "<sub>");
+            boost::replace_all(title, ESCAPED_SUB_R, "</sub>");
+            boost::replace_all(title, ESCAPED_SUP_L, "<sup>");
+            boost::replace_all(title, ESCAPED_SUP_R, "</sup>");
+            boost::replace_all(title, ESCAPED_BR,    "<br />");
+    
+            // HTML
+            std::string titleDiv = "   <div class=\"MonTitle\" id=\"section1\">\n";
             titleDiv += title + "\n";
             titleDiv += "   </div>\n";
             xml = std::regex_replace(xml, rgx, titleDiv);
 
-            // ownerCompany is a separate div between section 1 and section 2
-            // It's alread there for XML type 2
+            // Note: "ownerCompany" is a separate "<div>" between section 1 and section 2
+            // It's already there for XML type 2
 
+            // Chapter name
             sectionId.push_back("Section1");
+            cleanupSection_1_Title(title);
             // Some titles have another "<br />" in the middle
-            // Remove it for the chapter name
-            // For other section numbers see 'cleanupTitle()'
+            // Leave it there for the HTML above
+            // Remove it for the section 1 chapter name
+            // For other section numbers see 'cleanupSection_not1_Title()'
             boost::replace_first(title, "<br />", " ");
             sectionTitle.push_back(title);
-        }
-#endif
+        } // if MonTitle
 
         // Extract chapter list
         const std::string sectIdText("id=\"Section");
@@ -631,24 +671,8 @@ void getHtmlFromXml(std::string &xml,
 
                     boost::replace_all(tagContent, "&apos;", "'");
 
-//                    if (tagContent.find(TITLES_STR_SEPARATOR) != std::string::npos) {
-//                        statsTitleStrSeparatorMap.insert(std::make_pair(regnrs, tagContent));
-//#ifdef DEBUG
-//                        if (verbose)
-//                            std::clog
-//                            << basename((char *)__FILE__) << ":" << __LINE__
-//                            << ", Warning - rn " << regnrs
-//                            << ", replacing title_str separator in \"" << tagContent << "\""
-//                            << std::endl;
-//#endif
-//
-//                        // Replace section separator ";" with something else
-//                        // (not ',' because it's the decimal point separator on some locales)
-//                        boost::replace_all(tagContent, ";",  "·"); // &middot;
-//                    }
-
                     std::string chapterName = tagContent;
-                    cleanupTitle(chapterName, regnrs);
+                    cleanupSection_not1_Title(chapterName, regnrs);
                     sectionTitle.push_back(chapterName);
                     
                     std::string divClass;
@@ -837,7 +861,7 @@ doPedDose:
     {
         std::string pedHtml = PED::getHtmlByAtc(atc);
         if (!pedHtml.empty()) {
-            std::string sectionPedDose("section" + std::to_string(SECTION_NUMBER_PEDDOSE));
+            std::string sectionPedDose("Section" + std::to_string(SECTION_NUMBER_PEDDOSE));
             std::string sectionPedDoseName("Swisspeddose");
 
             if (hasXmlHeader)
@@ -855,9 +879,10 @@ doPedDose:
     }
 
     // Add a section that was not in the XML contents
+    // Note that this section id and name don't get added to the chapter name list
     // Footer
     {
-        html += "   <div class=\"paragraph\" id=\"section" + std::to_string(SECTION_NUMBER_FOOTER) + "\"></div>\n";
+        html += "   <div class=\"paragraph\" id=\"Section" + std::to_string(SECTION_NUMBER_FOOTER) + "\"></div>\n";
 
         std::time_t seconds = std::time(nullptr);
         std::string curtime = std::asctime(std::localtime( &seconds )); // TODO: avoid trailing \n
@@ -934,7 +959,6 @@ int main(int argc, char **argv)
         }
         
         if (vm.count("version")) {
-            std::cout << appName << " " << __DATE__ << " " << __TIME__ << std::endl;
             on_version();
             return EXIT_SUCCESS;
         }
