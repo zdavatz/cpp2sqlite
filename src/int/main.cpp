@@ -40,9 +40,19 @@ void outputInteraction(std::ofstream &ofs,
     std::string nameSection3 = "Mechanismus";
     std::string nameSection4 = "Empfohlene Massnahmen";
     
-    std::string legend; // TODO: it depends on column I
-    if (inColumnI == "D")
+    std::string legend; // TODO: localize
+    if (inColumnI == "A")
+        legend = "Keine Massnahmen notwendig";
+    else if (inColumnI == "B")
+        legend = "Vorsichtsmassnahmen empfohlen";
+    else if (inColumnI == "C")
+        legend = "Regelmässige Überwachung";
+    else if (inColumnI == "D")
         legend = "Kombination vermeiden";
+    else if (inColumnI == "X")
+        legend = "Kontraindiziert";
+    else
+        legend = "Unknown section";
 
     std::string outColumnE = "<div><div class=\"paragraph" + inColumnI + "\" id=\"" + inColumnA + "-" + inColumnC + "\"><div class=\"absTitle\">" + inColumnA + " [" + inColumnB + "] &rarr;";
     
@@ -73,7 +83,7 @@ void parseCSV(const std::string &filename,
     ofs.open(fullFilename.c_str());
 
     try {
-        std::clog << std::endl << "Reading CSV" << std::endl;
+        //std::clog << std::endl << "Reading CSV" << std::endl;
         std::ifstream file(filename);
         
         std::string str;
