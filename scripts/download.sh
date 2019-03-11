@@ -124,14 +124,13 @@ TARGET=AipsDownload.zip
 
 # First get index.html and the first cookie
 wget --save-cookies cookieA.txt --keep-session-cookies $URL
+
 VS_VALUE=$(grep -w __VIEWSTATE index.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
 EVVAL_VALUE=$(grep -w __EVENTVALIDATION index.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
 
 # urlencode VS_VALUE and VS_VALUE, alternatively use curl with --data-urlencode
-echo "EVVAL_VALUE before: $EVVAL_VALUE\n"
 VS_VALUE=$(urlencode $VS_VALUE)
 EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
-echo "EVVAL_VALUE  after: $EVVAL_VALUE"
 
 VS="__VIEWSTATE=$VS_VALUE"
 EVVAL="__EVENTVALIDATION=$EVVAL_VALUE"
@@ -139,24 +138,28 @@ VSG="__VIEWSTATEGENERATOR=00755B7A"
 BTN_OK="ctl00%24MainContent%24btnOK=Ja%2C+ich+akzeptiere+%2F+Oui%2C+j%E2%80%99accepte+%2F+S%C3%AC%2C+accetto"
 BODY_DATA="${VS}&${VSG}&${EVVAL}&${BTN_OK}"
 
-# <input type="submit" name="ctl00$MainContent$btnOK" value="Ja, ich akzeptiere / Oui, j’accepte / Sì, accetto" id="MainContent_btnOK" />
-#POST_DATA="ctl00$MainContent$btnOK=Ja, ich akzeptiere / Oui, j’accepte / Sì, accetto"
+# Then get index2.html and the second cookie
 wget --header 'Host: download.swissmedicinfo.ch' \
     --user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0.3' \
 	--header 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
    	--referer 'http://download.swissmedicinfo.ch/Accept.aspx?ReturnUrl=%2f' \
     --load-cookies=cookieA.txt \
+    --save-cookies cookieB.txt --keep-session-cookies \
     --header 'Upgrade-Insecure-Requests: 1' \
     --post-data="$BODY_DATA" \
-	"$URL/Accept.aspx?ReturnUrl=%2f" --save-cookies cookieB.txt --keep-session-cookies
+	"$URL/Accept.aspx?ReturnUrl=%2f" -O index2.html
 
-# TODO: Extract data from index.html hidden fields to be used in POST
-# / becomes %2F
-# = becomes %3D
-# $ becomes %24
-VS="__VIEWSTATE=%2FwEPDwULLTE4MTg5MDc1ODUPZBYCZg9kFgICAw9kFgICCw8WAh4LXyFJdGVtQ291bnQCBBYIZg9kFgRmDxUBCD9MYW5nPURFZAIBDw8WCB4EVGV4dAUCREUeB1Rvb2xUaXAFAkRFHglGb250X0JvbGRnHgRfIVNCAoAQZGQCAg9kFgRmDxUBCD9MYW5nPUZSZAIBDw8WCB8BBQJGUh8CBQJGUh8DaB8EAoAQZGQCBA9kFgRmDxUBCD9MYW5nPUlUZAIBDw8WCB8BBQJJVB8CBQJJVB8DaB8EAoAQZGQCBg9kFgRmDxUBCD9MYW5nPUVOZAIBDw8WCB8BBQJFTh8CBQJFTh8DaB8EAoAQZGRkjlURDuFTfUSzCkU4Z%2FHgzJTwh8JAx9UG3UUmb1vpCvk%3D"
+# Extract data from index2.html hidden fields to be used in POST
+VS_VALUE=$(grep -w __VIEWSTATE index2.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
+EVVAL_VALUE=$(grep -w __EVENTVALIDATION index2.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
+
+# urlencode VS_VALUE and VS_VALUE, alternatively use curl with --data-urlencode
+VS_VALUE=$(urlencode $VS_VALUE)
+EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
+
+VS="__VIEWSTATE=$VS_VALUE"
+EVVAL="__EVENTVALIDATION=$EVVAL_VALUE"
 VSG="__VIEWSTATEGENERATOR=CA0B0334"
-EVVAL="__EVENTVALIDATION=%2FwEdAAP75S3dOZ6sf0G6ruN2nzl0Ys46t3fbHVLzSTNxrdjIh8RrVmh3M0KCdbB64e6QzAIEClHNrqZ9LNHZdrtCdxbx9WpxB6%2BPdFanYBbOaZT3Pw%3D%3D"
 BTN_YES="ctl00%24MainContent%24BtnYes=Ja"
 BODY_DATA="${VS}&${VSG}&${EVVAL}&${BTN_YES}"
 
@@ -174,13 +177,17 @@ wget --header 'Host: download.swissmedicinfo.ch' \
 	$URL \
 	--output-document $TARGET
 
-#file --brief $TARGET | grep "Zip archive data" # Check that we got a zip file with:
+file --brief $TARGET | grep "Zip archive data" # Check that we got a zip file with:
+RESULT=$?
+if [ $RESULT -ne 0 ] ; then
+    file --brief $TARGET
+    echo -e "$TARGET is not a zip file"
+else
+    unzip $TARGET -d temp
+    mv "$(ls temp/AipsDownload_*.xml)" aips.xml
+    rm -r temp
+    rm $TARGET
+    rm index*
+    rm cookie*.txt
+fi
 
-unzip $TARGET -d temp
-mv "$(ls temp/AipsDownload_*.xml)" aips.xml
-rm -r temp
-rm "Accept.aspx?ReturnUrl=%2F"
-rm $TARGET
-
-rm index.html*
-rm cookie*.txt
