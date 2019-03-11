@@ -88,9 +88,7 @@ source $WD/passwords
 URL="https://db.swisspeddose.ch"
 FILE3="$URL/app/uploads/xml_publication/swisspeddosepublication-2019-02-21.xml"
 
-#POST_DATA='Submit=Log In&log=${USERNAME}&pwd=${PASSWORD}'
 POST_DATA='log=${USERNAME}&pwd=${PASSWORD}'
-#  <input type="submit" name="Submit" value="Log In" class="buttons" />
 
 wget --save-cookies cookies.txt \
      --keep-session-cookies \

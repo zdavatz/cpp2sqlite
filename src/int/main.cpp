@@ -14,18 +14,21 @@
 #include <libgen.h>     // for basename()
 
 #include <boost/algorithm/string_regex.hpp>
+#include <boost/asio/io_service.hpp>
 
 #define OUTPUT_FILE_SEPARATOR   "|"
 
-#define inColumnA     cols[0]
-#define inColumnB     cols[1]
-#define inColumnC     cols[2]
-#define inColumnD     cols[3]
-#define inColumnE     cols[4]
-#define inColumnF     cols[5]
-#define inColumnG     cols[6]
-#define inColumnH     cols[7]
-#define inColumnI     cols[8]
+#define inColumnA     cols[0] // ATC1
+#define inColumnB     cols[1] // Name1
+#define inColumnC     cols[2] // ATC2
+#define inColumnD     cols[3] // Name2
+#define inColumnE     cols[4] // Info
+#define inColumnF     cols[5] // Mechanismus
+#define inColumnG     cols[6] // Effekt  ( unused ? )
+#define inColumnH     cols[7] // Massnahmen
+#define inColumnI     cols[8] // Grad
+
+std::set<std::string> toBeTranslatedSet;
 
 void outputInteraction(std::ofstream &ofs,
                        const std::vector<std::string> &cols)
@@ -35,33 +38,37 @@ void outputInteraction(std::ofstream &ofs,
         return;
     }
 
+    toBeTranslatedSet.insert(inColumnE);
+    toBeTranslatedSet.insert(inColumnF);
+    toBeTranslatedSet.insert(inColumnH);
+
     // TODO: localize
-    std::string nameSection1 = "Risikoklasse";
-    std::string nameSection2 = "Möglicher Effekt";
-    std::string nameSection3 = "Mechanismus";
-    std::string nameSection4 = "Empfohlene Massnahmen";
+    std::string nameSection1 = "Risikoklasse";          // Risk class
+    std::string nameSection2 = "Möglicher Effekt";      // Possible effect
+    std::string nameSection3 = "Mechanismus";           // Mechanism
+    std::string nameSection4 = "Empfohlene Massnahmen"; // Recommended measures
     
     std::string legend; // TODO: localize
     if (inColumnI == "A")
-        legend = "Keine Massnahmen notwendig";
+        legend = "Keine Massnahmen notwendig"; // No measures necessary
     else if (inColumnI == "B")
-        legend = "Vorsichtsmassnahmen empfohlen";
+        legend = "Vorsichtsmassnahmen empfohlen";  // precautions recommended
     else if (inColumnI == "C")
-        legend = "Regelmässige Überwachung";
+        legend = "Regelmässige Überwachung";  // Regular monitoring
     else if (inColumnI == "D")
-        legend = "Kombination vermeiden";
+        legend = "Kombination vermeiden"; // Avoid combination
     else if (inColumnI == "X")
-        legend = "Kontraindiziert";
+        legend = "Kontraindiziert"; // Contraindicated
     else
         legend = "Unknown section";
 
     std::string outColumnE = "<div class=\"paragraph" + inColumnI + "\" id=\"" + inColumnA + "-" + inColumnC + "\">";
     outColumnE += "<div class=\"absTitle\">" + inColumnA + " [" + inColumnB + "] &rarr; " + inColumnC + " [" + inColumnD + "]</div>";
     outColumnE += "</div>";
-    outColumnE += "<p class=\"spacing2\"><i>" + nameSection1 + ":</i> " + legend + " (" + inColumnI + ")</p>";
-    outColumnE += "<p class=\"spacing2\"><i>" + nameSection2 + ":</i> " + inColumnE + "</p>";
-    outColumnE += "<p class=\"spacing2\"><i>" + nameSection3 + ":</i> " + inColumnF + "</p>";
-    outColumnE += "<p class=\"spacing2\"><i>" + nameSection4 + ":</i> " + inColumnH + "</p>";
+    outColumnE += "<p class=\"spacing2\"><i>" + nameSection1 + ":</i> " + legend + " (" + inColumnI + ")</p>"; // Grad
+    outColumnE += "<p class=\"spacing2\"><i>" + nameSection2 + ":</i> " + inColumnE + "</p>";  // Info
+    outColumnE += "<p class=\"spacing2\"><i>" + nameSection3 + ":</i> " + inColumnF + "</p>";  // Mechanismus
+    outColumnE += "<p class=\"spacing2\"><i>" + nameSection4 + ":</i> " + inColumnH + "</p>";  // Massnahmen
 
     outColumnE = "<div>" + outColumnE + "</div>";
 
@@ -134,5 +141,11 @@ int main(int argc, char **argv)
     }
     
     parseCSV(argv[1], "de", false);
+    
+    std::string toBeTran = boost::algorithm::join(toBeTranslatedSet, "\n");
+    std::ofstream outfile ("deepl.in.txt");
+    outfile << toBeTran;
+    outfile.close();
+    
     return EXIT_SUCCESS;
 }
