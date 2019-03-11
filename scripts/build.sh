@@ -28,5 +28,6 @@ make -j9 all
 #sudo make install
 
 cd $BLD_DIR  # it should be $BIN_DIR otherwise there is no point in doing make install
-time ./cpp2sqlite --verbose --lang=fr --inDir $SRC_DIR/input&
-time ./cpp2sqlite --verbose --inDir $SRC_DIR/input&
+time ./cpp2sqlite --lang=fr --inDir $SRC_DIR/input&
+time ./cpp2sqlite --inDir $SRC_DIR/input&
+./interaction --inDir $SRC_DIR/input
