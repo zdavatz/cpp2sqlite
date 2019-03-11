@@ -108,10 +108,12 @@ void outputInteraction(std::ofstream &ofs,
 void getTranslationMap(const std::string &outDir,
                        const std::string &language)
 {
+#ifdef DEBUG
     std::cerr
     << basename((char *)__FILE__) << ":" << __LINE__
     << ", outDir" << outDir
     << std::endl;
+#endif
 
     try {
         std::ifstream ifsKey(outDir + "/deepl.in.txt");
@@ -146,7 +148,7 @@ void parseCSV(const std::string &inFilename,
               bool verbose)
 {
     std::ofstream ofs;
-    ofs.open(outDir + "/drug_interaction_" + language + ".csv");
+    ofs.open(outDir + "/drug_interactions_csv_" + language + ".csv");
 
     try {
         //std::clog << std::endl << "Reading CSV" << std::endl;
