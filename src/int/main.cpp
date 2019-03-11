@@ -35,6 +35,7 @@ void outputInteraction(std::ofstream &ofs,
         return;
     }
 
+    // TODO: localize
     std::string nameSection1 = "Risikoklasse";
     std::string nameSection2 = "Möglicher Effekt";
     std::string nameSection3 = "Mechanismus";
@@ -63,6 +64,7 @@ void outputInteraction(std::ofstream &ofs,
     outColumnE += "<p class=\"spacing2\"><i>" + nameSection4 + ":</i> " + inColumnH + "</p>";
 
     outColumnE = "<div>" + outColumnE + "</div>";
+
 #if 0
     std::clog
 #else
@@ -72,7 +74,7 @@ void outputInteraction(std::ofstream &ofs,
     << OUTPUT_FILE_SEPARATOR                // B empty column
     << inColumnC << OUTPUT_FILE_SEPARATOR   // C
     << OUTPUT_FILE_SEPARATOR                // D empty column
-    << outColumnE
+    << outColumnE                           // E
     << std::endl;
 }
 
