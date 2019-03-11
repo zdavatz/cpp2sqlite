@@ -77,7 +77,7 @@ std::map<std::string, std::string> statsTitleStrSeparatorMap;
 
 void on_version()
 {
-    std::cout << PROJECT_NAME << " " << PROJECT_VER
+    std::cout << appName << " " << PROJECT_VER
               << ", " << __DATE__ << " " << __TIME__ << std::endl;
 
     std::cout << "C++ " << __cplusplus << std::endl;

@@ -2,19 +2,19 @@
 # Alex Bettarini - 11 Mar 2019
 
 source passwords
-TARGET_LAN=FR
+TARGET_LAN=fr
 URL="https://api.deepl.com/v1"
 
-IN_FILE=../output/deepl.in.txt
+IN_DIR=../output
 
 if [ ! -z "$1" ] ; then
-    IN_FILE=$1
+    IN_DIR=$1
 fi
 
-mkdir temp
-
-OUT_FILE=temp/translated-${TARGET_LAN}.txt
-ERR_FILE=temp/not-translated-${TARGET_LAN}.txt
+mkdir -p $IN_DIR
+IN_FILE=$IN_DIR/deepl.in.txt
+OUT_FILE=$IN_DIR/deepl.out.${TARGET_LAN}.txt
+ERR_FILE=$IN_DIR/deepl.err.${TARGET_LAN}.txt
 if [ -f $OUT_FILE ] ; then
     rm $OUT_FILE
 fi
@@ -61,6 +61,6 @@ fi
 
 while read p; do
   translate "$p"
-done < $IN_FILE
+done < "$IN_FILE"
 
 echo "Created $OUT_FILE and $ERR_FILE"

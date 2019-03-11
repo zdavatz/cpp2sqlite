@@ -3,11 +3,19 @@ C++ tool to generate sqlite database containing Swiss Healthcare Public Domain D
 ## History
 This tool is a port of [aips2sqlite](https://github.com/zdavatz/aips2sqlite)
 ## Requirements
-Using Boost, C++17, sqlite, cmake, gcc-7.3.1 and [xlnt](https://github.com/tfussell/xlnt) with `cmake -DSTATIC=on`
+
+- Boost
+- C++17
+- sqlite
+- cmake
+- gcc-7.3.1
+- [xlnt](https://github.com/tfussell/xlnt) with `cmake -DSTATIC=on`
+- jq (Command-line JSON processor)
+
 ## Installation
 See [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh)
 ## Usage
-`./cpp2sqlite --inDir /home/zeno/.software/aips2sqlite/jars/downloads/`
+`./cpp2sqlite --inDir ~/.software/aips2sqlite/jars/downloads/`
 ## Input Sources
 _ [AIPS](http://download.swissmedicinfo.ch)\
 _ [BAG XML](http://www.spezialitätenliste.ch/File.axd?file=XMLPublications.zip)\
