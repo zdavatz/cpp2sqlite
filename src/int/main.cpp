@@ -204,11 +204,6 @@ void parseCSV(const std::string &inFilename,
                 translatedVector.push_back(translatedMap[inColumnH]);// TODO: get translation
                 translatedVector.push_back(inColumnI);
 
-                std::cerr
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << " verify " << boost::algorithm::join(translatedVector, "\n")
-                << std::endl;
-
                 outputInteraction(ofs, translatedVector);
             }
         }
