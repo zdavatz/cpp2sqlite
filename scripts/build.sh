@@ -44,7 +44,9 @@ LANG=fr
 #./deepl.sh
 
 # STEP 3
-# Manually translate output/deepl.err.$LANG.txt to output/deepl.out2.$LANG.txt
+# Manual translation
+# Read file: output/deepl.err.$LANG.txt
+# Write file: output/deepl.out2.$LANG.txt
 
 # STEP 4
 # Read files: input/matrix.csv output/deepl.in.txt output/deepl.out.$LANG.txt output/deepl.out2.$LANG.txt
