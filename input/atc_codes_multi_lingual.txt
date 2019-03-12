@@ -1240,7 +1240,7 @@ J01CE10: Phenoxymethylpenicillin-Benzathin; Phénoxyméthylpénicilline-benzathi
 J01CE: Beta-Lactamase-sensitive Penicilline; Pénicillines sensibles aux bêta-lactamases
 J01CF05: Flucloxacillin; Flucloxacilline
 J01CF: Beta-Lactamase-resistente Penicilline; Pénicillines résistantes à la bêta-lactamase
-J01CR02: Amoxicillin und Enzym-Inhibitoren; Amoxicilline et acide clavulanique
+J01CR02: Amoxicillin und Enzym-Inhibitoren; Amoxicilline et inhibiteurs d'enzymes
 J01CR05: Piperacillin und Enzym-Inhibitoren; Pipéracilline et inhibiteur d’enzyme
 J01CR: Kombinationen von Penicillinen, inkl. Beta-Lactamase-Inhibitoren; Combinaisons de pénicillines, y compris des inhibiteurs de bêta-lactamase
 J01D: ANDERE BETA-LACTAM-ANTIBIOTIKA; AUTRES ANTIBIOTIQUES BÊTA-LACTAMINES
