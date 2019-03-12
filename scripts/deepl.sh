@@ -5,7 +5,7 @@ source passwords
 TARGET_LAN=fr
 URL="https://api.deepl.com/v1"
 
-IN_DIR=../output
+IN_DIR=../input
 
 if [ ! -z "$1" ] ; then
     IN_DIR=$1

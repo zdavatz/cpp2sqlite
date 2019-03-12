@@ -96,15 +96,15 @@ void outputInteraction(std::ofstream &ofs,
 }
 
 // Define translatedMap
-// key "/output/deepl.in.txt"
-// val "/output/deepl.out.fr.txt"
-void getTranslationMap(const std::string &outDir,
+// key "input/deepl.in.txt"
+// val "input/deepl.out.fr.txt"
+void getTranslationMap(const std::string &dir,
                        const std::string &language)
 {
     try {
-        std::ifstream ifsKey(outDir + "/deepl.in.txt");
-        std::ifstream ifsValue(outDir + "/deepl.out." + language + ".txt");   // translated by deepl.sh
-        std::ifstream ifsValue2(outDir + "/deepl.out2." + language + ".txt"); // translated manually
+        std::ifstream ifsKey(dir + "/deepl.in.txt");
+        std::ifstream ifsValue(dir + "/deepl.out." + language + ".txt");   // translated by deepl.sh
+        std::ifstream ifsValue2(dir + "/deepl.out2." + language + ".txt"); // translated manually
 
         std::string key, val;
         while (std::getline(ifsKey, key)) {
@@ -164,6 +164,8 @@ void parseCSV(const std::string &inFilename,
             if (language == "de") {
                 outputInteraction(ofs, columnTrimmedVector);
 
+                toBeTranslatedSet.insert(inColumnB);
+                toBeTranslatedSet.insert(inColumnD);
                 toBeTranslatedSet.insert(inColumnE);
                 toBeTranslatedSet.insert(inColumnF);
                 toBeTranslatedSet.insert(inColumnH);
@@ -172,9 +174,9 @@ void parseCSV(const std::string &inFilename,
                 std::vector<std::string> translatedVector;
                 
                 translatedVector.push_back(inColumnA);
-                translatedVector.push_back(inColumnB);
+                translatedVector.push_back(translatedMap[inColumnB]);
                 translatedVector.push_back(inColumnC);
-                translatedVector.push_back(inColumnD);
+                translatedVector.push_back(translatedMap[inColumnD]);
                 translatedVector.push_back(translatedMap[inColumnE]);
                 translatedVector.push_back(translatedMap[inColumnF]);
                 translatedVector.push_back(inColumnG);
@@ -259,8 +261,7 @@ int main(int argc, char **argv)
         stringsFromFr();
 
     if (opt_language != "de") {
-        getTranslationMap(opt_workDirectory + "/output",
-                          opt_language);
+        getTranslationMap(opt_inputDirectory, opt_language);
     }
 
     parseCSV(opt_inputDirectory + "/matrix.csv",
@@ -270,7 +271,7 @@ int main(int argc, char **argv)
 
     if (opt_language == "de") {
         std::string toBeTran = boost::algorithm::join(toBeTranslatedSet, "\n");
-        std::ofstream outfile(opt_workDirectory + "/output/deepl.in.txt");
+        std::ofstream outfile(opt_inputDirectory + "/deepl.in.txt");
         outfile << toBeTran;
         outfile.close();
     }

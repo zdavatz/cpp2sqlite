@@ -33,22 +33,35 @@ time ./cpp2sqlite --inDir $SRC_DIR/input&
 
 #-------------------------------------------------------------------------------
 # STEP 1
-# Read file: input/matrix.csv
-# Write files: output/drug_interactions_de.csv output/deepl.in.txt
+# Read file:
+#       input/matrix.csv
+# Write files:
+#       output/drug_interactions_de.csv
+#       input/deepl.in.txt
 #./interaction --inDir $SRC_DIR/input
 
-LANG=fr
 # STEP 2 for each language other than "de"
-# Read file: output/deepl.in.txt
-# Write files: output/deepl.out.$LANG.txt output/deepl.err.$LANG.txt
+LANG=fr
+# Read file:
+#       input/deepl.in.txt
+# Write files:
+#       input/deepl.out.$LANG.txt
+#       input/deepl.err.$LANG.txt
 #./deepl.sh
 
 # STEP 3
 # Manual translation
-# Read file: output/deepl.err.$LANG.txt
-# Write file: output/deepl.out2.$LANG.txt
+# Read file:
+#       input/deepl.err.$LANG.txt
+# Write file:
+#       input/deepl.out2.$LANG.txt
 
 # STEP 4
-# Read files: input/matrix.csv output/deepl.in.txt output/deepl.out.$LANG.txt output/deepl.out2.$LANG.txt
-# Write file: output/drug_interactions_$LANG.csv
+# Read files:
+#       input/matrix.csv
+#       input/deepl.in.txt
+#       input/deepl.out.$LANG.txt
+#       input/deepl.out2.$LANG.txt
+# Write file:
+#       output/drug_interactions_$LANG.csv
 ./interaction --inDir $SRC_DIR/input --lang $LANG
