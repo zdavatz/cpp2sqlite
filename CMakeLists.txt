@@ -60,6 +60,7 @@ add_executable(interaction
 	src/int/lang/en.h
 	src/int/lang/de.h
 	src/int/lang/fr.h
+	src/int/atc.hpp src/int/atc.cpp
 	src/int/main.cpp)
 
 target_include_directories(interaction PUBLIC "${CMAKE_SOURCE_DIR}/src/int")

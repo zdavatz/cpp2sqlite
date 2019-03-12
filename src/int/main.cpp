@@ -20,6 +20,7 @@
 #include <boost/algorithm/string_regex.hpp>
 
 #include "config.h"
+#include "atc.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "lang/en.h"    // Base language
@@ -164,8 +165,6 @@ void parseCSV(const std::string &inFilename,
             if (language == "de") {
                 outputInteraction(ofs, columnTrimmedVector);
 
-                toBeTranslatedSet.insert(inColumnB);
-                toBeTranslatedSet.insert(inColumnD);
                 toBeTranslatedSet.insert(inColumnE);
                 toBeTranslatedSet.insert(inColumnF);
                 toBeTranslatedSet.insert(inColumnH);
@@ -174,9 +173,9 @@ void parseCSV(const std::string &inFilename,
                 std::vector<std::string> translatedVector;
                 
                 translatedVector.push_back(inColumnA);
-                translatedVector.push_back(translatedMap[inColumnB]);
+                translatedVector.push_back(ATC::getTextByAtc(inColumnB));
                 translatedVector.push_back(inColumnC);
-                translatedVector.push_back(translatedMap[inColumnD]);
+                translatedVector.push_back(ATC::getTextByAtc(inColumnD));
                 translatedVector.push_back(translatedMap[inColumnE]);
                 translatedVector.push_back(translatedMap[inColumnF]);
                 translatedVector.push_back(inColumnG);
@@ -255,10 +254,16 @@ int main(int argc, char **argv)
         opt_workDirectory = opt_inputDirectory + "/..";
     }
 
-    if (opt_language == "de")
+    ////////////////////////////////////////////////////////////////////////////
+    if (opt_language == "de") {
         stringsFromDe();
-    else if (opt_language == "fr")
+    }
+    else if (opt_language == "fr") {
         stringsFromFr();
+
+        // For French names of medicines
+        ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
+    }
 
     if (opt_language != "de") {
         getTranslationMap(opt_inputDirectory, opt_language);
