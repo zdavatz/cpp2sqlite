@@ -21,6 +21,12 @@
 
 #include "config.h"
 
+////////////////////////////////////////////////////////////////////////////////
+#include "lang/en.h"    // Base language
+#include "lang/de.h"
+#include "lang/fr.h"
+
+////////////////////////////////////////////////////////////////////////////////
 #define OUTPUT_FILE_SEPARATOR   "|"
 
 #define inColumnA     columnTrimmedVector[0] // ATC1
@@ -58,26 +64,13 @@ void outputInteraction(std::ofstream &ofs,
         std::clog << "Unexpected # columns: " << columnTrimmedVector.size() << std::endl;
         return;
     }
-
-    // TODO: localize
-    std::string nameSection1 = "Risikoklasse";          // Risk class
-    std::string nameSection2 = "Möglicher Effekt";      // Possible effect
-    std::string nameSection3 = "Mechanismus";           // Mechanism
-    std::string nameSection4 = "Empfohlene Massnahmen"; // Recommended measures
     
-    std::string legend; // TODO: localize
-    if (inColumnI == "A")
-        legend = "Keine Massnahmen notwendig"; // No measures necessary
-    else if (inColumnI == "B")
-        legend = "Vorsichtsmassnahmen empfohlen";  // precautions recommended
-    else if (inColumnI == "C")
-        legend = "Regelmässige Überwachung";  // Regular monitoring
-    else if (inColumnI == "D")
-        legend = "Kombination vermeiden"; // Avoid combination
-    else if (inColumnI == "X")
-        legend = "Kontraindiziert"; // Contraindicated
-    else
-        legend = "Unknown section";
+    std::string legend("Unknown section");
+    if      (inColumnI == "A") legend = legendA;
+    else if (inColumnI == "B") legend = legendB;
+    else if (inColumnI == "C") legend = legendC;
+    else if (inColumnI == "D") legend = legendD;
+    else if (inColumnI == "X") legend = legendX;
 
     std::string outColumnE = "<div class=\"paragraph" + inColumnI + "\" id=\"" + inColumnA + "-" + inColumnC + "\">";
     outColumnE += "<div class=\"absTitle\">" + inColumnA + " [" + inColumnB + "] &rarr; " + inColumnC + " [" + inColumnD + "]</div>";
@@ -277,7 +270,12 @@ int main(int argc, char **argv)
     if (!vm.count("workDir")) {
         opt_workDirectory = opt_inputDirectory + "/..";
     }
-    
+
+    if (opt_language == "de")
+        stringsFromDe();
+    else if (opt_language == "fr")
+        stringsFromFr();
+
     if (opt_language != "de") {
         getTranslationMap(opt_workDirectory + "/output",
                           opt_language);

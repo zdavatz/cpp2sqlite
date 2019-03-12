@@ -57,6 +57,9 @@ target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_
 
 #-------------------------------------------------------------------------------
 add_executable(interaction
+	src/int/lang/en.h
+	src/int/lang/de.h
+	src/int/lang/fr.h
 	src/int/main.cpp)
 
 target_include_directories(interaction PUBLIC "${CMAKE_SOURCE_DIR}/src/int")
