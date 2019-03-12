@@ -10,7 +10,7 @@
 #ifndef fr_h
 #define fr_h
 
-const std::string nameSection1_fr = "Risikoklasse";          // Risk class
+const std::string nameSection1_fr = "Classe de risque";      // Risk class
 const std::string nameSection2_fr = "Möglicher Effekt";      // Possible effect
 const std::string nameSection3_fr = "Mechanismus";           // Mechanism
 const std::string nameSection4_fr = "Empfohlene Massnahmen"; // Recommended measures

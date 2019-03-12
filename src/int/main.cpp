@@ -101,30 +101,19 @@ void outputInteraction(std::ofstream &ofs,
 void getTranslationMap(const std::string &outDir,
                        const std::string &language)
 {
-#ifdef DEBUG
-    std::cerr
-    << basename((char *)__FILE__) << ":" << __LINE__
-    << ", outDir" << outDir
-    << std::endl;
-#endif
-
     try {
         std::ifstream ifsKey(outDir + "/deepl.in.txt");
-        std::ifstream ifsValue(outDir + "/deepl.out." + language + ".txt");
-        //std::ifstream ifsValue2(outDir + "/deepl.err." + language + ".txt");
+        std::ifstream ifsValue(outDir + "/deepl.out." + language + ".txt");   // translated by deepl.sh
+        std::ifstream ifsValue2(outDir + "/deepl.out2." + language + ".txt"); // translated manually
 
         std::string key, val;
         while (std::getline(ifsKey, key)) {
             
             std::getline(ifsValue, val);
-            if (val.empty()) {
-                // DeepL failed to translate it
-                // TODO: get it from manually translated file
-                translatedMap.insert(std::make_pair(key, key));
-            }
-            else {
-                translatedMap.insert(std::make_pair(key, val));
-            }
+            if (val.empty())                    // DeepL failed to translate it
+                std::getline(ifsValue2, val);   // Get it from manually translated file
+
+            translatedMap.insert(std::make_pair(key, val));
         }
     }
     catch (std::exception &e) {
@@ -186,17 +175,10 @@ void parseCSV(const std::string &inFilename,
                 translatedVector.push_back(inColumnB);
                 translatedVector.push_back(inColumnC);
                 translatedVector.push_back(inColumnD);
-#ifdef DEBUG
-                std::cerr
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << ", or <" << inColumnE << ">"
-                << ", tr <" << translatedMap[inColumnE] << ">"
-                << std::endl;
-#endif
-                translatedVector.push_back(translatedMap[inColumnE]);// TODO: get translation
-                translatedVector.push_back(translatedMap[inColumnF]);// TODO: get translation
+                translatedVector.push_back(translatedMap[inColumnE]);
+                translatedVector.push_back(translatedMap[inColumnF]);
                 translatedVector.push_back(inColumnG);
-                translatedVector.push_back(translatedMap[inColumnH]);// TODO: get translation
+                translatedVector.push_back(translatedMap[inColumnH]);
                 translatedVector.push_back(inColumnI);
 
                 outputInteraction(ofs, translatedVector);
@@ -279,15 +261,6 @@ int main(int argc, char **argv)
     if (opt_language != "de") {
         getTranslationMap(opt_workDirectory + "/output",
                           opt_language);
-#ifdef DEBUG
-        for (auto s : translatedMap) {
-            std::cerr
-            << basename((char *)__FILE__) << ":" << __LINE__
-            << ", first <" << s.first << ">"
-            << ", sec <" << s.second << ">"
-            << std::endl;
-        }
-#endif
     }
 
     parseCSV(opt_inputDirectory + "/matrix.csv",

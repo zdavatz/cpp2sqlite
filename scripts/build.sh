@@ -30,4 +30,22 @@ make -j9 all
 cd $BLD_DIR  # it should be $BIN_DIR otherwise there is no point in doing make install
 time ./cpp2sqlite --lang=fr --inDir $SRC_DIR/input&
 time ./cpp2sqlite --inDir $SRC_DIR/input&
-./interaction --inDir $SRC_DIR/input
+
+#-------------------------------------------------------------------------------
+# STEP 1
+# Read file: input/matrix.csv
+# Write files: output/drug_interactions_de.csv output/deepl.in.txt
+#./interaction --inDir $SRC_DIR/input
+
+LANG=fr
+# STEP 2 for each language other than "de"
+# Read file: output/deepl.in.txt
+# Write files: output/deepl.out.$LANG.txt output/deepl.err.$LANG.txt
+#./deepl.sh
+
+# STEP 3
+# Manually translate output/deepl.err.$LANG.txt to output/deepl.out2.$LANG.txt
+
+# STEP 4
+# Write file: output/drug_interactions_$LANG.csv
+./interaction --inDir $SRC_DIR/input --lang $LANG
