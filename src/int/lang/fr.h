@@ -10,15 +10,15 @@
 #ifndef fr_h
 #define fr_h
 
-const std::string nameSection1_fr = "Classe de risque";      // Risk class
-const std::string nameSection2_fr = "Effet possible";      // Possible effect
-const std::string nameSection3_fr = "Mécanisme";           // Mechanism
+const std::string nameSection1_fr = "Classe de risque";     // Risk class
+const std::string nameSection2_fr = "Effet possible";       // Possible effect
+const std::string nameSection3_fr = "Mécanisme";            // Mechanism
 const std::string nameSection4_fr = "Mesures recommandées"; // Recommended measures
 
-const std::string legendA_fr = "Aucune mesure n'est nécessaire";      // No measures necessary
-const std::string legendB_fr = "Précautions recommandées";   // precautions recommended
-const std::string legendC_fr = "Suivi régulier";        // Regular monitoring
-const std::string legendD_fr = "Éviter la combinaison";           // Avoid combination
+const std::string legendA_fr = "Aucune mesure n'est nécessaire"; // No measures necessary
+const std::string legendB_fr = "Précautions recommandées";       // precautions recommended
+const std::string legendC_fr = "Suivi régulier";                 // Regular monitoring
+const std::string legendD_fr = "Éviter la combinaison";          // Avoid combination
 const std::string legendX_fr = "Contre-indiqué";                 // Contraindicated
 
 void stringsFromFr()

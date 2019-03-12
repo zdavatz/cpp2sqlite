@@ -62,7 +62,7 @@ void outputInteraction(std::ofstream &ofs,
                        const std::vector<std::string> &columnTrimmedVector)
 {
     if (columnTrimmedVector.size() != 9) {
-        std::clog << "Unexpected # columns: " << columnTrimmedVector.size() << std::endl;
+        std::cerr << "Unexpected # columns: " << columnTrimmedVector.size() << std::endl;
         return;
     }
     
@@ -173,9 +173,9 @@ void parseCSV(const std::string &inFilename,
                 std::vector<std::string> translatedVector;
                 
                 translatedVector.push_back(inColumnA);
-                translatedVector.push_back(ATC::getTextByAtc(inColumnB));
+                translatedVector.push_back(ATC::getTextByAtc(inColumnA));
                 translatedVector.push_back(inColumnC);
-                translatedVector.push_back(ATC::getTextByAtc(inColumnD));
+                translatedVector.push_back(ATC::getTextByAtc(inColumnC));
                 translatedVector.push_back(translatedMap[inColumnE]);
                 translatedVector.push_back(translatedMap[inColumnF]);
                 translatedVector.push_back(inColumnG);
