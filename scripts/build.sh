@@ -64,4 +64,9 @@ LANG=fr
 #       input/deepl.out2.$LANG.txt
 # Write file:
 #       output/drug_interactions_$LANG.csv
-./interaction --inDir $SRC_DIR/input --lang $LANG
+if [ "$(wc -l < $SRC_DIR/input/deepl.in.txt)" -ne "$(wc -l < $SRC_DIR/input/deepl.out.$LANG.txt)" ]; then
+    echo 'deepl.in.txt and deepl.out.$LANG.txt must have the same number of lines'
+else
+    ./interaction --inDir $SRC_DIR/input --lang $LANG
+fi
+
