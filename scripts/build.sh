@@ -47,5 +47,6 @@ LANG=fr
 # Manually translate output/deepl.err.$LANG.txt to output/deepl.out2.$LANG.txt
 
 # STEP 4
+# Read files: input/matrix.csv output/deepl.in.txt output/deepl.out.$LANG.txt
 # Write file: output/drug_interactions_$LANG.csv
 ./interaction --inDir $SRC_DIR/input --lang $LANG
