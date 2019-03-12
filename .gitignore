@@ -4,4 +4,6 @@ amiko_db_full_idx_de.db
 downloads/
 scripts/passwords
 output/
+# Lines starting with '#' will be ignored2
 build/
+scripts/temp/
