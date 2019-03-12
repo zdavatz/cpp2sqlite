@@ -594,7 +594,6 @@ Le métabolisme du zolpidem se fait essentiellement par les CYP3A4 et CYP1A2. Le
 Le patient doit faire l'objet d'une surveillance clinique pour déceler les symptômes d'une tendance accrue aux saignements. Vérifiez régulièrement les paramètres de coagulation sanguine (INR). Le producteur (Efient) déconseille l'administration de prasugrel avec des dérivés de coumarine.
 Le patient doit faire l'objet d'une surveillance clinique afin de déceler un risque accru de saignement, en particulier des symptômes de saignement gastro-intestinal.
 Le patient doit faire l'objet d'une surveillance clinique afin de déceler un risque accru de saignement, en particulier des symptômes de saignement gastro-intestinal. La tendance accrue aux saignements ne se reflète que partiellement dans un RIN modifié.
-Le patient doit faire l'objet d'une surveillance clinique afin de déceler un risque accru de saignement, en particulier des symptômes de saignement gastro-intestinal.
 Le patient doit faire l'objet d'une surveillance clinique afin d'accroître l'efficacité de l'Aliskiren. Les symptômes possibles sont : Diarrhée, dyspepsie, hypotension. Ajuster la dose d'aliskirène si nécessaire.
 Le patient doit faire l'objet d'une surveillance clinique pour déceler les symptômes d'une tendance accrue aux saignements. La tendance accrue aux saignements ne se reflète que partiellement dans un RIN modifié.
 L'inhibiteur de protéase indinavir inhibe le métabolisme du sildénafil par le CYP3A4.
@@ -2239,7 +2238,6 @@ La rifampicine induit fortement diverses enzymes du système cytochrome P-450, d
 La rifampicine induit fortement diverses enzymes, dont le CYP3A4 et le CYP2C19 et donc le métabolisme du clopidogrel.
 La rifampicine induit fortement diverses enzymes, dont le CYP3A4 et donc le métabolisme du clopidogrel.
 La rifampicine induit fortement diverses enzymes, dont le CYP3A4 et donc le métabolisme de la méthadone.
-La rifampicine induit fortement diverses enzymes, dont le CYP3A4 et donc le métabolisme de la méthadone....
 La rifampicine induit fortement diverses enzymes, dont le CYP3A4, le CYP2C9 et le CYP2C19 et donc aussi le métabolisme de la phénytoïne.
 La rifampicine induit fortement diverses enzymes, dont la MDR1 intestinale (P-glycoprotéine).
 La rifampicine induit fortement diverses enzymes, dont la glucuronidation de la lamotrigine.

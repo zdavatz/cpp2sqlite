@@ -62,6 +62,7 @@ LANG=fr
 #       input/deepl.in.txt
 #       input/deepl.out.$LANG.txt
 #       input/deepl.out2.$LANG.txt
+#       input/atc_codes_multi_lingual.txt
 # Write file:
 #       output/drug_interactions_$LANG.csv
 if [ "$(wc -l < $SRC_DIR/input/deepl.in.txt)" -ne "$(wc -l < $SRC_DIR/input/deepl.out.$LANG.txt)" ]; then
