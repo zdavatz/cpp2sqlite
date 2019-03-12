@@ -39,7 +39,7 @@ function translate() {
     #echo "translate $DATA"
 
 if false; then
-    wget  -d -v "$URL/translate?${GET_DATA}" -O - | jq -j '.translations[0].text' >> $OUT_FILE
+    wget  -d -v "$URL/translate?${GET_DATA}" -O - | jq -j '.translations[0].text' | tr -d '\n' >> $OUT_FILE
 else
     wget \
     --server-response \
@@ -48,7 +48,7 @@ else
     --method POST \
     --body-data "$POST_DATA" \
     "$URL/translate" \
-    -O - | jq -j '.translations[0].text' >> $OUT_FILE
+    -O - | jq -j '.translations[0].text' | tr -d '\n' >> $OUT_FILE
 fi
 
     if [ ${PIPESTATUS[0]} -ne 0 ] ; then
