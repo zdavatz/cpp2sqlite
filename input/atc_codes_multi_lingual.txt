@@ -1473,7 +1473,7 @@ J07BL01: Gelbfieber, lebend abgeschwächt; Fièvre jaune, virus vivant atténué
 J07BL: Gelbfieber-Impfstoffe; Les vaccins contre la fièvre jaune
 J07BM01: Humaner Papillomvirus-Impfstoff (Typen 6,11,16,18); Papillomavirus (types humains 6, 11, 16, 18)
 J07BM02: Humaner Papillomvirus-Impfstoff (Typen 16,18); Papillomavirus (types humains 16, 18)
-J07BM03: Humaner-Papillomvirus-Impfstoff
+J07BM03: Humaner-Papillomvirus-Impfstoff; Vaccin contre le virus du papillome humain
 J07BM: Papillomvirus-Impfstoffe; Vaccins contre le papillomavirus
 J07BX: Andere virale Impfstoffe; Autres vaccins viraux
 J07C: BAKTERIELLE UND VIRALE IMPFSTOFFE, KOMBINIERT; VACCINS BACTÉRIENS ET VIRAUX, COMBINÉS
