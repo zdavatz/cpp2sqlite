@@ -1480,8 +1480,7 @@ J07C: BAKTERIELLE UND VIRALE IMPFSTOFFE, KOMBINIERT; VACCINS BACTÉRIENS ET VIRA
 J07CA01: Diphtherie-Poliomyelitis-Tetanus; Diphtérie - poliomyélite - tétanos
 J07CA02: Diphtherie-Pertussis-Poliomyelitis-Tetanus; Diphtérie - coqueluche - poliomyélite - tétanos
 J07CA06: Diphtherie-Haemophilus-influenzae B-Pertussis-Poliomyelitis-Tetanus; Diphtérie - hémophilus influenzae B - coqueluche - poliomyélite - tétanos
-J07CA09: Diphtheria haemophilus influenzae
-J07CA09: Diphtherie-Haemophilus influenzae; Vaccin contre le virus du papillome humain
+J07CA09: Diphtherie-Haemophilus influenzae; Diphtérie - Haemophilus influenzae
 J07CA: Bakterielle und virale Impfstoffe, kombiniert; Vaccins bactériens et viraux, combinés
 J: ANTIINFEKTIVA ZUR SYSTEMISCHEN ANWENDUNG; Anti-infectieux généraux à usage systémique
 L01: ANTINEOPLASTISCHE MITTEL; Antinéoplasiques
