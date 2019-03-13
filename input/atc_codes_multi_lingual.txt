@@ -1473,15 +1473,15 @@ J07BL01: Gelbfieber, lebend abgeschwächt; Fièvre jaune, virus vivant atténué
 J07BL: Gelbfieber-Impfstoffe; Les vaccins contre la fièvre jaune
 J07BM01: Humaner Papillomvirus-Impfstoff (Typen 6,11,16,18); Papillomavirus (types humains 6, 11, 16, 18)
 J07BM02: Humaner Papillomvirus-Impfstoff (Typen 16,18); Papillomavirus (types humains 16, 18)
-J07BM03: "Humaner-Papillomvirus-Impfstoff
+J07BM03: Humaner-Papillomvirus-Impfstoff
 J07BM: Papillomvirus-Impfstoffe; Vaccins contre le papillomavirus
 J07BX: Andere virale Impfstoffe; Autres vaccins viraux
 J07C: BAKTERIELLE UND VIRALE IMPFSTOFFE, KOMBINIERT; VACCINS BACTÉRIENS ET VIRAUX, COMBINÉS
 J07CA01: Diphtherie-Poliomyelitis-Tetanus; Diphtérie - poliomyélite - tétanos
 J07CA02: Diphtherie-Pertussis-Poliomyelitis-Tetanus; Diphtérie - coqueluche - poliomyélite - tétanos
 J07CA06: Diphtherie-Haemophilus-influenzae B-Pertussis-Poliomyelitis-Tetanus; Diphtérie - hémophilus influenzae B - coqueluche - poliomyélite - tétanos
-J07CA09: Diphtheria haemophilus influenzae"
-J07CA09: Diphtherie-Haemophilus influenzae "; "Vaccin contre le virus du papillome humain
+J07CA09: Diphtheria haemophilus influenzae
+J07CA09: Diphtherie-Haemophilus influenzae; Vaccin contre le virus du papillome humain
 J07CA: Bakterielle und virale Impfstoffe, kombiniert; Vaccins bactériens et viraux, combinés
 J: ANTIINFEKTIVA ZUR SYSTEMISCHEN ANWENDUNG; Anti-infectieux généraux à usage systémique
 L01: ANTINEOPLASTISCHE MITTEL; Antinéoplasiques
