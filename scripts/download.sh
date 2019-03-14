@@ -86,7 +86,6 @@ if [ ! -f $WD/passwords ] ; then
 else
 source $WD/passwords
 URL="https://db.swisspeddose.ch"
-
 POST_DATA="log=${USERNAME}&pwd=${PASSWORD}&a=login"
 
 wget --keep-session-cookies \
