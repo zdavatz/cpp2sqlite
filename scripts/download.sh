@@ -86,7 +86,7 @@ if [ ! -f $WD/passwords ] ; then
 else
 source $WD/passwords
 URL="https://db.swisspeddose.ch"
-FILE3="$URL/app/uploads/xml_publication/swisspeddosepublication-2019-02-21.xml"
+FILE3="$URL/app/uploads/xml_publication/swisspeddosepublication-2019-03-07.xml"
 
 POST_DATA='log=${USERNAME}&pwd=${PASSWORD}'
 
