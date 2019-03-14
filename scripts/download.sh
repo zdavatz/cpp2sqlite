@@ -86,32 +86,42 @@ if [ ! -f $WD/passwords ] ; then
 else
 source $WD/passwords
 URL="https://db.swisspeddose.ch"
-FILE3="$URL/app/uploads/xml_publication/swisspeddosepublication-2019-02-21.xml"
 
-POST_DATA='log=${USERNAME}&pwd=${PASSWORD}'
+POST_DATA="log=${USERNAME}&pwd=${PASSWORD}&a=login"
 
-wget --save-cookies cookies.txt \
-     --keep-session-cookies \
-     --delete-after \
-     --post-data=$POST_DATA \
-     "$URL/sign-in"
+wget --keep-session-cookies \
+    --save-cookies cookiesB.txt \
+    --delete-after \
+    --post-data=$POST_DATA \
+    "$URL/sign-in" -O signed-in.html
 
-# | escaped to %7C
-COOKIE1='_pk_id.1.308c=c078669ae31d3522.1551272544.2.1551288031.1551287960.'
-COOKIE2='spd_terms_accepted_=1'
-COOKIE3='_pk_ses.1.308c=1'
-COOKIE4="wordpress_logged_in_1880a7b331025031dc6ad3fbaba977cf=${USERNAME}%7C${PASSWORD}%7CNqC0nhspo8dhQgNCtUB52CDopnUhn5FXs0R7wukyFI1%7C5ceeab44337c84cf3f25997cb96b854fba5fbf14562b5c04edf92a730088e1b7"
-COOKIE5='_icl_current_language=en'
+wget --header "Host: db.swisspeddose.ch" \
+	--user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Gecko/20100101 Firefox/65.0' \
+	--header "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
+	--header "Accept-Language: de,en-US;q=0.7,en;q=0.3" \
+	--referer "$URL/sign-in/" \
+    --cookies=on \
+    --load-cookies=cookiesB.txt \
+	--header "Upgrade-Insecure-Requests: 1" \
+    --keep-session-cookies \
+	"$URL/dashboard" -O dashboard.html
+
+FILENAME=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication' dashboard.html | awk -F\" '{print $4}')
+
 wget --header "Host: db.swisspeddose.ch" \
 	--user-agent "Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0" \
 	--header "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
 	--header "Accept-Language: de,en-US;q=0.7,en;q=0.3" \
 	--referer "$URL/dashboard/" \
-	--header "Cookie: ${COOKIE1}; ${COOKIE2}; ${COOKIE3}; ${COOKIE4}; ${COOKIE5}" \
-	--header "Upgrade-Insecure-Requests: 1" \
-	$FILE3 -O swisspeddosepublication.xml
+    --cookies=on \
+    --load-cookies=cookiesB.txt \
+    --header 'Upgrade-Insecure-Requests: 1' \
+    "${URL}${FILENAME}" \
+	-O swisspeddosepublication.xml
 
-rm cookies.txt
+rm cookies*.txt
+rm dashboard.html
+rm signed-in.html
 fi
 
 #-------------------------------------------------------------------------------
@@ -126,7 +136,7 @@ wget --save-cookies cookieA.txt --keep-session-cookies $URL
 VS_VALUE=$(grep -w __VIEWSTATE index.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
 EVVAL_VALUE=$(grep -w __EVENTVALIDATION index.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
 
-# urlencode VS_VALUE and VS_VALUE, alternatively use curl with --data-urlencode
+# urlencode VS_VALUE and EVVAL_VALUE, alternatively use curl with --data-urlencode
 VS_VALUE=$(urlencode $VS_VALUE)
 EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
 
@@ -151,7 +161,7 @@ wget --header 'Host: download.swissmedicinfo.ch' \
 VS_VALUE=$(grep -w __VIEWSTATE index2.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
 EVVAL_VALUE=$(grep -w __EVENTVALIDATION index2.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
 
-# urlencode VS_VALUE and VS_VALUE, alternatively use curl with --data-urlencode
+# urlencode VS_VALUE and EVVAL_VALUE, alternatively use curl with --data-urlencode
 VS_VALUE=$(urlencode $VS_VALUE)
 EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
 
@@ -175,7 +185,7 @@ wget --header 'Host: download.swissmedicinfo.ch' \
 	$URL \
 	--output-document $TARGET
 
-file --brief $TARGET | grep "Zip archive data" # Check that we got a zip file with:
+file $TARGET | grep "Zip archive data" # Check that we got a zip file with:
 RESULT=$?
 if [ $RESULT -ne 0 ] ; then
     file --brief $TARGET
