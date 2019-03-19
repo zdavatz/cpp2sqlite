@@ -150,6 +150,8 @@ MedicineList & parseXML(const std::string &filename,
                 if ((lan == language) && (typ == type)) {
                     Medicine Med;
                     Med.title = v.second.get("title", "");
+                    boost::replace_all(Med.title, "&#038;", "&"); // Issue #49
+                    
                     Med.auth = v.second.get("authHolder", "");
                     
                     Med.subst = v.second.get("substances", "");
