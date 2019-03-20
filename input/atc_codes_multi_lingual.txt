@@ -2258,6 +2258,7 @@ R03AK07: Formoterol und andere Mittel bei obstruktiven Atemwegserkrankungen; For
 R03AK10: Vilanterol und Fluticasonfuroat; Vilanterol et furoate de fluticasone
 R03AK11: Formoterol und Fluticason; Formotérol et Fluticasone
 R03AK: Sympathomimetika in Kombination mit Corticosteroiden oder anderen Mitteln, exkl. Anticholinergika; Sympathomimétiques en association avec des corticostéroïdes ou d'autres agents, sauf anticholinergiques
+R03AL01: Fenoterol und Ipratropiumbromid; Fénotérol et bromure d'ipratropium
 R03AL02: Salbutamol und Ipratropiumbromid; Salbutamol et bromure d'ipratropium
 R03AL03: Vilanterol und Umeclidiniumbromid; Vilanterol et bromure d'umeclidinium
 R03AL04: Indacaterol und Glycopyrroniumbromid; Indacatérol et bromure de glycopyrronium
