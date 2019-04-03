@@ -163,7 +163,6 @@ A07EA: Corticosteroide mit lokaler Wirkung; Corticostéroïdes à action locale
 A07EB01: Cromoglicinsäure; Acide cromoglicique
 A07EB: Antiallergika, exkl. Corticosteroide; Antiallergiques, sauf corticostéroïdes
 A07EC01: Sulfasalazin; Sulfasalazine
-A07EC02: Mesalazin; Mesalazine
 A07EC02: Mesalazin; Mésalazine
 A07EC: Aminosalicylsäure und ähnliche Mittel; Acide aminosalicylique et compositions similaires
 A07F: MIKROBIELLE ANTIDIARRHOIKA; AGENTS ANTIDIARRHÉIQUES MICROBIENS
