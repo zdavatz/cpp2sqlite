@@ -2643,7 +2643,6 @@ V10BX01: [89Sr]Strontiumchlorid; [89Sr]Strontium chlorure
 V10BX02: [153Sm]Samariumlexidronam; [153Sm]Samarium lexidronam
 V10BX: Verschiedene Radiopharmaka zur Schmerzlinderung; Divers produits radiopharmaceutiques pour le soulagement de la douleur
 V10X: ANDERE RADIOTHERAPEUTIKA; AUTRES PRODUITS RADIOTHÉRAPEUTIQUES
-V10X: ANDERE RADIOTHERAPEUTIKA; Autres produits radiopharmaceutiques à usage thérapeutique
 V10XA01: [131I]Natriumiodid; [131I]Iode sodium iodide
 V10XA: [131I]Iodverbindungen; [131I]Composés iodés
 V10XX02: [90Y]Ibritumomab tiuxetan; [90Y]Ibritumomab tiuxetan
