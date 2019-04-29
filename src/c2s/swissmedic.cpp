@@ -130,7 +130,7 @@ void parseXLXS(const std::string &filename)
 
 // Return count added
 int getAdditionalNames(const std::string &rn,
-                       std::set<std::string> &gtinUsed,
+                       std::set<std::string> &gtinUsedSet,
                        GTIN::oneFachinfoPackages &packages,
                        const std::string &language)
 {
@@ -143,8 +143,8 @@ int getAdditionalNames(const std::string &rn,
             continue;
         
         std::string g13 = gtin[rowInt];
-        it = gtinUsed.find(g13);
-        if (it == gtinUsed.end()) { // not found list of used GTINs, we must add the name
+        it = gtinUsedSet.find(g13);
+        if (it == gtinUsedSet.end()) { // not found list of used GTINs, we must add the name
             countAdded++;
             statsAugmentedGtinCount++;
             statsTotalGtinCount++;
@@ -174,7 +174,7 @@ int getAdditionalNames(const std::string &rn,
             if (!paf.empty())
                 onePackageInfo += paf;
 
-            gtinUsed.insert(g13);
+            gtinUsedSet.insert(g13);
             packages.gtin.push_back(g13);
             packages.name.push_back(onePackageInfo);
         }

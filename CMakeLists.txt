@@ -41,6 +41,7 @@ add_executable(cpp2sqlite
 	src/c2s/aips.hpp src/c2s/aips.cpp
 	src/c2s/refdata.hpp src/c2s/refdata.cpp
 	src/c2s/swissmedic.hpp src/c2s/swissmedic.cpp
+	src/c2s/sappinfo.hpp src/c2s/sappinfo.cpp
 	src/c2s/bag.hpp src/c2s/bag.cpp
 	src/c2s/gtin.hpp src/c2s/gtin.cpp
 	src/c2s/beautify.hpp src/c2s/beautify.cpp

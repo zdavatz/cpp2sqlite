@@ -20,23 +20,7 @@
 #include "atc.hpp"
 #include "report.hpp"
 
-#define WITH_SEPARATE_TABLE_HEADER
-
-////////////////////////////////////////////////////////////////////////////////
-#define TAG_TABLE_L     "<table class=\"s14\">"
-#define TAG_TABLE_R     "</table>"
-#define TAG_TD_L        "<td class=\"s13\"><p class=\"s11\">"
-#define TAG_TD_R        "</p><div class=\"s12\"/></td>"
-
-#ifdef WITH_SEPARATE_TABLE_HEADER
-#define TAG_TH_L        "<th>"
-#define TAG_TH_R        "</th>"
-#else
-#define TAG_TH_L        TAG_TD_L
-#define TAG_TH_R        TAG_TD_R
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
+#include "html_tags.h"
 
 namespace pt = boost::property_tree;
 
@@ -425,7 +409,7 @@ void getDosageById(const std::string &id, std::vector<_dosage> &dosages)
 }
 
 // Each "case" generates one table
-// One ATC can have mnay cases and therefore mutliple tables
+// One ATC can have mnay cases and therefore multiple tables
 //
 std::string getHtmlByAtc(const std::string atc)
 {

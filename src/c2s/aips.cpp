@@ -10,6 +10,7 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <map>
 #include <libgen.h>     // for basename()
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -33,7 +34,7 @@ namespace AIPS
     unsigned int statsAtcFromEphaCount = 0;
     unsigned int statsAtcFromAipsCount = 0;
     unsigned int statsAtcFromSwissmedicCount = 0;
-    unsigned int statsAtcNotFoundCount = 0;
+    //unsigned int statsAtcNotFoundCount = 0;
 
     unsigned int statsAtcTextFoundCount = 0;
     unsigned int statsPedTextFoundCount = 0;
@@ -43,6 +44,8 @@ namespace AIPS
     // Usage stats
     std::vector<std::string> statsDuplicateRegnrsVec;
     std::set<std::string> statsMissingImgAltSet;
+    //std::map<std::string, std::string> statsTitlesWithInvalidATCMap;
+    std::vector<std::string> statsTitlesWithInvalidATCVec;
 
 void addStatsMissingAlt(const std::string &regnrs, const int sectionNumber)
 {
@@ -50,6 +53,11 @@ void addStatsMissingAlt(const std::string &regnrs, const int sectionNumber)
     statsMissingImgAltSet.insert(regnrs);
 }
 
+void addStatsInvalidAtc(const std::string &title, const std::string &rns)
+{
+    statsTitlesWithInvalidATCVec.push_back("RN: <" + rns + "> " + ", title: <" + title + "> ");
+}
+    
 static
 void printFileStats(const std::string &filename,
                     const std::string &language,
@@ -62,13 +70,22 @@ void printFileStats(const std::string &filename,
     REP::html_li("medicalInformation " + type + " " + language + " " + std::to_string(medList.size()));
     REP::html_end_ul();
     
-    REP::html_h3("ATC codes " + std::to_string(statsAtcFromEphaCount + statsAtcFromAipsCount + statsAtcFromSwissmedicCount + statsAtcNotFoundCount));
+    REP::html_h3("ATC codes " + std::to_string(statsAtcFromEphaCount + statsAtcFromAipsCount + statsAtcFromSwissmedicCount + statsTitlesWithInvalidATCVec.size()));
     REP::html_start_ul();
     REP::html_li("from aips: " + std::to_string(statsAtcFromAipsCount));
     REP::html_li("from swissmedic: " + std::to_string(statsAtcFromSwissmedicCount));
     // There will be no ATC code in atc_columns
-    REP::html_li("no ATC code in atc_columns: " + std::to_string(statsAtcNotFoundCount));
+    //REP::html_li("no ATC code in atc_columns: " + std::to_string(statsTitlesWithInvalidATCVec.size())); // obsolete statsAtcNotFoundCount
     REP::html_end_ul();
+
+    if (statsTitlesWithInvalidATCVec.size() > 0) {
+        REP::html_p("Titles with empty or invalid ATC code: " + std::to_string(statsTitlesWithInvalidATCVec.size()));
+        REP::html_start_ul();
+        for (auto s : statsTitlesWithInvalidATCVec)
+            REP::html_li(s);
+        
+        REP::html_end_ul();
+    }
 
     REP::html_h3("ATC code text");
     REP::html_start_ul();
@@ -206,10 +223,14 @@ MedicineList & parseXML(const std::string &filename,
                         else {
                             // Fallback 2
                             Med.atc = SWISSMEDIC::getAtcFromFirstRn(rnVector[0]);
-                            if (!Med.atc.empty())
+                            if (!Med.atc.empty()) {
                                 statsAtcFromSwissmedicCount++;
-                            else
-                                statsAtcNotFoundCount++;
+                            }
+                            else {
+                                //statsAtcNotFoundCount++;
+                                // Add it to the report
+                                AIPS::addStatsInvalidAtc(Med.title, Med.regnrs);
+                            }
                         }
                     }
                     

@@ -20,6 +20,8 @@ namespace AIPS
                             bool verbose);
     void addStatsMissingAlt(const std::string &regnrs,
                             const int sectionNumber);
+    void addStatsInvalidAtc(const std::string &title,
+                            const std::string &atc);
     void printUsageStats();
 }
 

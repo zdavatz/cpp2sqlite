@@ -35,6 +35,7 @@
 #include "refdata.hpp"
 #include "swissmedic.hpp"
 #include "bag.hpp"
+#include "sappinfo.hpp"
 
 #include "sqlDatabase.hpp"
 #include "beautify.hpp"
@@ -68,6 +69,7 @@
 //      prefix "Section" for numbers > 100
 #define SECTION_NUMBER_PEDDOSE    9050
 #define SECTION_NUMBER_FOOTER     9051
+#define SECTION_NUMBER_SAPPINFO   9052
 
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
@@ -454,7 +456,14 @@ void getHtmlFromXml(std::string &xml,
     html = xml;
     return;
 #endif
-    
+
+#ifdef DEBUG
+    if (atc.empty())
+        std::clog << basename((char *)__FILE__) << ":" << __LINE__
+        << ", Empty ATC for rn:" << regnrs
+        << std::endl;
+#endif
+
     //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << regnrs << std::endl;
 
     cleanupXml(xml, regnrs);  // and escape some children tags
@@ -576,7 +585,7 @@ void getHtmlFromXml(std::string &xml,
         // This type of XML requires very little processing
         html += xml;
 
-        goto doPedDose;
+        goto doExtraSections;
     }
 
     html += "  <div id=\"monographie\" name=\"" + regnrs + "\">\n\n";
@@ -855,9 +864,10 @@ void getHtmlFromXml(std::string &xml,
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
     }
 
-doPedDose:
+doExtraSections:
     // Add a section that was not in the XML contents
     // PedDose
+    if (!atc.empty())
     {
         std::string pedHtml = PED::getHtmlByAtc(atc);
         if (!pedHtml.empty()) {
@@ -875,6 +885,29 @@ doPedDose:
             // Append 'section#' to a vector to be used in column "ids_str"
             sectionId.push_back(sectionPedDose);
             sectionTitle.push_back(sectionPedDoseName);
+        }
+    }
+
+    // Add another section that was not in the XML contents
+    // Sappinfo
+    if (!atc.empty())
+    {
+        std::string sappHtml = SAPP::getHtmlByAtc(atc);
+        if (!sappHtml.empty()) {
+            std::string sectionSappInfo("Section" + std::to_string(SECTION_NUMBER_SAPPINFO));
+            std::string sectionSappInfoName("SappInfo");
+            
+            if (hasXmlHeader)
+                html += "\n  </div>"; // terminate previous section before starting a new one
+            
+            html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo + "\">\n";
+            html += "<div class=\"absTitle\">" + sectionSappInfoName + "</div>";
+            html += sappHtml;
+            html += "   </div>\n";
+            
+            // Append 'section#' to a vector to be used in column "ids_str"
+            sectionId.push_back(sectionSappInfo);
+            sectionTitle.push_back(sectionSappInfoName);
         }
     }
 
@@ -1013,7 +1046,7 @@ int main(int argc, char **argv)
     std::string jsonFilename = "/epha_products_" + opt_language + "_json.json";
     EPHA::parseJSON(opt_workDirectory + "/downloads" + jsonFilename, flagVerbose);
 #endif
-
+    
     PED::parseXML(opt_workDirectory + "/downloads/swisspeddosepublication.xml",
                   opt_language);
 #ifdef DEBUG_PED_DOSE
@@ -1045,6 +1078,8 @@ int main(int argc, char **argv)
         REP::html_li(std::to_string(countBagGtinInRefdata(bagList)) + " GTIN are also in refdata");
         REP::html_end_ul();
     }
+    
+    SAPP::parseXLXS(opt_inputDirectory + "/sappinfo.xlsx", opt_language);
 
     if (flagXml) {
         std::cerr << "Creating XML not yet implemented" << std::endl;
@@ -1172,6 +1207,17 @@ int main(int argc, char **argv)
 
             // content
             auto firstAtc = ATC::getFirstAtcInAtcColumn(m.atc);
+            if (firstAtc.empty()) {
+#ifdef DEBUG
+                std::clog << basename((char *)__FILE__) << ":" << __LINE__
+                << ", title: <" << m.title << ">"
+                << ", atc: <" << m.atc << ">"     // nicht vergeben
+                << std::endl;
+#endif
+//                // Add it to the report
+//                AIPS::addStatsInvalidAtc(m.title, m.regnrs);
+            }
+
             std::vector<std::string> sectionId;    // HTML section IDs
             std::vector<std::string> sectionTitle; // HTML section titles
             {
@@ -1298,6 +1344,7 @@ int main(int argc, char **argv)
         BAG::printUsageStats();
         ATC::printUsageStats();
         PED::printUsageStats();
+        SAPP::printUsageStats();
 
         AIPS::destroyStatement(statement);
 
