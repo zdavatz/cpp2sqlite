@@ -895,9 +895,9 @@ doExtraSections:
         std::string sappHtml = SAPP::getHtmlByAtc(atc);
         if (!sappHtml.empty()) {
             std::string sectionSappInfo("Section" + std::to_string(SECTION_NUMBER_SAPPINFO));
-            std::string sectionSappInfoName("SappInfo");
+            std::string sectionSappInfoName("Sappinfo");
             
-            if (hasXmlHeader)
+            if (hasXmlHeader && atc.empty())
                 html += "\n  </div>"; // terminate previous section before starting a new one
             
             html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo + "\">\n";
@@ -1214,8 +1214,6 @@ int main(int argc, char **argv)
                 << ", atc: <" << m.atc << ">"     // nicht vergeben
                 << std::endl;
 #endif
-//                // Add it to the report
-//                AIPS::addStatsInvalidAtc(m.title, m.regnrs);
             }
 
             std::vector<std::string> sectionId;    // HTML section IDs

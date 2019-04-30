@@ -23,12 +23,19 @@ namespace SAPP
     
     struct _breastfeed {
         _common c;
-        std::string maxDailyDose;        // max. verabreichte Tagesdosis
+        std::string comments;           // Bemerkungen zur Dosierung
+        std::string maxDailyDose;       // max. verabreichte Tagesdosis
     };
 
     struct _pregnancy {
         _common c;
-        std::string comments;        // Bemerkungen
+        std::string link;        // SAPP-Monographie
+        std::string max1;        // max. verabreichte Tagesdosis 1. Trimenon
+        std::string max2;        // max. verabreichte Tagesdosis 2. Trimenon
+        std::string max3;        // max. verabreichte Tagesdosis 3. Trimenon
+        //std::string Dosis;     // Dosisanpassung
+        std::string periDosi;    // Peripartale Dosierung
+        std::string periBeme;    // Bemerkungen zur peripartalen Dosierung
     };
 
     void parseXLXS(const std::string &filename,
@@ -36,10 +43,6 @@ namespace SAPP
     std::string getHtmlByAtc(const std::string atc);
     
     void printUsageStats();
-    
-//private:
-    static void getBreastFeedByAtc(const std::string &atc, std::vector<_breastfeed> &bfv);
-    static void getPregnancyByAtc(const std::string &atc, std::vector<_pregnancy> &pv);
 }
 
 #endif /* sappinfo_hpp */

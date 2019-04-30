@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(AIPS VERSION "1.0.229")
+project(AIPS VERSION "1.1.283")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -50,7 +50,8 @@ add_executable(cpp2sqlite
 	src/c2s/peddose.hpp src/c2s/peddose.cpp
     src/c2s/report.hpp src/c2s/report.cpp
 	src/c2s/ean13/functii.cpp src/c2s/ean13/functii.h
-	src/c2s/medicine.h)
+	src/c2s/medicine.h
+	src/c2s/html_tags.h)
 
 target_include_directories(cpp2sqlite PUBLIC "${CMAKE_SOURCE_DIR}/src/c2s")
 target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})

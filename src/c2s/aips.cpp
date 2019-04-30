@@ -34,7 +34,6 @@ namespace AIPS
     unsigned int statsAtcFromEphaCount = 0;
     unsigned int statsAtcFromAipsCount = 0;
     unsigned int statsAtcFromSwissmedicCount = 0;
-    //unsigned int statsAtcNotFoundCount = 0;
 
     unsigned int statsAtcTextFoundCount = 0;
     unsigned int statsPedTextFoundCount = 0;
@@ -44,7 +43,6 @@ namespace AIPS
     // Usage stats
     std::vector<std::string> statsDuplicateRegnrsVec;
     std::set<std::string> statsMissingImgAltSet;
-    //std::map<std::string, std::string> statsTitlesWithInvalidATCMap;
     std::vector<std::string> statsTitlesWithInvalidATCVec;
 
 void addStatsMissingAlt(const std::string &regnrs, const int sectionNumber)
@@ -74,8 +72,6 @@ void printFileStats(const std::string &filename,
     REP::html_start_ul();
     REP::html_li("from aips: " + std::to_string(statsAtcFromAipsCount));
     REP::html_li("from swissmedic: " + std::to_string(statsAtcFromSwissmedicCount));
-    // There will be no ATC code in atc_columns
-    //REP::html_li("no ATC code in atc_columns: " + std::to_string(statsTitlesWithInvalidATCVec.size())); // obsolete statsAtcNotFoundCount
     REP::html_end_ul();
 
     if (statsTitlesWithInvalidATCVec.size() > 0) {
@@ -227,7 +223,6 @@ MedicineList & parseXML(const std::string &filename,
                                 statsAtcFromSwissmedicCount++;
                             }
                             else {
-                                //statsAtcNotFoundCount++;
                                 // Add it to the report
                                 AIPS::addStatsInvalidAtc(Med.title, Med.regnrs);
                             }
