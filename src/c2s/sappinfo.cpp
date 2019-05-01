@@ -152,16 +152,10 @@ void parseXLXS(const std::string &filename,
 {
     const std::unordered_set<int> acceptedFiltersSet = { 1, 5, 6, 9 };
 
-    // TODO: localization, see pedddose parseXML()
     {
-        // Define localized lookup table for Sappinfo table header
+        // Define localized lookup table for Sappinfo table headers
         std::vector<std::string> &th = th_en;
-        for (int i=0; i< th_key.size(); i++)
-            thTitleMap.insert(std::make_pair(th_key[i], th[i]));
-
         std::vector<std::string> &th_2 = th_en_2;
-        for (int i=0; i< th_key_2.size(); i++)
-            thTitleMap_2.insert(std::make_pair(th_key_2[i], th_2[i]));
 
         if (language == "de") {
             th = th_de;
@@ -171,6 +165,12 @@ void parseXLXS(const std::string &filename,
             th = th_fr;
             th_2 = th_fr_2;
         }
+
+        for (int i=0; i< th_key.size(); i++)
+            thTitleMap.insert(std::make_pair(th_key[i], th[i]));
+
+        for (int i=0; i< th_key_2.size(); i++)
+            thTitleMap_2.insert(std::make_pair(th_key_2[i], th_2[i]));
     }
 
     xlnt::workbook wb;
