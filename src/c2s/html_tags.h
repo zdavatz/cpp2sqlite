@@ -12,6 +12,9 @@
 
 #define WITH_SEPARATE_TABLE_HEADER
 
+#define COL_SPAN_L     "<col span=\""
+#define COL_SPAN_R     "\" style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>"
+
 #define TAG_TABLE_L     "<table class=\"s14\">"
 #define TAG_TABLE_R     "</table>"
 #define TAG_TD_L        "<td class=\"s13\"><p class=\"s11\">"

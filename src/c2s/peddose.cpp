@@ -501,8 +501,7 @@ std::string getHtmlByAtc(const std::string atc)
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
 
-        std::string tableColGroup("<col span=\"" + std::to_string(numColumns) + "\" style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>");
-
+        std::string tableColGroup(COL_SPAN_L + std::to_string(numColumns) + COL_SPAN_R);
         tableColGroup = "<colgroup>" + tableColGroup + "</colgroup>";
 
         std::string tableHeader;

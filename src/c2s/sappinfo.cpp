@@ -318,43 +318,31 @@ void parseXLXS(const std::string &filename,
     printFileStats(filename);
 }
 
+// There could be multiple lines for the same ATC. Return a vector
+template <class T>
+void getByAtc(const std::string &atc,
+              const std::vector<T> &inVec,
+              std::vector<T> &outVec)
+{
+    for (auto item : inVec)
+        for (auto a : item.c.atcCodeVec)
+            if (a == atc) {
+                outVec.push_back(item);
+                
+                // Break out of the inner loop, to move onto the next item
+                // Not a big speed gain for only two items, but logically it makes sense
+                break;
+            }
+}
+
 static void getBreastFeedByAtc(const std::string &atc, std::vector<_breastfeed> &bfv)
 {
-#if 0
-    for (auto item : breastFeedVec)
-        if (item.c.atcCodes == atc)
-            bfv.push_back(item);
-#else
-    for (auto item : breastFeedVec)
-        for (auto a : item.c.atcCodeVec)
-            if (a == atc) {
-                bfv.push_back(item);
-
-                // Break out of the inner loop, to move onto the next item
-                // Not a big speed gain for only two items, but logically it makes sense
-                break;
-            }
-#endif
+    getByAtc<_breastfeed>(atc, breastFeedVec, bfv);
 }
     
-// There could be multiple lines for the same ATC. Return a vector
 static void getPregnancyByAtc(const std::string &atc, std::vector<_pregnancy> &pv)
 {
-#if 0
-    for (auto item : pregnancyVec)
-        if (item.c.atcCodes == atc)
-            pv.push_back(item);
-#else
-    for (auto item : pregnancyVec)
-        for (auto a : item.c.atcCodeVec)
-            if (a == atc) {
-                pv.push_back(item);
-
-                // Break out of the inner loop, to move onto the next item
-                // Not a big speed gain for only two items, but logically it makes sense
-                break;
-            }
-#endif
+    getByAtc<_pregnancy>(atc, pregnancyVec, pv);
 }
 
 std::string getHtmlByAtc(const std::string atc)
@@ -409,8 +397,7 @@ std::string getHtmlByAtc(const std::string atc)
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
 
-        std::string tableColGroup("<col span=\"" + std::to_string(numColumns) + "\" style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>");
-
+        std::string tableColGroup(COL_SPAN_L + std::to_string(numColumns) + COL_SPAN_R);
         tableColGroup = "<colgroup>" + tableColGroup + "</colgroup>";
         
         std::string tableHeader;
@@ -534,8 +521,7 @@ std::string getHtmlByAtc(const std::string atc)
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
         
-        std::string tableColGroup("<col span=\"" + std::to_string(numColumns) + "\" style=\"background-color: #EEEEEE; padding-right: 5px; padding-left: 5px\"/>");
-        
+        std::string tableColGroup(COL_SPAN_L + std::to_string(numColumns) + COL_SPAN_R);
         tableColGroup = "<colgroup>" + tableColGroup + "</colgroup>";
         
         std::string tableHeader;
