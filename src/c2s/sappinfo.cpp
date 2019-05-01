@@ -43,7 +43,7 @@
 
 #define FIRST_DATA_ROW_INDEX    1
 
-#define DEBUG_SAPPINFO
+//#define DEBUG_SAPPINFO
 
 namespace SAPP
 {
@@ -270,6 +270,8 @@ void parseXLXS(const std::string &filename,
         pr.c.indication = aSingleRow[COLUMN_2_C];
         pr.c.typeOfApplication = aSingleRow[COLUMN_2_H];
         pr.link = aSingleRow[COLUMN_2_AA];
+        if (pr.link == "nein")
+            pr.link.clear();
         pr.max1 = aSingleRow[COLUMN_2_I];
         pr.max2 = aSingleRow[COLUMN_2_J];
         pr.max3 = aSingleRow[COLUMN_2_K];
