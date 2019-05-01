@@ -12,6 +12,7 @@
 #include <set>
 #include <unordered_set>
 #include <libgen.h>     // for basename()
+#include <boost/algorithm/string.hpp>
 
 #include <xlnt/xlnt.hpp>
 
@@ -179,6 +180,7 @@ void parseXLXS(const std::string &filename,
 
     std::clog << std::endl << "Reading sappinfo XLSX" << std::endl;
 
+    // Breast-feeding sheet
     auto ws = wb.sheet_by_index(0);
     sheetTitle[0] = ws.title();
     std::clog << "\tSheet: " << ws.title() << std::endl;
@@ -208,7 +210,14 @@ void parseXLXS(const std::string &filename,
         sheetBreastFeeding.push_back(aSingleRow);
         
         _breastfeed bf;
-        bf.c.atcCode = aSingleRow[COLUMN_R];
+        bf.c.atcCodes = aSingleRow[COLUMN_R];
+#if 1 // issue 53
+        // Also break it down into single ATCs
+        boost::algorithm::split(bf.c.atcCodeVec, bf.c.atcCodes, boost::is_any_of(ATC_LIST_SEPARATOR), boost::token_compress_on);
+
+        for (auto a : bf.c.atcCodeVec)
+            statsUniqueAtcSet.insert(a);
+#endif
         bf.c.activeSubstance = aSingleRow[COLUMN_G];
         bf.c.mainIndication = aSingleRow[COLUMN_B];
         bf.c.indication = aSingleRow[COLUMN_C];
@@ -216,7 +225,6 @@ void parseXLXS(const std::string &filename,
         bf.maxDailyDose = aSingleRow[COLUMN_I];
         bf.comments = aSingleRow[COLUMN_J];
         breastFeedVec.push_back(bf);
-        statsUniqueAtcSet.insert(bf.c.atcCode);
 #ifdef DEBUG_SAPPINFO
         if (aSingleRow[COLUMN_R] == "J02AC01") {
             std::clog
@@ -264,7 +272,14 @@ void parseXLXS(const std::string &filename,
         sheetPregnancy.push_back(aSingleRow);
         
         _pregnancy pr;
-        pr.c.atcCode = aSingleRow[COLUMN_2_Z];
+        pr.c.atcCodes = aSingleRow[COLUMN_2_Z];
+#if 1 // issue 53
+        // Also break it down into single ATCs
+        boost::algorithm::split(pr.c.atcCodeVec, pr.c.atcCodes, boost::is_any_of(ATC_LIST_SEPARATOR), boost::token_compress_on);
+        
+        for (auto a : pr.c.atcCodeVec)
+            statsUniqueAtcSet.insert(a);
+#endif
         pr.c.activeSubstance = aSingleRow[COLUMN_2_G];
         pr.c.mainIndication = aSingleRow[COLUMN_2_B];
         pr.c.indication = aSingleRow[COLUMN_2_C];
@@ -277,11 +292,10 @@ void parseXLXS(const std::string &filename,
         pr.max3 = aSingleRow[COLUMN_2_K];
         pr.periDosi = aSingleRow[COLUMN_2_M];
         pr.periBeme = aSingleRow[COLUMN_2_N];
-        // TODO:
         pregnancyVec.push_back(pr);
-        statsUniqueAtcSet.insert(pr.c.atcCode);
 #ifdef DEBUG_SAPPINFO
-        if (aSingleRow[COLUMN_2_Z] == "J01FA01") {
+        if (aSingleRow[COLUMN_2_Z] == "J01FA01")
+        {
             std::clog
             << "Art der Anwendung: " << ws.title()
             << "\n\t ATC: <" << aSingleRow[COLUMN_2_Z] << ">"
@@ -303,23 +317,44 @@ void parseXLXS(const std::string &filename,
 
     printFileStats(filename);
 }
-    
-// There could be multiple lines for the same ATC. Return a vector
+
 static void getBreastFeedByAtc(const std::string &atc, std::vector<_breastfeed> &bfv)
 {
-    for (auto b : breastFeedVec) {
-        if (b.c.atcCode == atc)
-            bfv.push_back(b);
-    }
+#if 0
+    for (auto item : breastFeedVec)
+        if (item.c.atcCodes == atc)
+            bfv.push_back(item);
+#else
+    for (auto item : breastFeedVec)
+        for (auto a : item.c.atcCodeVec)
+            if (a == atc) {
+                bfv.push_back(item);
+
+                // Break out of the inner loop, to move onto the next item
+                // Not a big speed gain for only two items, but logically it makes sense
+                break;
+            }
+#endif
 }
     
 // There could be multiple lines for the same ATC. Return a vector
 static void getPregnancyByAtc(const std::string &atc, std::vector<_pregnancy> &pv)
 {
-    for (auto p : pregnancyVec) {
-        if (p.c.atcCode == atc)
-            pv.push_back(p);
-    }
+#if 0
+    for (auto item : pregnancyVec)
+        if (item.c.atcCodes == atc)
+            pv.push_back(item);
+#else
+    for (auto item : pregnancyVec)
+        for (auto a : item.c.atcCodeVec)
+            if (a == atc) {
+                pv.push_back(item);
+
+                // Break out of the inner loop, to move onto the next item
+                // Not a big speed gain for only two items, but logically it makes sense
+                break;
+            }
+#endif
 }
 
 std::string getHtmlByAtc(const std::string atc)
@@ -364,7 +399,7 @@ std::string getHtmlByAtc(const std::string atc)
         std::string textBeforeTable;
         {
             textBeforeTable += "Art der Anwendung: " + sheetTitle[0] + "<br />\n";
-            textBeforeTable += "ATC-Code: " + b.c.atcCode + "<br />\n";
+            textBeforeTable += "ATC-Code: " + b.c.atcCodes + "<br />\n";
             textBeforeTable += "Wirkstoff: " + b.c.activeSubstance + "<br />\n"; // TODO: localize
             if (!b.c.mainIndication.empty())
                 textBeforeTable += "Hauptindikation: " + b.c.mainIndication + "<br />\n"; // TODO: localize
@@ -441,7 +476,8 @@ std::string getHtmlByAtc(const std::string atc)
         std::map<std::string, bool> optionalColumnMap = {
             {TH_KEY_MAX1, false},
             {TH_KEY_MAX2, false},
-            {TH_KEY_MAX3, false}
+            {TH_KEY_MAX3, false},
+            {TH_KEY_PERIDOSE_COMMENT, false}
         };
         int numColumns = th_key_2.size() - optionalColumnMap.size();
         if (!optionalColumnMap[TH_KEY_MAX1] &&
@@ -464,6 +500,13 @@ std::string getHtmlByAtc(const std::string atc)
             optionalColumnMap[TH_KEY_MAX3] = true;
             numColumns++;
         }
+
+        if (!optionalColumnMap[TH_KEY_PERIDOSE_COMMENT] &&
+            !p.periBeme.empty())
+        {
+            optionalColumnMap[TH_KEY_PERIDOSE_COMMENT] = true;
+            numColumns++;
+        }
 #else
         // TODO: Check for optional columns
         int numColumns = th_key_2.size();
@@ -473,7 +516,7 @@ std::string getHtmlByAtc(const std::string atc)
         std::string textBeforeTable;
         {
             textBeforeTable += "Art der Anwendung: " + sheetTitle[1] + "<br />\n";
-            textBeforeTable += "ATC-Code: " + p.c.atcCode + "<br />\n";
+            textBeforeTable += "ATC-Code: " + p.c.atcCodes + "<br />\n";
             textBeforeTable += "Wirkstoff: " + p.c.activeSubstance + "<br />\n"; // TODO: localize
             if (!p.c.mainIndication.empty())
                 textBeforeTable += "Hauptindikation: " + p.c.mainIndication + "<br />\n"; // TODO: localize
@@ -514,8 +557,9 @@ std::string getHtmlByAtc(const std::string atc)
 
             tableHeader += TAG_TH_L + thTitleMap_2[TH_KEY_DOSE_ADJUST] + TAG_TH_R;
             tableHeader += TAG_TH_L + thTitleMap_2[TH_KEY_PERIDOSE] + TAG_TH_R;
-            tableHeader += TAG_TH_L + thTitleMap_2[TH_KEY_PERIDOSE_COMMENT] + TAG_TH_R;
-            // TODO: optional columns
+
+            if (optionalColumnMap[TH_KEY_PERIDOSE_COMMENT])
+                tableHeader += TAG_TH_L + thTitleMap_2[TH_KEY_PERIDOSE_COMMENT] + TAG_TH_R;
             
             tableHeader += "\n"; // for readability
             tableHeader = "<tr>" + tableHeader + "</tr>";
@@ -541,8 +585,9 @@ std::string getHtmlByAtc(const std::string atc)
 
             tableRow += TAG_TD_L + std::string("???") + TAG_TD_R; // TODO
             tableRow += TAG_TD_L + p.periDosi + TAG_TD_R;
-            tableRow += TAG_TD_L + p.periBeme + TAG_TD_R;
-            // TODO:
+
+            if (optionalColumnMap[TH_KEY_PERIDOSE_COMMENT])
+                tableRow += TAG_TD_L + p.periBeme + TAG_TD_R;
             
             tableRow += "\n";  // for readability
             tableRow = "<tr>" + tableRow + "</tr>";

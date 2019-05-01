@@ -13,7 +13,10 @@
 namespace SAPP
 {
     struct _common {
-        std::string atcCode;
+        std::string atcCodes;    // could be a single ATC, or a comma separated list
+        std::vector<std::string> atcCodeVec;  // break it down into individual ATCs
+#define ATC_LIST_SEPARATOR  ", "
+
         std::string activeSubstance;    // Wirkstoff
         std::string mainIndication;     // Hauptindikation
         std::string indication;         // Indikation
