@@ -284,10 +284,8 @@ void parseXLXS(const std::string &filename,
         bf.c.mainIndication = aSingleRow[COLUMN_B];
         bf.c.indication = aSingleRow[COLUMN_C];
         bf.c.typeOfApplication = aSingleRow[COLUMN_H];
-        bf.c.link = aSingleRow[COLUMN_S];
+        bf.c.link = aSingleRow[COLUMN_S]; if (bf.c.link == "nein") bf.c.link.clear();
         bf.c.comments = aSingleRow[COLUMN_J];
-        if (bf.c.link == "nein")
-            bf.c.link.clear();
         bf.maxDailyDose = aSingleRow[COLUMN_I];
         bf.approval = aSingleRow[COLUMN_Q];
         breastFeedVec.push_back(bf);
@@ -355,7 +353,7 @@ void parseXLXS(const std::string &filename,
         pr.c.mainIndication = aSingleRow[COLUMN_2_B];
         pr.c.indication = aSingleRow[COLUMN_2_C];
         pr.c.typeOfApplication = aSingleRow[COLUMN_2_H];
-        pr.c.link = aSingleRow[COLUMN_2_AA];
+        pr.c.link = aSingleRow[COLUMN_2_AA]; if (pr.c.link == "nein") pr.c.link.clear();
         pr.c.comments = aSingleRow[COLUMN_2_L]; if (pr.c.link == "nein") pr.c.link.clear();
         pr.max1 = aSingleRow[COLUMN_2_I]; if (pr.max1 == "-") pr.max1.clear();
         pr.max2 = aSingleRow[COLUMN_2_J]; if (pr.max2 == "-") pr.max2.clear();
