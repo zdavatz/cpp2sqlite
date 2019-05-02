@@ -354,7 +354,7 @@ void parseXLXS(const std::string &filename,
         pr.c.indication = aSingleRow[COLUMN_2_C];
         pr.c.typeOfApplication = aSingleRow[COLUMN_2_H];
         pr.c.link = aSingleRow[COLUMN_2_AA]; if (pr.c.link == "nein") pr.c.link.clear();
-        pr.c.comments = aSingleRow[COLUMN_2_L]; if (pr.c.link == "nein") pr.c.link.clear();
+        pr.c.comments = aSingleRow[COLUMN_2_L];
         pr.max1 = aSingleRow[COLUMN_2_I]; if (pr.max1 == "-") pr.max1.clear();
         pr.max2 = aSingleRow[COLUMN_2_J]; if (pr.max2 == "-") pr.max2.clear();
         pr.max3 = aSingleRow[COLUMN_2_K]; if (pr.max3 == "-") pr.max3.clear();
