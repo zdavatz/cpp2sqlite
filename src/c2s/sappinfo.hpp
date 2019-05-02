@@ -21,18 +21,18 @@ namespace SAPP
         std::string mainIndication;     // Hauptindikation
         std::string indication;         // Indikation
         std::string typeOfApplication;  // Applikationsart
-
+        std::string link;               // SAPP-Monographie
+        std::string comments;           // Bemerkungen zur Dosierung
     };
     
     struct _breastfeed {
         _common c;
-        std::string comments;           // Bemerkungen zur Dosierung
         std::string maxDailyDose;       // max. verabreichte Tagesdosis
+        std::string approval;           // Zulassungsnummer
     };
 
     struct _pregnancy {
         _common c;
-        std::string link;        // SAPP-Monographie
         std::string max1;        // max. verabreichte Tagesdosis 1. Trimenon
         std::string max2;        // max. verabreichte Tagesdosis 2. Trimenon
         std::string max3;        // max. verabreichte Tagesdosis 3. Trimenon

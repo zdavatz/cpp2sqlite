@@ -26,7 +26,9 @@
 #define COLUMN_H        7   // Applikationsart
 #define COLUMN_I        8   // max. verabreichte Tagesdosis
 #define COLUMN_J        9   // Bemerkungen zur Dosierung
+#define COLUMN_Q       16   // Zulassungsnummer
 #define COLUMN_R       17   // ATC
+#define COLUMN_S       18   // SAPP-Monographie
 #define COLUMN_U       20   // Filter
 
 #define COLUMN_2_B      1   // Hauptindikation
@@ -36,6 +38,7 @@
 #define COLUMN_2_I      8   // max. verabreichte Tagesdosis 1. Trimenon
 #define COLUMN_2_J      9   // max. verabreichte Tagesdosis 2. Trimenon
 #define COLUMN_2_K     10   // max. verabreichte Tagesdosis 3. Trimenon
+#define COLUMN_2_L     11   // Bemerkungen zur Dosierung
 #define COLUMN_2_M     12   // Peripartale Dosierung
 #define COLUMN_2_N     13   // Bemerkungen zur peripartalen Dosierung
 #define COLUMN_2_Z     25   // ATC
@@ -69,63 +72,76 @@ namespace SAPP
     // LOCALIZATION
 
     // Common
+#define LOC_KEY_TH_TYPE                 "application"
+#define LOC_KEY_TH_COMMENT              "comments"
+
+    // Sheet 1
+#define LOC_KEY_TH_MAX_DAILY            "maxDaily"
+#define LOC_KEY_TH_APPROVAL             "approval"
+
+    // Sheet 2
+#define LOC_KEY_TH_MAX1                 "Max1"
+#define LOC_KEY_TH_MAX2                 "Max2"
+#define LOC_KEY_TH_MAX3                 "Max3"
+#define LOC_KEY_TH_PERIDOSE             "periDosi"
+#define LOC_KEY_TH_PERIDOSE_COMMENT     "periBemer"
+
+    // Other strings
 #define LOC_KEY_TYPE                    "type"
 #define LOC_KEY_ACT_SUBST               "active"
 #define LOC_KEY_MAIN_INDIC              "mainInd"
 #define LOC_KEY_INDICATION              "indication"
 
-#define LOC_KEY_TH_TYPE                 "application"
-
-    // First sheet
-#define LOC_KEY_TH_MAX_DAILY            "MaxDaily"
-#define LOC_KEY_TH_COMMENT              "Comments"
-    
-    // Second sheet
-#define LOC_KEY_TH_MAX1                 "Max1"
-#define LOC_KEY_TH_MAX2                 "Max2"
-#define LOC_KEY_TH_MAX3                 "Max3"
-#define LOC_KEY_TH_DOSE_ADJUST          "Adjustment"
-#define LOC_KEY_TH_PERIDOSE             "periDosi"
-#define LOC_KEY_TH_PERIDOSE_COMMENT     "periBemer"
-
     const std::vector<std::string> loc_string_key = {
-        LOC_KEY_TH_TYPE,
+        LOC_KEY_TH_TYPE, LOC_KEY_TH_COMMENT,
         
-        LOC_KEY_TH_MAX_DAILY, LOC_KEY_TH_COMMENT,
+        // Sheet 1
+        LOC_KEY_TH_MAX_DAILY, LOC_KEY_TH_APPROVAL,
         
+        // Sheet 2
         LOC_KEY_TH_MAX1, LOC_KEY_TH_MAX2, LOC_KEY_TH_MAX3,
-        LOC_KEY_TH_DOSE_ADJUST, LOC_KEY_TH_PERIDOSE, LOC_KEY_TH_PERIDOSE_COMMENT,
+        LOC_KEY_TH_PERIDOSE, LOC_KEY_TH_PERIDOSE_COMMENT,
         
+        // Other strings
         LOC_KEY_TYPE, LOC_KEY_ACT_SUBST, LOC_KEY_MAIN_INDIC, LOC_KEY_INDICATION
     };
     std::vector<std::string> loc_string_de = {
-        "Applikationsart",
+        "Applikationsart", "Bemerkungen zur Dosierung",
         
-        "max. verabreichte Tagesdosis", "Bemerkungen",
+        // Sheet 1
+        "max. verabreichte Tagesdosis", "Zulassungsnummer",
         
+        // Sheet 2
         "max TD Tr 1", "max TD Tr 2", "max TD Tr 3",
-        "Dosisanpassung", "Peripartale Dosierung", "Bemerkungen zur peripartalen Dosierung",
+        "Peripartale Dosierung", "Bemerkungen zur peripartalen Dosierung",
         
+        // Other strings
         "Art der Anwendung", "Wirkstoff", "Hauptindikation", "Indikation"
     };
     std::vector<std::string> loc_string_fr = { // TODO: verify translations
-        "Type d’application",
+        "Type d’application", "Commentaires sur dosage",
         
-        "dose quotidienne max", "Comments",
+        // Sheet 1
+        "dose quotidienne max", "Approbation",
         
+        // Sheet 2
         "max TD Tr 1", "max TD Tr 2", "max TD Tr 3",
-        "Ajustement de la dose", "Peripartum posologie", "Commentaires sur périnatale posologie",
+        "Peripartum posologie", "Commentaires sur périnatale posologie",
         
+        // Other strings
         "Type d'utilisation", "Substance active", "Indication principale", "Indication"
     };
     std::vector<std::string> loc_string_en = {
-        "Type of application",
+        "Type of application", "Comments on dosage",
         
-        "max daily dose", "Comments",
+        // Sheet 1
+        "max daily dose", "Approval",
 
+        // Sheet 2
         "max TD Tr 1", "max TD Tr 2", "max TD Tr 3",
         "Dose adjustment", "Peripartum dosage", "Comments on peripartum dosage",
         
+        // Other strings
         "Type of use", "Active Substance", "Main Indication", "Indication"
     };
     std::map<std::string, std::string> localizedResourcesMap;
@@ -137,17 +153,20 @@ namespace SAPP
         LOC_KEY_TH_TYPE, LOC_KEY_TH_MAX_DAILY
     };
     std::map<std::string, bool> optionalColumnMap = {
-        {LOC_KEY_TH_COMMENT, false}
+        {LOC_KEY_TH_COMMENT, false},
+        {LOC_KEY_TH_APPROVAL, false}
     };
 
     // Second sheet
     const std::vector<std::string> requiredColumnVec_2 = {
-        LOC_KEY_TH_TYPE, LOC_KEY_TH_DOSE_ADJUST, LOC_KEY_TH_PERIDOSE
+        LOC_KEY_TH_TYPE
     };
     std::map<std::string, bool> optionalColumnMap_2 = {
+        {LOC_KEY_TH_COMMENT, false},
         {LOC_KEY_TH_MAX1, false},
         {LOC_KEY_TH_MAX2, false},
         {LOC_KEY_TH_MAX3, false},
+        {LOC_KEY_TH_PERIDOSE, false},
         {LOC_KEY_TH_PERIDOSE_COMMENT, false}
     };
     
@@ -191,6 +210,11 @@ void printUsageStats()
 void parseXLXS(const std::string &filename,
                const std::string &language)
 {
+#ifdef DEBUG
+    assert(loc_string_key.size == loc_string_de.size);
+    assert(loc_string_key.size == loc_string_fr.size);
+    assert(loc_string_key.size == loc_string_en.size);
+#endif
     const std::unordered_set<int> acceptedFiltersSet = { 1, 5, 6, 9 };
 
     {
@@ -225,8 +249,12 @@ void parseXLXS(const std::string &filename,
         if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
 #ifdef DEBUG_SAPPINFO
             int i=0;
-            for (auto cell : row)
-                std::clog << i++ << "\t<" << cell.to_string() << ">" << std::endl;
+            for (auto cell : row) {
+                xlnt::column_t::index_t col_idx = cell.column_index();
+                std::clog << i++
+                << "\t" << xlnt::column_t::column_string_from_index(col_idx)
+                << "\t<" << cell.to_string() << ">" << std::endl;
+            }
 #endif
             continue;
         }
@@ -256,21 +284,26 @@ void parseXLXS(const std::string &filename,
         bf.c.mainIndication = aSingleRow[COLUMN_B];
         bf.c.indication = aSingleRow[COLUMN_C];
         bf.c.typeOfApplication = aSingleRow[COLUMN_H];
+        bf.c.link = aSingleRow[COLUMN_S];
+        bf.c.comments = aSingleRow[COLUMN_J];
+        if (bf.c.link == "nein")
+            bf.c.link.clear();
         bf.maxDailyDose = aSingleRow[COLUMN_I];
-        bf.comments = aSingleRow[COLUMN_J];
+        bf.approval = aSingleRow[COLUMN_Q];
         breastFeedVec.push_back(bf);
 #ifdef DEBUG_SAPPINFO
         if (aSingleRow[COLUMN_R] == "J02AC01") {
             std::clog
             << "Art der Anwendung: " << ws.title()
-            << "\n\t ATC: <" << aSingleRow[COLUMN_R] << ">"
-            << "\n\t Wirkstoff: <" << aSingleRow[COLUMN_G] << ">"
-            << "\n\t Hauptindikation: <" << aSingleRow[COLUMN_B] << ">"
-            << "\n\t Indikation: <" << aSingleRow[COLUMN_C] << ">"
-            << "\n\t Applikationsart: <" << aSingleRow[COLUMN_H] << ">"
-            << "\n\t max: <" << aSingleRow[COLUMN_I] << ">"
-            << "\n\t comment: <" << aSingleRow[COLUMN_J] << ">"
-            << "\n\t Filter: <" << aSingleRow[COLUMN_U] << ">"
+            << "\n\t R ATC: <" << aSingleRow[COLUMN_R] << ">"
+            << "\n\t G Wirkstoff: <" << aSingleRow[COLUMN_G] << ">"
+            << "\n\t B Hauptindikation: <" << aSingleRow[COLUMN_B] << ">"
+            << "\n\t C Indikation: <" << aSingleRow[COLUMN_C] << ">"
+            << "\n\t H Applikationsart: <" << aSingleRow[COLUMN_H] << ">"
+            << "\n\t I max: <" << aSingleRow[COLUMN_I] << ">"
+            << "\n\t J comment: <" << aSingleRow[COLUMN_J] << ">"
+            << "\n\t Q approval: <" << aSingleRow[COLUMN_Q] << ">"
+            << "\n\t U Filter: <" << aSingleRow[COLUMN_U] << ">"
             << std::endl;
         }
 #endif
@@ -287,8 +320,12 @@ void parseXLXS(const std::string &filename,
         if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
 #ifdef DEBUG_SAPPINFO
             int i=0;
-            for (auto cell : row)
-                std::clog << i++ << "\t<" << cell.to_string() << ">" << std::endl;
+            for (auto cell : row) {
+                xlnt::column_t::index_t col_idx = cell.column_index();
+                std::clog << i++
+                << "\t" << xlnt::column_t::column_string_from_index(col_idx)
+                << "\t<" << cell.to_string() << ">" << std::endl;
+            }
 #endif
             continue;
         }
@@ -318,12 +355,11 @@ void parseXLXS(const std::string &filename,
         pr.c.mainIndication = aSingleRow[COLUMN_2_B];
         pr.c.indication = aSingleRow[COLUMN_2_C];
         pr.c.typeOfApplication = aSingleRow[COLUMN_2_H];
-        pr.link = aSingleRow[COLUMN_2_AA];
-        if (pr.link == "nein")
-            pr.link.clear();
-        pr.max1 = aSingleRow[COLUMN_2_I];
-        pr.max2 = aSingleRow[COLUMN_2_J];
-        pr.max3 = aSingleRow[COLUMN_2_K];
+        pr.c.link = aSingleRow[COLUMN_2_AA];
+        pr.c.comments = aSingleRow[COLUMN_2_L]; if (pr.c.link == "nein") pr.c.link.clear();
+        pr.max1 = aSingleRow[COLUMN_2_I]; if (pr.max1 == "-") pr.max1.clear();
+        pr.max2 = aSingleRow[COLUMN_2_J]; if (pr.max2 == "-") pr.max2.clear();
+        pr.max3 = aSingleRow[COLUMN_2_K]; if (pr.max3 == "-") pr.max3.clear();
         pr.periDosi = aSingleRow[COLUMN_2_M];
         pr.periBeme = aSingleRow[COLUMN_2_N];
         pregnancyVec.push_back(pr);
@@ -332,18 +368,18 @@ void parseXLXS(const std::string &filename,
         {
             std::clog
             << "Art der Anwendung: " << ws.title()
-            << "\n\t ATC: <" << aSingleRow[COLUMN_2_Z] << ">"
-            << "\n\t Wirkstoff: <" << aSingleRow[COLUMN_2_G] << ">"
-            << "\n\t Hauptindikation: <" << aSingleRow[COLUMN_2_B] << ">"
-            << "\n\t Indikation: <" << aSingleRow[COLUMN_2_C] << ">"
-            << "\n\t Applikationsart: <" << aSingleRow[COLUMN_2_H] << ">"
-            << "\n\t SAPP-Monographie: <" << aSingleRow[COLUMN_2_AA] << ">"
-            << "\n\t max TD Tr 1: <" << aSingleRow[COLUMN_2_I] << ">"
-            << "\n\t max TD Tr 2: <" << aSingleRow[COLUMN_2_J] << ">"
-            << "\n\t max TD Tr 3: <" << aSingleRow[COLUMN_2_K] << ">"
-            << "\n\t Peripartale Dosierung: <" << aSingleRow[COLUMN_2_M] << ">"
-            << "\n\t Bemerkungen zur peripartalen Dosierung: <" << aSingleRow[COLUMN_2_N] << ">"
-            << "\n\t Filter: <" << aSingleRow[COLUMN_2_AC] << ">"
+            << "\n\t Z ATC: <" << aSingleRow[COLUMN_2_Z] << ">"
+            << "\n\t G Wirkstoff: <" << aSingleRow[COLUMN_2_G] << ">"
+            << "\n\t B Hauptindikation: <" << aSingleRow[COLUMN_2_B] << ">"
+            << "\n\t C Indikation: <" << aSingleRow[COLUMN_2_C] << ">"
+            << "\n\t H Applikationsart: <" << aSingleRow[COLUMN_2_H] << ">"
+            << "\n\t AA SAPP-Monographie: <" << aSingleRow[COLUMN_2_AA] << ">"
+            << "\n\t I max TD Tr 1: <" << aSingleRow[COLUMN_2_I] << ">"
+            << "\n\t J max TD Tr 2: <" << aSingleRow[COLUMN_2_J] << ">"
+            << "\n\t K max TD Tr 3: <" << aSingleRow[COLUMN_2_K] << ">"
+            << "\n\t M Peripartale Dosierung: <" << aSingleRow[COLUMN_2_M] << ">"
+            << "\n\t N Bemerkungen zur peripartalen Dosierung: <" << aSingleRow[COLUMN_2_N] << ">"
+            << "\n\t AC Filter: <" << aSingleRow[COLUMN_2_AC] << ">"
             << std::endl;
         }
 #endif
@@ -410,9 +446,16 @@ std::string getHtmlByAtc(const std::string atc)
             m.second = false;
 
         if (!optionalColumnMap[LOC_KEY_TH_COMMENT] &&
-            !b.comments.empty())
+            !b.c.comments.empty())
         {
             optionalColumnMap[LOC_KEY_TH_COMMENT] = true;
+            numColumns++;
+        }
+
+        if (!optionalColumnMap[LOC_KEY_TH_APPROVAL] &&
+            !b.approval.empty())
+        {
+            optionalColumnMap[LOC_KEY_TH_APPROVAL] = true;
             numColumns++;
         }
 #endif
@@ -428,6 +471,9 @@ std::string getHtmlByAtc(const std::string atc)
 
             if (!b.c.indication.empty())
                 textBeforeTable += localizedResourcesMap[LOC_KEY_INDICATION] + ": " + b.c.indication + "<br />\n";
+            
+            if (!b.c.link.empty())
+                textBeforeTable += "<a href=\"" + b.c.link + "\">Sappinfo Monographie (Link)</a>" + "<br />\n"; // TODO: localize
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
 
@@ -441,12 +487,15 @@ std::string getHtmlByAtc(const std::string atc)
         tableBody.clear();
         
         {
-            tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_TYPE] + TAG_TH_R;
-            tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX_DAILY] + TAG_TH_R;
+            tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_TYPE] + TAG_TH_R;        // col H
+            tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX_DAILY] + TAG_TH_R;   // col I
 
             if (optionalColumnMap[LOC_KEY_TH_COMMENT])
-                tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_COMMENT] + TAG_TH_R;
-
+                tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_COMMENT] + TAG_TH_R;  // col J
+            
+            if (optionalColumnMap[LOC_KEY_TH_APPROVAL])
+                tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_APPROVAL] + TAG_TH_R; // col Q
+            
             tableHeader += "\n"; // for readability
             tableHeader = "<tr>" + tableHeader + "</tr>";
 #ifdef WITH_SEPARATE_TABLE_HEADER
@@ -461,8 +510,12 @@ std::string getHtmlByAtc(const std::string atc)
 
             tableRow += TAG_TD_L + b.c.typeOfApplication + TAG_TD_R;
             tableRow += TAG_TD_L + b.maxDailyDose + TAG_TD_R;
+
             if (optionalColumnMap[LOC_KEY_TH_COMMENT])
-                tableRow += TAG_TD_L + b.comments + TAG_TD_R;
+                tableRow += TAG_TD_L + b.c.comments + TAG_TD_R;
+
+            if (optionalColumnMap[LOC_KEY_TH_APPROVAL])
+                tableRow += TAG_TD_L + b.approval + TAG_TD_R;
 
             tableRow += "\n";  // for readability
             tableRow = "<tr>" + tableRow + "</tr>";
@@ -520,10 +573,25 @@ std::string getHtmlByAtc(const std::string atc)
             numColumns++;
         }
 
+        //
+        if (!optionalColumnMap_2[LOC_KEY_TH_PERIDOSE] &&
+            !p.periDosi.empty())
+        {
+            optionalColumnMap_2[LOC_KEY_TH_PERIDOSE] = true;
+            numColumns++;
+        }
+
         if (!optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT] &&
             !p.periBeme.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT] = true;
+            numColumns++;
+        }
+
+        if (!optionalColumnMap[LOC_KEY_TH_COMMENT] &&
+            !p.c.comments.empty())
+        {
+            optionalColumnMap[LOC_KEY_TH_COMMENT] = true;
             numColumns++;
         }
 #endif
@@ -540,8 +608,8 @@ std::string getHtmlByAtc(const std::string atc)
             if (!p.c.indication.empty())
                 textBeforeTable += localizedResourcesMap[LOC_KEY_INDICATION] + ": " + p.c.indication + "<br />\n";
             
-            if (!p.link.empty())
-                textBeforeTable += "<a href=\"" + p.link + "\">Sappinfo Monographie (Link)</a>" + "<br />\n"; // TODO: localize
+            if (!p.c.link.empty())
+                textBeforeTable += "<a href=\"" + p.c.link + "\">Sappinfo Monographie (Link)</a>" + "<br />\n"; // TODO: localize
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
         
@@ -566,8 +634,11 @@ std::string getHtmlByAtc(const std::string atc)
             if (optionalColumnMap_2[LOC_KEY_TH_MAX3])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX3] + TAG_TH_R;
 
-            tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_DOSE_ADJUST] + TAG_TH_R;
-            tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_PERIDOSE] + TAG_TH_R;
+            if (optionalColumnMap[LOC_KEY_TH_COMMENT])
+                tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_COMMENT] + TAG_TH_R;
+
+            if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE])
+                tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_PERIDOSE] + TAG_TH_R;
 
             if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_PERIDOSE_COMMENT] + TAG_TH_R;
@@ -585,6 +656,7 @@ std::string getHtmlByAtc(const std::string atc)
             std::string tableRow;
             
             tableRow += TAG_TD_L + p.c.typeOfApplication + TAG_TD_R;
+
             if (optionalColumnMap_2[LOC_KEY_TH_MAX1])
                 tableRow += TAG_TD_L + p.max1 + TAG_TD_R;
 
@@ -594,8 +666,11 @@ std::string getHtmlByAtc(const std::string atc)
             if (optionalColumnMap_2[LOC_KEY_TH_MAX3])
                 tableRow += TAG_TD_L + p.max3 + TAG_TD_R;
 
-            tableRow += TAG_TD_L + std::string("???") + TAG_TD_R; // TODO
-            tableRow += TAG_TD_L + p.periDosi + TAG_TD_R;
+            if (optionalColumnMap[LOC_KEY_TH_COMMENT])
+                tableRow += TAG_TD_L + p.c.comments + TAG_TD_R;
+
+            if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE])
+                tableRow += TAG_TD_L + p.periDosi + TAG_TD_R;
 
             if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT])
                 tableRow += TAG_TD_L + p.periBeme + TAG_TD_R;
