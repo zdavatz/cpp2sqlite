@@ -74,7 +74,7 @@ add_executable(sappinfo
 
 target_include_directories(sappinfo PUBLIC "${CMAKE_SOURCE_DIR}/src/sap")
 target_link_libraries(sappinfo ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
-#-------------------------------------------------------------------------------
 
+#-------------------------------------------------------------------------------
 
 install(TARGETS cpp2sqlite interaction sappinfo RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})

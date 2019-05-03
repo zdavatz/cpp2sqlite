@@ -63,11 +63,7 @@ namespace DEEPL
 {
 std::string sheetTitle[2];
 
-// Used when language == "de"
 std::set<std::string> toBeTranslatedSet; // no duplicates, sorted
-
-// Used when language != "de"
-std::map<std::string, std::string> translatedMap;
 
 void validateAndAdd(const std::string s)
 {
@@ -84,7 +80,6 @@ void validateAndAdd(const std::string s)
 
 void parseXLXS(const std::string &inFilename,
                const std::string &outDir,
-               const std::string &language,
                bool verbose)
 {
     const std::unordered_set<int> acceptedFiltersSet = { 1, 5, 6, 9 };
@@ -168,7 +163,7 @@ int main(int argc, char **argv)
     
     std::string opt_inputDirectory;
     std::string opt_workDirectory;  // for downloads subdirectory
-    std::string opt_language;
+    //std::string opt_language;
     bool flagVerbose = false;
     
     po::options_description desc("Allowed options");
@@ -176,7 +171,7 @@ int main(int argc, char **argv)
     ("help,h", "print this message")
     ("version,v", "print the version information and exit")
     ("verbose", "be extra verbose") // Show errors and logs
-    ("lang", po::value<std::string>( &opt_language )->default_value("de"), "use given language (de/fr)")
+    //("lang", po::value<std::string>( &opt_language )->default_value("de"), "use given language (de/fr)")
     ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
     ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
     ;
@@ -221,32 +216,32 @@ int main(int argc, char **argv)
     }
     
     ////////////////////////////////////////////////////////////////////////////
-    if (opt_language == "de") {
-        //stringsFromDe();
-    }
-    else if (opt_language == "fr") {
-        //stringsFromFr();
-        
-        // For French names of medicines
-        //ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
-    }
-    
-    if (opt_language != "de") {
-        //getTranslationMap(opt_inputDirectory, opt_language);
-    }
+//    if (opt_language == "de") {
+//        //stringsFromDe();
+//    }
+//    else if (opt_language == "fr") {
+//        //stringsFromFr();
+//
+//        // For French names of medicines
+//        //ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
+//    }
+//
+//    if (opt_language != "de") {
+//        //getTranslationMap(opt_inputDirectory, opt_language);
+//    }
     
     DEEPL::parseXLXS(opt_inputDirectory + "/sappinfo.xlsx",
                      opt_workDirectory + "/output",
-                     opt_language,
                      false);
 
-#if 1 //def DEBUG
+#ifdef DEBUG
     std::clog << basename((char *)__FILE__) << ":" << __LINE__
     << ", toBeTranslatedSet size: " << DEEPL::toBeTranslatedSet.size()
     << std::endl;
 #endif
 
-    if (opt_language == "de") {
+    //if (opt_language == "de")
+    {
         std::string toBeTran = boost::algorithm::join(DEEPL::toBeTranslatedSet, "\n");
         std::ofstream outfile(opt_inputDirectory + "/deepl.sappinfo.in.txt");
         outfile << toBeTran;
