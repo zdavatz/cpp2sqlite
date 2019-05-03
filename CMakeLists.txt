@@ -67,8 +67,14 @@ add_executable(interaction
 
 target_include_directories(interaction PUBLIC "${CMAKE_SOURCE_DIR}/src/int")
 target_link_libraries(interaction ${Boost_LIBRARIES})
-	
+
+#-------------------------------------------------------------------------------
+add_executable(sappinfo
+	src/sap/main.cpp)
+
+target_include_directories(sappinfo PUBLIC "${CMAKE_SOURCE_DIR}/src/sap")
+target_link_libraries(sappinfo ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 #-------------------------------------------------------------------------------
 
 
-install(TARGETS cpp2sqlite interaction RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(TARGETS cpp2sqlite interaction sappinfo RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
