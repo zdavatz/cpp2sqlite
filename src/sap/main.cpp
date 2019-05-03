@@ -25,7 +25,7 @@
 
 #include "config.h"
 
-// Comment out the columsn that don't contain text
+// Columns that don't contain text are commented out (except for the filter column)
 
 #define COLUMN_B        1   // Hauptindikation
 #define COLUMN_C        2   // Indikation
@@ -33,23 +33,23 @@
 #define COLUMN_H        7   // Applikationsart
 #define COLUMN_I        8   // max. verabreichte Tagesdosis
 #define COLUMN_J        9   // Bemerkungen zur Dosierung
-#define COLUMN_Q       16   // Zulassungsnummer
-#define COLUMN_R       17   // ATC
-#define COLUMN_S       18   // SAPP-Monographie
+//#define COLUMN_Q       16   // Zulassungsnummer
+//#define COLUMN_R       17   // ATC
+//#define COLUMN_S       18   // SAPP-Monographie
 #define COLUMN_U       20   // Filter
 
 #define COLUMN_2_B      1   // Hauptindikation
 #define COLUMN_2_C      2   // Indikation
 #define COLUMN_2_G      6   // Wirkstoff
 #define COLUMN_2_H      7   // Applikationsart
-#define COLUMN_2_I      8   // max. verabreichte Tagesdosis 1. Trimenon
-#define COLUMN_2_J      9   // max. verabreichte Tagesdosis 2. Trimenon
-#define COLUMN_2_K     10   // max. verabreichte Tagesdosis 3. Trimenon
+//#define COLUMN_2_I      8   // max. verabreichte Tagesdosis 1. Trimenon
+//#define COLUMN_2_J      9   // max. verabreichte Tagesdosis 2. Trimenon
+//#define COLUMN_2_K     10   // max. verabreichte Tagesdosis 3. Trimenon
 #define COLUMN_2_L     11   // Bemerkungen zur Dosierung
-#define COLUMN_2_M     12   // Peripartale Dosierung
+//#define COLUMN_2_M     12   // Peripartale Dosierung
 #define COLUMN_2_N     13   // Bemerkungen zur peripartalen Dosierung
-#define COLUMN_2_Z     25   // ATC
-#define COLUMN_2_AA    26   // SAPP-Monographie
+//#define COLUMN_2_Z     25   // ATC
+//#define COLUMN_2_AA    26   // SAPP-Monographie
 #define COLUMN_2_AC    28   // Filter
 
 #define FIRST_DATA_ROW_INDEX    1
@@ -106,10 +106,8 @@ void parseXLXS(const std::string &inFilename,
             continue;            // Not found in set
         
         std::vector<std::string> aSingleRow;
-        for (auto cell : row) {
-            //std::clog << cell.to_string() << std::endl;
+        for (auto cell : row)
             aSingleRow.push_back(cell.to_string());
-        }
 
         validateAndAdd(aSingleRow[COLUMN_B]);   // Hauptindikation
         validateAndAdd(aSingleRow[COLUMN_C]);   // Indikation
@@ -131,11 +129,13 @@ void parseXLXS(const std::string &inFilename,
             continue;
         }
         
+        int filter = std::stoi(row[COLUMN_2_AC].to_string());
+        if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
+            continue;            // Not found in set
+        
         std::vector<std::string> aSingleRow;
-        for (auto cell : row) {
-            //std::clog << cell.to_string() << std::endl;
+        for (auto cell : row)
             aSingleRow.push_back(cell.to_string());
-        }
 
         validateAndAdd(aSingleRow[COLUMN_2_B]);     // Hauptindikation
         validateAndAdd(aSingleRow[COLUMN_2_C]);     // Indikation
