@@ -99,8 +99,9 @@ Ajustement de la dose en fonction des besoins cliniques
 Ajustement de la dose en fonction de la surveillance thérapeutique des médicaments (TDM)
 Ajustement de la dose en fonction de la surveillance thérapeutique des médicaments (TDM), substitution à l'acide folique
 Ajustement de la dose en fonction de la surveillance thérapeutique des médicaments (TDM), réduction de la dose péripartale
-
-
+Augmentation de la posologie en fonction de la surveillance thérapeutique des médicaments (TDM)
+Augmentation de la posologie en fonction de la surveillance thérapeutique des
+médicaments (TDM), Réduire l'intervalle posologique à 4 heures
 Augmentation de la posologie en fonction de la surveillance thérapeutique des médicaments (TDM)
 Doxylaminé
 diarrhée
