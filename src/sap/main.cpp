@@ -109,12 +109,17 @@ void parseXLXS(const std::string &inFilename,
         for (auto cell : row)
             aSingleRow.push_back(cell.to_string());
 
-        validateAndAdd(aSingleRow[COLUMN_B]);   // Hauptindikation
-        validateAndAdd(aSingleRow[COLUMN_C]);   // Indikation
-        validateAndAdd(aSingleRow[COLUMN_G]);   // Wirkstoff
-        validateAndAdd(aSingleRow[COLUMN_H]);   // Applikationsart
-        validateAndAdd(aSingleRow[COLUMN_I]);   // max. verabreichte Tagesdosis
-        validateAndAdd(aSingleRow[COLUMN_J]);   // Bemerkungen zur Dosierung
+        const std::unordered_set<int> columnsWithTextSet = {
+            COLUMN_B,   // Hauptindikation
+            COLUMN_C,   // Indikation
+            COLUMN_G,   // Wirkstoff
+            COLUMN_H,   // Applikationsart
+            COLUMN_I,   // max. verabreichte Tagesdosis
+            COLUMN_J    // Bemerkungen zur Dosierung
+        };
+        
+        for (auto s : columnsWithTextSet)
+            validateAndAdd(aSingleRow[s]);
     } // for row in sheet 1
     
     // Pregnancy sheet
@@ -137,12 +142,17 @@ void parseXLXS(const std::string &inFilename,
         for (auto cell : row)
             aSingleRow.push_back(cell.to_string());
 
-        validateAndAdd(aSingleRow[COLUMN_2_B]);     // Hauptindikation
-        validateAndAdd(aSingleRow[COLUMN_2_C]);     // Indikation
-        validateAndAdd(aSingleRow[COLUMN_2_G]);     // Wirkstoff
-        validateAndAdd(aSingleRow[COLUMN_2_H]);     // Applikationsart
-        validateAndAdd(aSingleRow[COLUMN_2_L]);     // Bemerkungen zur Dosierung
-        validateAndAdd(aSingleRow[COLUMN_2_N]);     // Bemerkungen zur peripartalen Dosierung
+        const std::unordered_set<int> columnsWithTextSet = {
+            COLUMN_2_B, // Hauptindikation
+            COLUMN_2_C, // Indikation
+            COLUMN_2_G, // Wirkstoff
+            COLUMN_2_H, // Applikationsart
+            COLUMN_2_L, // Bemerkungen zur Dosierung
+            COLUMN_2_N  // Bemerkungen zur peripartalen Dosierung
+        };
+
+        for (auto s : columnsWithTextSet)
+            validateAndAdd(aSingleRow[s]);
     } // for row in sheet 2
 }
 } // namespace DEEPL
