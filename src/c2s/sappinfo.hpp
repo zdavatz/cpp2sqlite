@@ -41,7 +41,8 @@ namespace SAPP
         std::string periBeme;    // Bemerkungen zur peripartalen Dosierung
     };
 
-    void parseXLXS(const std::string &filename,
+    void parseXLXS(const std::string &inDir,
+                   const std::string &filename,
                    const std::string &language);
     std::string getHtmlByAtc(const std::string atc);
     

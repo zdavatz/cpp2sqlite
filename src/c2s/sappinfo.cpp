@@ -146,6 +146,9 @@ namespace SAPP
     };
     std::map<std::string, std::string> localizedResourcesMap;
 
+    // Used when language != "de"
+    std::map<std::string, std::string> deeplTranslatedMap;
+
     ////////////////////////////////////////////////////////////////////////////
 
     // First sheet
@@ -206,8 +209,44 @@ void printUsageStats()
     REP::html_end_ul();
 }
 
+// Define deeplTranslatedMap
+// key "input/deepl.in.txt"
+// val "input/deepl.out.fr.txt"
+void getDeeplTranslationMap(const std::string &dir,
+                            const std::string &job,
+                            const std::string &language,
+                            std::map<std::string, std::string> &map)
+{
+    try {
+        std::string dotJob;
+        if (!job.empty())
+            dotJob = "." + job;
+        
+        std::ifstream ifsKey(dir + "/deepl" + dotJob + ".in.txt");
+        std::ifstream ifsValue(dir + "/deepl" + dotJob + ".out." + language + ".txt");   // translated by deepl.sh
+        std::ifstream ifsValue2(dir + "/deepl" + dotJob + ".out2." + language + ".txt"); // translated manually
+        
+        std::string key, val;
+        while (std::getline(ifsKey, key)) {
+            
+            std::getline(ifsValue, val);
+            if (val.empty())                    // DeepL failed to translate it
+                std::getline(ifsValue2, val);   // Get it from manually translated file
+            
+            map.insert(std::make_pair(key, val));
+        }
+    }
+    catch (std::exception &e) {
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << " Error " << e.what()
+        << std::endl;
+    }
+}
+    
 // TODO: use a set of ATCs to speed up the lookup
-void parseXLXS(const std::string &filename,
+void parseXLXS(const std::string &inDir,
+               const std::string &inFile,
                const std::string &language)
 {
 #ifdef DEBUG
@@ -228,10 +267,17 @@ void parseXLXS(const std::string &filename,
             loc_string = loc_string_fr;
         }
 
+        // Create localization map for string resources NOT from the input file
         for (int i=0; i< loc_string_key.size(); i++)
             localizedResourcesMap.insert(std::make_pair(loc_string_key[i], loc_string[i]));
+
+        // Create localization map for string resources from the input file (translated with DeepL)
+        if (language != "de") {
+            getDeeplTranslationMap(inDir, "sappinfo", language, deeplTranslatedMap);
+        }
     }
 
+    const std::string &filename = inDir + inFile;
     xlnt::workbook wb;
     wb.load(filename);
     //auto ws = wb.active_sheet();

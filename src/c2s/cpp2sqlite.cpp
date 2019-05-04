@@ -1079,7 +1079,7 @@ int main(int argc, char **argv)
         REP::html_end_ul();
     }
     
-    SAPP::parseXLXS(opt_inputDirectory + "/sappinfo.xlsx", opt_language);
+    SAPP::parseXLXS(opt_inputDirectory, "/sappinfo.xlsx", opt_language);
 
     if (flagXml) {
         std::cerr << "Creating XML not yet implemented" << std::endl;
