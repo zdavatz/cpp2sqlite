@@ -8,3 +8,4 @@ output/
 # Lines starting with '#' will be ignored2
 build/
 scripts/temp/
+input/deepl.sappinfo.in.txt
