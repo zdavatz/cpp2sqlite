@@ -84,16 +84,16 @@ namespace SAPP
 #define LOC_KEY_TH_MAX1                 "Max1"
 #define LOC_KEY_TH_MAX2                 "Max2"
 #define LOC_KEY_TH_MAX3                 "Max3"
-#define LOC_KEY_TH_PERIDOSE             "periDosi"
-#define LOC_KEY_TH_PERIDOSE_COMMENT     "periBemer"
+#define LOC_KEY_TH_PERIDOSE             "perD" // periDosi
+#define LOC_KEY_TH_PERIDOSE_COMMENT     "perB" // periBemer
 
     // Other strings
 #define LOC_KEY_TYPE                    "type"
-#define LOC_KEY_ACT_SUBST               "active"
-#define LOC_KEY_MAIN_INDIC              "mainInd"
-#define LOC_KEY_INDICATION              "indication"
-#define LOC_KEY_SHEET1                  "breastFeed"
-#define LOC_KEY_SHEET2                  "pregnancy"
+#define LOC_KEY_ACT_SUBST               "actv" // active
+#define LOC_KEY_MAIN_INDIC              "mInd" // mainIndication
+#define LOC_KEY_INDICATION              "indc" // indication
+#define LOC_KEY_SHEET1                  "brFd" // breastFeed
+#define LOC_KEY_SHEET2                  "preg" // pregnancy
 
     const std::vector<std::string> loc_string_key = {
         LOC_KEY_TH_TYPE, LOC_KEY_TH_COMMENT,
@@ -377,15 +377,7 @@ void parseXLXS(const std::string &inDir,
         bf.c.link = aSingleRow[COLUMN_S]; if (bf.c.link == "nein") bf.c.link.clear();
         bf.c.comments = getLocalized(language, aSingleRow[COLUMN_J]);
         bf.approval = aSingleRow[COLUMN_Q];
-
-#if 1
         bf.maxDailyDose = getLocalized(language, aSingleRow[COLUMN_I]);
-#else
-        // Special case
-        bf.maxDailyDose = aSingleRow[COLUMN_I];
-        if (!std::isdigit(bf.maxDailyDose[0]))
-            bf.maxDailyDose = getLocalized(language, bf.maxDailyDose);
-#endif
         breastFeedVec.push_back(bf);
 #ifdef DEBUG_SAPPINFO
         if (aSingleRow[COLUMN_R] == "J02AC01") {
@@ -453,9 +445,9 @@ void parseXLXS(const std::string &inDir,
         pr.c.typeOfApplication = getLocalized(language, aSingleRow[COLUMN_2_H]);
         pr.c.link = aSingleRow[COLUMN_2_AA]; if (pr.c.link == "nein") pr.c.link.clear();
         pr.c.comments = getLocalized(language, aSingleRow[COLUMN_2_L]);
-        pr.max1 = getLocalized(language, aSingleRow[COLUMN_2_I]); //if (pr.max1 == "-") pr.max1.clear();
-        pr.max2 = getLocalized(language, aSingleRow[COLUMN_2_J]); //if (pr.max2 == "-") pr.max2.clear();
-        pr.max3 = getLocalized(language, aSingleRow[COLUMN_2_K]); //if (pr.max3 == "-") pr.max3.clear();
+        pr.max1 = getLocalized(language, aSingleRow[COLUMN_2_I]);
+        pr.max2 = getLocalized(language, aSingleRow[COLUMN_2_J]);
+        pr.max3 = getLocalized(language, aSingleRow[COLUMN_2_K]);
         pr.periDosi = aSingleRow[COLUMN_2_M];
         pr.periBeme = getLocalized(language, aSingleRow[COLUMN_2_N]);
         pregnancyVec.push_back(pr);
