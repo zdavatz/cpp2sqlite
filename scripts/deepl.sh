@@ -1,20 +1,27 @@
 #!/bin/bash
 # Alex Bettarini - 11 Mar 2019
 
-source passwords
-TARGET_LAN=fr
-URL="https://api.deepl.com/v1"
+if [ -z "${TARGET_LAN}" ] ; then
+    echo "Environment variable TARGET_LAN must be defined to continue"
+    exit 1
+fi
 
 IN_DIR=../input
-
 if [ ! -z "$1" ] ; then
     IN_DIR=$1
 fi
 
+if [ ! -z "$2" ] ; then
+    TARGET_JOB=".$2"
+fi
+
+source passwords
+URL="https://api.deepl.com/v1"
+
 mkdir -p $IN_DIR
-IN_FILE=$IN_DIR/deepl.in.txt
-OUT_FILE=$IN_DIR/deepl.out.${TARGET_LAN}.txt
-ERR_FILE=$IN_DIR/deepl.err.${TARGET_LAN}.txt
+IN_FILE=$IN_DIR/deepl${TARGET_JOB}.in.txt
+OUT_FILE=$IN_DIR/deepl${TARGET_JOB}.out.${TARGET_LAN}.txt
+ERR_FILE=$IN_DIR/deepl${TARGET_JOB}.err.${TARGET_LAN}.txt
 if [ -f $OUT_FILE ] ; then
     rm $OUT_FILE
 fi
