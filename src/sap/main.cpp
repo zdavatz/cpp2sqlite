@@ -42,9 +42,9 @@
 #define COLUMN_2_C      2   // Indikation
 #define COLUMN_2_G      6   // Wirkstoff
 #define COLUMN_2_H      7   // Applikationsart
-//#define COLUMN_2_I      8   // max. verabreichte Tagesdosis 1. Trimenon
-//#define COLUMN_2_J      9   // max. verabreichte Tagesdosis 2. Trimenon
-//#define COLUMN_2_K     10   // max. verabreichte Tagesdosis 3. Trimenon
+#define COLUMN_2_I      8   // max. verabreichte Tagesdosis 1. Trimenon
+#define COLUMN_2_J      9   // max. verabreichte Tagesdosis 2. Trimenon
+#define COLUMN_2_K     10   // max. verabreichte Tagesdosis 3. Trimenon
 #define COLUMN_2_L     11   // Bemerkungen zur Dosierung
 //#define COLUMN_2_M     12   // Peripartale Dosierung
 #define COLUMN_2_N     13   // Bemerkungen zur peripartalen Dosierung
@@ -65,16 +65,26 @@ std::string sheetTitle[2];
 
 std::set<std::string> toBeTranslatedSet; // no duplicates, sorted
 
+// See also src/c2s/sappinfo.cpp getLocalized()
 void validateAndAdd(const std::string s)
 {
     if (s.empty())
         return;
     
     // Skip if it starts with a number
-    // sheet1 column I could be like "120mg" or "keine Angaben"
+    // sheet 1, column I, could be like "120mg" or "keine Angaben"
     if (std::isdigit(s[0]))
         return;
     
+    // Sometimes it start with a number, but after a space: " 80mg"
+    // example sheet 2, column K, ATC C05AD01
+    if (std::isspace(s[0]) && std::isdigit(s[1]))
+        return;
+
+    // Treat this as an empty cell
+    if (s == "-")
+        return;
+
     toBeTranslatedSet.insert(s);
 }
 
@@ -114,8 +124,10 @@ void parseXLXS(const std::string &inFilename,
             COLUMN_C,   // Indikation
             COLUMN_G,   // Wirkstoff
             COLUMN_H,   // Applikationsart
-            COLUMN_I,   // max. verabreichte Tagesdosis
-            COLUMN_J    // Bemerkungen zur Dosierung
+            COLUMN_J,   // Bemerkungen zur Dosierung
+            
+            // Sometimes dosage, other times text:
+            COLUMN_I   // max. verabreichte Tagesdosis
         };
         
         for (auto s : columnsWithTextSet)
@@ -148,7 +160,12 @@ void parseXLXS(const std::string &inFilename,
             COLUMN_2_G, // Wirkstoff
             COLUMN_2_H, // Applikationsart
             COLUMN_2_L, // Bemerkungen zur Dosierung
-            COLUMN_2_N  // Bemerkungen zur peripartalen Dosierung
+            COLUMN_2_N, // Bemerkungen zur peripartalen Dosierung
+
+            // Sometimes dosage, other times text:
+            COLUMN_2_I, // max. verabreichte Tagesdosis 1. Trimenon
+            COLUMN_2_J, // max. verabreichte Tagesdosis 2. Trimenon
+            COLUMN_2_K  // max. verabreichte Tagesdosis 3. Trimenon
         };
 
         for (auto s : columnsWithTextSet)
