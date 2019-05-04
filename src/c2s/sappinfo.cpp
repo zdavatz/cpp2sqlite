@@ -586,10 +586,10 @@ std::string getHtmlByAtc(const std::string atc)
             numColumns++;
         }
 
-        if (!optionalColumnMap[LOC_KEY_TH_COMMENT] &&
+        if (!optionalColumnMap_2[LOC_KEY_TH_COMMENT] &&
             !p.c.comments.empty())
         {
-            optionalColumnMap[LOC_KEY_TH_COMMENT] = true;
+            optionalColumnMap_2[LOC_KEY_TH_COMMENT] = true;
             numColumns++;
         }
 #endif
