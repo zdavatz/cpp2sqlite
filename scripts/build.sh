@@ -1,6 +1,6 @@
 #!/bin/bash
 
-STEP_GIT=true
+STEP_GIT=false
 STEP_DOWNLOAD=true
 STEP_BUILD_APPS=true
 STEP_RUN_C2S=true
