@@ -418,6 +418,13 @@ void parseXLXS(const std::string &inDir,
             continue;
         }
         
+        if (row[COLUMN_2_AC].to_string().empty()) {
+            // Issue #64
+            // The last line of the second sheet contains just one subtotal for G
+            // The filter column is empty, so just ignore it
+            continue;
+        }
+
         int filter = std::stoi(row[COLUMN_2_AC].to_string());
         if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
             continue;            // Not found in set
