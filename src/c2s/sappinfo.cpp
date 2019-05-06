@@ -121,7 +121,7 @@ namespace SAPP
         
         // Other strings
         "Art der Anwendung", "Wirkstoff", "Hauptindikation", "Indikation",
-        "stillzeit", "schwangerschaft"
+        "Stillzeit", "Schwangerschaft"
     };
     std::vector<std::string> loc_string_fr = { // TODO: verify translations
         "Type d’application", "Commentaires sur dosage",
@@ -135,7 +135,7 @@ namespace SAPP
         
         // Other strings
         "Type d'utilisation", "Substance active", "Indication principale", "Indication",
-        "allaitement", "grossesse"
+        "Période de lactation", "Grossesse"
     };
     std::vector<std::string> loc_string_en = {
         "Type of application", "Comments on dosage",
