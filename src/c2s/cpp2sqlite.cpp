@@ -450,7 +450,8 @@ void getHtmlFromXml(std::string &xml,
                     std::vector<std::string> &sectionTitle,
                     const std::string atc,
                     const std::string language,
-                    bool verbose = false)
+                    bool verbose,
+                    bool skipSappinfo)
 {
 #ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
     html = xml;
@@ -864,6 +865,8 @@ void getHtmlFromXml(std::string &xml,
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
     }
 
+#pragma mark - extra sections
+
 doExtraSections:
     // Add a section that was not in the XML contents
     // PedDose
@@ -890,7 +893,7 @@ doExtraSections:
 
     // Add another section that was not in the XML contents
     // Sappinfo
-    if (!atc.empty())
+    if (!atc.empty() && !skipSappinfo)
     {
         std::string sappHtml = SAPP::getHtmlByAtc(atc);
         if (!sappHtml.empty()) {
@@ -929,6 +932,8 @@ doExtraSections:
     html += "\n</html>";
 }
 
+#pragma mark - main
+
 int main(int argc, char **argv)
 {
     //std::setlocale(LC_ALL, "en_US.utf8");
@@ -940,6 +945,7 @@ int main(int argc, char **argv)
     std::string opt_language;
     bool flagXml = false;
     bool flagVerbose = false;
+    bool flagNoSappinfo = false;
     //bool flagPinfo = false;
     std::string type("fi"); // Fachinfo
     std::string opt_aplha;
@@ -952,6 +958,7 @@ int main(int argc, char **argv)
         ("help,h", "print this message")
         ("version,v", "print the version information and exit")
         ("verbose", "be extra verbose") // Show errors and logs
+        ("without-sappinfo", "don't include sappinfo section")
 //        ("nodown", "no download, parse only")
         ("lang", po::value<std::string>( &opt_language )->default_value("de"), "use given language (de/fr)")
 //        ("alpha", po::value<std::string>( &opt_aplha ), "only include titles which start with arg value")  // Med title
@@ -1016,6 +1023,10 @@ int main(int argc, char **argv)
         flagVerbose = true;
     }
     
+    if (vm.count("without-sappinfo")) {
+        flagNoSappinfo = true;
+    }
+
     if (vm.count("xml")) {
         flagXml = true;
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagXml: " << flagXml << std::endl;
@@ -1079,7 +1090,8 @@ int main(int argc, char **argv)
         REP::html_end_ul();
     }
     
-    SAPP::parseXLXS(opt_inputDirectory, "/sappinfo.xlsx", opt_language);
+    if (!flagNoSappinfo)
+        SAPP::parseXLXS(opt_inputDirectory, "/sappinfo.xlsx", opt_language);
 
     if (flagXml) {
         std::cerr << "Creating XML not yet implemented" << std::endl;
@@ -1226,7 +1238,8 @@ int main(int argc, char **argv)
                                sectionTitle,    // for titles_str
                                firstAtc,        // for pedDose
                                opt_language,    // for barcode section
-                               flagVerbose);
+                               flagVerbose,
+                               flagNoSappinfo);
                 AIPS::bindText("amikodb", statement, 15, html);
             }
             
@@ -1342,7 +1355,7 @@ int main(int argc, char **argv)
         BAG::printUsageStats();
         ATC::printUsageStats();
         PED::printUsageStats();
-        SAPP::printUsageStats();
+        if (!flagNoSappinfo) SAPP::printUsageStats();
 
         AIPS::destroyStatement(statement);
 
