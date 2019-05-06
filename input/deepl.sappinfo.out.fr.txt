@@ -339,24 +339,24 @@ Zolpidem
 vaginose bactérienne
 selon les informations techniques
 se gargariser et cracher
-i.m.
-i.v.
 inhalateur
+intramusculaire
+intravenös
 selon l'âge gestationnel
 aucun détail
 pas d'application à long terme
 pas d'application à long terme, application péripartale
 pas de traitement à long terme
 dans le coin
+ne s'appliquent pas
 Doses uniques seulement
 doses uniques, pas de traitement à long terme
 doses uniques seulement, réduction de la dose péripartale
 Utilisation uniquement en tant que réserve
 utilisation à court terme seulement
-p.o.
-p.o.
-péripartum contre-indiqué
+ne pas utiliser peripartal
+péroral
 par semaine
 rectal
-s.c.
+sous-cutané
 vaginal

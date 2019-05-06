@@ -1,8 +1,8 @@
 #!/bin/bash
 # Alex Bettarini - 11 Mar 2019
 
-if [ -z "${TARGET_LAN}" ] ; then
-    echo "Environment variable TARGET_LAN must be defined to continue"
+if [ -z "${TARGET_LANG}" ] ; then
+    echo "Environment variable TARGET_LANG must be defined to continue"
     exit 1
 fi
 
@@ -20,8 +20,8 @@ URL="https://api.deepl.com/v1"
 
 mkdir -p $IN_DIR
 IN_FILE=$IN_DIR/deepl${TARGET_JOB}.in.txt
-OUT_FILE=$IN_DIR/deepl${TARGET_JOB}.out.${TARGET_LAN}.txt
-ERR_FILE=$IN_DIR/deepl${TARGET_JOB}.err.${TARGET_LAN}.txt
+OUT_FILE=$IN_DIR/deepl${TARGET_JOB}.out.${TARGET_LANG}.txt
+ERR_FILE=$IN_DIR/deepl${TARGET_JOB}.err.${TARGET_LANG}.txt
 if [ -f $OUT_FILE ] ; then
     rm $OUT_FILE
 fi
@@ -39,7 +39,7 @@ fi
 
 function translate() {
     local DATA=$1
-    local GET_DATA="text=${DATA}&target_lang=${TARGET_LAN}&auth_key=${AUTH_KEY}"
+    local GET_DATA="text=${DATA}&target_lang=${TARGET_LANG}&auth_key=${AUTH_KEY}"
     local POST_DATA="${GET_DATA}"
     local LENGTH=$(echo -n $POST_DATA | wc -c)
     #echo "data length: $LENGTH"
