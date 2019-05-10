@@ -26,6 +26,11 @@ namespace SWISSMEDIC
         std::string gtin12;
         std::string name;
         std::string galenicForm;
+        std::string owner;
+        std::string category;
+        std::string regDate;
+        std::string validUntil;
+        std::string narcoticFlag;
         dosageUnits du;
     };
 

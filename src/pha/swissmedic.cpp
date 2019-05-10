@@ -23,13 +23,17 @@
 
 #define COLUMN_A        0   // GTIN (5 digits)
 #define COLUMN_C        2   // name
+#define COLUMN_D        3   // owner
 #define COLUMN_G        6   // ATC
+#define COLUMN_H        7   // registration date (Date d'autorisation du dosage)
+#define COLUMN_J        9   // valid until (Durée de validité de l'AMM))
 #define COLUMN_K       10   // packaging code (3 digits)
 #define COLUMN_L       11   // number for dosage
 #define COLUMN_M       12   // units for dosage
 #define COLUMN_N       13   // category (A..E)
 #define COLUMN_S       18   // application field
 #define COLUMN_W       22   // preparation contains narcotics
+#define COLUMN_X       23   // narcotic flag
 
 #define FIRST_DATA_ROW_INDEX    6
 
@@ -132,22 +136,25 @@ void parseXLXS(const std::string &filename)
         // TODO: take first from Refdata
         pr.name = aSingleRow[COLUMN_C];
 
+        pr.owner = aSingleRow[COLUMN_D];
+        
+        // TODO: get date
+        pr.regDate = aSingleRow[COLUMN_H];
+        
+        // TODO: get date
+        pr.validUntil = aSingleRow[COLUMN_J];
+
         pr.galenicForm = aSingleRow[COLUMN_M];
 
-        // Precalculate category
-        {
-        std::string cat = aSingleRow[COLUMN_N];
-        if ((cat == "A") && (aSingleRow[COLUMN_W] == "a"))
-            cat += "+";
-        
-        //categoryVec.push_back(cat);
-        }
+        pr.category = aSingleRow[COLUMN_N];
+        if ((pr.category == "A") && (aSingleRow[COLUMN_W] == "a"))
+            pr.category += "+";
         
         // Precalculate dosage and units
         pr.du.dosage = aSingleRow[COLUMN_L];
         pr.du.units = aSingleRow[COLUMN_M];
-#ifdef DEBUG_PHARMA
-#endif
+
+        pr.narcoticFlag = aSingleRow[COLUMN_X];
 
         pharmaVec.push_back(pr);
     }
@@ -319,9 +326,27 @@ void createCSV(const std::string &outDir)
     << "Registrierungsnummer" << OUTPUT_FILE_SEPARATOR  // A
     << "Packungsnummer" << OUTPUT_FILE_SEPARATOR        // B
     << "Swissmedicnummer" << OUTPUT_FILE_SEPARATOR      // C
-    << "Swissmedicnummer" << OUTPUT_FILE_SEPARATOR      // D
+    << "GTIN" << OUTPUT_FILE_SEPARATOR                  // D
     << "Präparat" << OUTPUT_FILE_SEPARATOR              // E
-    << "Galenische Form"
+    << "Galenische Form" << OUTPUT_FILE_SEPARATOR       // F
+    << "Dosierung" << OUTPUT_FILE_SEPARATOR             // G
+    << "Packungsgrösse" << OUTPUT_FILE_SEPARATOR // H
+    << "Packungsgrösse numerisch" << OUTPUT_FILE_SEPARATOR // I
+    << "EFP" << OUTPUT_FILE_SEPARATOR // J
+    << "PP" << OUTPUT_FILE_SEPARATOR // K
+    << "Zulassungsinhaber" << OUTPUT_FILE_SEPARATOR // L
+    << "Swissmedic Kategorie" << OUTPUT_FILE_SEPARATOR // M
+    << "SL Produkt:" << OUTPUT_FILE_SEPARATOR // N
+    << "Aufnahmedatum SL" << OUTPUT_FILE_SEPARATOR // O
+    << "Registrierungsdatum" << OUTPUT_FILE_SEPARATOR // P
+    << "Gültigkeitsdatum" << OUTPUT_FILE_SEPARATOR // Q
+    << "Exportprodukt" << OUTPUT_FILE_SEPARATOR // R
+    << "Generikum" << OUTPUT_FILE_SEPARATOR // S
+    << "Index Therapeuticus (BAG)" << OUTPUT_FILE_SEPARATOR // T
+    << "Index Therapeuticus (Swissmedic)" << OUTPUT_FILE_SEPARATOR // U
+    << "Betäubungsmittel" << OUTPUT_FILE_SEPARATOR // V
+    << "Impfstoff/Blutprodukt" << OUTPUT_FILE_SEPARATOR // W
+    << "Tageskosten (DDD)" // X
     << std::endl;
     
     for (auto pv : pharmaVec) {
@@ -333,7 +358,25 @@ void createCSV(const std::string &outDir)
         << pv.rn5 << pv.code3 << OUTPUT_FILE_SEPARATOR  // C
         << pv.gtin12 << OUTPUT_FILE_SEPARATOR           // D
         << pv.name << OUTPUT_FILE_SEPARATOR             // E
-        << pv.galenicForm
+        << pv.galenicForm << OUTPUT_FILE_SEPARATOR      // F
+        << "todo" << OUTPUT_FILE_SEPARATOR              // G
+        << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR // H
+        << OUTPUT_FILE_SEPARATOR // I
+        << OUTPUT_FILE_SEPARATOR // J
+        << OUTPUT_FILE_SEPARATOR // K
+        << pv.owner << OUTPUT_FILE_SEPARATOR // L
+        << pv.category << OUTPUT_FILE_SEPARATOR // M
+        << OUTPUT_FILE_SEPARATOR // N
+        << OUTPUT_FILE_SEPARATOR // O
+        << pv.regDate << OUTPUT_FILE_SEPARATOR // P
+        << pv.validUntil << OUTPUT_FILE_SEPARATOR // Q
+        << OUTPUT_FILE_SEPARATOR // R
+        << OUTPUT_FILE_SEPARATOR // S
+        << OUTPUT_FILE_SEPARATOR // T
+        << OUTPUT_FILE_SEPARATOR // U
+        << pv.narcoticFlag << OUTPUT_FILE_SEPARATOR // V
+        << OUTPUT_FILE_SEPARATOR // W
+        << "todo" // X
         << std::endl;
 
     }
