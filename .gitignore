@@ -9,3 +9,4 @@ output/
 build/
 scripts/temp/
 input/deepl.sappinfo.in.txt
+input/deepl.sappinfo.err.fr.txt

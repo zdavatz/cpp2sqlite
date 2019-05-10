@@ -1,6 +1,6 @@
 //
 //  main.cpp
-//  interaction
+//  sappinfo
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File

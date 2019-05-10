@@ -401,7 +401,7 @@ void parseXLXS(const std::string &inDir,
     
     ws = wb.sheet_by_index(1);
     sheetTitle[1] = ws.title();
-    std::clog << "Sheet title: " << ws.title() << std::endl;
+    std::clog << "\tSheet: " << ws.title() << std::endl;
     
     skipHeaderCount = 0;
     for (auto row : ws.rows(false)) {

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(AIPS VERSION "1.1.283")
+project(AIPS VERSION "1.2.319")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -43,7 +43,7 @@ add_executable(cpp2sqlite
 	src/c2s/swissmedic.hpp src/c2s/swissmedic.cpp
 	src/c2s/sappinfo.hpp src/c2s/sappinfo.cpp
 	src/c2s/bag.hpp src/c2s/bag.cpp
-	src/c2s/gtin.hpp src/c2s/gtin.cpp
+	src/gtin.hpp src/gtin.cpp
 	src/c2s/beautify.hpp src/c2s/beautify.cpp
 	src/c2s/atc.hpp src/c2s/atc.cpp
 	src/c2s/epha.hpp src/c2s/epha.cpp
@@ -53,7 +53,9 @@ add_executable(cpp2sqlite
 	src/c2s/medicine.h
 	src/c2s/html_tags.h)
 
-target_include_directories(cpp2sqlite PUBLIC "${CMAKE_SOURCE_DIR}/src/c2s")
+target_include_directories(cpp2sqlite PUBLIC
+	"${CMAKE_SOURCE_DIR}/src"
+	"${CMAKE_SOURCE_DIR}/src/c2s")
 target_link_libraries(cpp2sqlite ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})
 #set_target_properties(cpp2sqlite PROPERTIES CXX_STANDARD 17)
 
@@ -76,5 +78,16 @@ target_include_directories(sappinfo PUBLIC "${CMAKE_SOURCE_DIR}/src/sap")
 target_link_libraries(sappinfo ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 
 #-------------------------------------------------------------------------------
+add_executable(pharma
+	src/gtin.hpp src/gtin.cpp
+	src/pha/swissmedic.hpp src/pha/swissmedic.cpp
+	src/pha/main.cpp)
 
-install(TARGETS cpp2sqlite interaction sappinfo RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
+target_include_directories(pharma PUBLIC
+			"${CMAKE_SOURCE_DIR}/src"
+			"${CMAKE_SOURCE_DIR}/src/pha")
+target_link_libraries(pharma ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
+
+#-------------------------------------------------------------------------------
+
+install(TARGETS cpp2sqlite interaction sappinfo pharma RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
