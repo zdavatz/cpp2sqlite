@@ -98,8 +98,8 @@ int main(int argc, char **argv)
     REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, false);
 
     // Read input files
-    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", "de", false);
     SWISSMEDIC::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages.xlsx");
+    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", "de", false);
 
     // Create CSV
     SWISSMEDIC::createCSV(opt_workDirectory + "/output");

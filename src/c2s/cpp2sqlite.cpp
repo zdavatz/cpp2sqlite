@@ -1047,7 +1047,7 @@ int main(int argc, char **argv)
     boost::to_upper(language);
     //ofs2 << "<title>" << title << " Report " << language << "</title>";
     std::string reportTitle("AmiKo Report " + language);
-    REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, opt_language, flagVerbose);
+    REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, flagVerbose);
     REP::html_start_ul();
     for (int i=0; i<argc; i++)
         REP::html_li(argv[i]);
