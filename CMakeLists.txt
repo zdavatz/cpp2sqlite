@@ -42,13 +42,13 @@ add_executable(cpp2sqlite
 	src/c2s/refdata.hpp src/c2s/refdata.cpp
 	src/c2s/swissmedic.hpp src/c2s/swissmedic.cpp
 	src/c2s/sappinfo.hpp src/c2s/sappinfo.cpp
-	src/c2s/bag.hpp src/c2s/bag.cpp
+	src/bag.hpp src/bag.cpp
 	src/gtin.hpp src/gtin.cpp
 	src/c2s/beautify.hpp src/c2s/beautify.cpp
 	src/c2s/atc.hpp src/c2s/atc.cpp
 	src/c2s/epha.hpp src/c2s/epha.cpp
 	src/c2s/peddose.hpp src/c2s/peddose.cpp
-    src/c2s/report.hpp src/c2s/report.cpp
+    src/report.hpp src/report.cpp
 	src/c2s/ean13/functii.cpp src/c2s/ean13/functii.h
 	src/c2s/medicine.h
 	src/c2s/html_tags.h)
@@ -80,6 +80,8 @@ target_link_libraries(sappinfo ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 #-------------------------------------------------------------------------------
 add_executable(pharma
 	src/gtin.hpp src/gtin.cpp
+	src/bag.hpp src/bag.cpp
+	src/report.hpp src/report.cpp
 	src/pha/swissmedic.hpp src/pha/swissmedic.cpp
 	src/pha/main.cpp)
 

@@ -42,11 +42,11 @@ static void toConsole(const std::string &msg)
 }
 
 void init(std::string logDir,
-          std::string language,
+          std::string filename,
+          std::string title,
+          //std::string language,
           bool verbose)
 {
-    std::string filename("amiko_report_" + language + ".html");
-
     verboseFlag = verbose;
 
     std::string fullFilename(logDir);
@@ -57,8 +57,8 @@ void init(std::string logDir,
     ofs2 << "<head>";
 
     ofs2 << "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />";
-    boost::to_upper(language);
-    ofs2 << "<title>AmiKo Report " << language << "</title>";
+    //boost::to_upper(language);
+    ofs2 << "<title>" << title << "</title>";
     ofs2 << "<style>";
     ofs2 << "body {font-family: verdana,arial,sans-serif; font-size: 13px;}";
     ofs2 << "h1 {text-align: center;}";

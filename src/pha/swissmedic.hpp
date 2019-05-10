@@ -23,7 +23,7 @@ namespace SWISSMEDIC
     struct pharmaRow {
         std::string rn5;
         std::string code3;
-        std::string gtin12;
+        std::string gtin13;
         std::string name;
         std::string galenicForm;
         std::string owner;

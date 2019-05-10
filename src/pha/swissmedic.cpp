@@ -17,9 +17,9 @@
 
 #include "swissmedic.hpp"
 #include "gtin.hpp"
-//#include "bag.hpp"
+#include "bag.hpp"
 //#include "beautify.hpp"
-//#include "report.hpp"
+#include "report.hpp"
 
 #define COLUMN_A        0   // GTIN (5 digits)
 #define COLUMN_C        2   // name
@@ -65,30 +65,26 @@ namespace SWISSMEDIC
     unsigned int statsTotalGtinCount = 0;
     unsigned int statsRecoveredDosage = 0;
 
-//static
-//void printFileStats(const std::string &filename)
-//{
-//#if 0
-//    REP::html_h2("Swissmedic");
-//    //REP::html_p(std::string(basename((char *)filename.c_str())));
-//    REP::html_p(filename);
-//    REP::html_start_ul();
-//    REP::html_li("rows: " + std::to_string(theWholeSpreadSheet.size()));
-//    REP::html_end_ul();
-//#endif
-//}
+static
+void printFileStats(const std::string &filename)
+{
+    REP::html_h2("Swissmedic");
+    //REP::html_p(std::string(basename((char *)filename.c_str())));
+    REP::html_p(filename);
+    REP::html_start_ul();
+    REP::html_li("rows: " + std::to_string(theWholeSpreadSheet.size()));
+    REP::html_end_ul();
+}
 
-//void printUsageStats()
-//{
-//#if 0
-//    REP::html_h2("Swissmedic");
-//
-//    REP::html_start_ul();
-//    REP::html_li("GTINs used: " + std::to_string(statsTotalGtinCount));
-//    REP::html_li("recovered dosage " + std::to_string(statsRecoveredDosage));
-//    REP::html_end_ul();
-//#endif
-//}
+void printUsageStats()
+{
+    REP::html_h2("Swissmedic");
+
+    REP::html_start_ul();
+    REP::html_li("GTINs used: " + std::to_string(statsTotalGtinCount));
+    REP::html_li("recovered dosage " + std::to_string(statsRecoveredDosage));
+    REP::html_end_ul();
+}
 
 void parseXLXS(const std::string &filename)
 {
@@ -102,7 +98,7 @@ void parseXLXS(const std::string &filename)
     for (auto row : ws.rows(false)) {
         ++skipHeaderCount;
         if (skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
-#ifdef DEBUG_PHARMA
+#if 0 //def DEBUG_PHARMA
             if (skipHeaderCount == FIRST_DATA_ROW_INDEX) {
                 int i=0;
                 for (auto cell : row) {
@@ -131,7 +127,7 @@ void parseXLXS(const std::string &filename)
         // Precalculate gtin
         std::string gtin12 = "7680" + pr.rn5 + pr.code3;
         char checksum = GTIN::getGtin13Checksum(gtin12);
-        pr.gtin12 = gtin12 + checksum;
+        pr.gtin13 = gtin12 + checksum;
 
         // TODO: take first from Refdata
         pr.name = aSingleRow[COLUMN_C];
@@ -159,7 +155,7 @@ void parseXLXS(const std::string &filename)
         pharmaVec.push_back(pr);
     }
 
-    //printFileStats(filename);
+    printFileStats(filename);
 }
 
 //// Return count added
@@ -291,18 +287,27 @@ void parseXLXS(const std::string &filename)
 //    return atc;
 //}
 
-//std::string getCategoryByGtin(const std::string &g)
-//{
-//    std::string cat;
-//
-//    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++)
-//        if (gtin[rowInt] == g) {
-//            cat = categoryVec[rowInt];
-//            break;
-//        }
-//
-//    return cat;
-//}
+std::string getCategoryByGtin(const std::string &g)
+{
+    std::string cat;
+
+#if 0
+    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++)
+        if (gtin[rowInt] == g) {
+            cat = categoryVec[rowInt];
+            break;
+        }
+#else
+    for (auto pv : pharmaVec) {
+        if (pv.gtin13 == g) {
+            cat = pv.category;
+            break;
+        }
+    }
+#endif
+
+    return cat;
+}
 
 //dosageUnits getByGtin(const std::string &g)
 //{
@@ -351,19 +356,23 @@ void createCSV(const std::string &outDir)
     
     for (auto pv : pharmaVec) {
 
+        std::string cat = SWISSMEDIC::getCategoryByGtin(pv.gtin13);
+        std::string paf = BAG::getPricesAndFlags(pv.gtin13, "", cat);
+        BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13);
+
         ofs
 //        << "\"" << pv.rn5 << "\"" << OUTPUT_FILE_SEPARATOR   // A
         << pv.rn5 << OUTPUT_FILE_SEPARATOR              // A
         << pv.code3 << OUTPUT_FILE_SEPARATOR            // B
         << pv.rn5 << pv.code3 << OUTPUT_FILE_SEPARATOR  // C
-        << pv.gtin12 << OUTPUT_FILE_SEPARATOR           // D
+        << pv.gtin13 << OUTPUT_FILE_SEPARATOR           // D
         << pv.name << OUTPUT_FILE_SEPARATOR             // E
         << pv.galenicForm << OUTPUT_FILE_SEPARATOR      // F
         << "todo" << OUTPUT_FILE_SEPARATOR              // G
         << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR // H
         << OUTPUT_FILE_SEPARATOR // I
-        << OUTPUT_FILE_SEPARATOR // J
-        << OUTPUT_FILE_SEPARATOR // K
+        << fromBag.efp << OUTPUT_FILE_SEPARATOR // J
+        << fromBag.pp << OUTPUT_FILE_SEPARATOR // K
         << pv.owner << OUTPUT_FILE_SEPARATOR // L
         << pv.category << OUTPUT_FILE_SEPARATOR // M
         << OUTPUT_FILE_SEPARATOR // N

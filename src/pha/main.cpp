@@ -12,6 +12,8 @@
 #include <boost/program_options.hpp>
 
 #include "swissmedic.hpp"
+#include "bag.hpp"
+#include "report.hpp"
 #include "config.h"
 
 namespace po = boost::program_options;
@@ -91,11 +93,22 @@ int main(int argc, char **argv)
     
     ////////////////////////////////////////////////////////////////////////////
 
-    // Read Swissmedic
+    std::string reportFilename("pharma_report.html");
+    std::string reportTitle("Pharma Report");
+    REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, false);
+
+    // Read input files
+    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", "de", false);
     SWISSMEDIC::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages.xlsx");
 
     // Create CSV
     SWISSMEDIC::createCSV(opt_workDirectory + "/output");
     
+    // Usage report
+    REP::html_h1("Usage");
+    SWISSMEDIC::printUsageStats();
+    BAG::printUsageStats();
+    REP::terminate();
+
     return EXIT_SUCCESS;
 }

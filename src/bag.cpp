@@ -158,7 +158,7 @@ void parseXML(const std::string &filename,
                         prep.packs.push_back(pack);
                         
                         statsPackCount++;
-#if 0
+#ifdef DEBUG_PHARMA
                     static int i=0;
                     if (i<10)
                         std::clog
@@ -228,8 +228,8 @@ void parseXML(const std::string &filename,
 
 // Return count added
 int getAdditionalNames(const std::string &rn,
-                               std::set<std::string> &gtinUsed,
-                               GTIN::oneFachinfoPackages &packages)
+                       std::set<std::string> &gtinUsed,
+                       GTIN::oneFachinfoPackages &packages)
 {
     std::set<std::string>::iterator it;
     int countAdded = 0;
