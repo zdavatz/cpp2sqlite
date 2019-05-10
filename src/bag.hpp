@@ -19,6 +19,7 @@ namespace BAG
     struct packageFields {
         std::string shortName;
         std::string efp;
+        std::string efp_validFrom;
         std::string pp;
         std::vector<std::string> flags;
     };
@@ -33,6 +34,7 @@ namespace BAG
         std::string category;
         std::string gtin;
         std::string exFactoryPrice;
+        std::string exFactoryPriceValidFrom;
         std::string publicPrice;
         std::string limitationPoints;   // TODO
     };

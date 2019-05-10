@@ -363,38 +363,45 @@ void createCSV(const std::string &outDir)
         std::string paf = BAG::getPricesAndFlags(pv.gtin13, "", cat);
         BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13);
         
-        std::string flagSL;
-        for (auto s : fromBag.flags)
-            if (s == "SL") {
-                flagSL = s;
-                break;
-            }
+        std::string bagFlagSL;
+        std::string bagFlagGeneric;
+        for (auto s : fromBag.flags) {
+            if (s == "SL")
+                bagFlagSL = s;
+
+            if ((s == "G") || (s == "O"))
+                bagFlagGeneric = s;
+        }
 
         ofs
-        << "\"" << pv.rn5 << "\"" << OUTPUT_FILE_SEPARATOR   // A
+        << "\"" << pv.rn5 << "\"" << OUTPUT_FILE_SEPARATOR              // A
         << "\"" << pv.code3 << "\"" << OUTPUT_FILE_SEPARATOR            // B
         << "\"" << pv.rn5 << pv.code3 << "\"" << OUTPUT_FILE_SEPARATOR  // C
         << pv.gtin13 << OUTPUT_FILE_SEPARATOR           // D
         << pv.name << OUTPUT_FILE_SEPARATOR             // E
         << pv.galenicForm << OUTPUT_FILE_SEPARATOR      // F
-        << "todo" << OUTPUT_FILE_SEPARATOR              // G
-        << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR // H
-        << OUTPUT_FILE_SEPARATOR // I
+        << OUTPUT_FILE_SEPARATOR              // G
+        << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR  // H
+        << pv.du.dosage << OUTPUT_FILE_SEPARATOR        // I // TODO: calculation 10 x 0.5 ml becomes 5
         << fromBag.efp << OUTPUT_FILE_SEPARATOR         // J
         << fromBag.pp << OUTPUT_FILE_SEPARATOR          // K
         << pv.owner << OUTPUT_FILE_SEPARATOR            // L
         << pv.category << OUTPUT_FILE_SEPARATOR         // M
-        << OUTPUT_FILE_SEPARATOR // N
-        << OUTPUT_FILE_SEPARATOR // O
-        << pv.regDate << OUTPUT_FILE_SEPARATOR // P
-        << pv.validUntil << OUTPUT_FILE_SEPARATOR // Q
+        << bagFlagSL << OUTPUT_FILE_SEPARATOR           // N
+        << fromBag.efp_validFrom << OUTPUT_FILE_SEPARATOR // O
+        << pv.regDate << OUTPUT_FILE_SEPARATOR          // P
+        << pv.validUntil << OUTPUT_FILE_SEPARATOR       // Q
         << OUTPUT_FILE_SEPARATOR // R
-        << flagSL << OUTPUT_FILE_SEPARATOR // S  boost::algorithm::join(fromBag.flags, ",")
+#if 1
+        << bagFlagGeneric << OUTPUT_FILE_SEPARATOR      // S
+#else
+        << boost::algorithm::join(fromBag.flags, ",") << OUTPUT_FILE_SEPARATOR // S
+#endif
         << OUTPUT_FILE_SEPARATOR // T
         << OUTPUT_FILE_SEPARATOR // U
         << pv.narcoticFlag << OUTPUT_FILE_SEPARATOR // V
         << OUTPUT_FILE_SEPARATOR // W
-        << "todo" // X
+        << "" // X
         << std::endl;
 
     }

@@ -154,6 +154,7 @@ void parseXML(const std::string &filename,
 
                         pack.limitationPoints = p.second.get("PointLimitations.PointLimitation.Points", "");
                         pack.exFactoryPrice = formatPriceAsMoney(p.second.get("Prices.ExFactoryPrice.Price", ""));
+                        pack.exFactoryPriceValidFrom = p.second.get("Prices.ExFactoryPrice.ValidFromDate", "");
                         pack.publicPrice = formatPriceAsMoney(p.second.get("Prices.PublicPrice.Price", ""));
                         prep.packs.push_back(pack);
                         
@@ -290,6 +291,10 @@ std::string getPricesAndFlags(const std::string &gtin,
                 if (!p.publicPrice.empty()) {
                     prices += ", PP " + p.publicPrice;
                     pf.pp = p.publicPrice;
+                }
+
+                if (!p.exFactoryPriceValidFrom.empty()) { // for pharma.csv
+                    pf.efp_validFrom = p.exFactoryPriceValidFrom;
                 }
 
                 // Flags
