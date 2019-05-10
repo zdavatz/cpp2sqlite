@@ -18,7 +18,7 @@
 
 #include "bag.hpp"
 #include "gtin.hpp"
-#include "swissmedic.hpp"
+//#include "swissmedic.hpp"
 #include "report.hpp"
 
 namespace pt = boost::property_tree;

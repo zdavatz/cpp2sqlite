@@ -11,7 +11,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#include "swissmedic.hpp"
+#include "swissmedic1.hpp"
+#include "swissmedic2.hpp"
 #include "bag.hpp"
 #include "report.hpp"
 #include "config.h"
@@ -98,15 +99,16 @@ int main(int argc, char **argv)
     REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, false);
 
     // Read input files
-    SWISSMEDIC::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages.xlsx");
+    SWISSMEDIC1::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages.xlsx");
+    SWISSMEDIC2::parseXLXS(opt_workDirectory + "/downloads/Erweiterte_Arzneimittelliste HAM.xlsx");
     BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", "de", false);
 
     // Create CSV
-    SWISSMEDIC::createCSV(opt_workDirectory + "/output");
+    SWISSMEDIC1::createCSV(opt_workDirectory + "/output");
     
     // Usage report
     REP::html_h1("Usage");
-    SWISSMEDIC::printUsageStats();
+    SWISSMEDIC1::printUsageStats();
     BAG::printUsageStats();
     REP::terminate();
 

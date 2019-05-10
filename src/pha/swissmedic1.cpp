@@ -1,5 +1,5 @@
 //
-//  swissmedic.cpp
+//  swissmedic1.cpp
 //  pharma
 //
 //  ©ywesee GmbH -- all rights reserved
@@ -15,7 +15,7 @@
 
 #include <xlnt/xlnt.hpp>
 
-#include "swissmedic.hpp"
+#include "swissmedic1.hpp"
 #include "gtin.hpp"
 #include "bag.hpp"
 //#include "beautify.hpp"
@@ -39,7 +39,7 @@
 
 #define OUTPUT_FILE_SEPARATOR   ";"
 
-namespace SWISSMEDIC
+namespace SWISSMEDIC1
 {
     std::vector< std::vector<std::string> > theWholeSpreadSheet;
 #if 1
@@ -359,7 +359,7 @@ void createCSV(const std::string &outDir)
     
     for (auto pv : pharmaVec) {
 
-        std::string cat = SWISSMEDIC::getCategoryByGtin(pv.gtin13);
+        std::string cat = getCategoryByGtin(pv.gtin13);
         std::string paf = BAG::getPricesAndFlags(pv.gtin13, "", cat);
         BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13);
         

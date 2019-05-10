@@ -1,5 +1,5 @@
 //
-//  swissmedic.hpp
+//  swissmedic1.hpp
 //  pharma
 //
 //  ©ywesee GmbH -- all rights reserved
@@ -13,7 +13,7 @@
 #include <set>
 //#include "gtin.hpp"
 
-namespace SWISSMEDIC
+namespace SWISSMEDIC1
 {
     struct dosageUnits {
         std::string dosage;

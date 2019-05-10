@@ -82,7 +82,8 @@ add_executable(pharma
 	src/gtin.hpp src/gtin.cpp
 	src/bag.hpp src/bag.cpp
 	src/report.hpp src/report.cpp
-	src/pha/swissmedic.hpp src/pha/swissmedic.cpp
+	src/pha/swissmedic1.hpp src/pha/swissmedic1.cpp
+	src/pha/swissmedic2.hpp src/pha/swissmedic2.cpp
 	src/pha/main.cpp)
 
 target_include_directories(pharma PUBLIC
