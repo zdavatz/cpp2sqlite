@@ -158,7 +158,7 @@ void parseXML(const std::string &filename,
                         prep.packs.push_back(pack);
                         
                         statsPackCount++;
-#ifdef DEBUG_PHARMA
+#if 0 //def DEBUG_PHARMA
                     static int i=0;
                     if (i<10)
                         std::clog

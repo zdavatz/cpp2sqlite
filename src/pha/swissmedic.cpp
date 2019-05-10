@@ -325,8 +325,11 @@ std::string getCategoryByGtin(const std::string &g)
 void createCSV(const std::string &outDir)
 {
     std::ofstream ofs;
-    ofs.open(outDir + "/pharma.csv");
-    
+    std::string filename = outDir + "/pharma.csv";
+    ofs.open(filename);
+ 
+    std::clog << std::endl << "Creating CSV" << std::endl;
+
     ofs
     << "Registrierungsnummer" << OUTPUT_FILE_SEPARATOR  // A
     << "Packungsnummer" << OUTPUT_FILE_SEPARATOR        // B
@@ -335,23 +338,23 @@ void createCSV(const std::string &outDir)
     << "Präparat" << OUTPUT_FILE_SEPARATOR              // E
     << "Galenische Form" << OUTPUT_FILE_SEPARATOR       // F
     << "Dosierung" << OUTPUT_FILE_SEPARATOR             // G
-    << "Packungsgrösse" << OUTPUT_FILE_SEPARATOR // H
+    << "Packungsgrösse" << OUTPUT_FILE_SEPARATOR        // H
     << "Packungsgrösse numerisch" << OUTPUT_FILE_SEPARATOR // I
-    << "EFP" << OUTPUT_FILE_SEPARATOR // J
-    << "PP" << OUTPUT_FILE_SEPARATOR // K
-    << "Zulassungsinhaber" << OUTPUT_FILE_SEPARATOR // L
-    << "Swissmedic Kategorie" << OUTPUT_FILE_SEPARATOR // M
-    << "SL Produkt:" << OUTPUT_FILE_SEPARATOR // N
-    << "Aufnahmedatum SL" << OUTPUT_FILE_SEPARATOR // O
-    << "Registrierungsdatum" << OUTPUT_FILE_SEPARATOR // P
-    << "Gültigkeitsdatum" << OUTPUT_FILE_SEPARATOR // Q
-    << "Exportprodukt" << OUTPUT_FILE_SEPARATOR // R
-    << "Generikum" << OUTPUT_FILE_SEPARATOR // S
+    << "EFP" << OUTPUT_FILE_SEPARATOR                   // J
+    << "PP" << OUTPUT_FILE_SEPARATOR                    // K
+    << "Zulassungsinhaber" << OUTPUT_FILE_SEPARATOR     // L
+    << "Swissmedic Kategorie" << OUTPUT_FILE_SEPARATOR  // M
+    << "SL Produkt:" << OUTPUT_FILE_SEPARATOR           // N
+    << "Aufnahmedatum SL" << OUTPUT_FILE_SEPARATOR      // O
+    << "Registrierungsdatum" << OUTPUT_FILE_SEPARATOR   // P
+    << "Gültigkeitsdatum" << OUTPUT_FILE_SEPARATOR      // Q
+    << "Exportprodukt" << OUTPUT_FILE_SEPARATOR         // R
+    << "Generikum" << OUTPUT_FILE_SEPARATOR             // S
     << "Index Therapeuticus (BAG)" << OUTPUT_FILE_SEPARATOR // T
     << "Index Therapeuticus (Swissmedic)" << OUTPUT_FILE_SEPARATOR // U
-    << "Betäubungsmittel" << OUTPUT_FILE_SEPARATOR // V
+    << "Betäubungsmittel" << OUTPUT_FILE_SEPARATOR      // V
     << "Impfstoff/Blutprodukt" << OUTPUT_FILE_SEPARATOR // W
-    << "Tageskosten (DDD)" // X
+    << "Tageskosten (DDD)"                              // X
     << std::endl;
     
     for (auto pv : pharmaVec) {
@@ -359,28 +362,34 @@ void createCSV(const std::string &outDir)
         std::string cat = SWISSMEDIC::getCategoryByGtin(pv.gtin13);
         std::string paf = BAG::getPricesAndFlags(pv.gtin13, "", cat);
         BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13);
+        
+        std::string flagSL;
+        for (auto s : fromBag.flags)
+            if (s == "SL") {
+                flagSL = s;
+                break;
+            }
 
         ofs
-//        << "\"" << pv.rn5 << "\"" << OUTPUT_FILE_SEPARATOR   // A
-        << pv.rn5 << OUTPUT_FILE_SEPARATOR              // A
-        << pv.code3 << OUTPUT_FILE_SEPARATOR            // B
-        << pv.rn5 << pv.code3 << OUTPUT_FILE_SEPARATOR  // C
+        << "\"" << pv.rn5 << "\"" << OUTPUT_FILE_SEPARATOR   // A
+        << "\"" << pv.code3 << "\"" << OUTPUT_FILE_SEPARATOR            // B
+        << "\"" << pv.rn5 << pv.code3 << "\"" << OUTPUT_FILE_SEPARATOR  // C
         << pv.gtin13 << OUTPUT_FILE_SEPARATOR           // D
         << pv.name << OUTPUT_FILE_SEPARATOR             // E
         << pv.galenicForm << OUTPUT_FILE_SEPARATOR      // F
         << "todo" << OUTPUT_FILE_SEPARATOR              // G
         << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR // H
         << OUTPUT_FILE_SEPARATOR // I
-        << fromBag.efp << OUTPUT_FILE_SEPARATOR // J
-        << fromBag.pp << OUTPUT_FILE_SEPARATOR // K
-        << pv.owner << OUTPUT_FILE_SEPARATOR // L
-        << pv.category << OUTPUT_FILE_SEPARATOR // M
+        << fromBag.efp << OUTPUT_FILE_SEPARATOR         // J
+        << fromBag.pp << OUTPUT_FILE_SEPARATOR          // K
+        << pv.owner << OUTPUT_FILE_SEPARATOR            // L
+        << pv.category << OUTPUT_FILE_SEPARATOR         // M
         << OUTPUT_FILE_SEPARATOR // N
         << OUTPUT_FILE_SEPARATOR // O
         << pv.regDate << OUTPUT_FILE_SEPARATOR // P
         << pv.validUntil << OUTPUT_FILE_SEPARATOR // Q
         << OUTPUT_FILE_SEPARATOR // R
-        << OUTPUT_FILE_SEPARATOR // S
+        << flagSL << OUTPUT_FILE_SEPARATOR // S  boost::algorithm::join(fromBag.flags, ",")
         << OUTPUT_FILE_SEPARATOR // T
         << OUTPUT_FILE_SEPARATOR // U
         << pv.narcoticFlag << OUTPUT_FILE_SEPARATOR // V
@@ -391,5 +400,7 @@ void createCSV(const std::string &outDir)
     }
     
     ofs.close();
+    
+    std::clog << std::endl << "Created " << filename << std::endl;
 }
 }
