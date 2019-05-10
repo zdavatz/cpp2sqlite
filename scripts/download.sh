@@ -47,6 +47,10 @@ done
 FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_ham.xlsx"
 wget -N $FILE1 -O swissmedic_packages.xlsx
 
+# Extended drug list
+FILE2="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/erweiterte_ham.xlsx.download.xlsx/Erweiterte_Arzneimittelliste%20HAM.xlsx"
+wget -N $FILE2
+
 #-------------------------------------------------------------------------------
 # refdata
 # see Java code, file: AllDown.java:254 function: downRefdataPharmaXml
@@ -197,9 +201,4 @@ else
     rm index*
     rm cookie*.txt
 fi
-
-#-------------------------------------------------------------------------------
-# Extended drug list
-FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/erweiterte_ham.xlsx.download.xlsx/Erweiterte_Arzneimittelliste%20HAM.xlsx"
-wget -N $FILE1
 
