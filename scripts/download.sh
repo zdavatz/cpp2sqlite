@@ -198,3 +198,8 @@ else
     rm cookie*.txt
 fi
 
+#-------------------------------------------------------------------------------
+# Extended drug list
+FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/erweiterte_ham.xlsx.download.xlsx/Erweiterte_Arzneimittelliste%20HAM.xlsx"
+wget -N $FILE1
+
