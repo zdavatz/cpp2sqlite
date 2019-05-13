@@ -5,7 +5,6 @@ Acénocoumarol
 Acétylcystéine
 Acetylsalicylsäure
 Acyclovir
-charbon actif
 albendazole
 Réactions allergiques
 Infections générales
@@ -25,19 +24,16 @@ Anticoagulation, prophylaxie des thromboses
 anticoagulation, maladies veineuses, hémorroïdes
 anti-conception
 anémie
-Artemether Lumefantrine
 Asthme
 Atosiban
 Azithromycine
 Aztréonam
 Vaginose bactérienne
 racine de valériane
-Béclométason
 Beclomethason
 Benzylpénicilline
 Bétaméthason
 Bêtaméthasonacétate / Natriumphosphat
-bisacodyle
 Facteur de coagulation du sang 8
 flatulences
 Flatulence, constipation
@@ -58,9 +54,7 @@ Cefpodoxime
 ceftriaxone
 Cefuroxim
 Cetirizin
-Chinois
 chlorhexidine
-Chloroquin
 Chlorphénamine
 Cholestase
 Cyclopirox
@@ -71,7 +65,6 @@ Clindamycine
 Clonazépam
 Clotrimazol
 codéine
-Coumarin
 Dalteparine
 lacération ou dissection périnéale
 colyse continue
@@ -83,10 +76,8 @@ Désinfection Sektio
 désogestrel
 Dexamethason Natriumphosphat
 Dexpanthénol
-Dextrométhorphane
 diabète
 Diclofénac
-Dimeticon
 dimétindène
 phosphate d'hydrogène disodique
 Dinoproston
@@ -94,14 +85,10 @@ Diosmin Komb.
 diphenhydramine
 Différents extraits de plantes
 Dompéridon
-Dosage en fonction du besoin clinique
+adaptation posologique
 Ajustement de la dose en fonction des besoins cliniques
 Ajustement de la dose en fonction de la surveillance thérapeutique des médicaments (TDM)
 Ajustement de la dose en fonction de la surveillance thérapeutique des médicaments (TDM), substitution à l'acide folique
-Ajustement de la dose en fonction de la surveillance thérapeutique des médicaments (TDM), réduction de la dose péripartale
-Augmentation de la posologie en fonction de la surveillance thérapeutique des médicaments (TDM)
-Augmentation de la posologie en fonction de la surveillance thérapeutique des médicaments (TDM), Réduire l'intervalle posologique à 4 heures
-Augmentation de la posologie en fonction de la surveillance thérapeutique des médicaments (TDM)
 Doxylaminé
 diarrhée
 Diarrhée (prophylaxie)
@@ -123,7 +110,6 @@ Escitalopram
 Esoméprazol
 Estriol Lactobacillus
 étonogestrel
-Famciclovir
 préparations à base de figues
 Fenotérol
 Fentanyl
@@ -142,8 +128,9 @@ substitution de l'acide folique
 formotérol
 Fosfomycine
 efforts prématurés
+prophylaxie des naissances prématurées
+Prophylaxie des naissances prématurées, travail prématuré
 Furosémide
-acide fusidique
 Mycoses des pieds et des mains
 GOER
 déclenchement du travail
@@ -167,13 +154,12 @@ Hexoprenalin
 tousser
 Hydrocortisonacétate
 Hydromorphon
-Hydroxychloroquin
 Maladies hypertensives
 Maladies hypertensives
 hypertension
 hémorroïdes
 Ibuprofène
-Imipinem
+Imipénem
 Indométhacine
 Infections bactériennes en général
 Infections vaginales bactériennes
@@ -185,7 +171,6 @@ Grippe A
 racine de gingembre
 Ipratropin
 Isoconazol
-potassium
 Labétalol
 Lactitol
 L'allaitement maternel
@@ -209,7 +194,6 @@ citrate de magnésium
 hydroxyde de magnésium
 sels de magnésium
 sulfate de magnésium
-Malathion
 Éviter la zone des mamelons
 mébendazole
 Meclozin combo.
@@ -217,7 +201,6 @@ Meclozin combo.
 Médroxyprogestérone
 eau de mer
 acide méfénamique
-Mefloquin
 méropénem
 Métamizole
 metformine
@@ -229,15 +212,12 @@ Métoprolol
 Métronidazol
 Miconazol
 Midazolam
-acide lactique
 Misoprostol
 Misoprostol
 morphine
 nadroparine
 mycoses des ongles
 Nalbuphine
-phosphate de sodium
-Natriumpicosulfat
 Maladies neurologiques et psychiatriques
 Nifédipine
 Nitrofurantoïne
@@ -245,7 +225,6 @@ Obstipation
 Olanzapine
 Oméprazole
 Ondansetron
-Ornidazole
 Oseltamivir
 oxérutine
 Oxycodon
@@ -254,7 +233,6 @@ PVP iode
 Pantoprazol
 Paracétamol
 Paracétamol
-cire de paraffine
 perméthrine
 péthidine
 Phénobarbital
@@ -265,7 +243,6 @@ Inhibiteurs de l'enzyme pipéracilline
 Extrait de plantago
 Extrait de Plantago, etc.
 période placentaire
-Polidocanol
 Saignement post-partum
 Postpartale Depression
 Hémorragie post-partum
@@ -274,9 +251,7 @@ Hémorragie post-partum, période placentaire, atonie utérine
 Hémorragie post-partum, atonie utérine
 Psychoses post-partum
 Prednicarbate
-prednisolone
 Combo Prednisolon.
-prednisone
 progestérone
 Propylthiouracil
 Prurit
@@ -296,7 +271,6 @@ Salbutamol
 salmétérol
 Gale
 troubles thyroïdiens
-maladies thyroïdiennes
 courbatures
 Douleur post-opératoire, puerpéralité
 Douleur post-opératoire
@@ -307,28 +281,22 @@ reniflements
 sertraline
 Simeticon
 brûlures d'estomac, maladie de reflux
-Sterculia
 Interruption de l'allaitement de 48 heures
 Sulfaméthoxazol Triméthoprime
 sulprostone
 terbutaline
 Thromboseprophylaxe
-Combinaison de thyrothricine.
-Tobramycine
-Tobramycine
 tocolyse
 Toxoplasmose
 Tramadol
 acide tranexamique
 Trichomonaden
-Combinaison de tyrothricine.
 acide ursodésoxycholique
 atonie utérine
 Valacyclovir
 Varizen
 varices, crampes dans les mollets
 indigestions
-vitamine B12
 Rupture prématurée de la vessie
 crampes aux jambes
 douleurs de travail, prématurées
@@ -336,6 +304,7 @@ xylométazoline
 Zidovudine
 Zolpidem
 à partir du 18. SSW
+comme réserve, seulement des doses uniques
 vaginose bactérienne
 selon les informations techniques
 se gargariser et cracher
