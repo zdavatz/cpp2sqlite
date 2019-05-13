@@ -15,7 +15,10 @@ This tool is a port of [aips2sqlite](https://github.com/zdavatz/aips2sqlite)
 ## Installation
 See [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh)
 ## Usage
+### cpp2sqlite
 `./cpp2sqlite --inDir ~/.software/aips2sqlite/jars/downloads/`
+### deepl translation
+comment out the line 8 of [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh#L8)
 ## Input Sources
 _ [AIPS](http://download.swissmedicinfo.ch)\
 _ [BAG XML](http://www.spezialitätenliste.ch/File.axd?file=XMLPublications.zip)\
