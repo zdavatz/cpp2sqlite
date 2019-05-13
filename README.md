@@ -18,7 +18,8 @@ See [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.s
 ### cpp2sqlite
 `./cpp2sqlite --inDir ~/.software/aips2sqlite/jars/downloads/`
 ### deepl translation
-comment out the line 8 of [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh#L8)
+run `build/sappinfo` to generate the unique language file.
+comment out the line 8 of [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh#L8) to do the translations.
 ## Input Sources
 _ [AIPS](http://download.swissmedicinfo.ch)\
 _ [BAG XML](http://www.spezialitätenliste.ch/File.axd?file=XMLPublications.zip)\
