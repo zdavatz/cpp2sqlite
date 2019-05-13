@@ -61,6 +61,12 @@ namespace SAPP
     unsigned int statsPregnByAtcFoundCount = 0;
     unsigned int statsPregnByAtcNotFoundCount = 0;
     unsigned int statsTablesCount[2] = {0,0};
+    unsigned int statsRepeatedAtcCount = 0;         // Issue #70
+    std::set<std::string> statsUniqueUsedAtcSet;    // Issue #70
+#ifdef SAPPINFO_NEW_STATS
+    std::set<std::string> statsUniqueAtcSheet1Set;  // Issue #70
+    std::set<std::string> statsUniqueAtcSheet2Set;  // Issue #70
+#endif
 
     std::string sheetTitle[2];
     std::vector< std::vector<std::string> > sheetBreastFeeding;
@@ -68,6 +74,8 @@ namespace SAPP
     
     std::vector<_breastfeed> breastFeedVec;
     std::vector<_pregnancy> pregnancyVec;
+    
+    const std::unordered_set<int> acceptedFiltersSet = { 1, 5, 6, 9 };
     
     ////////////////////////////////////////////////////////////////////////////
     // LOCALIZATION
@@ -198,22 +206,46 @@ static void printFileStats(const std::string &filename)
     
 void printUsageStats()
 {
-    REP::html_h2("SappInfo");
+    REP::html_h2("Sappinfo");
 
-    REP::html_p("ATC (counting also repetitions)");
+#ifdef SAPPINFO_OLD_STATS
+    REP::html_p("ATC hits (counting also repetitions)");
     REP::html_start_ul();
     REP::html_li("with <breastFeed>: " + std::to_string(statsBfByAtcFoundCount));
     REP::html_li("without <breastFeed>: " + std::to_string(statsBfByAtcNotFoundCount));
     REP::html_li("with <pregnancy>: " + std::to_string(statsPregnByAtcFoundCount));
     REP::html_li("without <pregnancy>: " + std::to_string(statsPregnByAtcNotFoundCount));
     REP::html_end_ul();
+#endif
 
+#ifdef SAPPINFO_NEW_STATS
+    REP::html_p("Unique ATC");
+    REP::html_start_ul();
+    REP::html_li("breastFeed: " + std::to_string(statsUniqueAtcSheet1Set.size()));
+    REP::html_li("pregnancy: "  + std::to_string(statsUniqueAtcSheet2Set.size()));
+    REP::html_end_ul();
+
+    REP::html_p("Tables created");
+    REP::html_start_ul();
+    REP::html_li("breastFeed: " + std::to_string(statsTablesCount[0]));
+    REP::html_li("pregnancy: " + std::to_string(statsTablesCount[1]));
+    REP::html_end_ul();
+#else
     REP::html_p("Other stats");
     REP::html_start_ul();
     REP::html_li("tables created: " +
-                 std::to_string(statsTablesCount[0]) + " + " +
-                 std::to_string(statsTablesCount[1]));
+                 std::to_string(statsTablesCount[0]) + " (breastFeed) + " +
+                 std::to_string(statsTablesCount[1]) + " pregnancy");
     REP::html_end_ul();
+#endif
+    
+#ifdef SAPPINFO_OLD_STATS
+    REP::html_p("Issue #70");
+    REP::html_start_ul();
+    REP::html_li("Unique ATC used: " + std::to_string(statsUniqueAtcSet.size()));
+    REP::html_li("ATC used again: " + std::to_string(statsRepeatedAtcCount) + " times");
+    REP::html_end_ul();
+#endif
 }
 
 // See also src/sap/main.cpp validateAndAdd()
@@ -299,7 +331,7 @@ void parseXLXS(const std::string &inDir,
     assert(loc_string_key.size == loc_string_fr.size);
     assert(loc_string_key.size == loc_string_en.size);
 #endif
-    const std::unordered_set<int> acceptedFiltersSet = { 1, 5, 6, 9 };
+    //const std::unordered_set<int> acceptedFiltersSet = { 1, 5, 6, 9 };
 
     {
         // Define localized strings
@@ -516,10 +548,16 @@ std::string getHtmlByAtc(const std::string atc)
     
     if (atc.empty())
         return {};
-    
+
     // First check ordered set, quicker than going through the whole vector
     if (statsUniqueAtcSet.find(atc) == statsUniqueAtcSet.end())
         return {};
+    
+    // Issue #70
+    if (statsUniqueUsedAtcSet.find(atc) == statsUniqueAtcSet.end())
+        statsUniqueUsedAtcSet.insert(atc);
+    else
+        statsRepeatedAtcCount++;
 
     std::string html;
     html.clear();
@@ -528,10 +566,15 @@ std::string getHtmlByAtc(const std::string atc)
     std::vector<_breastfeed> bfv;
     getBreastFeedByAtc(atc, bfv);
 
-    if (bfv.empty())
+    if (bfv.empty()) {
         statsBfByAtcNotFoundCount++;
-    else
+    }
+    else {
         statsBfByAtcFoundCount++;
+#ifdef SAPPINFO_NEW_STATS
+        statsUniqueAtcSheet1Set.insert(atc);
+#endif
+    }
     
     for (auto b : bfv) {
 #if 1
@@ -635,10 +678,15 @@ std::string getHtmlByAtc(const std::string atc)
     std::vector<_pregnancy> pregnv;
     getPregnancyByAtc(atc, pregnv);
 
-    if (pregnv.empty())
+    if (pregnv.empty()) {
         statsPregnByAtcNotFoundCount++;
-    else
+    }
+    else {
         statsPregnByAtcFoundCount++;
+#ifdef SAPPINFO_NEW_STATS
+        statsUniqueAtcSheet2Set.insert(atc);
+#endif
+    }
     
     for (auto p : pregnv) {
 #if 1

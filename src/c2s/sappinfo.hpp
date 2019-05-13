@@ -10,6 +10,10 @@
 #ifndef sappinfo_hpp
 #define sappinfo_hpp
 
+// Issue #70
+//#define SAPPINFO_OLD_STATS
+#define SAPPINFO_NEW_STATS
+
 namespace SAPP
 {
     struct _common {

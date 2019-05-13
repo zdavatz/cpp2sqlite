@@ -76,6 +76,9 @@ namespace pt = boost::property_tree;
 
 static std::string appName;
 std::map<std::string, std::string> statsTitleStrSeparatorMap;
+#ifdef SAPPINFO_OLD_STATS
+unsigned int statsSappinfoSectionsCreated = 0;  // Issue #70
+#endif
 
 void on_version()
 {
@@ -897,6 +900,9 @@ doExtraSections:
     {
         std::string sappHtml = SAPP::getHtmlByAtc(atc);
         if (!sappHtml.empty()) {
+#ifdef SAPPINFO_OLD_STATS
+            statsSappinfoSectionsCreated++; // Issue #70
+#endif
             std::string sectionSappInfo("Section" + std::to_string(SECTION_NUMBER_SAPPINFO));
             std::string sectionSappInfoName("Sappinfo");
             
@@ -1360,7 +1366,12 @@ int main(int argc, char **argv)
         BAG::printUsageStats();
         ATC::printUsageStats();
         PED::printUsageStats();
-        if (!flagNoSappinfo) SAPP::printUsageStats();
+        if (!flagNoSappinfo) {
+            SAPP::printUsageStats();
+#ifdef SAPPINFO_OLD_STATS
+            REP::html_p("Sappinfo sections created: " + std::to_string(statsSappinfoSectionsCreated)); // Issue #70
+#endif
+        }
 
         AIPS::destroyStatement(statement);
 

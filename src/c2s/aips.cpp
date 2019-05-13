@@ -39,6 +39,7 @@ namespace AIPS
     unsigned int statsPedTextFoundCount = 0;
     unsigned int statsAtcTextNotFoundCount = 0;
     std::vector<std::string> statsTitlesWithRnZeroVec;
+    std::set<std::string> statsUniqueAtcSet; // Issue #70
 
     // Usage stats
     std::vector<std::string> statsDuplicateRegnrsVec;
@@ -72,6 +73,7 @@ void printFileStats(const std::string &filename,
     REP::html_start_ul();
     REP::html_li("from aips: " + std::to_string(statsAtcFromAipsCount));
     REP::html_li("from swissmedic: " + std::to_string(statsAtcFromSwissmedicCount));
+    REP::html_li("unique (from both aips and swissmedic): " + std::to_string(statsUniqueAtcSet.size()));
     REP::html_end_ul();
 
     if (statsTitlesWithInvalidATCVec.size() > 0) {
@@ -231,6 +233,17 @@ MedicineList & parseXML(const std::string &filename,
                     
                     // Add ";" and localized text from 'atc_codes_multi_lingual.txt'
                     if (!Med.atc.empty()) {
+#if 1 // Issue #70
+                        if (boost::contains(Med.atc, ",")) {
+                            std::vector<std::string> atcVector;
+                            boost::algorithm::split(atcVector, Med.atc, boost::is_any_of(","));
+                            for (auto a : atcVector)
+                                statsUniqueAtcSet.insert(a);
+                        }
+                        else {
+                            statsUniqueAtcSet.insert(Med.atc);
+                        }
+#endif
                         std::string atcText = ATC::getTextByAtcs(Med.atc);
                         if (!atcText.empty()) {
                             statsAtcTextFoundCount++;
