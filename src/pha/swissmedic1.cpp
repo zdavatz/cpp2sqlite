@@ -91,6 +91,8 @@ void parseXLXS(const std::string &filename)
     xlnt::workbook wb;
     wb.load(filename);
     auto ws = wb.active_sheet();
+    
+    auto date_format = wb.create_format().number_format(xlnt::number_format{"dd-mm-yyyy"}, xlnt::optional<bool>(true));
 
     std::clog << std::endl << "Reading swissmedic XLSX" << std::endl;
 
@@ -114,8 +116,30 @@ void parseXLXS(const std::string &filename)
 
         std::vector<std::string> aSingleRow;
         for (auto cell : row) {
-            //std::clog << cell.to_string() << std::endl;
-            aSingleRow.push_back(cell.to_string());
+            
+            if (cell.is_date()) {
+#ifdef DEBUG
+                std::clog << "Line " << __LINE__
+                << ", format_string before: " << cell.number_format().format_string()
+                << std::endl;
+#endif
+
+                cell.format(date_format);
+                auto nf = cell.number_format();
+#ifdef DEBUG
+                std::clog << "Line " << __LINE__
+                << ", to_string " << cell.to_string()
+                << ", data_type " << (int)cell.data_type() // 5 is xlnt::cell::type::number
+                << ", format_string after: " << nf.format_string()
+                << ", cell.value <" << cell.value<std::string>() << ">"
+                << ", format1 " << nf.format(std::stoi(cell.to_string()), xlnt::calendar::windows_1900)
+                << std::endl;
+#endif
+                aSingleRow.push_back(nf.format(std::stoi(cell.to_string()), xlnt::calendar::windows_1900));
+            }
+            else {
+                aSingleRow.push_back(cell.to_string());
+            }
         }
 
         theWholeSpreadSheet.push_back(aSingleRow);
@@ -133,13 +157,8 @@ void parseXLXS(const std::string &filename)
         pr.name = aSingleRow[COLUMN_C];
 
         pr.owner = aSingleRow[COLUMN_D];
-        
-        // TODO: get date
-        pr.regDate = aSingleRow[COLUMN_H];
-        
-        // TODO: get date
-        pr.validUntil = aSingleRow[COLUMN_J];
-
+        pr.regDate = aSingleRow[COLUMN_H];      // Date
+        pr.validUntil = aSingleRow[COLUMN_J];   // Date
         pr.galenicForm = aSingleRow[COLUMN_M];
 
         pr.category = aSingleRow[COLUMN_N];
