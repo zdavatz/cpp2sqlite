@@ -128,7 +128,7 @@ namespace SAPP
         "Peripartale Dosierung", "Bemerkungen zur peripartalen Dosierung",
         
         // Other strings
-        "Art der Anwendung", "Wirkstoff", "Hauptindikation", "Indikation",
+        "Anwendungszeitraum", "Wirkstoff", "Hauptindikation", "Indikation",
         "Stillzeit", "Schwangerschaft"
     };
     std::vector<std::string> loc_string_fr = { // TODO: verify translations
@@ -142,7 +142,7 @@ namespace SAPP
         "Peripartum posologie", "Commentaires sur périnatale posologie",
         
         // Other strings
-        "Type d'utilisation", "Substance active", "Indication principale", "Indication",
+        "Période d'application", "Substance active", "Indication principale", "Indication",
         "Période de lactation", "Grossesse"
     };
     std::vector<std::string> loc_string_en = {
