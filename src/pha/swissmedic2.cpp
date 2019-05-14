@@ -17,6 +17,7 @@
 #include "gtin.hpp"
 
 #define COLUMN_A        0   // GTIN (5 digits)
+#define COLUMN_B        1   // dosage number
 #define COLUMN_E        4   // Type d'autorisation
 #define COLUMN_I        8   // ATC
 
@@ -24,7 +25,8 @@
 
 namespace SWISSMEDIC2
 {
-
+    std::vector<pharmaExtraRow> pharmaExtraVec;
+    
 void parseXLXS(const std::string &filename)
 {
     xlnt::workbook wb;
@@ -57,8 +59,12 @@ void parseXLXS(const std::string &filename)
             aSingleRow.push_back(cell.to_string());
         }
         
-        std::string rn5 = GTIN::padToLength(5, aSingleRow[COLUMN_A]);
-        std::string authType = aSingleRow[COLUMN_E];
+        pharmaExtraRow pxr;
+        pxr.rn5 = GTIN::padToLength(5, aSingleRow[COLUMN_A]);
+        pxr.dosageNr = aSingleRow[COLUMN_B];
+        pxr.authType = aSingleRow[COLUMN_E];
+        
+        pharmaExtraVec.push_back(pxr);
         
 #ifdef DEBUG
         static int k=0;
@@ -71,4 +77,19 @@ void parseXLXS(const std::string &filename)
 #endif
     }
 }
+    
+std::string getAuthorizationByAtc(const std::string &atc, const std::string &dn)
+{
+    std::string auth;
+    
+    for (auto px : pharmaExtraVec) {
+        if ((px.rn5 == atc) && (px.dosageNr == dn)){
+            auth = px.authType;
+            break;
+        }
+    }
+    
+    return auth;
+}
+
 }

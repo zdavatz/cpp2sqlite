@@ -16,12 +16,14 @@
 #include <xlnt/xlnt.hpp>
 
 #include "swissmedic1.hpp"
+#include "swissmedic2.hpp"
 #include "gtin.hpp"
 #include "bag.hpp"
 //#include "beautify.hpp"
 #include "report.hpp"
 
 #define COLUMN_A        0   // GTIN (5 digits)
+#define COLUMN_B        1   // dosage number
 #define COLUMN_C        2   // name
 #define COLUMN_D        3   // owner
 #define COLUMN_G        6   // ATC
@@ -146,6 +148,7 @@ void parseXLXS(const std::string &filename)
 
         pharmaRow pr;
         pr.rn5 = GTIN::padToLength(5, aSingleRow[COLUMN_A]);
+        pr.dosageNr = aSingleRow[COLUMN_B];
         pr.code3 = GTIN::padToLength(3, aSingleRow[COLUMN_K]);
         
         // Precalculate gtin
@@ -381,6 +384,7 @@ void createCSV(const std::string &outDir)
         std::string cat = getCategoryByGtin(pv.gtin13);
         std::string paf = BAG::getPricesAndFlags(pv.gtin13, "", cat);
         BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13);
+        std::string auth = SWISSMEDIC2::getAuthorizationByAtc(pv.rn5, pv.dosageNr);
         
         std::string bagFlagSL;
         std::string bagFlagGeneric;
@@ -410,7 +414,7 @@ void createCSV(const std::string &outDir)
         << fromBag.efp_validFrom << OUTPUT_FILE_SEPARATOR // O
         << pv.regDate << OUTPUT_FILE_SEPARATOR          // P
         << pv.validUntil << OUTPUT_FILE_SEPARATOR       // Q
-        << OUTPUT_FILE_SEPARATOR // R
+        << auth << OUTPUT_FILE_SEPARATOR                // R
 #if 1
         << bagFlagGeneric << OUTPUT_FILE_SEPARATOR      // S
 #else
@@ -422,7 +426,6 @@ void createCSV(const std::string &outDir)
         << OUTPUT_FILE_SEPARATOR // W
         << "" // X
         << std::endl;
-
     }
     
     ofs.close();

@@ -7,8 +7,8 @@
 //  Created by Alex Bettarini on 22 Jan 2019
 //
 
-#ifndef swissmedic_hpp
-#define swissmedic_hpp
+#ifndef swissmedic1_hpp
+#define swissmedic1_hpp
 
 #include <set>
 //#include "gtin.hpp"
@@ -21,7 +21,8 @@ namespace SWISSMEDIC1
     };
 
     struct pharmaRow {
-        std::string rn5;
+        std::string rn5;        // A
+        std::string dosageNr;   // B
         std::string code3;
         std::string gtin13;
         std::string name;
