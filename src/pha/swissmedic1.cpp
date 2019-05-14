@@ -21,6 +21,7 @@
 #include "bag.hpp"
 //#include "beautify.hpp"
 #include "report.hpp"
+#include "refdata.hpp"
 
 #define COLUMN_A        0   // GTIN (5 digits)
 #define COLUMN_B        1   // dosage number
@@ -156,23 +157,30 @@ void parseXLXS(const std::string &filename)
         char checksum = GTIN::getGtin13Checksum(gtin12);
         pr.gtin13 = gtin12 + checksum;
 
-        // TODO: take first from Refdata
+#if 0  // Old way
         pr.name = aSingleRow[COLUMN_C];
+        pr.galenicForm = aSingleRow[COLUMN_M];
+#else
+        std::vector<std::string> nameComponents;
+        boost::algorithm::split(nameComponents, aSingleRow[COLUMN_C], boost::is_any_of(","));
+
+        // Use the name only up to first comma (Issue #68, 5)
+        pr.name = nameComponents[0];
+
+        // Use words after last comma (Issue #68, 6)
+        pr.galenicForm = nameComponents[nameComponents.size()-1];
+#endif
 
         pr.owner = aSingleRow[COLUMN_D];
         pr.regDate = aSingleRow[COLUMN_H];      // Date
         pr.validUntil = aSingleRow[COLUMN_J];   // Date
-        pr.galenicForm = aSingleRow[COLUMN_M];
+        pr.du.dosage = aSingleRow[COLUMN_L];
+        pr.du.units = aSingleRow[COLUMN_M];
+        pr.narcoticFlag = aSingleRow[COLUMN_X];
 
         pr.category = aSingleRow[COLUMN_N];
         if ((pr.category == "A") && (aSingleRow[COLUMN_W] == "a"))
             pr.category += "+";
-        
-        // Precalculate dosage and units
-        pr.du.dosage = aSingleRow[COLUMN_L];
-        pr.du.units = aSingleRow[COLUMN_M];
-
-        pr.narcoticFlag = aSingleRow[COLUMN_X];
 
         pharmaVec.push_back(pr);
     }
@@ -313,20 +321,11 @@ std::string getCategoryByGtin(const std::string &g)
 {
     std::string cat;
 
-#if 0
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++)
-        if (gtin[rowInt] == g) {
-            cat = categoryVec[rowInt];
-            break;
-        }
-#else
-    for (auto pv : pharmaVec) {
+    for (auto pv : pharmaVec)
         if (pv.gtin13 == g) {
             cat = pv.category;
             break;
         }
-    }
-#endif
 
     return cat;
 }
@@ -386,6 +385,11 @@ void createCSV(const std::string &outDir)
         BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13);
         std::string auth = SWISSMEDIC2::getAuthorizationByAtc(pv.rn5, pv.dosageNr);
         
+        // Take the name first from Refdata based on GTIN
+        std::string name = REFDATA::getNameByGtin(pv.gtin13);
+        if (name.empty())
+            name = pv.name;
+        
         std::string bagFlagSL;
         std::string bagFlagGeneric;
         for (auto s : fromBag.flags) {
@@ -400,9 +404,9 @@ void createCSV(const std::string &outDir)
         << "\"" << pv.rn5 << "\"" << OUTPUT_FILE_SEPARATOR              // A
         << "\"" << pv.code3 << "\"" << OUTPUT_FILE_SEPARATOR            // B
         << "\"" << pv.rn5 << pv.code3 << "\"" << OUTPUT_FILE_SEPARATOR  // C
-        << pv.gtin13 << OUTPUT_FILE_SEPARATOR           // D
-        << pv.name << OUTPUT_FILE_SEPARATOR             // E
-        << pv.galenicForm << OUTPUT_FILE_SEPARATOR      // F
+        << "\"" << pv.gtin13 << "\"" << OUTPUT_FILE_SEPARATOR           // D
+        << name << OUTPUT_FILE_SEPARATOR                                // E
+        << pv.galenicForm << OUTPUT_FILE_SEPARATOR                      // F
         << OUTPUT_FILE_SEPARATOR              // G
         << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR  // H
         << pv.du.dosage << OUTPUT_FILE_SEPARATOR        // I // TODO: calculation 10 x 0.5 ml becomes 5

@@ -44,7 +44,7 @@ add_executable(cpp2sqlite
 	src/c2s/sappinfo.hpp src/c2s/sappinfo.cpp
 	src/bag.hpp src/bag.cpp
 	src/gtin.hpp src/gtin.cpp
-	src/c2s/beautify.hpp src/c2s/beautify.cpp
+	src/beautify.hpp src/beautify.cpp
 	src/c2s/atc.hpp src/c2s/atc.cpp
 	src/c2s/epha.hpp src/c2s/epha.cpp
 	src/c2s/peddose.hpp src/c2s/peddose.cpp
@@ -82,6 +82,8 @@ add_executable(pharma
 	src/gtin.hpp src/gtin.cpp
 	src/bag.hpp src/bag.cpp
 	src/report.hpp src/report.cpp
+	src/beautify.hpp src/beautify.cpp
+	src/pha/refdata.hpp src/pha/refdata.cpp
 	src/pha/swissmedic1.hpp src/pha/swissmedic1.cpp
 	src/pha/swissmedic2.hpp src/pha/swissmedic2.cpp
 	src/pha/main.cpp)

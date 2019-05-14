@@ -11,6 +11,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
+#include "refdata.hpp"
 #include "swissmedic1.hpp"
 #include "swissmedic2.hpp"
 #include "bag.hpp"
@@ -99,9 +100,11 @@ int main(int argc, char **argv)
     REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, false);
 
     // Read input files
+    const std::string language("de");
     SWISSMEDIC1::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages.xlsx");
     SWISSMEDIC2::parseXLXS(opt_workDirectory + "/downloads/Erweiterte_Arzneimittelliste HAM.xlsx");
-    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", "de", false);
+    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", language, false);
+    REFDATA::parseXML(opt_workDirectory + "/downloads/refdata_pharma.xml", language);
 
     // Create CSV
     SWISSMEDIC1::createCSV(opt_workDirectory + "/output");

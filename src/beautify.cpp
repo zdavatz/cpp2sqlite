@@ -1,6 +1,6 @@
 //
 //  beautify.cpp
-//  cpp2sqlite
+//  cpp2sqlite, pharma
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
