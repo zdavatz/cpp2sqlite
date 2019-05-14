@@ -60,7 +60,7 @@ void parseXLXS(const std::string &filename)
         std::string rn5 = GTIN::padToLength(5, aSingleRow[COLUMN_A]);
         std::string authType = aSingleRow[COLUMN_E];
         
-#if 1 // DEBUG
+#ifdef DEBUG
         static int k=0;
         if (k++ < 55) {
             std::clog
