@@ -99,6 +99,14 @@ int main(int argc, char **argv)
     std::string reportTitle("Pharma Report");
     REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, false);
 
+    REP::html_start_ul();
+    for (int i=0; i<argc; i++)
+        REP::html_li(argv[i]);
+    
+    REP::html_end_ul();
+
+    REP::html_h1("File Analysis");
+
     // Read input files
     const std::string language("de");
     SWISSMEDIC1::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages.xlsx");

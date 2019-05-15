@@ -122,21 +122,21 @@ void parseXLXS(const std::string &filename)
             
             if (cell.is_date()) {
 #ifdef DEBUG
-                std::clog << "Line " << __LINE__
-                << ", format_string before: " << cell.number_format().format_string()
-                << std::endl;
+//                std::clog << "Line " << __LINE__
+//                << ", format_string before: " << cell.number_format().format_string()
+//                << std::endl;
 #endif
 
                 cell.format(date_format);
                 auto nf = cell.number_format();
 #ifdef DEBUG
-                std::clog << "Line " << __LINE__
-                << ", to_string " << cell.to_string()
-                << ", data_type " << (int)cell.data_type() // 5 is xlnt::cell::type::number
-                << ", format_string after: " << nf.format_string()
-                << ", cell.value <" << cell.value<std::string>() << ">"
-                << ", format1 " << nf.format(std::stoi(cell.to_string()), xlnt::calendar::windows_1900)
-                << std::endl;
+//                std::clog << "Line " << __LINE__
+//                << ", to_string " << cell.to_string()
+//                << ", data_type " << (int)cell.data_type() // 5 is xlnt::cell::type::number
+//                << ", format_string after: " << nf.format_string()
+//                << ", cell.value <" << cell.value<std::string>() << ">"
+//                << ", format1 " << nf.format(std::stoi(cell.to_string()), xlnt::calendar::windows_1900)
+//                << std::endl;
 #endif
                 aSingleRow.push_back(nf.format(std::stoi(cell.to_string()), xlnt::calendar::windows_1900));
             }
@@ -162,7 +162,7 @@ void parseXLXS(const std::string &filename)
         pr.galenicForm = aSingleRow[COLUMN_M];
 #else
         std::vector<std::string> nameComponents;
-        boost::algorithm::split(nameComponents, aSingleRow[COLUMN_C], boost::is_any_of(","));
+        boost::algorithm::split(nameComponents, aSingleRow[COLUMN_C], boost::is_any_of(", "));
 
         // Use the name only up to first comma (Issue #68, 5)
         pr.name = nameComponents[0];
@@ -389,6 +389,13 @@ void createCSV(const std::string &outDir)
         std::string name = REFDATA::getNameByGtin(pv.gtin13);
         if (name.empty())
             name = pv.name;
+
+        // Issue #72 Extract "Dosierung" from "Präparat" with an allmighty regular expression
+        std::regex rgx(R"(\d+\smg)");  // tested at https://regex101.com
+        std::smatch match;
+        std::string dosage;
+        if (std::regex_search(name, match, rgx))
+            dosage = match[0];
         
         std::string bagFlagSL;
         std::string bagFlagGeneric;
@@ -407,7 +414,7 @@ void createCSV(const std::string &outDir)
         << "\"" << pv.gtin13 << "\"" << OUTPUT_FILE_SEPARATOR           // D
         << name << OUTPUT_FILE_SEPARATOR                                // E
         << pv.galenicForm << OUTPUT_FILE_SEPARATOR                      // F
-        << OUTPUT_FILE_SEPARATOR              // G
+        << dosage << OUTPUT_FILE_SEPARATOR                              // G
         << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR  // H
         << pv.du.dosage << OUTPUT_FILE_SEPARATOR        // I // TODO: calculation 10 x 0.5 ml becomes 5
         << fromBag.efp << OUTPUT_FILE_SEPARATOR         // J

@@ -65,16 +65,6 @@ void parseXLXS(const std::string &filename)
         pxr.authType = aSingleRow[COLUMN_E];
         
         pharmaExtraVec.push_back(pxr);
-        
-#ifdef DEBUG
-        static int k=0;
-        if (k++ < 55) {
-            std::clog
-            << "rn5: " << rn5
-            << ", authType: " << authType
-            << std::endl;
-        }
-#endif
     }
 }
     
