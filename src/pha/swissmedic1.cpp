@@ -162,13 +162,14 @@ void parseXLXS(const std::string &filename)
         pr.galenicForm = aSingleRow[COLUMN_M];
 #else
         std::vector<std::string> nameComponents;
-        boost::algorithm::split(nameComponents, aSingleRow[COLUMN_C], boost::is_any_of(", "));
+        boost::algorithm::split(nameComponents, aSingleRow[COLUMN_C], boost::is_any_of(","));
 
         // Use the name only up to first comma (Issue #68, 5)
         pr.name = nameComponents[0];
 
         // Use words after last comma (Issue #68, 6)
         pr.galenicForm = nameComponents[nameComponents.size()-1];
+        boost::algorithm::trim(pr.galenicForm);
 #endif
 
         pr.owner = aSingleRow[COLUMN_D];
@@ -391,7 +392,7 @@ void createCSV(const std::string &outDir)
             name = pv.name;
 
         // Issue #72 Extract "Dosierung" from "Präparat" with an allmighty regular expression
-        std::regex rgx(R"(\d+\s*(mg|g\s|i.u.|e\s|mcg|ie)(\/\d*(ml|g|mcg))*)");  // tested at https://regex101.com
+        std::regex rgx(R"(\d+\s*(mg|g(\s|$)|i.u.|e(\s|$)|mcg|ie)(\/\d*\s*(ml|g|mcg))*)");  // tested at https://regex101.com
         std::smatch match;
         std::string dosage;
         if (std::regex_search(name, match, rgx))

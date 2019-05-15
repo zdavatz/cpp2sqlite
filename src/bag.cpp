@@ -116,7 +116,7 @@ void parseXML(const std::string &filename,
                 BOOST_FOREACH(pt::ptree::value_type &p, v.second.get_child("Packs")) {
                     if (p.first == "Pack") {
                         Pack pack;
-                        pack.description = p.second.get(descriptionTag, ""); // TODO: trim trailing spaces
+                        pack.description = p.second.get(descriptionTag, "");
                         boost::algorithm::trim_right(pack.description);
                         pack.description = boost::to_lower_copy<std::string>(pack.description);
 
