@@ -391,7 +391,7 @@ void createCSV(const std::string &outDir)
             name = pv.name;
 
         // Issue #72 Extract "Dosierung" from "Präparat" with an allmighty regular expression
-        std::regex rgx(R"(\d+\s(mg|g|i.u.|mcg\/ml|ie))");  // tested at https://regex101.com
+        std::regex rgx(R"(\d+\s(mg|g|i.u.|mcg\/ml|ie)\/*\d*(ml)*)");  // tested at https://regex101.com
         std::smatch match;
         std::string dosage;
         if (std::regex_search(name, match, rgx))
