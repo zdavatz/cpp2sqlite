@@ -904,7 +904,7 @@ doExtraSections:
             statsSappinfoSectionsCreated++; // Issue #70
 #endif
             std::string sectionSappInfo("Section" + std::to_string(SECTION_NUMBER_SAPPINFO));
-            std::string sectionSappInfoName("Schwangerschaft-SAPP");
+            std::string sectionSappInfoName("Sappinfo");
             
             if (hasXmlHeader && atc.empty())
                 html += "\n  </div>"; // terminate previous section before starting a new one
