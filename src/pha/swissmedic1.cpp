@@ -378,8 +378,7 @@ void getPackageSizeNumericalFromName(std::string &calculatedDosage)
         return;
     }
 
-#if 1
-    std::regex rgx(R"((\d+((\.|,)\d+)?)\s?(x|X)\s?(\d+((\.|,)\d+)?))");  // tested at https://regex101.com
+    std::regex rgx(R"((\d+((\.|,)\d+)?)\s*(x|X)\s?(\d+((\.|,)\d+)?))");  // tested at https://regex101.com
     std::smatch match;
     if (std::regex_search(calculatedDosage, match, rgx)) {
 #if 0 //def DEBUG
@@ -409,27 +408,6 @@ void getPackageSizeNumericalFromName(std::string &calculatedDosage)
 #endif
         calculatedDosage = std::to_string(a*b);
     }
-#else
-    {
-        std::vector<std::string> tk;
-        boost::algorithm::split(tk, calculatedDosage, boost::is_any_of(" "));
-        if (tk.size() >= 3) {
-            double a = std::atof(tk[0].c_str());
-            double b = std::atof(tk[2].c_str());
-    #if 1 //def DEBUG
-            std::clog
-            << "calculatedDosage <" << calculatedDosage << ">"
-            << ", tk[0] " << tk[0]
-            << ", tk[2] " << tk[2]
-            << ", a " << a
-            << ", b " << b
-            << ", axb " << (a*b)
-            << std::endl;
-    #endif
-            calculatedDosage = std::to_string(a*b);
-        }
-    }
-#endif
 }
     
 // Issue #72 Extract "Dosierung" from "Präparat" with an almighty regular expression
