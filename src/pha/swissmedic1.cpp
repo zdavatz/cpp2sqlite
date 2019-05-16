@@ -42,6 +42,54 @@
 
 #define OUTPUT_FILE_SEPARATOR   ";"
 
+#define DEBUG_DOSAGE_REGEX
+
+#ifdef DEBUG_DOSAGE_REGEX
+#include <set>
+// To verify regular expression, see issue #72
+const std::set<long int> atcTestSet = {
+    7680121750195, // APHENYLBARBIT
+    7680202725067, // RAPIDOCAIN
+    7680207130118, // KYTTA
+    7680215050132, // SUCCINOLIN
+    7680216720010, // VITARUBIN
+    7680221140261, // SYNTOCINON
+    7680229580540, // SOLCOSERYL
+    7680229580021, // Solcoseryl
+    7680240350184, // AKINETON
+    7680261770305, // KENACORT
+    7680263960346, // SOLCOSERYL
+    7680278370260, // VENORUTON
+    7680290800622, // AEQUIFUSINE
+    7680295508851, // GLUC
+    7680295520891, // KCL
+    7680295540998, // NACL
+    7680613930074, // CO-VALSARTAN
+    7680620790128, // Pramipexol
+    7680620800025, // XEOMIN
+    7680620830039, // Methrexx
+    7680620830084, // METHREXX
+    7680621090012, // LOSARTAN
+    7680621460037, // REFACTO
+    7680621830021, // DEXDOR
+    7680358561021, // BLEOMYCIN
+    7680359600231, // QUILONORM
+    7680363520358, // NASIVIN
+    7680364640017, // EFUDIX
+    7680370570018, // OSPEN
+    7680378870561, // BACTRIM
+    7680661420022, // PERINDOPRIL
+    7680662190047, // LONSURF
+    7680662370029, // DESOGYNELLE
+    7680662620070, // CLARISCAN
+    7680651310029, // ALENDRON
+    7680005920010, // TWINRIX
+    7680659680056, // LYXUMIA
+    7680608720017, // Calvive
+    7680612150121  // CANSARTAN
+};
+#endif
+
 namespace SWISSMEDIC1
 {
     std::vector< std::vector<std::string> > theWholeSpreadSheet;
@@ -330,6 +378,18 @@ std::string getCategoryByGtin(const std::string &g)
 
     return cat;
 }
+    
+// Issue #72 Extract "Dosierung" from "Präparat" with an almighty regular expression
+std::string getDosageFromName(const std::string &name)
+{
+    std::string dosage;
+    std::regex rgx(R"(\d+(\.\d+)?\s*(mg|g(\s|$)|i.u.|e(\s|$)|mcg|ie|mmol)(\s?\/\s?(\d(\.\d+)?)*\s*(ml|g|mcg))*)");  // tested at https://regex101.com
+    std::smatch match;
+    if (std::regex_search(name, match, rgx))
+        dosage = match[0];
+    
+    return dosage;
+}
 
 //dosageUnits getByGtin(const std::string &g)
 //{
@@ -391,12 +451,17 @@ void createCSV(const std::string &outDir)
         if (name.empty())
             name = pv.name;
 
-        // Issue #72 Extract "Dosierung" from "Präparat" with an allmighty regular expression
-        std::regex rgx(R"(\d+\s*(mg|g(\s|$)|i.u.|e(\s|$)|mcg|ie)(\/\d*\s*(ml|g|mcg))*)");  // tested at https://regex101.com
-        std::smatch match;
-        std::string dosage;
-        if (std::regex_search(name, match, rgx))
-            dosage = match[0];
+        std::string dosage = getDosageFromName(name);
+#ifdef DEBUG_DOSAGE_REGEX
+        static int k=1;
+        if (atcTestSet.find(std::stol(pv.gtin13)) != atcTestSet.end()) {
+            std::clog << k++ << "."
+            << "\t <" << name << ">"
+            << "\t\t\t <" << dosage << ">"
+            << std::endl;
+        }
+#endif
+
         
         std::string bagFlagSL;
         std::string bagFlagGeneric;
