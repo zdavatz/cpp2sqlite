@@ -169,23 +169,8 @@ void parseXLXS(const std::string &filename)
         for (auto cell : row) {
             
             if (cell.is_date()) {
-#ifdef DEBUG
-//                std::clog << "Line " << __LINE__
-//                << ", format_string before: " << cell.number_format().format_string()
-//                << std::endl;
-#endif
-
                 cell.format(date_format);
                 auto nf = cell.number_format();
-#ifdef DEBUG
-//                std::clog << "Line " << __LINE__
-//                << ", to_string " << cell.to_string()
-//                << ", data_type " << (int)cell.data_type() // 5 is xlnt::cell::type::number
-//                << ", format_string after: " << nf.format_string()
-//                << ", cell.value <" << cell.value<std::string>() << ">"
-//                << ", format1 " << nf.format(std::stoi(cell.to_string()), xlnt::calendar::windows_1900)
-//                << std::endl;
-#endif
                 aSingleRow.push_back(nf.format(std::stoi(cell.to_string()), xlnt::calendar::windows_1900));
             }
             else {
@@ -382,11 +367,16 @@ std::string getCategoryByGtin(const std::string &g)
 // Issue #72 Extract "Dosierung" from "Präparat" with an almighty regular expression
 std::string getDosageFromName(const std::string &name)
 {
+    // TODO: use a separate regex if the name ends with "stk"
+
     std::string dosage;
     std::regex rgx(R"(\d+(\.\d+)?\s*(mg|g(\s|$)|i.u.|e(\s|$)|mcg|ie|mmol)(\s?\/\s?(\d(\.\d+)?)*\s*(ml|g|mcg))*)");  // tested at https://regex101.com
     std::smatch match;
     if (std::regex_search(name, match, rgx))
         dosage = match[0];
+    
+    // TODO: trim trailing space
+    // TODO: change " / " to "/"
     
     return dosage;
 }
@@ -446,11 +436,13 @@ void createCSV(const std::string &outDir)
         BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13);
         std::string auth = SWISSMEDIC2::getAuthorizationByAtc(pv.rn5, pv.dosageNr);
         
+        // Column E
         // Take the name first from Refdata based on GTIN
         std::string name = REFDATA::getNameByGtin(pv.gtin13);
         if (name.empty())
             name = pv.name;
 
+        // Column G
         std::string dosage = getDosageFromName(name);
 #ifdef DEBUG_DOSAGE_REGEX
         static int k=1;
@@ -461,8 +453,31 @@ void createCSV(const std::string &outDir)
             << std::endl;
         }
 #endif
-
         
+        // Column I
+        std::string calculatedDosage = pv.du.dosage;
+        // Calculation: "10 x 0.5 ml" becomes "5"
+        if (calculatedDosage.find(" x ") != std::string::npos) {
+            std::vector<std::string> tk;
+            boost::algorithm::split(tk, calculatedDosage, boost::is_any_of(" "));
+            if (tk.size() >= 3) {
+                double a = std::atof(tk[0].c_str());
+                double b = std::atof(tk[2].c_str());
+#ifdef DEBUG
+                std::clog
+                << "calculatedDosage <" << calculatedDosage << ">"
+                << ", tk[0] " << tk[0]
+                << ", tk[2] " << tk[2]
+                << ", a " << a
+                << ", b " << b
+                << ", axb " << (a*b)
+                << std::endl;
+#endif
+                calculatedDosage = std::to_string(a*b);
+            }
+        }
+
+        // Columns N, S
         std::string bagFlagSL;
         std::string bagFlagGeneric;
         for (auto s : fromBag.flags) {
@@ -482,7 +497,7 @@ void createCSV(const std::string &outDir)
         << pv.galenicForm << OUTPUT_FILE_SEPARATOR                      // F
         << dosage << OUTPUT_FILE_SEPARATOR                              // G
         << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR  // H
-        << pv.du.dosage << OUTPUT_FILE_SEPARATOR        // I // TODO: calculation 10 x 0.5 ml becomes 5
+        << calculatedDosage << OUTPUT_FILE_SEPARATOR                    // I
         << fromBag.efp << OUTPUT_FILE_SEPARATOR         // J
         << fromBag.pp << OUTPUT_FILE_SEPARATOR          // K
         << pv.owner << OUTPUT_FILE_SEPARATOR            // L
