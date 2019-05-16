@@ -29,7 +29,8 @@ namespace SWISSMEDIC1
         std::string galenicForm;
         std::string owner;
         std::string itNumber;
-        std::string category;
+        std::string categoryMed;
+        std::string categoryPack;
         std::string regDate;
         std::string validUntil;
         std::string narcoticFlag;
@@ -49,7 +50,7 @@ namespace SWISSMEDIC1
     std::string getAtcFromFirstRn(const std::string &rn);
 
     bool findGtin(const std::string &gtin);
-    std::string getCategoryByGtin(const std::string &gtin);
+    std::string getCategoryPackByGtin(const std::string &gtin);
     dosageUnits getByGtin(const std::string &gtin);
 
     void printUsageStats();

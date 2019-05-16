@@ -134,7 +134,7 @@ int getNames(const std::string &rn,
 #endif
             onePackageInfo += art.name;
 
-            std::string cat = SWISSMEDIC::getCategoryByGtin(art.gtin_13);
+            std::string cat = SWISSMEDIC::getCategoryPackByGtin(art.gtin_13);
             std::string paf = BAG::getPricesAndFlags(art.gtin_13, "", cat);
             if (!paf.empty())
                 onePackageInfo += paf;

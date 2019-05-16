@@ -27,6 +27,7 @@
 #define COLUMN_B        1   // dosage number
 #define COLUMN_C        2   // name
 #define COLUMN_D        3   // owner
+#define COLUMN_E        4   // category
 #define COLUMN_F        5   // IT number
 //#define COLUMN_G        6   // ATC
 #define COLUMN_H        7   // registration date (Date d'autorisation du dosage)
@@ -207,6 +208,11 @@ void parseXLXS(const std::string &filename)
 #endif
 
         pr.owner = aSingleRow[COLUMN_D];
+
+        pr.categoryMed = aSingleRow[COLUMN_E];
+        if ((pr.categoryMed != "Impfstoffe") && (pr.categoryMed != "Blutprodukte"))
+            pr.categoryMed.clear();
+        
         pr.itNumber = aSingleRow[COLUMN_F];
         pr.regDate = aSingleRow[COLUMN_H];      // Date
         pr.validUntil = aSingleRow[COLUMN_J];   // Date
@@ -214,9 +220,9 @@ void parseXLXS(const std::string &filename)
         pr.du.units = aSingleRow[COLUMN_M];
         pr.narcoticFlag = aSingleRow[COLUMN_X];
 
-        pr.category = aSingleRow[COLUMN_N];
-        if ((pr.category == "A") && (aSingleRow[COLUMN_W] == "a"))
-            pr.category += "+";
+        pr.categoryPack = aSingleRow[COLUMN_N];
+        if ((pr.categoryPack == "A") && (aSingleRow[COLUMN_W] == "a"))
+            pr.categoryPack += "+";
 
         pharmaVec.push_back(pr);
     }
@@ -353,13 +359,13 @@ void parseXLXS(const std::string &filename)
 //    return atc;
 //}
 
-std::string getCategoryByGtin(const std::string &g)
+std::string getCategoryPackByGtin(const std::string &g)
 {
     std::string cat;
 
     for (auto pv : pharmaVec)
         if (pv.gtin13 == g) {
-            cat = pv.category;
+            cat = pv.categoryPack;
             break;
         }
 
@@ -480,7 +486,7 @@ void createCSV(const std::string &outDir)
     
     for (auto pv : pharmaVec) {
 
-        std::string cat = getCategoryByGtin(pv.gtin13);
+        std::string cat = getCategoryPackByGtin(pv.gtin13);
         std::string paf = BAG::getPricesAndFlags(pv.gtin13, "", cat);
         BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13);
         std::string auth = SWISSMEDIC2::getAuthorizationByAtc(pv.rn5, pv.dosageNr);
@@ -531,7 +537,7 @@ void createCSV(const std::string &outDir)
         << fromBag.efp << OUTPUT_FILE_SEPARATOR                         // J
         << fromBag.pp << OUTPUT_FILE_SEPARATOR                          // K
         << pv.owner << OUTPUT_FILE_SEPARATOR                            // L
-        << pv.category << OUTPUT_FILE_SEPARATOR                         // M
+        << pv.categoryPack << OUTPUT_FILE_SEPARATOR                     // M
         << bagFlagSL << OUTPUT_FILE_SEPARATOR                           // N
         << fromBag.efp_validFrom << OUTPUT_FILE_SEPARATOR               // O
         << pv.regDate << OUTPUT_FILE_SEPARATOR                          // P
@@ -545,7 +551,7 @@ void createCSV(const std::string &outDir)
         << OUTPUT_FILE_SEPARATOR // T
         << pv.itNumber << OUTPUT_FILE_SEPARATOR                         // U
         << pv.narcoticFlag << OUTPUT_FILE_SEPARATOR                     // V
-        << OUTPUT_FILE_SEPARATOR // W
+        << pv.categoryMed << OUTPUT_FILE_SEPARATOR                      // W
         << "" // X
         << std::endl;
     }
