@@ -389,7 +389,7 @@ void getPackageSizeNumericalFromName(std::string &calculatedDosage)
         return;
     }
 
-    std::regex rgx(R"((\d+((\.|,)\d+)?)\s*x\s?(\d+((\.|,)\d+)?))");  // tested at https://regex101.com
+    std::regex rgx(R"((\d+((\.|,)\d+)?)\s*x\s*(\d+((\.|,)\d+)?))");  // tested at https://regex101.com
     std::smatch match;
     if (std::regex_search(stringMassaged, match, rgx)) {
 #if 0 //def DEBUG
