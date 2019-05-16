@@ -42,7 +42,7 @@
 
 #define OUTPUT_FILE_SEPARATOR   ";"
 
-#define DEBUG_DOSAGE_REGEX
+//#define DEBUG_DOSAGE_REGEX
 
 #ifdef DEBUG_DOSAGE_REGEX
 #include <set>
@@ -364,6 +364,74 @@ std::string getCategoryByGtin(const std::string &g)
     return cat;
 }
     
+// Issue #68, 9
+void getPackageSizeNumericalFromName(std::string &calculatedDosage)
+{
+    // If it contains + or - use as is
+    if (calculatedDosage.find_first_of("+-") != std::string::npos)
+        return;
+    
+    if (calculatedDosage.find("x") == std::string::npos) {      // It doesn't contain "x"
+        if (calculatedDosage.find("ml") != std::string::npos)   // but it contains "ml"
+            calculatedDosage = "1";
+        
+        return;
+    }
+
+#if 1
+    std::regex rgx(R"((\d+((\.|,)\d+)?)\s?(x|X)\s?(\d+((\.|,)\d+)?))");  // tested at https://regex101.com
+    std::smatch match;
+    if (std::regex_search(calculatedDosage, match, rgx)) {
+#if 0 //def DEBUG
+        std::clog
+        << "calculatedDosage <" << calculatedDosage << ">"
+        << ", match.size <" << match.size() << ">"
+        << std::endl;
+        for (auto m : match) {
+            std::clog
+            << "\t <" << m << ">"
+            << std::endl;
+        }
+#endif
+        std::string as = match[1];
+        std::string bs = match[5];
+        boost::replace_first(as, ",", ".");
+        boost::replace_first(bs, ",", "."); // "0,5" --> "0.5"
+        double a = std::atof(as.c_str());
+        double b = std::atof(bs.c_str());
+#ifdef DEBUG
+        std::clog
+        << "calculatedDosage <" << calculatedDosage << ">"
+        << ", a " << a
+        << ", b " << b
+        << ", axb " << (a*b)
+        << std::endl;
+#endif
+        calculatedDosage = std::to_string(a*b);
+    }
+#else
+    {
+        std::vector<std::string> tk;
+        boost::algorithm::split(tk, calculatedDosage, boost::is_any_of(" "));
+        if (tk.size() >= 3) {
+            double a = std::atof(tk[0].c_str());
+            double b = std::atof(tk[2].c_str());
+    #if 1 //def DEBUG
+            std::clog
+            << "calculatedDosage <" << calculatedDosage << ">"
+            << ", tk[0] " << tk[0]
+            << ", tk[2] " << tk[2]
+            << ", a " << a
+            << ", b " << b
+            << ", axb " << (a*b)
+            << std::endl;
+    #endif
+            calculatedDosage = std::to_string(a*b);
+        }
+    }
+#endif
+}
+    
 // Issue #72 Extract "Dosierung" from "Präparat" with an almighty regular expression
 std::string getDosageFromName(const std::string &name)
 {
@@ -456,26 +524,7 @@ void createCSV(const std::string &outDir)
         
         // Column I
         std::string calculatedDosage = pv.du.dosage;
-        // Calculation: "10 x 0.5 ml" becomes "5"
-        if (calculatedDosage.find(" x ") != std::string::npos) {
-            std::vector<std::string> tk;
-            boost::algorithm::split(tk, calculatedDosage, boost::is_any_of(" "));
-            if (tk.size() >= 3) {
-                double a = std::atof(tk[0].c_str());
-                double b = std::atof(tk[2].c_str());
-#ifdef DEBUG
-                std::clog
-                << "calculatedDosage <" << calculatedDosage << ">"
-                << ", tk[0] " << tk[0]
-                << ", tk[2] " << tk[2]
-                << ", a " << a
-                << ", b " << b
-                << ", axb " << (a*b)
-                << std::endl;
-#endif
-                calculatedDosage = std::to_string(a*b);
-            }
-        }
+        getPackageSizeNumericalFromName(calculatedDosage);
 
         // Columns N, S
         std::string bagFlagSL;
