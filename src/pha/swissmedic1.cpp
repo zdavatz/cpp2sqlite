@@ -27,7 +27,8 @@
 #define COLUMN_B        1   // dosage number
 #define COLUMN_C        2   // name
 #define COLUMN_D        3   // owner
-#define COLUMN_G        6   // ATC
+#define COLUMN_F        5   // IT number
+//#define COLUMN_G        6   // ATC
 #define COLUMN_H        7   // registration date (Date d'autorisation du dosage)
 #define COLUMN_J        9   // valid until (Durée de validité de l'AMM))
 #define COLUMN_K       10   // packaging code (3 digits)
@@ -206,6 +207,7 @@ void parseXLXS(const std::string &filename)
 #endif
 
         pr.owner = aSingleRow[COLUMN_D];
+        pr.itNumber = aSingleRow[COLUMN_F];
         pr.regDate = aSingleRow[COLUMN_H];      // Date
         pr.validUntil = aSingleRow[COLUMN_J];   // Date
         pr.du.dosage = aSingleRow[COLUMN_L];
@@ -525,23 +527,23 @@ void createCSV(const std::string &outDir)
         << dosage << OUTPUT_FILE_SEPARATOR                              // G
         << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR  // H
         << calculatedDosage << OUTPUT_FILE_SEPARATOR                    // I
-        << fromBag.efp << OUTPUT_FILE_SEPARATOR         // J
-        << fromBag.pp << OUTPUT_FILE_SEPARATOR          // K
-        << pv.owner << OUTPUT_FILE_SEPARATOR            // L
-        << pv.category << OUTPUT_FILE_SEPARATOR         // M
-        << bagFlagSL << OUTPUT_FILE_SEPARATOR           // N
-        << fromBag.efp_validFrom << OUTPUT_FILE_SEPARATOR // O
-        << pv.regDate << OUTPUT_FILE_SEPARATOR          // P
-        << pv.validUntil << OUTPUT_FILE_SEPARATOR       // Q
-        << auth << OUTPUT_FILE_SEPARATOR                // R
+        << fromBag.efp << OUTPUT_FILE_SEPARATOR                         // J
+        << fromBag.pp << OUTPUT_FILE_SEPARATOR                          // K
+        << pv.owner << OUTPUT_FILE_SEPARATOR                            // L
+        << pv.category << OUTPUT_FILE_SEPARATOR                         // M
+        << bagFlagSL << OUTPUT_FILE_SEPARATOR                           // N
+        << fromBag.efp_validFrom << OUTPUT_FILE_SEPARATOR               // O
+        << pv.regDate << OUTPUT_FILE_SEPARATOR                          // P
+        << pv.validUntil << OUTPUT_FILE_SEPARATOR                       // Q
+        << auth << OUTPUT_FILE_SEPARATOR                                // R
 #if 1
-        << bagFlagGeneric << OUTPUT_FILE_SEPARATOR      // S
+        << bagFlagGeneric << OUTPUT_FILE_SEPARATOR                      // S
 #else
         << boost::algorithm::join(fromBag.flags, ",") << OUTPUT_FILE_SEPARATOR // S
 #endif
         << OUTPUT_FILE_SEPARATOR // T
-        << OUTPUT_FILE_SEPARATOR // U
-        << pv.narcoticFlag << OUTPUT_FILE_SEPARATOR // V
+        << pv.itNumber << OUTPUT_FILE_SEPARATOR                         // U
+        << pv.narcoticFlag << OUTPUT_FILE_SEPARATOR                     // V
         << OUTPUT_FILE_SEPARATOR // W
         << "" // X
         << std::endl;

@@ -28,6 +28,7 @@ namespace SWISSMEDIC1
         std::string name;
         std::string galenicForm;
         std::string owner;
+        std::string itNumber;
         std::string category;
         std::string regDate;
         std::string validUntil;
