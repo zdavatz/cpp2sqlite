@@ -43,6 +43,7 @@
 #define FIRST_DATA_ROW_INDEX    6
 
 #define OUTPUT_FILE_SEPARATOR   ";"
+#define CELL_ESCAPE             "\""
 
 //#define DEBUG_DOSAGE_REGEX
 
@@ -196,8 +197,12 @@ void parseXLXS(const std::string &filename)
         pr.name = aSingleRow[COLUMN_C];
         pr.galenicForm = aSingleRow[COLUMN_M];
 #else
+        std::string nameString = aSingleRow[COLUMN_C];
+        boost::replace_all(nameString, CELL_ESCAPE, ""); // double quotes interfere with CSV
+        boost::replace_all(nameString, ";", ","); // sometimes the galenic form is after ';' not ','
+
         std::vector<std::string> nameComponents;
-        boost::algorithm::split(nameComponents, aSingleRow[COLUMN_C], boost::is_any_of(","));
+        boost::algorithm::split(nameComponents, nameString, boost::is_any_of(","));
 
         // Use the name only up to first comma (Issue #68, 5)
         pr.name = nameComponents[0];
@@ -525,11 +530,11 @@ void createCSV(const std::string &outDir)
         }
 
         ofs
-        << "\"" << pv.rn5 << "\"" << OUTPUT_FILE_SEPARATOR              // A
-        << "\"" << pv.code3 << "\"" << OUTPUT_FILE_SEPARATOR            // B
-        << "\"" << pv.rn5 << pv.code3 << "\"" << OUTPUT_FILE_SEPARATOR  // C
-        << "\"" << pv.gtin13 << "\"" << OUTPUT_FILE_SEPARATOR           // D
-        << "\"" << name << "\"" << OUTPUT_FILE_SEPARATOR                                // E
+        << CELL_ESCAPE << pv.rn5 << CELL_ESCAPE << OUTPUT_FILE_SEPARATOR              // A
+        << CELL_ESCAPE << pv.code3 << CELL_ESCAPE << OUTPUT_FILE_SEPARATOR            // B
+        << CELL_ESCAPE << pv.rn5 << pv.code3 << CELL_ESCAPE << OUTPUT_FILE_SEPARATOR  // C
+        << CELL_ESCAPE << pv.gtin13 << CELL_ESCAPE << OUTPUT_FILE_SEPARATOR           // D
+        << CELL_ESCAPE << name << CELL_ESCAPE << OUTPUT_FILE_SEPARATOR                // E
         << pv.galenicForm << OUTPUT_FILE_SEPARATOR                      // F
         << dosage << OUTPUT_FILE_SEPARATOR                              // G
         << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR  // H
