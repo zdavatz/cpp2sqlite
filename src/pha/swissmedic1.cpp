@@ -372,17 +372,20 @@ void getPackageSizeNumericalFromName(std::string &calculatedDosage)
     // If it contains + or - use as is
     if (calculatedDosage.find_first_of("+-") != std::string::npos)
         return;
+
+    std::string stringMassaged = boost::to_lower_copy<std::string>(calculatedDosage); // "X" --> "x"
+    boost::replace_all(stringMassaged, ",", "."); // "0,5" --> "0.5"
     
-    if (calculatedDosage.find("x") == std::string::npos) {      // It doesn't contain "x"
-        if (calculatedDosage.find("ml") != std::string::npos)   // but it contains "ml"
+    if (stringMassaged.find("x") == std::string::npos) {      // It doesn't contain "x"
+        if (stringMassaged.find("ml") != std::string::npos)   // but it contains "ml"
             calculatedDosage = "1";
         
         return;
     }
 
-    std::regex rgx(R"((\d+((\.|,)\d+)?)\s*(x|X)\s?(\d+((\.|,)\d+)?))");  // tested at https://regex101.com
+    std::regex rgx(R"((\d+((\.|,)\d+)?)\s*x\s?(\d+((\.|,)\d+)?))");  // tested at https://regex101.com
     std::smatch match;
-    if (std::regex_search(calculatedDosage, match, rgx)) {
+    if (std::regex_search(stringMassaged, match, rgx)) {
 #if 0 //def DEBUG
         std::clog
         << "calculatedDosage <" << calculatedDosage << ">"
@@ -395,9 +398,7 @@ void getPackageSizeNumericalFromName(std::string &calculatedDosage)
         }
 #endif
         std::string as = match[1];
-        std::string bs = match[5];
-        boost::replace_first(as, ",", ".");
-        boost::replace_first(bs, ",", "."); // "0,5" --> "0.5"
+        std::string bs = match[4];
         double a = std::atof(as.c_str());
         double b = std::atof(bs.c_str());
 #ifdef DEBUG
