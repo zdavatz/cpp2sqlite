@@ -529,7 +529,7 @@ void createCSV(const std::string &outDir)
         << "\"" << pv.code3 << "\"" << OUTPUT_FILE_SEPARATOR            // B
         << "\"" << pv.rn5 << pv.code3 << "\"" << OUTPUT_FILE_SEPARATOR  // C
         << "\"" << pv.gtin13 << "\"" << OUTPUT_FILE_SEPARATOR           // D
-        << name << OUTPUT_FILE_SEPARATOR                                // E
+        << "\"" << name << "\"" << OUTPUT_FILE_SEPARATOR                                // E
         << pv.galenicForm << OUTPUT_FILE_SEPARATOR                      // F
         << dosage << OUTPUT_FILE_SEPARATOR                              // G
         << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR  // H
