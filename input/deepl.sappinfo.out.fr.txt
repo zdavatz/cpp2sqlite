@@ -1,5 +1,4 @@
-*Remplacer l'acide folique : 5mg/j
-Notez la distance
+<4000mg
 sevrage
 Acénocoumarol
 Acétylcystéine
@@ -7,7 +6,7 @@ Acetylsalicylsäure
 Acyclovir
 albendazole
 Réactions allergiques
-Infections générales
+Infections générales, infections des voies urinaires
 Substitution générale
 Alprazolam
 hydroxyde d'aluminium
@@ -67,7 +66,6 @@ Clotrimazol
 codéine
 Dalteparine
 lacération ou dissection périnéale
-colyse continue
 Dépression
 Dequalinium
 Dermatose
@@ -85,10 +83,10 @@ Diosmin Komb.
 diphenhydramine
 Différents extraits de plantes
 Dompéridon
-adaptation posologique
+Ajuster le dosage
 Ajustement de la dose en fonction des besoins cliniques
 Ajustement de la dose en fonction de la surveillance thérapeutique des médicaments (TDM)
-Ajustement de la dose en fonction de la surveillance thérapeutique des médicaments (TDM), substitution à l'acide folique
+réduction de dose
 Doxylaminé
 diarrhée
 Diarrhée (prophylaxie)
@@ -122,9 +120,7 @@ fluconazole
 Acétonide de fluocinolone
 Fluticason
 acide folique
-Remplacer l'acide folique
 Acide folique Méthylfolate de méthyle e.a.
-substitution de l'acide folique
 formotérol
 Fosfomycine
 efforts prématurés
@@ -194,7 +190,7 @@ citrate de magnésium
 hydroxyde de magnésium
 sels de magnésium
 sulfate de magnésium
-Éviter la zone des mamelons
+Éviter la zone du mamelon, dosage selon les informations techniques
 mébendazole
 Meclozin combo.
 Meclozin combo.
@@ -231,7 +227,6 @@ Oxycodon
 Ocytocine
 PVP iode
 Pantoprazol
-Paracétamol
 Paracétamol
 perméthrine
 péthidine
@@ -272,7 +267,6 @@ salmétérol
 Gale
 troubles thyroïdiens
 courbatures
-Douleur post-opératoire, puerpéralité
 Douleur post-opératoire
 Douleur sub/post-partum
 Douleur à la naissance
@@ -303,28 +297,25 @@ douleurs de travail, prématurées
 xylométazoline
 Zidovudine
 Zolpidem
-à partir du 18. SSW
-comme réserve, seulement des doses uniques
 vaginose bactérienne
 selon les informations techniques
-se gargariser et cracher
+Informations techniques geäss
 inhalateur
 intramusculaire
 intravenös
-selon l'âge gestationnel
+intraveineuse, perorale
+intraveineuse, perorale, rectale, rectale
 aucun détail
 pas d'application à long terme
-pas d'application à long terme, application péripartale
-pas de traitement à long terme
 dans le coin
 ne s'appliquent pas
 Doses uniques seulement
-doses uniques, pas de traitement à long terme
-doses uniques seulement, réduction de la dose péripartale
 Utilisation uniquement en tant que réserve
 utilisation à court terme seulement
 ne pas utiliser peripartal
 péroral
+péroral, rectal
+pérorales, vaginales
 par semaine
 rectal
 sous-cutané
