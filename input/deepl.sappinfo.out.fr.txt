@@ -2,7 +2,7 @@
 sevrage
 Acénocoumarol
 Acétylcystéine
-Acetylsalicylsäure
+Acide acétylsalicylique
 Acyclovir
 albendazole
 Réactions allergiques
@@ -302,9 +302,9 @@ selon les informations techniques
 Informations techniques geäss
 inhalateur
 intramusculaire
-intravenös
+intraveineuse
 intraveineuse, perorale
-intraveineuse, perorale, rectale, rectale
+intraveineuse, perorale, rectale
 aucun détail
 pas d'application à long terme
 dans le coin
