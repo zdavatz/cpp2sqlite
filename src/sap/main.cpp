@@ -61,8 +61,6 @@ static std::string appName;
 
 namespace DEEPL
 {
-std::string sheetTitle[2];
-
 std::set<std::string> toBeTranslatedSet; // no duplicates, sorted
 
 // See also src/c2s/sappinfo.cpp getLocalized()
@@ -93,92 +91,94 @@ void parseXLXS(const std::string &inFilename,
                bool verbose)
 {
     const std::unordered_set<int> acceptedFiltersSet = { 1, 5, 6, 9 };
-    
+    std::clog << std::endl << "Reading sappinfo XLSX" << std::endl;
     xlnt::workbook wb;
     wb.load(inFilename);
-    //auto ws = wb.active_sheet();
     
-    std::clog << std::endl << "Reading sappinfo XLSX" << std::endl;
+    //--- Breast-feeding sheet -------------------------------------------------
+    const std::string title1("Stillzeit");
+    if (wb.contains(title1)) {
+        auto ws = wb.sheet_by_title(title1);
 
-    // Breast-feeding sheet
-    auto ws = wb.sheet_by_index(0);
-    sheetTitle[0] = ws.title();
-    std::clog << "Sheet title: " << ws.title() << std::endl;
-    
-    int skipHeaderCount = 0;
-    for (auto row : ws.rows(false)) {
-        if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
-            continue;
-        }
+        std::clog << "Sheet title: " << ws.title() << std::endl;
         
-        int filter = std::stoi(row[COLUMN_U].to_string());
-        if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
-            continue;            // Not found in set
-        
-        std::vector<std::string> aSingleRow;
-        for (auto cell : row)
-            aSingleRow.push_back(cell.to_string());
-
-        const std::unordered_set<int> columnsWithTextSet = {
-            COLUMN_B,   // Hauptindikation
-            COLUMN_C,   // Indikation
-            COLUMN_G,   // Wirkstoff
-            COLUMN_H,   // Applikationsart
-            COLUMN_J,   // Bemerkungen zur Dosierung
+        int skipHeaderCount = 0;
+        for (auto row : ws.rows(false)) {
+            if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
+                continue;
+            }
             
-            // Sometimes dosage, other times text:
-            COLUMN_I   // max. verabreichte Tagesdosis
-        };
+            int filter = std::stoi(row[COLUMN_U].to_string());
+            if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
+                continue;            // Not found in set
+            
+            std::vector<std::string> aSingleRow;
+            for (auto cell : row)
+                aSingleRow.push_back(cell.to_string());
+
+            const std::unordered_set<int> columnsWithTextSet = {
+                COLUMN_B,   // Hauptindikation
+                COLUMN_C,   // Indikation
+                COLUMN_G,   // Wirkstoff
+                COLUMN_H,   // Applikationsart
+                COLUMN_J,   // Bemerkungen zur Dosierung
+                
+                // Sometimes dosage, other times text:
+                COLUMN_I   // max. verabreichte Tagesdosis
+            };
+            
+            for (auto s : columnsWithTextSet)
+                validateAndAdd(aSingleRow[s]);
+        } // for row in sheet 1
+    }
+
+    //--- Pregnancy sheet ------------------------------------------------------
+    const std::string title2("Schwangerschaft");
+    if (wb.contains(title2)) {
+        auto ws = wb.sheet_by_title(title2);
+        std::clog << "Sheet title: " << ws.title() << std::endl;
         
-        for (auto s : columnsWithTextSet)
-            validateAndAdd(aSingleRow[s]);
-    } // for row in sheet 1
-    
-    // Pregnancy sheet
-    
-    ws = wb.sheet_by_index(1);
-    sheetTitle[1] = ws.title();
-    std::clog << "Sheet title: " << ws.title() << std::endl;
-    
-    skipHeaderCount = 0;
-    for (auto row : ws.rows(false)) {
-        if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
-            continue;
-        }
-        
-        if (row[COLUMN_2_AC].to_string().empty()) {
-            // Issue #64
-            // The last line of the second sheet contains just one subtotal for G
-            // The filter column is empty, so just ignore it
-            continue;
-        }
+        int skipHeaderCount = 0;
+        for (auto row : ws.rows(false)) {
+            if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
+                continue;
+            }
+            
+            if (row[COLUMN_2_AC].to_string().empty()) {
+                // Issue #64
+                // The last line of the second sheet contains just one subtotal for G
+                // The filter column is empty, so just ignore it
+                continue;
+            }
 
-        int filter = std::stoi(row[COLUMN_2_AC].to_string());
-        if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
-            continue;            // Not found in set
-        
-        std::vector<std::string> aSingleRow;
-        for (auto cell : row)
-            aSingleRow.push_back(cell.to_string());
+            int filter = std::stoi(row[COLUMN_2_AC].to_string());
+            if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
+                continue;            // Not found in set
+            
+            std::vector<std::string> aSingleRow;
+            for (auto cell : row)
+                aSingleRow.push_back(cell.to_string());
 
-        const std::unordered_set<int> columnsWithTextSet = {
-            COLUMN_2_B, // Hauptindikation
-            COLUMN_2_C, // Indikation
-            COLUMN_2_G, // Wirkstoff
-            COLUMN_2_H, // Applikationsart
-            COLUMN_2_L, // Bemerkungen zur Dosierung
-            COLUMN_2_N, // Bemerkungen zur peripartalen Dosierung
+            const std::unordered_set<int> columnsWithTextSet = {
+                COLUMN_2_B, // Hauptindikation
+                COLUMN_2_C, // Indikation
+                COLUMN_2_G, // Wirkstoff
+                COLUMN_2_H, // Applikationsart
+                COLUMN_2_L, // Bemerkungen zur Dosierung
+                COLUMN_2_N, // Bemerkungen zur peripartalen Dosierung
 
-            // Sometimes dosage, other times text:
-            COLUMN_2_I, // max. verabreichte Tagesdosis 1. Trimenon
-            COLUMN_2_J, // max. verabreichte Tagesdosis 2. Trimenon
-            COLUMN_2_K  // max. verabreichte Tagesdosis 3. Trimenon
-        };
+                // Sometimes dosage, other times text:
+                COLUMN_2_I, // max. verabreichte Tagesdosis 1. Trimenon
+                COLUMN_2_J, // max. verabreichte Tagesdosis 2. Trimenon
+                COLUMN_2_K  // max. verabreichte Tagesdosis 3. Trimenon
+            };
 
-        for (auto s : columnsWithTextSet)
-            validateAndAdd(aSingleRow[s]);
-    } // for row in sheet 2
+            for (auto s : columnsWithTextSet)
+                validateAndAdd(aSingleRow[s]);
+        } // for row in sheet 2
+    }
 }
+
 } // namespace DEEPL
 
 ////////////////////////////////////////////////////////////////////////////

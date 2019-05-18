@@ -68,7 +68,6 @@ namespace SAPP
     std::set<std::string> statsUniqueAtcSheet2Set;  // Issue #70
 #endif
 
-    std::string sheetTitle[2];
     std::vector< std::vector<std::string> > sheetBreastFeeding;
     std::vector< std::vector<std::string> > sheetPregnancy;
     
@@ -354,162 +353,163 @@ void parseXLXS(const std::string &inDir,
     }
 
     const std::string &filename = inDir + inFile;
+    std::clog << std::endl << "Reading sappinfo XLSX" << std::endl;
     xlnt::workbook wb;
     wb.load(filename);
-    //auto ws = wb.active_sheet();
 
-    std::clog << std::endl << "Reading sappinfo XLSX" << std::endl;
+    //--- Breast-feeding sheet -------------------------------------------------
+    const std::string title1("Stillzeit");
+    if (wb.contains(title1)) {
+        auto ws = wb.sheet_by_title(title1);
+        std::clog << "\tSheet: " << ws.title() << std::endl;
 
-    // Breast-feeding sheet
-    auto ws = wb.sheet_by_index(0);
-    sheetTitle[0] = ws.title();
-    std::clog << "\tSheet: " << ws.title() << std::endl;
-
-    int skipHeaderCount = 0;
-    for (auto row : ws.rows(false)) {
-        
-        if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
+        int skipHeaderCount = 0;
+        for (auto row : ws.rows(false)) {
+            
+            if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
 #ifdef DEBUG_SAPPINFO
-            int i=0;
+                int i=0;
+                for (auto cell : row) {
+                    xlnt::column_t::index_t col_idx = cell.column_index();
+                    std::clog << i++
+                    << "\t" << xlnt::column_t::column_string_from_index(col_idx)
+                    << "\t<" << cell.to_string() << ">" << std::endl;
+                }
+#endif
+                continue;
+            }
+            
+            int filter = std::stoi(row[COLUMN_U].to_string());
+            if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
+                continue;            // Not found in set
+
+            std::vector<std::string> aSingleRow;
             for (auto cell : row) {
-                xlnt::column_t::index_t col_idx = cell.column_index();
-                std::clog << i++
-                << "\t" << xlnt::column_t::column_string_from_index(col_idx)
-                << "\t<" << cell.to_string() << ">" << std::endl;
+                //std::clog << cell.to_string() << std::endl;
+                aSingleRow.push_back(cell.to_string());
+            }
+            
+            sheetBreastFeeding.push_back(aSingleRow);
+            
+            _breastfeed bf;
+            bf.c.atcCodes = aSingleRow[COLUMN_R];
+#if 1 // issue 53
+            // Also break it down into single ATCs
+            boost::algorithm::split(bf.c.atcCodeVec, bf.c.atcCodes, boost::is_any_of(ATC_LIST_SEPARATOR), boost::token_compress_on);
+
+            for (auto a : bf.c.atcCodeVec)
+                statsUniqueAtcSet.insert(a);
+#endif
+            bf.c.activeSubstance = getLocalized(language, aSingleRow[COLUMN_G]);
+            bf.c.mainIndication = getLocalized(language, aSingleRow[COLUMN_B]);
+            bf.c.indication = getLocalized(language, aSingleRow[COLUMN_C]);
+            bf.c.typeOfApplication = getLocalized(language, aSingleRow[COLUMN_H]);
+            bf.c.link = aSingleRow[COLUMN_S]; if (bf.c.link == "nein") bf.c.link.clear();
+            bf.c.comments = getLocalized(language, aSingleRow[COLUMN_J]);
+            bf.approval = aSingleRow[COLUMN_Q];
+            bf.maxDailyDose = getLocalized(language, aSingleRow[COLUMN_I]);
+            breastFeedVec.push_back(bf);
+#ifdef DEBUG_SAPPINFO
+            if (aSingleRow[COLUMN_R] == "J02AC01") {
+                std::clog
+                << "Art der Anwendung: " << ws.title()
+                << "\n\t R ATC: <" << aSingleRow[COLUMN_R] << ">"
+                << "\n\t G Wirkstoff: <" << aSingleRow[COLUMN_G] << ">"
+                << "\n\t B Hauptindikation: <" << aSingleRow[COLUMN_B] << ">"
+                << "\n\t C Indikation: <" << aSingleRow[COLUMN_C] << ">"
+                << "\n\t H Applikationsart: <" << aSingleRow[COLUMN_H] << ">"
+                << "\n\t I max: <" << aSingleRow[COLUMN_I] << ">"
+                << "\n\t J comment: <" << aSingleRow[COLUMN_J] << ">"
+                << "\n\t Q approval: <" << aSingleRow[COLUMN_Q] << ">"
+                << "\n\t U Filter: <" << aSingleRow[COLUMN_U] << ">"
+                << std::endl;
             }
 #endif
-            continue;
         }
-        
-        int filter = std::stoi(row[COLUMN_U].to_string());
-        if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
-            continue;            // Not found in set
-
-        std::vector<std::string> aSingleRow;
-        for (auto cell : row) {
-            //std::clog << cell.to_string() << std::endl;
-            aSingleRow.push_back(cell.to_string());
-        }
-        
-        sheetBreastFeeding.push_back(aSingleRow);
-        
-        _breastfeed bf;
-        bf.c.atcCodes = aSingleRow[COLUMN_R];
-#if 1 // issue 53
-        // Also break it down into single ATCs
-        boost::algorithm::split(bf.c.atcCodeVec, bf.c.atcCodes, boost::is_any_of(ATC_LIST_SEPARATOR), boost::token_compress_on);
-
-        for (auto a : bf.c.atcCodeVec)
-            statsUniqueAtcSet.insert(a);
-#endif
-        bf.c.activeSubstance = getLocalized(language, aSingleRow[COLUMN_G]);
-        bf.c.mainIndication = getLocalized(language, aSingleRow[COLUMN_B]);
-        bf.c.indication = getLocalized(language, aSingleRow[COLUMN_C]);
-        bf.c.typeOfApplication = getLocalized(language, aSingleRow[COLUMN_H]);
-        bf.c.link = aSingleRow[COLUMN_S]; if (bf.c.link == "nein") bf.c.link.clear();
-        bf.c.comments = getLocalized(language, aSingleRow[COLUMN_J]);
-        bf.approval = aSingleRow[COLUMN_Q];
-        bf.maxDailyDose = getLocalized(language, aSingleRow[COLUMN_I]);
-        breastFeedVec.push_back(bf);
-#ifdef DEBUG_SAPPINFO
-        if (aSingleRow[COLUMN_R] == "J02AC01") {
-            std::clog
-            << "Art der Anwendung: " << ws.title()
-            << "\n\t R ATC: <" << aSingleRow[COLUMN_R] << ">"
-            << "\n\t G Wirkstoff: <" << aSingleRow[COLUMN_G] << ">"
-            << "\n\t B Hauptindikation: <" << aSingleRow[COLUMN_B] << ">"
-            << "\n\t C Indikation: <" << aSingleRow[COLUMN_C] << ">"
-            << "\n\t H Applikationsart: <" << aSingleRow[COLUMN_H] << ">"
-            << "\n\t I max: <" << aSingleRow[COLUMN_I] << ">"
-            << "\n\t J comment: <" << aSingleRow[COLUMN_J] << ">"
-            << "\n\t Q approval: <" << aSingleRow[COLUMN_Q] << ">"
-            << "\n\t U Filter: <" << aSingleRow[COLUMN_U] << ">"
-            << std::endl;
-        }
-#endif
     }
     
-    // Pregnancy sheet
-    
-    ws = wb.sheet_by_index(1);
-    sheetTitle[1] = ws.title();
-    std::clog << "\tSheet: " << ws.title() << std::endl;
-    
-    skipHeaderCount = 0;
-    for (auto row : ws.rows(false)) {
-        if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
+    //--- Pregnancy sheet ------------------------------------------------------
+    const std::string title2("Schwangerschaft");
+    if (wb.contains(title2)) {
+        auto ws = wb.sheet_by_title(title2);
+        std::clog << "\tSheet: " << ws.title() << std::endl;
+        
+        int skipHeaderCount = 0;
+        for (auto row : ws.rows(false)) {
+            if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
 #ifdef DEBUG_SAPPINFO
-            int i=0;
+                int i=0;
+                for (auto cell : row) {
+                    xlnt::column_t::index_t col_idx = cell.column_index();
+                    std::clog << i++
+                    << "\t" << xlnt::column_t::column_string_from_index(col_idx)
+                    << "\t<" << cell.to_string() << ">" << std::endl;
+                }
+#endif
+                continue;
+            }
+            
+            if (row[COLUMN_2_AC].to_string().empty()) {
+                // Issue #64
+                // The last line of the second sheet contains just one subtotal for G
+                // The filter column is empty, so just ignore it
+                continue;
+            }
+
+            int filter = std::stoi(row[COLUMN_2_AC].to_string());
+            if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
+                continue;            // Not found in set
+            
+            std::vector<std::string> aSingleRow;
             for (auto cell : row) {
-                xlnt::column_t::index_t col_idx = cell.column_index();
-                std::clog << i++
-                << "\t" << xlnt::column_t::column_string_from_index(col_idx)
-                << "\t<" << cell.to_string() << ">" << std::endl;
+                //std::clog << cell.to_string() << std::endl;
+                aSingleRow.push_back(cell.to_string());
+            }
+            
+            sheetPregnancy.push_back(aSingleRow);
+            
+            _pregnancy pr;
+            pr.c.atcCodes = aSingleRow[COLUMN_2_Z];
+#if 1 // issue 53
+            // Also break it down into single ATCs
+            boost::algorithm::split(pr.c.atcCodeVec, pr.c.atcCodes, boost::is_any_of(ATC_LIST_SEPARATOR), boost::token_compress_on);
+            
+            for (auto a : pr.c.atcCodeVec)
+                statsUniqueAtcSet.insert(a);
+#endif
+            pr.c.activeSubstance = getLocalized(language, aSingleRow[COLUMN_2_G]);
+            pr.c.mainIndication = getLocalized(language, aSingleRow[COLUMN_2_B]);
+            pr.c.indication = getLocalized(language, aSingleRow[COLUMN_2_C]);
+            pr.c.typeOfApplication = getLocalized(language, aSingleRow[COLUMN_2_H]);
+            pr.c.link = aSingleRow[COLUMN_2_AA]; if (pr.c.link == "nein") pr.c.link.clear();
+            pr.c.comments = getLocalized(language, aSingleRow[COLUMN_2_L]);
+            pr.max1 = getLocalized(language, aSingleRow[COLUMN_2_I]);
+            pr.max2 = getLocalized(language, aSingleRow[COLUMN_2_J]);
+            pr.max3 = getLocalized(language, aSingleRow[COLUMN_2_K]);
+            pr.periDosi = aSingleRow[COLUMN_2_M];
+            pr.periBeme = getLocalized(language, aSingleRow[COLUMN_2_N]);
+            pregnancyVec.push_back(pr);
+#ifdef DEBUG_SAPPINFO
+            if (aSingleRow[COLUMN_2_Z] == "J01FA01")
+            {
+                std::clog
+                << "Art der Anwendung: " << ws.title()
+                << "\n\t Z ATC: <" << aSingleRow[COLUMN_2_Z] << ">"
+                << "\n\t G Wirkstoff: <" << aSingleRow[COLUMN_2_G] << ">"
+                << "\n\t B Hauptindikation: <" << aSingleRow[COLUMN_2_B] << ">"
+                << "\n\t C Indikation: <" << aSingleRow[COLUMN_2_C] << ">"
+                << "\n\t H Applikationsart: <" << aSingleRow[COLUMN_2_H] << ">"
+                << "\n\t AA SAPP-Monographie: <" << aSingleRow[COLUMN_2_AA] << ">"
+                << "\n\t I max TD Tr 1: <" << aSingleRow[COLUMN_2_I] << ">"
+                << "\n\t J max TD Tr 2: <" << aSingleRow[COLUMN_2_J] << ">"
+                << "\n\t K max TD Tr 3: <" << aSingleRow[COLUMN_2_K] << ">"
+                << "\n\t M Peripartale Dosierung: <" << aSingleRow[COLUMN_2_M] << ">"
+                << "\n\t N Bemerkungen zur peripartalen Dosierung: <" << aSingleRow[COLUMN_2_N] << ">"
+                << "\n\t AC Filter: <" << aSingleRow[COLUMN_2_AC] << ">"
+                << std::endl;
             }
 #endif
-            continue;
         }
-        
-        if (row[COLUMN_2_AC].to_string().empty()) {
-            // Issue #64
-            // The last line of the second sheet contains just one subtotal for G
-            // The filter column is empty, so just ignore it
-            continue;
-        }
-
-        int filter = std::stoi(row[COLUMN_2_AC].to_string());
-        if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
-            continue;            // Not found in set
-        
-        std::vector<std::string> aSingleRow;
-        for (auto cell : row) {
-            //std::clog << cell.to_string() << std::endl;
-            aSingleRow.push_back(cell.to_string());
-        }
-        
-        sheetPregnancy.push_back(aSingleRow);
-        
-        _pregnancy pr;
-        pr.c.atcCodes = aSingleRow[COLUMN_2_Z];
-#if 1 // issue 53
-        // Also break it down into single ATCs
-        boost::algorithm::split(pr.c.atcCodeVec, pr.c.atcCodes, boost::is_any_of(ATC_LIST_SEPARATOR), boost::token_compress_on);
-        
-        for (auto a : pr.c.atcCodeVec)
-            statsUniqueAtcSet.insert(a);
-#endif
-        pr.c.activeSubstance = getLocalized(language, aSingleRow[COLUMN_2_G]);
-        pr.c.mainIndication = getLocalized(language, aSingleRow[COLUMN_2_B]);
-        pr.c.indication = getLocalized(language, aSingleRow[COLUMN_2_C]);
-        pr.c.typeOfApplication = getLocalized(language, aSingleRow[COLUMN_2_H]);
-        pr.c.link = aSingleRow[COLUMN_2_AA]; if (pr.c.link == "nein") pr.c.link.clear();
-        pr.c.comments = getLocalized(language, aSingleRow[COLUMN_2_L]);
-        pr.max1 = getLocalized(language, aSingleRow[COLUMN_2_I]);
-        pr.max2 = getLocalized(language, aSingleRow[COLUMN_2_J]);
-        pr.max3 = getLocalized(language, aSingleRow[COLUMN_2_K]);
-        pr.periDosi = aSingleRow[COLUMN_2_M];
-        pr.periBeme = getLocalized(language, aSingleRow[COLUMN_2_N]);
-        pregnancyVec.push_back(pr);
-#ifdef DEBUG_SAPPINFO
-        if (aSingleRow[COLUMN_2_Z] == "J01FA01")
-        {
-            std::clog
-            << "Art der Anwendung: " << ws.title()
-            << "\n\t Z ATC: <" << aSingleRow[COLUMN_2_Z] << ">"
-            << "\n\t G Wirkstoff: <" << aSingleRow[COLUMN_2_G] << ">"
-            << "\n\t B Hauptindikation: <" << aSingleRow[COLUMN_2_B] << ">"
-            << "\n\t C Indikation: <" << aSingleRow[COLUMN_2_C] << ">"
-            << "\n\t H Applikationsart: <" << aSingleRow[COLUMN_2_H] << ">"
-            << "\n\t AA SAPP-Monographie: <" << aSingleRow[COLUMN_2_AA] << ">"
-            << "\n\t I max TD Tr 1: <" << aSingleRow[COLUMN_2_I] << ">"
-            << "\n\t J max TD Tr 2: <" << aSingleRow[COLUMN_2_J] << ">"
-            << "\n\t K max TD Tr 3: <" << aSingleRow[COLUMN_2_K] << ">"
-            << "\n\t M Peripartale Dosierung: <" << aSingleRow[COLUMN_2_M] << ">"
-            << "\n\t N Bemerkungen zur peripartalen Dosierung: <" << aSingleRow[COLUMN_2_N] << ">"
-            << "\n\t AC Filter: <" << aSingleRow[COLUMN_2_AC] << ">"
-            << std::endl;
-        }
-#endif
     }
 
     printFileStats(filename);
@@ -541,31 +541,12 @@ static void getPregnancyByAtc(const std::string &atc, std::vector<_pregnancy> &p
 {
     getByAtc<_pregnancy>(atc, pregnancyVec, pv);
 }
-
-std::string getHtmlByAtc(const std::string atc)
+    
+void getHtmlBreastfeed(const std::string atc, std::string &html)
 {
-    //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << atc << std::endl;
-    
-    if (atc.empty())
-        return {};
-
-    // First check ordered set, quicker than going through the whole vector
-    if (statsUniqueAtcSet.find(atc) == statsUniqueAtcSet.end())
-        return {};
-    
-    // Issue #70
-    if (statsUniqueUsedAtcSet.find(atc) == statsUniqueAtcSet.end())
-        statsUniqueUsedAtcSet.insert(atc);
-    else
-        statsRepeatedAtcCount++;
-
-    std::string html;
-    html.clear();
-
-    //---
     std::vector<_breastfeed> bfv;
     getBreastFeedByAtc(atc, bfv);
-
+    
     if (bfv.empty()) {
         statsBfByAtcNotFoundCount++;
     }
@@ -577,27 +558,25 @@ std::string getHtmlByAtc(const std::string atc)
     }
     
     for (auto b : bfv) {
-#if 1
         // Check for optional columns
         int numColumns = requiredColumnVec.size();
         for (auto &m : optionalColumnMap)  // reset options
             m.second = false;
-
+        
         if (!optionalColumnMap[LOC_KEY_TH_COMMENT] &&
             !b.c.comments.empty())
         {
             optionalColumnMap[LOC_KEY_TH_COMMENT] = true;
             numColumns++;
         }
-
+        
         if (!optionalColumnMap[LOC_KEY_TH_APPROVAL] &&
             !b.approval.empty())
         {
             optionalColumnMap[LOC_KEY_TH_APPROVAL] = true;
             numColumns++;
         }
-#endif
-
+        
         // Start defining the HTML code
         std::string textBeforeTable;
         {
@@ -606,7 +585,7 @@ std::string getHtmlByAtc(const std::string atc)
             textBeforeTable += localizedResourcesMap[LOC_KEY_ACT_SUBST] + ": " + b.c.activeSubstance + "<br />\n";
             if (!b.c.mainIndication.empty())
                 textBeforeTable += localizedResourcesMap[LOC_KEY_MAIN_INDIC] + ": " + b.c.mainIndication + "<br />\n";
-
+            
             if (!b.c.indication.empty())
                 textBeforeTable += localizedResourcesMap[LOC_KEY_INDICATION] + ": " + b.c.indication + "<br />\n";
             
@@ -614,20 +593,20 @@ std::string getHtmlByAtc(const std::string atc)
                 textBeforeTable += "<a href=\"" + b.c.link + "\">Sappinfo Monographie</a>" + "<br />\n"; // TODO: localize
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
-
+        
         std::string tableColGroup(COL_SPAN_L + std::to_string(numColumns) + COL_SPAN_R);
         tableColGroup = "<colgroup>" + tableColGroup + "</colgroup>";
         
         std::string tableHeader;
         tableHeader.clear();
-
+        
         std::string tableBody;
         tableBody.clear();
         
         {
             tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_TYPE] + TAG_TH_R;        // col H
             tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX_DAILY] + TAG_TH_R;   // col I
-
+            
             if (optionalColumnMap[LOC_KEY_TH_COMMENT])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_COMMENT] + TAG_TH_R;  // col J
             
@@ -642,26 +621,26 @@ std::string getHtmlByAtc(const std::string atc)
             tableBody += tableHeader;
 #endif
         }
-
+        
         {
             std::string tableRow;
-
+            
             tableRow += TAG_TD_L + b.c.typeOfApplication + TAG_TD_R;
             tableRow += TAG_TD_L + b.maxDailyDose + TAG_TD_R;
-
+            
             if (optionalColumnMap[LOC_KEY_TH_COMMENT])
                 tableRow += TAG_TD_L + b.c.comments + TAG_TD_R;
-
+            
             if (optionalColumnMap[LOC_KEY_TH_APPROVAL])
                 tableRow += TAG_TD_L + b.approval + TAG_TD_R;
-
+            
             tableRow += "\n";  // for readability
             tableRow = "<tr>" + tableRow + "</tr>";
             tableBody += tableRow;
         }
-
+        
         tableBody = "<tbody>" + tableBody + "</tbody>";
-
+        
         std::string table = tableColGroup;
 #ifdef WITH_SEPARATE_TABLE_HEADER
         table += tableHeader + tableBody;
@@ -670,14 +649,16 @@ std::string getHtmlByAtc(const std::string atc)
 #endif
         table = TAG_TABLE_L + table + TAG_TABLE_R;
         html += table;
-
+        
         statsTablesCount[0]++;
     }  // for bfv
+}
 
-    //---
+void getHtmlPregnancy(const std::string atc, std::string &html)
+{
     std::vector<_pregnancy> pregnv;
     getPregnancyByAtc(atc, pregnv);
-
+    
     if (pregnv.empty()) {
         statsPregnByAtcNotFoundCount++;
     }
@@ -689,54 +670,52 @@ std::string getHtmlByAtc(const std::string atc)
     }
     
     for (auto p : pregnv) {
-#if 1
         // Check for optional columns
         int numColumns = requiredColumnVec_2.size();
         for (auto &m : optionalColumnMap_2)  // reset options
             m.second = false;
-
+        
         if (!optionalColumnMap_2[LOC_KEY_TH_MAX1] &&
             !p.max1.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_MAX1] = true;
             numColumns++;
         }
-
+        
         if (!optionalColumnMap_2[LOC_KEY_TH_MAX2] &&
             !p.max2.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_MAX2] = true;
             numColumns++;
         }
-
+        
         if (!optionalColumnMap_2[LOC_KEY_TH_MAX3] &&
             !p.max3.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_MAX3] = true;
             numColumns++;
         }
-
+        
         if (!optionalColumnMap_2[LOC_KEY_TH_COMMENT] &&
             !p.c.comments.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_COMMENT] = true;
             numColumns++;
         }
-
+        
         if (!optionalColumnMap_2[LOC_KEY_TH_PERIDOSE] &&
             !p.periDosi.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_PERIDOSE] = true;
             numColumns++;
         }
-
+        
         if (!optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT] &&
             !p.periBeme.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT] = true;
             numColumns++;
         }
-#endif
         
         // Define the HTML code
         std::string textBeforeTable;
@@ -766,22 +745,22 @@ std::string getHtmlByAtc(const std::string atc)
         
         {
             tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_TYPE] + TAG_TH_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_MAX1])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX1] + TAG_TH_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_MAX2])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX2] + TAG_TH_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_MAX3])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX3] + TAG_TH_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_COMMENT])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_COMMENT] + TAG_TH_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_PERIDOSE] + TAG_TH_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_PERIDOSE_COMMENT] + TAG_TH_R;
             
@@ -798,22 +777,22 @@ std::string getHtmlByAtc(const std::string atc)
             std::string tableRow;
             
             tableRow += TAG_TD_L + p.c.typeOfApplication + TAG_TD_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_MAX1])
                 tableRow += TAG_TD_L + p.max1 + TAG_TD_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_MAX2])
                 tableRow += TAG_TD_L + p.max2 + TAG_TD_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_MAX3])
                 tableRow += TAG_TD_L + p.max3 + TAG_TD_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_COMMENT])
                 tableRow += TAG_TD_L + p.c.comments + TAG_TD_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE])
                 tableRow += TAG_TD_L + p.periDosi + TAG_TD_R;
-
+            
             if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT])
                 tableRow += TAG_TD_L + p.periBeme + TAG_TD_R;
             
@@ -835,6 +814,30 @@ std::string getHtmlByAtc(const std::string atc)
         
         statsTablesCount[1]++;
     } // for pregnv
+}
+    
+std::string getHtmlByAtc(const std::string atc)
+{
+    //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << atc << std::endl;
+    
+    if (atc.empty())
+        return {};
+
+    // First check ordered set, quicker than going through the whole vector
+    if (statsUniqueAtcSet.find(atc) == statsUniqueAtcSet.end())
+        return {};
+    
+    // Issue #70
+    if (statsUniqueUsedAtcSet.find(atc) == statsUniqueAtcSet.end())
+        statsUniqueUsedAtcSet.insert(atc);
+    else
+        statsRepeatedAtcCount++;
+
+    std::string html;
+    //html.clear();
+
+    getHtmlPregnancy(atc, html);
+    getHtmlBreastfeed(atc, html);
 
     return html;
 }
