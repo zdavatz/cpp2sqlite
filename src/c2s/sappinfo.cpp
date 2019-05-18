@@ -138,7 +138,7 @@ namespace SAPP
         
         // Sheet 2
         "max TD Tr 1", "max TD Tr 2", "max TD Tr 3",
-        "Peripartum posologie", "Commentaires sur périnatale posologie",
+        "Peripartum posologie", "Commentaires sur dosage",
         
         // Other strings
         "Période d'application", "Substance active", "Indication principale", "Indication",
