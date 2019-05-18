@@ -48,7 +48,10 @@ namespace SAPP
     void parseXLXS(const std::string &inDir,
                    const std::string &filename,
                    const std::string &language);
-    std::string getHtmlByAtc(const std::string atc);
+
+    void getHtmlByAtc(const std::string atc,
+                      std::string &htmlPregnancy,
+                      std::string &htmlBreastfeed);
     
     void printUsageStats();
 }

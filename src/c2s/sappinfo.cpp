@@ -95,12 +95,12 @@ namespace SAPP
 #define LOC_KEY_TH_PERIDOSE_COMMENT     "perB" // periBemer
 
     // Other strings
-#define LOC_KEY_TYPE                    "type"
+//#define LOC_KEY_TYPE                    "type"
 #define LOC_KEY_ACT_SUBST               "actv" // active
 #define LOC_KEY_MAIN_INDIC              "mInd" // mainIndication
 #define LOC_KEY_INDICATION              "indc" // indication
-#define LOC_KEY_SHEET1                  "brFd" // breastFeed
-#define LOC_KEY_SHEET2                  "preg" // pregnancy
+//#define LOC_KEY_SHEET1                  "brFd" // breastFeed
+//#define LOC_KEY_SHEET2                  "preg" // pregnancy
 
     const std::vector<std::string> loc_string_key = {
         LOC_KEY_TH_TYPE, LOC_KEY_TH_COMMENT,
@@ -113,8 +113,9 @@ namespace SAPP
         LOC_KEY_TH_PERIDOSE, LOC_KEY_TH_PERIDOSE_COMMENT,
         
         // Other strings
-        LOC_KEY_TYPE, LOC_KEY_ACT_SUBST, LOC_KEY_MAIN_INDIC, LOC_KEY_INDICATION,
-        LOC_KEY_SHEET1, LOC_KEY_SHEET2
+        //LOC_KEY_TYPE,
+        LOC_KEY_ACT_SUBST, LOC_KEY_MAIN_INDIC, LOC_KEY_INDICATION
+        //LOC_KEY_SHEET1, LOC_KEY_SHEET2
     };
     std::vector<std::string> loc_string_de = {
         "Applikationsart", "Bemerkungen zur Dosierung",
@@ -127,8 +128,9 @@ namespace SAPP
         "Peripartale Dosierung", "Bemerkungen zur Dosierung",
         
         // Other strings
-        "Anwendungszeitraum", "Wirkstoff", "Hauptindikation", "Indikation",
-        "Stillzeit", "Schwangerschaft"
+        //"Anwendungszeitraum",
+        "Wirkstoff", "Hauptindikation", "Indikation"
+        //"Stillzeit", "Schwangerschaft"
     };
     std::vector<std::string> loc_string_fr = { // TODO: verify translations
         "Type d’application", "Commentaires sur dosage",
@@ -141,8 +143,9 @@ namespace SAPP
         "Peripartum posologie", "Commentaires sur dosage",
         
         // Other strings
-        "Période d'application", "Substance active", "Indication principale", "Indication",
-        "Période de lactation", "Grossesse"
+        //"Période d'application",
+        "Substance active", "Indication principale", "Indication"
+        //"Période de lactation", "Grossesse"
     };
     std::vector<std::string> loc_string_en = {
         "Type of application", "Comments on dosage",
@@ -155,8 +158,9 @@ namespace SAPP
         "Dose adjustment", "Peripartum dosage", "Comments on peripartum dosage",
         
         // Other strings
-        "Type of use", "Active Substance", "Main Indication", "Indication",
-        "breastfeeding", "pregnancy"
+        //"Type of use",
+        "Active Substance", "Main Indication", "Indication"
+        //"breastfeeding", "pregnancy"
     };
     std::map<std::string, std::string> localizedResourcesMap;
 
@@ -580,7 +584,7 @@ void getHtmlBreastfeed(const std::string atc, std::string &html)
         // Start defining the HTML code
         std::string textBeforeTable;
         {
-            textBeforeTable += localizedResourcesMap[LOC_KEY_TYPE] + ": " + localizedResourcesMap[LOC_KEY_SHEET1] + "<br />\n";
+            //textBeforeTable += localizedResourcesMap[LOC_KEY_TYPE] + ": " + localizedResourcesMap[LOC_KEY_SHEET1] + "<br />\n";
             textBeforeTable += "ATC-Code: " + b.c.atcCodes + "<br />\n";
             textBeforeTable += localizedResourcesMap[LOC_KEY_ACT_SUBST] + ": " + b.c.activeSubstance + "<br />\n";
             if (!b.c.mainIndication.empty())
@@ -720,7 +724,7 @@ void getHtmlPregnancy(const std::string atc, std::string &html)
         // Define the HTML code
         std::string textBeforeTable;
         {
-            textBeforeTable += localizedResourcesMap[LOC_KEY_TYPE] + ": " + localizedResourcesMap[LOC_KEY_SHEET2] + "<br />\n";
+            //textBeforeTable += localizedResourcesMap[LOC_KEY_TYPE] + ": " + localizedResourcesMap[LOC_KEY_SHEET2] + "<br />\n";
             textBeforeTable += "ATC-Code: " + p.c.atcCodes + "<br />\n";
             textBeforeTable += localizedResourcesMap[LOC_KEY_ACT_SUBST] + ": " + p.c.activeSubstance + "<br />\n";
             if (!p.c.mainIndication.empty())
@@ -816,16 +820,18 @@ void getHtmlPregnancy(const std::string atc, std::string &html)
     } // for pregnv
 }
     
-std::string getHtmlByAtc(const std::string atc)
+void getHtmlByAtc(const std::string atc,
+                  std::string &htmlPregnancy,
+                  std::string &htmlBreastfeed)
 {
     //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << atc << std::endl;
     
     if (atc.empty())
-        return {};
+        return;
 
     // First check ordered set, quicker than going through the whole vector
     if (statsUniqueAtcSet.find(atc) == statsUniqueAtcSet.end())
-        return {};
+        return;
     
     // Issue #70
     if (statsUniqueUsedAtcSet.find(atc) == statsUniqueAtcSet.end())
@@ -833,13 +839,8 @@ std::string getHtmlByAtc(const std::string atc)
     else
         statsRepeatedAtcCount++;
 
-    std::string html;
-    //html.clear();
-
-    getHtmlPregnancy(atc, html);
-    getHtmlBreastfeed(atc, html);
-
-    return html;
+    getHtmlPregnancy(atc, htmlPregnancy);
+    getHtmlBreastfeed(atc, htmlBreastfeed);
 }
 
 }
