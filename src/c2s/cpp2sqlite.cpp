@@ -910,7 +910,7 @@ doExtraSections:
             //---
 #if 1
             const std::string sectionSappInfo("Section" + std::to_string(SECTION_NUMBER_SAPPINFO));
-            const std::string sectionSappInfoName("Sappinfo");
+            const std::string sectionSappInfoName("SAPP");
             
             if (hasXmlHeader && atc.empty())
                 html += "\n  </div>"; // terminate previous section before starting a new one
