@@ -906,6 +906,7 @@ doExtraSections:
             std::string sectionSappInfoName1("SAPP: Schwangers.");
             if (language == "fr")
                 sectionSappInfoName1 = "SAPP: Grossesse";
+
             
             if (hasXmlHeader && atc.empty())
                 html += "\n  </div>"; // terminate previous section before starting a new one
