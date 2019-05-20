@@ -66,8 +66,9 @@ namespace BAG
 
     std::vector<std::string> getGtinList();
     std::string getTindex(const std::string &rn);
-    std::string getApplication(const std::string &rn);
-    
+    std::string getApplicationByRN(const std::string &rn);
+    std::string getApplicationByGtin(const std::string &gtin);
+
     std::string formatPriceAsMoney(const std::string &price);
 
     packageFields getPackageFieldsByGtin(const std::string &gtin);

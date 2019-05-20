@@ -372,7 +372,8 @@ std::string getTindex(const std::string &rn)
     return tindex;
 }
     
-std::string getApplication(const std::string &rn)
+// Used only by "cpp2sqlite" not by "pharma"
+std::string getApplicationByRN(const std::string &rn)
 {
     std::string app;
     for (Preparation p : prepList) {
@@ -383,6 +384,17 @@ std::string getApplication(const std::string &rn)
     }
 
     return app;
+}
+
+// Used only by "pharma" not by "cpp2sqlite"
+std::string getApplicationByGtin(const std::string &gtin)
+{
+    for (Preparation pre : prepList)
+        for (Pack p : pre.packs)
+            if (gtin == p.gtin)
+                return pre.itCodes.application;
+    
+    return {};
 }
 
 // Make sure the price string has only two decimal digits

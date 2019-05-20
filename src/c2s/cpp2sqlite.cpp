@@ -1187,7 +1187,7 @@ int main(int argc, char **argv)
             // application_str
             {
             std::string application = SWISSMEDIC::getApplication(regnrs[0]);
-            std::string appBag = BAG::getApplication(regnrs[0]);
+            std::string appBag = BAG::getApplicationByRN(regnrs[0]);
             if (!appBag.empty())
                 application += ";" + appBag;
 
