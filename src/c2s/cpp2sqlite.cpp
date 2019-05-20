@@ -903,7 +903,7 @@ doExtraSections:
 
         if (!htmlPregnancy.empty()) {
             const std::string sectionSappInfo1("Section" + std::to_string(SECTION_NUMBER_SAPPINFO_P));
-            std::string sectionSappInfoName1("SAPP: Schwangerschaft");
+            std::string sectionSappInfoName1("SAPP: Schwangers.");
             if (language == "fr")
                 sectionSappInfoName1 = "SAPP: Grossesse";
             
