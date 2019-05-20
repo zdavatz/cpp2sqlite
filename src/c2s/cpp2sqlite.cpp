@@ -78,9 +78,6 @@ namespace pt = boost::property_tree;
 
 static std::string appName;
 std::map<std::string, std::string> statsTitleStrSeparatorMap;
-#ifdef SAPPINFO_OLD_STATS
-unsigned int statsSappinfoSectionsCreated = 0;  // Issue #70
-#endif
 
 void on_version()
 {
@@ -903,72 +900,43 @@ doExtraSections:
         std::string htmlPregnancy;
         std::string htmlBreastfeed;
         SAPP::getHtmlByAtc(atc, htmlPregnancy, htmlBreastfeed);
-        if (!htmlPregnancy.empty() || !htmlBreastfeed.empty()) {
-#ifdef SAPPINFO_OLD_STATS
-            statsSappinfoSectionsCreated++; // Issue #70
-#endif
-            //---
-#if 1
-            const std::string sectionSappInfo("Section" + std::to_string(SECTION_NUMBER_SAPPINFO));
-            const std::string sectionSappInfoName("Sappinfo");
+
+        if (!htmlPregnancy.empty()) {
+            const std::string sectionSappInfo1("Section" + std::to_string(SECTION_NUMBER_SAPPINFO_P));
+            std::string sectionSappInfoName1("SAPP: Schwangerschaft");
+            if (language == "fr")
+                sectionSappInfoName1 = "SAPP: Grossesse";
             
             if (hasXmlHeader && atc.empty())
                 html += "\n  </div>"; // terminate previous section before starting a new one
             
-            html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo + "\">\n";
-            html += "<div class=\"absTitle\">" + sectionSappInfoName + "</div>";
+            html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo1 + "\">\n";
+            html += "<div class=\"absTitle\">" + sectionSappInfoName1 + "</div>";
+            html += htmlPregnancy;
             html += "   </div>\n";
             
             // Append 'section#' to a vector to be used in column "ids_str"
-            sectionId.push_back(sectionSappInfo);
-            sectionTitle.push_back(sectionSappInfoName);
-#endif
+            sectionId.push_back(sectionSappInfo1);
+            sectionTitle.push_back(sectionSappInfoName1);
+        }
 
-#if 1
-            if (!htmlPregnancy.empty()) {
-                const std::string sectionSappInfo1("Section" + std::to_string(SECTION_NUMBER_SAPPINFO_P));
-                const std::string sectionSappInfoName1("Schwangerschaft");
-                
-                if (hasXmlHeader && atc.empty())
-                    html += "\n  </div>"; // terminate previous section before starting a new one
-                
-                html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo1 + "\">\n";
-#if 0
-                html += "<div class=\"absTitle\">" + sectionSappInfoName1 + "</div>";
-#else
-                html += "<span style=\"font-style:italic;\">" + sectionSappInfoName1 + "</span>";
-#endif
-                html += htmlPregnancy;
-                html += "   </div>\n";
-                
-                // Append 'section#' to a vector to be used in column "ids_str"
-                sectionId.push_back(sectionSappInfo1);
-                sectionTitle.push_back(sectionSappInfoName1);
-            }
-#endif
+        if (!htmlBreastfeed.empty()) {
+            const std::string sectionSappInfo2("Section" + std::to_string(SECTION_NUMBER_SAPPINFO_BF));
+            std::string sectionSappInfoName2("SAPP: Stillzeit");
+            if (language == "fr")
+                sectionSappInfoName2 = "SAPP: Pér. d'allaitement";
             
-#if 1
-            if (!htmlBreastfeed.empty()) {
-                const std::string sectionSappInfo2("Section" + std::to_string(SECTION_NUMBER_SAPPINFO_BF));
-                const std::string sectionSappInfoName2("Stillzeit");
-                
-                if (hasXmlHeader && atc.empty())
-                    html += "\n  </div>"; // terminate previous section before starting a new one
-                
-                html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo2 + "\">\n";
-#if 0
-                html += "<div class=\"absTitle\">" + sectionSappInfoName2 + "</div>";
-#else
-                html += "<span style=\"font-style:italic;\">" + sectionSappInfoName2 + "</span>";
-#endif
-                html += htmlBreastfeed;
-                html += "   </div>\n";
-                
-                // Append 'section#' to a vector to be used in column "ids_str"
-                sectionId.push_back(sectionSappInfo2);
-                sectionTitle.push_back(sectionSappInfoName2);
-            }
-#endif
+            if (hasXmlHeader && atc.empty())
+                html += "\n  </div>"; // terminate previous section before starting a new one
+            
+            html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo2 + "\">\n";
+            html += "<div class=\"absTitle\">" + sectionSappInfoName2 + "</div>";
+            html += htmlBreastfeed;
+            html += "   </div>\n";
+            
+            // Append 'section#' to a vector to be used in column "ids_str"
+            sectionId.push_back(sectionSappInfo2);
+            sectionTitle.push_back(sectionSappInfoName2);
         }
     }
 
@@ -1420,9 +1388,6 @@ int main(int argc, char **argv)
         PED::printUsageStats();
         if (!flagNoSappinfo) {
             SAPP::printUsageStats();
-#ifdef SAPPINFO_OLD_STATS
-            REP::html_p("Sappinfo sections created: " + std::to_string(statsSappinfoSectionsCreated)); // Issue #70
-#endif
         }
 
         AIPS::destroyStatement(statement);

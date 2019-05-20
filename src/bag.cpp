@@ -194,7 +194,7 @@ void parseXML(const std::string &filename,
                                     itCode.application = itc.second.get(descriptionTag, "");
                                 }
 
-                                // tindex_str - choose the one with the longest attribute "Code"
+                                // tindex_str - choose the one with the shortest attribute "Code"
                                 if (minLen > n) {
                                     minLen = n;
                                     itCode.tindex = itc.second.get(descriptionTag, "");
