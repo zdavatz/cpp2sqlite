@@ -925,7 +925,7 @@ doExtraSections:
             const std::string sectionSappInfo2("Section" + std::to_string(SECTION_NUMBER_SAPPINFO_BF));
             std::string sectionSappInfoName2("SAPP: Stillzeit");
             if (language == "fr")
-                sectionSappInfoName2 = "SAPP: Pér. d'allaitement";
+                sectionSappInfoName2 = "SAPP: Pér. d'allaitem.";
             
             if (hasXmlHeader && atc.empty())
                 html += "\n  </div>"; // terminate previous section before starting a new one
