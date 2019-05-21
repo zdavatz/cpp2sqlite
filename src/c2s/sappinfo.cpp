@@ -123,9 +123,9 @@ namespace SAPP
         // Sheet 1
         "max. verabreichte Tagesdosis", "Zulassungsnummer",
         
-        // Sheet 2
-        "max TD Tr 1", "max TD Tr 2", "max TD Tr 3",
-        "Peripartale Dosierung", "Bemerkungen zur Dosierung",
+        // For German: Sheet 2
+        "TMD Trim 1", "TMD Trim 2", "TMD Trim 3",
+        "Peripartale Dosierung", "Bemerkungen",
         
         // Other strings
         //"Anwendungszeitraum",
@@ -138,9 +138,9 @@ namespace SAPP
         // Sheet 1
         "dose quotidienne max", "Approbation",
         
-        // Sheet 2
-        "max TD Tr 1", "max TD Tr 2", "max TD Tr 3",
-        "Peripartum posologie", "Commentaires sur dosage",
+        // For French: Sheet 2
+        "TMD Trim 1", "TMD Trim 2", "TMD Trim 3",
+        "Peripartum posologie", "Commentaires",
         
         // Other strings
         //"Période d'application",
