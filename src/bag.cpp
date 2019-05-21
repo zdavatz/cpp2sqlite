@@ -192,6 +192,7 @@ void parseXML(const std::string &filename,
                                 if (maxLen < n) {
                                     maxLen = n;
                                     itCode.application = itc.second.get(descriptionTag, "");
+                                    itCode.longestItCode = code;
                                 }
 
                                 // tindex_str - choose the one with the shortest attribute "Code"
@@ -387,12 +388,12 @@ std::string getApplicationByRN(const std::string &rn)
 }
 
 // Used only by "pharma" not by "cpp2sqlite"
-std::string getApplicationByGtin(const std::string &gtin)
+std::string getLongestItCodeByGtin(const std::string &gtin)
 {
     for (Preparation pre : prepList)
         for (Pack p : pre.packs)
             if (gtin == p.gtin)
-                return pre.itCodes.application;
+                return pre.itCodes.longestItCode;
     
     return {};
 }

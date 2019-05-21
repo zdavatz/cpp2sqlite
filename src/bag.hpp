@@ -25,8 +25,12 @@ namespace BAG
     };
 
     struct ItCode {
+        // shortest
         std::string tindex;         // localized
+        
+        // longest
         std::string application;    // localized
+        std::string longestItCode;
     };
 
     struct Pack {
@@ -67,7 +71,7 @@ namespace BAG
     std::vector<std::string> getGtinList();
     std::string getTindex(const std::string &rn);
     std::string getApplicationByRN(const std::string &rn);
-    std::string getApplicationByGtin(const std::string &gtin);
+    std::string getLongestItCodeByGtin(const std::string &gtin);
 
     std::string formatPriceAsMoney(const std::string &price);
 

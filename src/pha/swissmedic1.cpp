@@ -530,7 +530,7 @@ void createCSV(const std::string &outDir)
         }
         
         // Column T
-        std::string appBag = BAG::getApplicationByGtin(pv.gtin13);
+        std::string itCodeBag = BAG::getLongestItCodeByGtin(pv.gtin13);
 
         ofs
         << CELL_ESCAPE << pv.rn5 << CELL_ESCAPE << OUTPUT_FILE_SEPARATOR              // A
@@ -556,7 +556,7 @@ void createCSV(const std::string &outDir)
 #else
         << boost::algorithm::join(fromBag.flags, ",") << OUTPUT_FILE_SEPARATOR // S
 #endif
-        << appBag << OUTPUT_FILE_SEPARATOR                              // T
+        << itCodeBag << OUTPUT_FILE_SEPARATOR                           // T
         << pv.itNumber << OUTPUT_FILE_SEPARATOR                         // U
         << pv.narcoticFlag << OUTPUT_FILE_SEPARATOR                     // V
         << pv.categoryMed << OUTPUT_FILE_SEPARATOR                      // W
