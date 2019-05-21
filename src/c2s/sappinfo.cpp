@@ -594,7 +594,7 @@ void getHtmlBreastfeed(const std::string atc, std::string &html)
                 textBeforeTable += localizedResourcesMap[LOC_KEY_INDICATION] + ": " + b.c.indication + "<br />\n";
             
             if (!b.c.link.empty())
-                textBeforeTable += "<a href=\"" + b.c.link + "\">Sappinfo Monographie</a>" + "<br />\n"; // TODO: localize
+                textBeforeTable += "<a href=\"" + b.c.link + "\">sappinfo Monographie</a>" + "<br />\n"; // TODO: localize
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
         
@@ -734,7 +734,7 @@ void getHtmlPregnancy(const std::string atc, std::string &html)
                 textBeforeTable += localizedResourcesMap[LOC_KEY_INDICATION] + ": " + p.c.indication + "<br />\n";
             
             if (!p.c.link.empty())
-                textBeforeTable += "<a href=\"" + p.c.link + "\">Sappinfo Monographie</a>" + "<br />\n"; // TODO: localize
+                textBeforeTable += "<a href=\"" + p.c.link + "\">sappinfo Monographie</a>" + "<br />\n"; // TODO: localize
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
         
