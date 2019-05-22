@@ -118,13 +118,13 @@ namespace SAPP
         //LOC_KEY_SHEET1, LOC_KEY_SHEET2
     };
     std::vector<std::string> loc_string_de = {
-        "Applikationsart", "Bemerkungen zur Dosierung",
+        "Applikationsart", "Bemerkungen",
         
         // Sheet 1
-        "max. verabreichte Tagesdosis", "Zulassungsnummer",
+        "TDM", "Zulassungsnummer",
         
         // For German: Sheet 2
-        "TMD Trim 1", "TMD Trim 2", "TMD Trim 3",
+        "TDM Trim 1", "TDM Trim 2", "TDM Trim 3",
         "Peripartale Dosierung", "Bemerkungen",
         
         // Other strings
@@ -133,13 +133,13 @@ namespace SAPP
         //"Stillzeit", "Schwangerschaft"
     };
     std::vector<std::string> loc_string_fr = { // TODO: verify translations
-        "Type d’application", "Commentaires sur dosage",
+        "Type d’application", "Commentaires",
         
         // Sheet 1
-        "dose quotidienne max", "Approbation",
+        "TDM", "Approbation",
         
         // For French: Sheet 2
-        "TMD Trim 1", "TMD Trim 2", "TMD Trim 3",
+        "TDM Trim 1", "TDM Trim 2", "TDM Trim 3",
         "Peripartum posologie", "Commentaires",
         
         // Other strings
