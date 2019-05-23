@@ -491,7 +491,8 @@ void createCSV(const std::string &outDir)
     << "Index Therapeuticus (Swissmedic)" << OUTPUT_FILE_SEPARATOR // U
     << "Betäubungsmittel" << OUTPUT_FILE_SEPARATOR      // V
     << "Impfstoff/Blutprodukt" << OUTPUT_FILE_SEPARATOR // W
-    << "Tageskosten (DDD)"                              // X
+    << "Tageskosten (DDD)"  << OUTPUT_FILE_SEPARATOR    // X
+    << "ddd_calculation"                                // Y
     << std::endl;
     
     for (auto pv : pharmaVec) {
@@ -539,6 +540,7 @@ void createCSV(const std::string &outDir)
         
         // Column X
         std::string dailyCostString;
+        std::string dailyCostFormula;
         std::string atc = getAtcFromFirstRn(pv.rn5);
         if (!atc.empty()) {
             double daily_dosage_mg;
@@ -583,10 +585,19 @@ void createCSV(const std::string &outDir)
                                 // Multiply by DDD daily_dosage_mg --> daily_cost
                                 double dailyCost = package_cost_per_mg * daily_dosage_mg;
                             
-                                // Format as money
-                                std::ostringstream s;
-                                s << std::fixed << std::setprecision(2) << dailyCost;
-                                dailyCostString = s.str();
+                                if (dailyCost > 0.01) {
+                                    std::ostringstream s;
+
+                                    // Format column X as money
+                                    s << std::fixed << std::setprecision(2) << dailyCost;
+                                    dailyCostString = s.str();
+                                    
+                                    // Column Y
+                                    s.str(std::string()); // clear the variable s
+                                    s // << std::fixed << std::setprecision(2)
+                                    << "(" << package_cost << " / " << package_mg << ") * " << daily_dosage_mg;
+                                    dailyCostFormula = s.str();
+                                }
 #ifdef DEBUG
                                 std::clog
                                 << "gtin13 " << pv.gtin13
@@ -631,7 +642,8 @@ void createCSV(const std::string &outDir)
         << pv.itNumber << OUTPUT_FILE_SEPARATOR                         // U
         << pv.narcoticFlag << OUTPUT_FILE_SEPARATOR                     // V
         << pv.categoryMed << OUTPUT_FILE_SEPARATOR                      // W
-        << CELL_ESCAPE << dailyCostString << CELL_ESCAPE                // X
+        << CELL_ESCAPE << dailyCostString << CELL_ESCAPE << OUTPUT_FILE_SEPARATOR // X
+        << dailyCostFormula                                             // Y
         << std::endl;
     }
     
