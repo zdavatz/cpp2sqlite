@@ -86,6 +86,7 @@ add_executable(pharma
 	src/pha/refdata.hpp src/pha/refdata.cpp
 	src/pha/swissmedic1.hpp src/pha/swissmedic1.cpp
 	src/pha/swissmedic2.hpp src/pha/swissmedic2.cpp
+    src/pha/ddd.hpp src/pha/ddd.cpp
 	src/pha/main.cpp)
 
 target_include_directories(pharma PUBLIC

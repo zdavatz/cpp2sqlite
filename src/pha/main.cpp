@@ -17,6 +17,7 @@
 #include "bag.hpp"
 #include "report.hpp"
 #include "config.h"
+#include "ddd.hpp"
 
 namespace po = boost::program_options;
 static std::string appName;
