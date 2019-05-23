@@ -383,6 +383,9 @@ void parseXLXS(const std::string &inDir,
                 continue;
             }
             
+            if (row[COLUMN_U].to_string().empty())
+                continue;            // Issue #85
+            
             int filter = std::stoi(row[COLUMN_U].to_string());
             if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
                 continue;            // Not found in set
