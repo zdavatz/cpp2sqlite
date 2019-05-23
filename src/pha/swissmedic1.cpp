@@ -417,7 +417,7 @@ void getPackageSizeNumericalFromName(std::string &calculatedDosage)
         std::string bs = match[4];
         double a = std::atof(as.c_str());
         double b = std::atof(bs.c_str());
-#ifdef DEBUG
+#if 0 //def DEBUG
         std::clog
         << "calculatedDosage <" << calculatedDosage << ">"
         << ", a " << a
@@ -520,8 +520,8 @@ void createCSV(const std::string &outDir)
 #endif
         
         // Column I
-        std::string calculatedDosage = pv.du.dosage;
-        getPackageSizeNumericalFromName(calculatedDosage);
+        std::string calculatedDosageString = pv.du.dosage;
+        getPackageSizeNumericalFromName(calculatedDosageString);
 
         // Columns N, S
         std::string bagFlagSL;
@@ -569,7 +569,12 @@ void createCSV(const std::string &outDir)
                                 package_mg *= 1000;
 
                             // Multiply by column K --> package_cost
-                            if (!fromBag.pp.empty()) {
+                            if (!fromBag.pp.empty() && !calculatedDosageString.empty()) {
+                                
+                                // Multiply bu column I
+                                double calculatedDosageValue = std::atof(calculatedDosageString.c_str());
+                                package_mg *= calculatedDosageValue;
+
                                 double package_cost = std::atof(fromBag.pp.c_str());
                                 
                                 // Divide package_cost by package_mg --> package_cost_per_mg
@@ -607,7 +612,7 @@ void createCSV(const std::string &outDir)
         << pv.galenicForm << OUTPUT_FILE_SEPARATOR                      // F
         << dosage << OUTPUT_FILE_SEPARATOR                              // G
         << pv.du.dosage << " " << pv.du.units << OUTPUT_FILE_SEPARATOR  // H
-        << calculatedDosage << OUTPUT_FILE_SEPARATOR                    // I
+        << calculatedDosageString << OUTPUT_FILE_SEPARATOR              // I
         << fromBag.efp << OUTPUT_FILE_SEPARATOR                         // J
         << fromBag.pp << OUTPUT_FILE_SEPARATOR                          // K
         << pv.owner << OUTPUT_FILE_SEPARATOR                            // L

@@ -114,6 +114,7 @@ int main(int argc, char **argv)
     SWISSMEDIC2::parseXLXS(opt_workDirectory + "/downloads/Erweiterte_Arzneimittelliste HAM.xlsx");
     BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", language, false);
     REFDATA::parseXML(opt_workDirectory + "/downloads/refdata_pharma.xml", language);
+    DDD::parseCSV(opt_inputDirectory + "/atc_ddd_2019.csv");
 
     // Create CSV
     SWISSMEDIC1::createCSV(opt_workDirectory + "/output");
