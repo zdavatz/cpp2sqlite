@@ -468,30 +468,30 @@ void createCSV(const std::string &outDir)
     std::clog << std::endl << "Creating CSV" << std::endl;
 
     ofs
-    << "Registrierungsnummer" << OUTPUT_FILE_SEPARATOR  // A
-    << "Packungsnummer" << OUTPUT_FILE_SEPARATOR        // B
-    << "Swissmedicnummer" << OUTPUT_FILE_SEPARATOR      // C
-    << "GTIN" << OUTPUT_FILE_SEPARATOR                  // D
-    << "Präparat" << OUTPUT_FILE_SEPARATOR              // E
-    << "Galenische Form" << OUTPUT_FILE_SEPARATOR       // F
-    << "Dosierung" << OUTPUT_FILE_SEPARATOR             // G
-    << "Packungsgrösse" << OUTPUT_FILE_SEPARATOR        // H
-    << "Packungsgrösse numerisch" << OUTPUT_FILE_SEPARATOR // I
-    << "EFP" << OUTPUT_FILE_SEPARATOR                   // J
-    << "PP" << OUTPUT_FILE_SEPARATOR                    // K
-    << "Zulassungsinhaber" << OUTPUT_FILE_SEPARATOR     // L
-    << "Swissmedic Kategorie" << OUTPUT_FILE_SEPARATOR  // M
-    << "SL Produkt:" << OUTPUT_FILE_SEPARATOR           // N
-    << "Aufnahmedatum SL" << OUTPUT_FILE_SEPARATOR      // O
-    << "Registrierungsdatum" << OUTPUT_FILE_SEPARATOR   // P
-    << "Gültigkeitsdatum" << OUTPUT_FILE_SEPARATOR      // Q
-    << "Exportprodukt" << OUTPUT_FILE_SEPARATOR         // R
-    << "Generikum" << OUTPUT_FILE_SEPARATOR             // S
-    << "Index Therapeuticus (BAG)" << OUTPUT_FILE_SEPARATOR // T
-    << "Index Therapeuticus (Swissmedic)" << OUTPUT_FILE_SEPARATOR // U
-    << "Betäubungsmittel" << OUTPUT_FILE_SEPARATOR      // V
-    << "Impfstoff/Blutprodukt" << OUTPUT_FILE_SEPARATOR // W
-    << "Tageskosten (DDD)"  << OUTPUT_FILE_SEPARATOR    // X
+    << "registration_nbr" << OUTPUT_FILE_SEPARATOR      // A
+    << "package_nbr" << OUTPUT_FILE_SEPARATOR           // B
+    << "swissmedic_nbr" << OUTPUT_FILE_SEPARATOR        // C
+    << "gtin" << OUTPUT_FILE_SEPARATOR                  // D
+    << "product_name" << OUTPUT_FILE_SEPARATOR          // E
+    << "galenic_form" << OUTPUT_FILE_SEPARATOR          // F
+    << "dosis" << OUTPUT_FILE_SEPARATOR                 // G
+    << "package_content" << OUTPUT_FILE_SEPARATOR       // H
+    << "content_numeric" << OUTPUT_FILE_SEPARATOR       // I
+    << "price_exfactory" << OUTPUT_FILE_SEPARATOR       // J
+    << "price_public" << OUTPUT_FILE_SEPARATOR          // K
+    << "admission_holder" << OUTPUT_FILE_SEPARATOR      // L
+    << "swissmedic_cat" << OUTPUT_FILE_SEPARATOR        // M
+    << "sl_list" << OUTPUT_FILE_SEPARATOR               // N
+    << "sl_date" << OUTPUT_FILE_SEPARATOR               // O
+    << "registration_date" << OUTPUT_FILE_SEPARATOR     // P
+    << "expiration_date" << OUTPUT_FILE_SEPARATOR       // Q
+    << "export_product" << OUTPUT_FILE_SEPARATOR        // R
+    << "generic" << OUTPUT_FILE_SEPARATOR               // S
+    << "index_therapeuticus_bag" << OUTPUT_FILE_SEPARATOR // T
+    << "index_therapeuticus_swissmedic" << OUTPUT_FILE_SEPARATOR // U
+    << "narcotic" << OUTPUT_FILE_SEPARATOR              // V
+    << "vaccine" << OUTPUT_FILE_SEPARATOR               // W
+    << "ddd"  << OUTPUT_FILE_SEPARATOR                  // X
     << "ddd_calculation"                                // Y
     << std::endl;
     
