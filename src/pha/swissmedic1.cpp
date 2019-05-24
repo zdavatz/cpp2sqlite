@@ -26,6 +26,8 @@
 #include "refdata.hpp"
 #include "ddd.hpp"
 
+#define WITH_PROGRESS_BAR
+
 #define COLUMN_A        0   // GTIN (5 digits)
 #define COLUMN_B        1   // dosage number
 #define COLUMN_C        2   // name
@@ -495,7 +497,18 @@ void createCSV(const std::string &outDir)
     << "ddd_calculation"                                // Y
     << std::endl;
     
+#ifdef WITH_PROGRESS_BAR
+    int ii=1;
+    int n=pharmaVec.size();
+#endif
+
     for (auto pv : pharmaVec) {
+        
+#ifdef WITH_PROGRESS_BAR
+        // Show progress
+        if ((ii++ % 60) == 0)
+            std::cerr << "\r" << 100*ii/n << " % ";
+#endif
 
         std::string cat = getCategoryPackByGtin(pv.gtin13);
         std::string paf = BAG::getPricesAndFlags(pv.gtin13, "", cat);
@@ -647,6 +660,10 @@ void createCSV(const std::string &outDir)
         << std::endl;
     }
     
+#ifdef WITH_PROGRESS_BAR
+    std::cerr << "\r100 %" << std::endl;
+#endif
+
     ofs.close();
     
     std::clog << std::endl << "Created " << filename << std::endl;
