@@ -4,6 +4,7 @@
 STEP_DOWNLOAD=true
 STEP_BUILD_APPS=true
 STEP_RUN_C2S=true
+STEP_RUN_PHARMA=true
 #STEP_DEEPL_INTERACTIONS=true
 #STEP_DEEPL_SAPPINFO=true
 
@@ -47,6 +48,12 @@ if [ $STEP_RUN_C2S ] ; then
 cd $BLD_DIR  # it should be $BIN_DIR otherwise there is no point in doing make install
 time ./cpp2sqlite --verbose --lang=fr --inDir $SRC_DIR/input&
 time ./cpp2sqlite --verbose --inDir $SRC_DIR/input&
+fi
+
+#-------------------------------------------------------------------------------
+if [ $STEP_RUN_PHARMA ] ; then
+cd $BLD_DIR
+./pharma --inDir $SRC_DIR/downloads/
 fi
 
 #-------------------------------------------------------------------------------
