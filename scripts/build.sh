@@ -53,8 +53,7 @@ fi
 #-------------------------------------------------------------------------------
 if [ $STEP_RUN_PHARMA ] ; then
 cd $BLD_DIR
-#./pharma --inDir $SRC_DIR/downloads/
-./pharma --inDir $SRC_DIR/input
+./pharma --inDir $SRC_DIR/input --workDir $SRC_DIR
 fi
 
 #-------------------------------------------------------------------------------
