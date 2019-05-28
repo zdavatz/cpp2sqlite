@@ -121,7 +121,7 @@ namespace SAPP
         "Applikationsart", "Bemerkungen",
         
         // Sheet 1
-        "Überwachung", "Zulassungsnummer",
+        "TMD", "Zulassungsnummer",
         
         // For German: Sheet 2
         "TMD Trim 1", "TMD Trim 2", "TMD Trim 3",
@@ -136,7 +136,7 @@ namespace SAPP
         "Type d’application", "Commentaires",
         
         // Sheet 1
-        "Tutelle", "Approbation",
+        "TMD", "Approbation",
         
         // For French: Sheet 2
         "TMD Trim 1", "TMD Trim 2", "TMD Trim 3",
