@@ -121,10 +121,10 @@ namespace SAPP
         "Applikationsart", "Bemerkungen",
         
         // Sheet 1
-        "TDM", "Zulassungsnummer",
+        "Überwachung", "Zulassungsnummer",
         
         // For German: Sheet 2
-        "TDM Trim 1", "TDM Trim 2", "TDM Trim 3",
+        "TMD Trim 1", "TMD Trim 2", "TMD Trim 3",
         "Peripartale Dosierung", "Bemerkungen",
         
         // Other strings
@@ -136,10 +136,10 @@ namespace SAPP
         "Type d’application", "Commentaires",
         
         // Sheet 1
-        "TDM", "Approbation",
+        "Tutelle", "Approbation",
         
         // For French: Sheet 2
-        "TDM Trim 1", "TDM Trim 2", "TDM Trim 3",
+        "TMD Trim 1", "TMD Trim 2", "TMD Trim 3",
         "Peripartum posologie", "Commentaires",
         
         // Other strings
