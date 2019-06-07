@@ -39,7 +39,7 @@ namespace SWISSMEDIC1
 
     void parseXLXS(const std::string &filename);
     
-    void createCSV(const std::string &outDir);
+    void createCSV(const std::string &outDir, bool storageColumn);
 
 //    int getAdditionalNames(const std::string &rn,
 //                           std::set<std::string> &gtinUsed,

@@ -112,9 +112,210 @@ void sort(GTIN::oneFachinfoPackages &packages)
     }
 }
     
-void sortByGalenicForm(std::vector<std::string> &group)
+//void sortByGalenicForm(std::vector<std::string> &group)
+//{
+//
+//}
+
+// TODO: instead of calling it for XML (tags and contents)
+// call it only for tables (tags and content), chapter titles (contents), and xml "type 2" (tags and contents)
+//
+// The Java version seems to be using Jsoup and EscapeMode.xhtml
+// Don't convert &lt; &gt; &apos;
+void cleanupForNonHtmlUsage(std::string &xml)
 {
-        
+    boost::replace_all(xml, "&nbsp;",   " ");
+    boost::replace_all(xml, "&ge;",     "≥");
+    boost::replace_all(xml, "&le;",     "≤");
+    boost::replace_all(xml, "&plusmn;", "±"); // used in rn 58868 table 6
+    boost::replace_all(xml, "&agrave;", "à");
+    boost::replace_all(xml, "&Agrave;", "À");
+    boost::replace_all(xml, "&acirc;",  "â");
+    boost::replace_all(xml, "&Acirc;",  "Â");
+    boost::replace_all(xml, "&auml;",   "ä");
+    boost::replace_all(xml, "&Auml;",   "Ä");
+    boost::replace_all(xml, "&egrave;", "è");
+    boost::replace_all(xml, "&Egrave;", "È");
+    boost::replace_all(xml, "&eacute;", "é");
+    boost::replace_all(xml, "&Eacute;", "É");
+    boost::replace_all(xml, "&ecirc;",  "ê");
+    boost::replace_all(xml, "&euml;",   "ë");
+    boost::replace_all(xml, "&iuml;",   "ï");
+    boost::replace_all(xml, "&icirc;",  "î");
+    boost::replace_all(xml, "&ouml;",   "ö");
+    boost::replace_all(xml, "&ocirc;",  "ô");
+    boost::replace_all(xml, "&Ouml;",   "Ö");
+    boost::replace_all(xml, "&Ograve;", "Ò");
+    boost::replace_all(xml, "&uuml;",   "ü");
+    boost::replace_all(xml, "&Uuml;",   "Ü");
+    boost::replace_all(xml, "&oelig;",  "œ");
+    boost::replace_all(xml, "&OElig;",  "Œ");
+    boost::replace_all(xml, "&middot;", "–"); // the true middot is "·"
+    boost::replace_all(xml, "&bdquo;",  "„");
+    boost::replace_all(xml, "&ldquo;",  "“");
+    boost::replace_all(xml, "&lsquo;",  "‘");
+    boost::replace_all(xml, "&rsquo;",  "’");
+    boost::replace_all(xml, "&alpha;",  "α");
+    boost::replace_all(xml, "&beta;",   "β");
+    boost::replace_all(xml, "&gamma;",  "γ");
+    boost::replace_all(xml, "&kappa;",  "κ");
+    boost::replace_all(xml, "&micro;",  "µ");
+    boost::replace_all(xml, "&mu;",     "μ");
+    boost::replace_all(xml, "&phi;",    "φ");
+    boost::replace_all(xml, "&Phi;",    "Φ");
+    boost::replace_all(xml, "&tau;",    "τ");
+    boost::replace_all(xml, "&frac12;", "½");
+    boost::replace_all(xml, "&minus;",  "−");
+    boost::replace_all(xml, "&mdash;",  "—");
+    boost::replace_all(xml, "&ndash;",  "–");
+    boost::replace_all(xml, "&bull;",   "•"); // See rn 63182. Where is this in the Java code ?
+    boost::replace_all(xml, "&reg;",    "®");
+    boost::replace_all(xml, "&copy;",   "©");
+    boost::replace_all(xml, "&trade;",  "™");
+    boost::replace_all(xml, "&laquo;",  "«");
+    boost::replace_all(xml, "&raquo;",  "»");
+    boost::replace_all(xml, "&deg;",    "°");
+    boost::replace_all(xml, "&sup1;",   "¹");
+    boost::replace_all(xml, "&sup2;",   "²");
+    boost::replace_all(xml, "&sup3;",   "³");
+    boost::replace_all(xml, "&times;",  "×");
+    boost::replace_all(xml, "&pi;",     "π");
+    boost::replace_all(xml, "&szlig;",  "ß");
+    boost::replace_all(xml, "&infin;",  "∞");
+    boost::replace_all(xml, "&dagger;", "†");
+    boost::replace_all(xml, "&Dagger;", "‡");
+    boost::replace_all(xml, "&sect;",   "§");
+    boost::replace_all(xml, "&spades;", "♠"); // rn 63285, table 2
+    boost::replace_all(xml, "&THORN;",  "Þ");
+    boost::replace_all(xml, "&Oslash;", "Ø");
+    boost::replace_all(xml, "&para;",   "¶");
+    
+    boost::replace_all(xml, "&frasl;",  "⁄"); // see rn 36083
+    boost::replace_all(xml, "&curren;", "¤");
+    boost::replace_all(xml, "&yen;",    "¥");
+    boost::replace_all(xml, "&pound;",  "£");
+    boost::replace_all(xml, "&ordf;",   "ª");
+    boost::replace_all(xml, "&ccedil;", "ç");
+    
+    boost::replace_all(xml, "&larr;", "←");
+    boost::replace_all(xml, "&uarr;", "↑");
+    boost::replace_all(xml, "&rarr;", "→");
+    boost::replace_all(xml, "&darr;", "↓");
+    boost::replace_all(xml, "&harr;", "↔");
+}
+
+// Cleanup and also escape some children tags
+void cleanupXml(std::string &xml,
+                const std::string regnrs)
+{
+    // See also HtmlUtils.java:934
+    std::regex r1(R"(<span[^>]*>)");
+    xml = std::regex_replace(xml, r1, "");
+    
+    std::regex r2(R"(</span>)");
+    xml = std::regex_replace(xml, r2, "");
+    
+#if 0
+    std::regex r6a(R"(')");
+    xml = std::regex_replace(xml, r6a, "&apos;"); // to prevent errors when inserting into sqlite table
+#endif
+    
+    cleanupForNonHtmlUsage(xml); // unescapeContentForNonHtmlUsage
+    
+    // Cleanup XML post-replacements (still pre-parsing)
+    
+    // For section titles.
+    // Make the child XML tag content part of the parent.
+    // Also, the Reg mark is already "sup"
+    boost::replace_all(xml, "<sup class=\"s3\">®</sup>", "®");
+    boost::replace_all(xml, "<sup class=\"s3\">® </sup>", "®");
+    
+#ifdef DEBUG_SUB_SUP
+    std::string::size_type pos;
+    
+    std::vector<size_t> posSup;
+    pos = xml.find("<sup");
+    while (pos != std::string::npos) {
+        posSup.push_back(pos);
+        pos = xml.find("<sup", pos+1);
+    }
+    
+    for (auto p : posSup) {
+        std::clog
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", found \"" << xml.substr(p,28) << "\""
+        << ", rn:" << regnrs
+        << ", pos:" << p
+        << std::endl;
+    }
+    
+    std::vector<size_t> posSub;
+    pos = xml.find("<sub");
+    while (pos != std::string::npos) {
+        posSub.push_back(pos);
+        pos = xml.find("<sub", pos+1);
+    }
+    
+    for (auto p : posSub) {
+        std::clog
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", found \"" << xml.substr(p,28) << "\""
+        << ", rn:" << regnrs
+        << ", pos:" << p
+        << std::endl;
+    }
+#endif // DEBUG_SUB_SUP
+    
+#ifdef WORKAROUND_SUB_SUP_BR
+    // Temporarily alter these XML (HTML) tags so that
+    // the boost parser doesn't treat them as "children"
+    std::regex r10(R"(<sup[^>]*>)");
+    xml = std::regex_replace(xml, r10, ESCAPED_SUP_L);
+    
+    std::regex r11(R"(</sup>)");
+    xml = std::regex_replace(xml, r11, ESCAPED_SUP_R);
+    
+    std::regex r12(R"(<sub[^>]*>)");
+    xml = std::regex_replace(xml, r12, ESCAPED_SUB_L);
+    
+    std::regex r13(R"(</sub>)");
+    xml = std::regex_replace(xml, r13, ESCAPED_SUB_R);
+    
+    std::regex r14(R"(<br />)");
+    xml = std::regex_replace(xml, r14, ESCAPED_BR);
+    
+#ifdef DEBUG_SUB_SUP_TRACE
+    posSup.clear();
+    pos = xml.find(ESCAPED_SUP_L);
+    while (pos != std::string::npos) {
+        posSup.push_back(pos);
+        pos = xml.find(ESCAPED_SUP_L, pos+1);
+    }
+    
+    for (auto p : posSup) {
+        std::clog
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", xml becomes \"" << xml.substr(p,28) << "\""
+        << ", pos:" << p
+        << std::endl;
+    }
+    
+    posSub.clear();
+    pos = xml.find(ESCAPED_SUB_L);
+    while (pos != std::string::npos) {
+        posSub.push_back(pos);
+        pos = xml.find(ESCAPED_SUB_L, pos+1);
+    }
+    
+    for (auto p : posSub) {
+        std::clog
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << ", xml becomes \"" << xml.substr(p,28) << "\""
+        << ", pos:" << p
+        << std::endl;
+    }
+#endif // DEBUG_SUB_SUP
+#endif // WORKAROUND_SUB_SUP_BR
 }
 
 }

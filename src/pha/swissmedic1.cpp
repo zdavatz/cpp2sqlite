@@ -25,6 +25,7 @@
 #include "report.hpp"
 #include "refdata.hpp"
 #include "ddd.hpp"
+#include "aips.hpp"
 
 #define WITH_PROGRESS_BAR
 
@@ -461,7 +462,7 @@ std::string getDosageFromName(const std::string &name)
 //    return du;
 //}
 
-void createCSV(const std::string &outDir)
+void createCSV(const std::string &outDir, bool storageColumn)
 {
     std::ofstream ofs;
     std::string filename = outDir + "/pharma.csv";
@@ -494,8 +495,12 @@ void createCSV(const std::string &outDir)
     << "narcotic" << OUTPUT_FILE_SEPARATOR              // V
     << "vaccine" << OUTPUT_FILE_SEPARATOR               // W
     << "ddd"  << OUTPUT_FILE_SEPARATOR                  // X
-    << "ddd_calculation"                                // Y
-    << std::endl;
+    << "ddd_calculation";                               // Y
+
+    if (storageColumn)
+        ofs << OUTPUT_FILE_SEPARATOR << "storage";      // Z
+
+    ofs << std::endl;
     
 #ifdef WITH_PROGRESS_BAR
     int ii=1;
@@ -514,6 +519,7 @@ void createCSV(const std::string &outDir)
         std::string paf = BAG::getPricesAndFlags(pv.gtin13, "", cat);
         BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13);
         std::string auth = SWISSMEDIC2::getAuthorizationByAtc(pv.rn5, pv.dosageNr);
+        std::string storage = AIPS::getStorageByRN(pv.rn5);
         
         // Column E
         // Take the name first from Refdata based on GTIN
@@ -656,8 +662,12 @@ void createCSV(const std::string &outDir)
         << pv.narcoticFlag << OUTPUT_FILE_SEPARATOR                     // V
         << pv.categoryMed << OUTPUT_FILE_SEPARATOR                      // W
         << CELL_ESCAPE << dailyCostString << CELL_ESCAPE << OUTPUT_FILE_SEPARATOR // X
-        << dailyCostFormula                                             // Y
-        << std::endl;
+        << dailyCostFormula;                                             // Y
+
+        if (storageColumn)
+            ofs << OUTPUT_FILE_SEPARATOR << CELL_ESCAPE << storage << CELL_ESCAPE;  // Z
+
+        ofs << std::endl;
     }
     
 #ifdef WITH_PROGRESS_BAR

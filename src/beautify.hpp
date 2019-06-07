@@ -18,6 +18,10 @@ namespace BEAUTY
     void beautifyName(std::string &name);
     //void sort(std::string &packInfo, std::set<std::string> &gtinUsed);
     void sort(GTIN::oneFachinfoPackages &packages);
+    
+    void cleanupForNonHtmlUsage(std::string &xml);
+    void cleanupXml(std::string &xml,
+                    const std::string regnrs);
 }
 
 #endif /* beautify_hpp */

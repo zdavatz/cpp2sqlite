@@ -278,7 +278,7 @@ MedicineList & parseXML(const std::string &filename,
                     //std::cerr << "title: " << Med.title << ", atc: " << Med.atc << ", subst: " << Med.subst << std::endl;
 
                     medList.push_back(Med);
-                }
+                } // (lan == language) && (typ == type)
             }
         }
 

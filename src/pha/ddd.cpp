@@ -69,7 +69,7 @@ void parseCSV(const std::string &filename)
             std::regex rgx(R"((\d+(\.\d+)?)\s(mg|g)\s(O))");  // tested at https://regex101.com
             std::smatch match;
             if (std::regex_search(thirdColumn, match, rgx)) {
-#ifdef DEBUG
+#ifdef DEBUG_DDD
                 std::clog
                 << "thirdColumn <" << thirdColumn << ">"
                 << ", match.size <" << match.size() << ">"
@@ -103,7 +103,7 @@ void parseCSV(const std::string &filename)
         << std::endl;
     }
     
-#ifdef DEBUG
+#ifdef DEBUG_DDD
     std::clog
     << "lineVec <" << lineVec.size() << ">" // 1724
     << std::endl;

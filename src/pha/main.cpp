@@ -18,6 +18,7 @@
 #include "report.hpp"
 #include "config.h"
 #include "ddd.hpp"
+#include "aips.hpp"
 
 namespace po = boost::program_options;
 static std::string appName;
@@ -45,12 +46,14 @@ int main(int argc, char **argv)
     std::string opt_inputDirectory;
     std::string opt_workDirectory;  // for downloads subdirectory
     bool flagVerbose = false;
-    
+    bool flagStorage = false;
+
     po::options_description desc("Allowed options");
     desc.add_options()
     ("help,h", "print this message")
     ("version,v", "print the version information and exit")
     ("verbose", "be extra verbose") // Show errors and logs
+    ("storage", "add one more column with medicine storage info")
     ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
     ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
     ;
@@ -94,6 +97,10 @@ int main(int argc, char **argv)
         opt_workDirectory = opt_inputDirectory + "/..";
     }
     
+    if (vm.count("storage")) {
+        flagStorage = true;
+    }
+    
     ////////////////////////////////////////////////////////////////////////////
 
     std::string reportFilename("pharma_report.html");
@@ -115,9 +122,17 @@ int main(int argc, char **argv)
     BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", language, false);
     REFDATA::parseXML(opt_workDirectory + "/downloads/refdata_pharma.xml", language);
     DDD::parseCSV(opt_inputDirectory + "/atc_ddd_2019.csv");
+    
+    if (flagStorage) {
+        std::string type("fi"); // Fachinfo
+        AIPS::parseXML(opt_workDirectory + "/downloads/aips.xml",
+                       language,
+                       type,
+                       flagVerbose);
+    }
 
     // Create CSV
-    SWISSMEDIC1::createCSV(opt_workDirectory + "/output");
+    SWISSMEDIC1::createCSV(opt_workDirectory + "/output", flagStorage);
     
     // Usage report
     REP::html_h1("Usage");
