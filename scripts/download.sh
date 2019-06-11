@@ -37,7 +37,7 @@ esac
 done
     LC_COLLATE=$old_lc_collate
 }
-
+    
 #-------------------------------------------------------------------------------
 # epha no longer needed
 #wget -N http://download.epha.ch/cleaned/produkte.json -O epha_products_de_json.json
@@ -110,6 +110,7 @@ wget --header "Host: db.swisspeddose.ch" \
 	"$URL/dashboard" -O dashboard.html
 
 FILENAME=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication' dashboard.html | awk -F\" '{print $4}')
+BASENAME=swisspeddosepublication
 
 wget --header "Host: db.swisspeddose.ch" \
 	--user-agent "Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0" \
@@ -120,7 +121,13 @@ wget --header "Host: db.swisspeddose.ch" \
     --load-cookies=cookiesB.txt \
     --header 'Upgrade-Insecure-Requests: 1' \
     "${URL}${FILENAME}" \
-	-O swisspeddosepublication.xml
+	-O $BASENAME.zip
+
+unzip $BASENAME.zip
+
+rm $BASENAME.zip
+rm SwissPedDosePublication.xsd
+mv SwissPedDosePublication.xml $BASENAME.xml
 
 rm cookies*.txt
 rm dashboard.html
