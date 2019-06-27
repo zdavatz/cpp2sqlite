@@ -136,11 +136,11 @@ namespace SAPP
         "Type d’application", "Commentaires",
         
         // Sheet 1
-        "TMD", "Approbation",
+        "DJM", "Approbation",
         
         // For French: Sheet 2
-        "TMD Trim 1", "TMD Trim 2", "TMD Trim 3",
-        "Peripartum posologie", "Commentaires",
+        "DJM Trim 1", "DJM Trim 2", "DJM Trim 3",
+        "Posologie péripartale", "Commentaires",
         
         // Other strings
         //"Période d'application",
