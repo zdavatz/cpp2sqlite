@@ -704,7 +704,7 @@ doExtraSections:
             const std::string sectionSappInfo1("Section" + std::to_string(SECTION_NUMBER_SAPPINFO_P));
             std::string sectionSappInfoName1("SAPP: Schwangere");
             if (language == "fr")
-                sectionSappInfoName1 = "SAPP: F. enceintes";
+                sectionSappInfoName1 = "ASPP: F. enceintes";
 
             
             if (hasXmlHeader && atc.empty())
@@ -724,7 +724,7 @@ doExtraSections:
             const std::string sectionSappInfo2("Section" + std::to_string(SECTION_NUMBER_SAPPINFO_BF));
             std::string sectionSappInfoName2("SAPP: Stillende");
             if (language == "fr")
-                sectionSappInfoName2 = "SAPP: F. allaitantes";
+                sectionSappInfoName2 = "ASPP: F. allaitantes";
             
             if (hasXmlHeader && atc.empty())
                 html += "\n  </div>"; // terminate previous section before starting a new one
