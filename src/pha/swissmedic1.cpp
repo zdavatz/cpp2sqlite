@@ -42,7 +42,7 @@
 #define COLUMN_L       11   // number for dosage
 #define COLUMN_M       12   // units for dosage
 #define COLUMN_N       13   // category (A..E)
-#define COLUMN_S       18   // application field
+#define COLUMN_T       19   // application field
 #define COLUMN_W       22   // preparation contains narcotics
 #define COLUMN_X       23   // narcotic flag
 

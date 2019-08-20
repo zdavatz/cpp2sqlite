@@ -27,7 +27,7 @@
 #define COLUMN_L       11   // number for dosage
 #define COLUMN_M       12   // units for dosage
 #define COLUMN_N       13   // category (A..E)
-#define COLUMN_S       18   // application field
+#define COLUMN_T       19   // application field
 #define COLUMN_W       22   // preparation contains narcotics
 
 #define FIRST_DATA_ROW_INDEX    5
@@ -235,7 +235,7 @@ std::string getApplication(const std::string &rn)
 
     for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
         if (rn == regnrs[rowInt]) {
-            app = theWholeSpreadSheet.at(rowInt).at(COLUMN_S) + " (Swissmedic)";
+            app = theWholeSpreadSheet.at(rowInt).at(COLUMN_T) + " (Swissmedic)";
             break;
         }
     }
