@@ -494,11 +494,12 @@ void createCSV(const std::string &outDir, bool storageColumn)
     << "index_therapeuticus_swissmedic" << OUTPUT_FILE_SEPARATOR // U
     << "narcotic" << OUTPUT_FILE_SEPARATOR              // V
     << "vaccine" << OUTPUT_FILE_SEPARATOR               // W
-    << "ddd"  << OUTPUT_FILE_SEPARATOR                  // X
-    << "ddd_calculation";                               // Y
+    << "ddd" << OUTPUT_FILE_SEPARATOR                   // X
+    << "ddd_calculation" << OUTPUT_FILE_SEPARATOR       // Y
+    << "atc";                                           // Z
 
     if (storageColumn)
-        ofs << OUTPUT_FILE_SEPARATOR << "storage";      // Z
+        ofs << OUTPUT_FILE_SEPARATOR << "storage";      // AA
 
     ofs << std::endl;
     
@@ -560,6 +561,7 @@ void createCSV(const std::string &outDir, bool storageColumn)
         // Column X
         std::string dailyCostString;
         std::string dailyCostFormula;
+        // TODO: issue #99 it was initially requested to get the atc first from AIPS
         std::string atc = getAtcFromFirstRn(pv.rn5);
         if (!atc.empty()) {
             double daily_dosage_mg;
@@ -662,10 +664,11 @@ void createCSV(const std::string &outDir, bool storageColumn)
         << pv.narcoticFlag << OUTPUT_FILE_SEPARATOR                     // V
         << pv.categoryMed << OUTPUT_FILE_SEPARATOR                      // W
         << CELL_ESCAPE << dailyCostString << CELL_ESCAPE << OUTPUT_FILE_SEPARATOR // X
-        << dailyCostFormula;                                             // Y
+        << dailyCostFormula << OUTPUT_FILE_SEPARATOR                    // Y
+        << atc;                                                         // Z
 
         if (storageColumn)
-            ofs << OUTPUT_FILE_SEPARATOR << CELL_ESCAPE << storage << CELL_ESCAPE;  // Z
+            ofs << OUTPUT_FILE_SEPARATOR << CELL_ESCAPE << storage << CELL_ESCAPE;  // AA
 
         ofs << std::endl;
     }

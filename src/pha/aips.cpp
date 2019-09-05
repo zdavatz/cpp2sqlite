@@ -172,6 +172,14 @@ void parseXML(const std::string &filename,
                     std::vector<std::string> rnVector;
                     boost::algorithm::split(rnVector, regnrs, boost::is_any_of(", "), boost::token_compress_on);
                     
+#if 0
+                    // Note: this file is parsed only if the command line flag 'flagStorage' is specified
+                    std::string atc = v.second.get("atcCode", ""); // These ATCs need to be cleaned up;
+                    //ATC::validate(Med.regnrs, Med.atc);    // Clean up the ATCs TODO: add file to the project
+ 
+                    // TODO: issue #99 save it to a map so it can be retrieved later from swissmedic1
+#endif
+
                     std::string content = v.second.get("content", "");
 #if 0 //def DEBUG
                     std::cout
