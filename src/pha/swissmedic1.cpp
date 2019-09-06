@@ -152,7 +152,7 @@ void parseXLXS(const std::string &filename)
     wb.load(filename);
     auto ws = wb.active_sheet();
     
-    auto date_format = wb.create_format().number_format(xlnt::number_format{"dd.mm.yyyy"}, xlnt::optional<bool>(true));
+    auto date_format = wb.create_format().number_format(xlnt::number_format{"mm.dd.yyyy"}, xlnt::optional<bool>(true));
 
     std::clog << std::endl << "Reading swissmedic XLSX" << std::endl;
 
@@ -176,7 +176,6 @@ void parseXLXS(const std::string &filename)
 
         std::vector<std::string> aSingleRow;
         for (auto cell : row) {
-            
             if (cell.is_date()) {
                 cell.format(date_format);
                 auto nf = cell.number_format();
