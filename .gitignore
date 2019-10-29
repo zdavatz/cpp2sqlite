@@ -2,11 +2,12 @@
 .~lock*
 cpp2sqlite-build/
 amiko_db_full_idx_de.db
-downloads/
-scripts/passwords
-output/
-# Lines starting with '#' will be ignored2
 build/
+downloads/
+input/zurrose/
+output/
+scripts/passwords
+# Lines starting with '#' will be ignored2
 scripts/temp/
 input/deepl.sappinfo.in.txt
 input/deepl.sappinfo.err.fr.txt

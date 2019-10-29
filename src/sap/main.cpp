@@ -57,7 +57,7 @@
 namespace po = boost::program_options;
 static std::string appName;
 
-////////////////////////////////////////////////////////////////////////////
+#pragma mark - DEEPL
 
 namespace DEEPL
 {
@@ -184,7 +184,7 @@ void parseXLXS(const std::string &inFilename,
 
 } // namespace DEEPL
 
-////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 
 void on_version()
 {
@@ -250,8 +250,8 @@ int main(int argc, char **argv)
         opt_workDirectory = opt_inputDirectory + "/..";
     }
     
-    ////////////////////////////////////////////////////////////////////////////
-    
+    // Parse input files
+
     DEEPL::parseXLXS(opt_inputDirectory + "/sappinfo.xlsx",
                      opt_workDirectory + "/output",
                      false);

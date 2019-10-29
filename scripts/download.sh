@@ -37,7 +37,34 @@ esac
 done
     LC_COLLATE=$old_lc_collate
 }
-    
+
+#-------------------------------------------------------------------------------
+# zurrose
+
+source $WD/passwords
+URL="ftp://ftp.zur-rose.ch/ywesee OutTest"
+ZURROSE_DIR="${SRC_DIR}input/zurrose"
+mkdir -p $ZURROSE_DIR
+pushd $ZURROSE_DIR
+
+# Updated once per day
+curl -o artikel_stamm_zurrose.csv -O "${URL}"/Artikelstamm.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+
+# Updated every 4 hours
+curl -o artikel_stamm_voigt.csv -O "${URL}"/Artikelstamm_Voigt.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+
+# Updated every 30 minutes
+curl -o artikel_vollstamm_zurrose.csv -O "${URL}"/Artikelstamm_Vollstamm.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+
+curl -o direct_subst_zurrose.csv -O "${URL}"/direktsubstitution.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+curl -o nota_zurrose.csv -O "${URL}"/Nota.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+curl -o galenic_codes_map_zurrose.txt -O "${URL}"/Vollstamm_Galenic_Form_Mapping_by_Code.txt --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+
+#curl -O "${URL}"/_log.txt --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+#curl -O "${URL}"/Autogenerika.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+#curl -O "${URL}"/Kunden_alle.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+popd
+
 #-------------------------------------------------------------------------------
 # epha no longer needed
 #wget -N http://download.epha.ch/cleaned/produkte.json -O epha_products_de_json.json

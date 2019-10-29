@@ -96,5 +96,12 @@ target_include_directories(pharma PUBLIC
 target_link_libraries(pharma ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 
 #-------------------------------------------------------------------------------
+add_executable(zurrose
+	src/zur/main.cpp)
+
+target_include_directories(zurrose PUBLIC "${CMAKE_SOURCE_DIR}/src/zur")
+target_link_libraries(zurrose ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
+
+#-------------------------------------------------------------------------------
 
 install(TARGETS cpp2sqlite interaction sappinfo pharma RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})

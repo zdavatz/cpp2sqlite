@@ -254,7 +254,7 @@ int main(int argc, char **argv)
         opt_workDirectory = opt_inputDirectory + "/..";
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    ///
     if (opt_language == "de") {
         stringsFromDe();
     }
