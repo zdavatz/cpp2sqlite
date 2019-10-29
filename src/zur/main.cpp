@@ -59,10 +59,49 @@ void parseCSV(const std::string &filename)
 }
 
 #pragma mark -
-//  ./input/zurrose/artikel_stamm_zurrose.csv
-void generatePharmaToStockCsv()
+
+// See file DispoParse.java line 861
+void getAtcMap()
 {
-    
+    // TODO: parse  './downloads/epha_atc_codes_csv.csv'
+}
+
+// See file DispoParse.java line 725
+void getSLMap()
+{
+    // TODO: parse  './downloads/bag_preparations_xml.xml'
+}
+
+// See file DispoParse.java line 818
+void enhanceFlags()
+{
+    // TODO: parse './downloads/swissmedic_packages_xlsx.xlsx'
+}
+
+// See file DispoParse.java line 277
+void getGalenicCodeMap()
+{
+    // TODO: parse './input/zurrose/galenic_codes_map_zurrose.csv'
+}
+
+#ifdef OBSOLETE_STUFF
+// See file DispoParse.java line 312
+void processLikes()
+{
+    // TODO: parse './input/zurrose/like_db_zurrose.csv'
+}
+#endif
+
+// See file DispoParse.java line 363
+void generateFullSQLiteDB(std::string type)
+{
+    // TODO: parse 'input/zurrose/artikel_vollstamm_zurrose.csv'
+}
+
+// See file DispoParse.java line 582
+void generatePharmaToStockCsv(std::string dir)
+{
+    ZUR::parseCSV(dir + "/zurrose/artikel_stamm_zurrose.csv");
 }
 
 void on_version()
@@ -132,16 +171,46 @@ int main(int argc, char **argv)
     }
     
     // Parse input files
-    ZUR::parseCSV(opt_inputDirectory + "/zurrose/artikel_stamm_zurrose.csv");
     
+    // See ShoppingCartRose.java line 24 encryptFiles()
+#if 0 // we don't need this
+    // TODO: parse 'Abverkaufszahlen.csv' to generate 'rose_sales_fig.ser'
+#endif
+    // TODO: parse 'Kunden_alle.csv' to generate 'Kunden_alle.ser' and 'rose_ids.ser'
+    // TODO: parse 'Autogenerika.csv' to generate 'rose_autogenerika.ser'
+    // TODO: parse 'direct_subst_zurrose.csv' to generate 'rose_direct_subst.ser'
+    // TODO: parse 'nota_zurrose.csv' to generate 'rose_nota.ser'
+
     if (opt_zurrose == "fulldb") {
         // TODO: initSqliteDB("rose_db_new_full.db");
     }
     else if (opt_zurrose == "atcdb") {
         // TODO: initSqliteDB("rose_db_new_atc_only.db");
     }
+
+    if ((opt_zurrose == "fulldb") || (opt_zurrose == "atcdb"))
+    {
+        // Process atc map
+        getAtcMap();
+
+        // Get SL map
+        getSLMap();
+
+        // Enhance SL map with information on"Abgabekategorie"
+        enhanceFlags();
+
+        // Get galenic form to galenic code map
+        getGalenicCodeMap();
+
+#ifdef OBSOLETE_STUFF
+        processLikes();
+#endif
+
+        // Process CSV file and generate Sqlite DB
+        generateFullSQLiteDB(opt_zurrose);
+    }
     else if (opt_zurrose == "quick") {
-        generatePharmaToStockCsv(); // Generate gln to stock map (csv file)
+        generatePharmaToStockCsv(opt_inputDirectory); // Generate GLN to stock map (csv file)
     }
 
     return EXIT_SUCCESS;

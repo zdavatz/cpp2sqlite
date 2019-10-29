@@ -61,8 +61,8 @@ curl -o nota_zurrose.csv -O "${URL}"/Nota.csv --user "${USERNAME_ZUR}:${PASSWORD
 curl -o galenic_codes_map_zurrose.txt -O "${URL}"/Vollstamm_Galenic_Form_Mapping_by_Code.txt --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
 
 #curl -O "${URL}"/_log.txt --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
-#curl -O "${URL}"/Autogenerika.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
-#curl -O "${URL}"/Kunden_alle.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+curl -O "${URL}"/Autogenerika.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+curl -O "${URL}"/Kunden_alle.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
 popd
 
 #-------------------------------------------------------------------------------
