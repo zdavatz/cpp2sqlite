@@ -99,6 +99,7 @@ target_link_libraries(pharma ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 add_executable(zurrose
 	src/zur/main.cpp
 	src/zur/Article.hpp src/zur/Article.cpp
+	src/zur/atc.hpp src/zur/atc.cpp
 	src/zur/sqlDatabase.hpp src/zur/sqlDatabase.cpp)
 
 target_include_directories(zurrose PUBLIC "${CMAKE_SOURCE_DIR}/src/zur")

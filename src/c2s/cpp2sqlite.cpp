@@ -945,8 +945,8 @@ int main(int argc, char **argv)
         std::vector<std::string> statsRegnrsNotFound;
 
 #ifdef WITH_PROGRESS_BAR
-        int ii=1;
-        int n=list.size();
+        int ii = 1;
+        int n = list.size();
 #endif
         for (AIPS::Medicine m : list) {
             

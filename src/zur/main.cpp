@@ -17,8 +17,11 @@
 #include "config.h"
 #include "sqlDatabase.hpp"
 #include "Article.hpp"
+#include "atc.hpp"
 
+#define WITH_PROGRESS_BAR
 #define TABLE_NAME_ROSE     "rosedb"
+#define NO_DETAILS          "k.A."  // keine Angaben
 
 namespace po = boost::program_options;
 static std::string appName;
@@ -32,7 +35,7 @@ namespace CSV
 {
 
 // See DispoParse.java line 363 generateFullSQLiteDB()
-void parseVollstamm(const std::string &filename)
+void parseVollstamm(const std::string &filename, const std::string type)
 {
     std::clog << std::endl << "Reading artikel_vollstamm_zurrose CSV" << std::endl;
 
@@ -70,24 +73,72 @@ void parseVollstamm(const std::string &filename)
             }
 
             Article a;
-            a.pharma_code  = columnVector[0];
+            a.pharma_code  = columnVector[0]; // A
             a.pack_title = columnVector[1];
-            a.ean_code = columnVector[2];
+            
+            a.ean_code = columnVector[2];   // C
+            // TODO: a.flags = ...
+            // TODO: a.regnr = ...
+
+            a.likes = 0; // TODO:
+
             a.availability = columnVector[3];
             
-            // TODO: columnVector[3]; // column E
+            // TODO: columnVector[4]; // E unused ?
 
             a.pack_size = std::stoi(columnVector[5]);
             // TODO: if 0 parse the size from the title
             
-            a.therapy_code = columnVector[6]; // TODO: if empty write "k.A."
-            a.atc_code = columnVector[7]; // TODO: uppercase
+            a.therapy_code = columnVector[6];
+            if (a.therapy_code.size() > 0)
+                a.therapy_code = NO_DETAILS;
 
-            a.stock = std::stoi(columnVector[8]); //col I Lagerbestand = stock, a number means in stock, - not in stock number > 0
+            a.atc_code = boost::to_upper_copy<std::string>(columnVector[7]); // H
+            if (a.atc_code.size() > 0) {
+                a.atc_class = ATC::getTextByAtc(a.atc_code); // Java uses epha_atc_codes_csv.csv instead
+            }
+            else {
+                a.atc_code = NO_DETAILS;
+                a.atc_class = NO_DETAILS;
+            }
+
+            a.stock = std::stoi(columnVector[8]);
             
-            // TODO: continue from DispoParse.java line 460
+            a.rose_supplier = columnVector[9]; // J
             
-            articles.push_back(a);
+            std::string gal = columnVector[10]; // K
+            a.galen_form = gal;
+            a.galen_code = gal; // TODO: m_galenic_code_to_form_bimap
+            
+            a.pack_unit = columnVector[11]; // L
+            a.rose_base_price = columnVector[12]; // M TODO: see bag formatPriceAsMoney
+            
+            std::string ean = columnVector[13];  // N TODO: check that length is 13
+            a.replace_ean_code = ean;
+
+            a.replace_pharma_code = columnVector[14]; // O
+            
+            a.off_the_market = (boost::to_lower_copy<std::string>(columnVector[15]) == "ja"); // P
+            a.npl_article = (boost::to_lower_copy<std::string>(columnVector[16]) == "ja"); // Q
+
+            // TODO: use ean and m_bag_public_price_map
+            a.public_price = columnVector[17]; // R
+            //a.exfactory_price = ...
+            
+            // Column S unused ?
+            
+            a.dlk_flag = boost::contains(columnVector[19], "100%"); // T
+            a.pack_title_FR = columnVector[20]; // U
+
+            if (type == "fulldb") {
+                articles.push_back(a);
+            }
+            else if ((type == "atcdb") &&
+                     (a.atc_code.size() > 0) &&
+                     a.atc_code != NO_DETAILS) {
+                // Add only products which have an ATC code
+                articles.push_back(a);
+            }
         }  // while
     }
     catch (std::exception &e) {
@@ -173,10 +224,10 @@ void processLikes()
 #endif
 
 // See file DispoParse.java line 363
-void generateFullSQLiteDB(std::string dir, std::string type)
+void generateFullSQLiteDB(const std::string dir, const std::string type)
 {
     // TODO: use type
-    CSV::parseVollstamm(dir + "/zurrose/artikel_vollstamm_zurrose.csv");
+    CSV::parseVollstamm(dir + "/zurrose/artikel_vollstamm_zurrose.csv", type);
 }
 
 // See file DispoParse.java line 582
@@ -218,6 +269,7 @@ int main(int argc, char **argv)
 
     std::string opt_inputDirectory;
     std::string opt_workDirectory;  // for downloads subdirectory
+    std::string opt_language;
     std::string opt_zurrose;
     bool flagVerbose = false;
     
@@ -226,6 +278,7 @@ int main(int argc, char **argv)
     ("help,h", "print this message")
     ("version,v", "print the version information and exit")
     ("verbose", "be extra verbose") // Show errors and logs
+    ("lang", po::value<std::string>( &opt_language )->default_value("de"), "use given language (de/fr)")
     ("zurrose", po::value<std::string>( &opt_zurrose )->default_value("fulldb"), "generate zur Rose full article database or stock/like files (fulldb/atcdb/quick)")
     ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
     ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
@@ -271,6 +324,8 @@ int main(int argc, char **argv)
     }
     
     // Parse input files
+    // For French names of medicines
+    ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
     
     // See ShoppingCartRose.java line 24 encryptFiles()
 #if 0 // we don't need this
@@ -312,7 +367,17 @@ int main(int argc, char **argv)
         // Process CSV file and generate Sqlite DB
         generateFullSQLiteDB(opt_inputDirectory, opt_zurrose);
         
+#ifdef WITH_PROGRESS_BAR
+        unsigned int ii = 1;
+        int n = articles.size();
+#endif
         for (auto a : articles) {
+            
+#ifdef WITH_PROGRESS_BAR
+            // Show progress
+            if ((ii++ % 100) == 0)
+                std::cerr << "\r" << 100*ii/n << " % ";
+#endif
             sqlDb.bindText(1, a.pack_title);
             sqlDb.bindInt(2, a.pack_size);
             sqlDb.bindText(3, a.galen_form);
@@ -338,7 +403,11 @@ int main(int argc, char **argv)
             sqlDb.bindText(23, a.galen_code);
 
             sqlDb.runStatement(TABLE_NAME_ROSE);
-        }
+        } // for
+        
+#ifdef WITH_PROGRESS_BAR
+        std::cerr << "\r100 %" << std::endl;
+#endif
     }
     else if (opt_zurrose == "quick") {
         generatePharmaToStockCsv(opt_inputDirectory); // Generate GLN to stock map (csv file)
