@@ -1128,7 +1128,7 @@ int main(int argc, char **argv)
                     oneLine += "||||";
 
                     // Field 8
-                    // In the Java db there are 2 commas or 3 if there is SL
+                    // In the Java DB there are 2 commas or 3 if there is SL
                     oneLine += boost::algorithm::join(pf.flags, ",");
                     oneLine += "|";
 
@@ -1198,7 +1198,7 @@ int main(int argc, char **argv)
             << basename((char *)__FILE__) << ":" << __LINE__
             << ", rc" << rc
             << std::endl;
-    }
+    } // if flagXml
 
     REP::terminate();
 

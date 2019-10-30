@@ -1,6 +1,6 @@
 //
 //  main.cpp
-//  sappinfo
+//  zurrose
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
@@ -15,15 +15,94 @@
 #include <libgen.h>     // for basename()
 
 #include "config.h"
+#include "sqlDatabase.hpp"
+#include "Article.hpp"
+
+#define TABLE_NAME_ROSE     "rosedb"
 
 namespace po = boost::program_options;
 static std::string appName;
 
-#pragma mark - ZUR
+static DB::Sql sqlDb;
+std::vector<Article> articles;
 
-namespace ZUR
+#pragma mark - CSV
+
+namespace CSV
 {
-void parseCSV(const std::string &filename)
+
+// See DispoParse.java line 363 generateFullSQLiteDB()
+void parseVollstamm(const std::string &filename)
+{
+    std::clog << std::endl << "Reading artikel_vollstamm_zurrose CSV" << std::endl;
+
+#ifdef DEBUG
+    std::clog  << "Filename: " << filename << std::endl;
+#endif
+    
+    try {
+        std::ifstream file(filename);
+        
+        std::string str;
+        bool header = true;
+        while (std::getline(file, str)) {
+            
+            if (header) {
+                header = false;
+
+#ifdef DEBUG
+                std::vector<std::string> headerTitles;
+                boost::algorithm::split(headerTitles, str, boost::is_any_of(";"));
+                std::clog << "Number of columns: " << headerTitles.size() << std::endl;
+                auto colLetter = 'A';
+                for (auto t : headerTitles)
+                    std::clog << colLetter++ << "\t" << t << std::endl;
+#endif
+                continue;
+            }
+            
+            std::vector<std::string> columnVector;
+            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
+            
+            if (columnVector.size() != 21) {
+                std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            Article a;
+            a.pharma_code  = columnVector[0];
+            a.pack_title = columnVector[1];
+            a.ean_code = columnVector[2];
+            a.availability = columnVector[3];
+            
+            // TODO: columnVector[3]; // column E
+
+            a.pack_size = std::stoi(columnVector[5]);
+            // TODO: if 0 parse the size from the title
+            
+            a.therapy_code = columnVector[6]; // TODO: if empty write "k.A."
+            a.atc_code = columnVector[7]; // TODO: uppercase
+
+            a.stock = std::stoi(columnVector[8]); //col I Lagerbestand = stock, a number means in stock, - not in stock number > 0
+            
+            // TODO: continue from DispoParse.java line 460
+            
+            articles.push_back(a);
+        }  // while
+    }
+    catch (std::exception &e) {
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << " Error " << e.what()
+        << std::endl;
+    }
+    
+#ifdef DEBUG
+    std::clog << "Parsed " << articles.size() << " articles" << std::endl;
+#endif
+}
+
+void parseStamm(const std::string &filename)
 {
     std::clog << std::endl << "Reading artikel_stamm_zurrose CSV" << std::endl;
     
@@ -56,20 +135,21 @@ void parseCSV(const std::string &filename)
         << std::endl;
     }
 }
-}
+
+} // namespace CSV
 
 #pragma mark -
 
 // See file DispoParse.java line 861
 void getAtcMap()
 {
-    // TODO: parse  './downloads/epha_atc_codes_csv.csv'
+    // TODO: parse './downloads/epha_atc_codes_csv.csv'
 }
 
 // See file DispoParse.java line 725
 void getSLMap()
 {
-    // TODO: parse  './downloads/bag_preparations_xml.xml'
+    // TODO: parse './downloads/bag_preparations_xml.xml'
 }
 
 // See file DispoParse.java line 818
@@ -93,15 +173,35 @@ void processLikes()
 #endif
 
 // See file DispoParse.java line 363
-void generateFullSQLiteDB(std::string type)
+void generateFullSQLiteDB(std::string dir, std::string type)
 {
-    // TODO: parse 'input/zurrose/artikel_vollstamm_zurrose.csv'
+    // TODO: use type
+    CSV::parseVollstamm(dir + "/zurrose/artikel_vollstamm_zurrose.csv");
 }
 
 // See file DispoParse.java line 582
 void generatePharmaToStockCsv(std::string dir)
 {
-    ZUR::parseCSV(dir + "/zurrose/artikel_stamm_zurrose.csv");
+    CSV::parseStamm(dir + "/zurrose/artikel_stamm_zurrose.csv");
+}
+
+void createDB(const std::string &filename)
+{
+    sqlDb.openDB(filename);
+
+    // See file DispoParse.java line 187 createArticleDB()
+    sqlDb.createTable(TABLE_NAME_ROSE, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, size TEXT, galen TEXT, unit TEXT, eancode TEXT, pharmacode TEXT, atc TEXT, theracode TEXT, stock INTEGER, price TEXT, availability TEXT, supplier TEXT, likes INTEGER, replaceean TEXT, replacepharma TEXT, offmarket TEXT, flags TEXT, npl TEXT, publicprice TEXT, exfprice TEXT, dlkflag TEXT, title_FR TEXT, galencode TEXT");
+#if 0
+    sqlDb.createIndex(TABLE_NAME_ROSE, "idx_", {"title", "auth", "atc", "substances", "regnrs", "atc_class"});
+
+    sqlDb.createTable("productdb", "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, author TEXT, eancodes TEXT, pack_info_str TEXT, packages TEXT");
+    sqlDb.createIndex("productdb", "idx_prod_", {"title", "author", "eancodes"});
+    
+    sqlDb.createTable("android_metadata", "locale TEXT default 'en_US'");
+    sqlDb.insertInto("android_metadata", "locale", "'en_US'");
+#endif
+
+    //createTable("sqlite_sequence", "");  // created automatically
 }
 
 void on_version()
@@ -181,15 +281,18 @@ int main(int argc, char **argv)
     // TODO: parse 'direct_subst_zurrose.csv' to generate 'rose_direct_subst.ser'
     // TODO: parse 'nota_zurrose.csv' to generate 'rose_nota.ser'
 
-    if (opt_zurrose == "fulldb") {
-        // TODO: initSqliteDB("rose_db_new_full.db");
-    }
-    else if (opt_zurrose == "atcdb") {
-        // TODO: initSqliteDB("rose_db_new_atc_only.db");
-    }
-
     if ((opt_zurrose == "fulldb") || (opt_zurrose == "atcdb"))
     {
+        // See .java initSqliteDB()
+        std::string dbName = (opt_zurrose == "fulldb") ? "rose_db_new_full.db" : "rose_db_new_atc_only.db";
+        
+        std::string dbFullname = opt_workDirectory + "/output/" + dbName;
+
+        createDB(dbFullname);
+        
+        sqlDb.prepareStatement(TABLE_NAME_ROSE,
+                               "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+        
         // Process atc map
         getAtcMap();
 
@@ -207,10 +310,45 @@ int main(int argc, char **argv)
 #endif
 
         // Process CSV file and generate Sqlite DB
-        generateFullSQLiteDB(opt_zurrose);
+        generateFullSQLiteDB(opt_inputDirectory, opt_zurrose);
+        
+        for (auto a : articles) {
+            sqlDb.bindText(1, a.pack_title);
+            sqlDb.bindInt(2, a.pack_size);
+            sqlDb.bindText(3, a.galen_form);
+            sqlDb.bindText(4, a.pack_unit);
+            sqlDb.bindText(5, a.ean_code + ";" + a.regnr);
+            sqlDb.bindText(6, a.pharma_code);
+            sqlDb.bindText(7, a.atc_code + ";" + a.atc_class);
+            sqlDb.bindText(8, a.therapy_code);
+            sqlDb.bindInt(9, a.stock);
+            sqlDb.bindText(10, a.rose_base_price);
+            sqlDb.bindText(11, a.availability);
+            sqlDb.bindText(12, a.rose_supplier);
+            sqlDb.bindInt(13, a.likes);
+            sqlDb.bindText(14, a.replace_ean_code);
+            sqlDb.bindText(15, a.replace_pharma_code);
+            sqlDb.bindBool(16, a.off_the_market);
+            sqlDb.bindText(17, a.flags);
+            sqlDb.bindBool(18, a.npl_article);
+            sqlDb.bindText(19, a.public_price);
+            sqlDb.bindText(20, a.exfactory_price);
+            sqlDb.bindBool(21, a.dlk_flag);
+            sqlDb.bindText(22, a.pack_title_FR);
+            sqlDb.bindText(23, a.galen_code);
+
+            sqlDb.runStatement(TABLE_NAME_ROSE);
+        }
     }
     else if (opt_zurrose == "quick") {
         generatePharmaToStockCsv(opt_inputDirectory); // Generate GLN to stock map (csv file)
+    }
+    
+    if ((opt_zurrose == "fulldb") ||
+        (opt_zurrose == "atcdb"))
+    {
+        sqlDb.destroyStatement();
+        sqlDb.closeDB();
     }
 
     return EXIT_SUCCESS;

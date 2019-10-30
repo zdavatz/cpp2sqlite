@@ -2,10 +2,10 @@
 # Alex Bettarini - 22 Jan 2019
 
 WD=$(pwd)
-SRC_DIR=../
+SRC_DIR=$(realpath ../)
 
 if [ ! -z "$1" ] ; then
-    SRC_DIR=$1
+    SRC_DIR=$(realpath $1)
 fi
 
 BLD_DIR=$SRC_DIR/build
@@ -43,7 +43,7 @@ done
 
 source $WD/passwords
 URL="ftp://ftp.zur-rose.ch/ywesee OutTest"
-ZURROSE_DIR="${SRC_DIR}input/zurrose"
+ZURROSE_DIR="${SRC_DIR}/input/zurrose"
 mkdir -p $ZURROSE_DIR
 pushd $ZURROSE_DIR
 

@@ -56,7 +56,6 @@ void destroyStatement(sqlite3_stmt * statement)
 void runStatement(const std::string &tableName,
                   sqlite3_stmt * statement)
 {
-    // Run the SQL
     int rc = sqlite3_step(statement);
     if ((rc != SQLITE_OK) && (rc != SQLITE_DONE)) {
         char *exp = sqlite3_expanded_sql(statement);
