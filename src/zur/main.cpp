@@ -13,6 +13,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include <libgen.h>     // for basename()
 
@@ -26,6 +28,8 @@
 #define NO_DETAILS          "k.A."  // keine Angaben
 
 namespace po = boost::program_options;
+namespace pt = boost::property_tree;
+
 static std::string appName;
 
 static DB::Sql sqlDb;
@@ -305,7 +309,6 @@ void parseStammVoigt(const std::string &filename)
 #endif
 }
 
-
 void createRoseStock(const std::string &filename)
 {
     std::ofstream ofs;
@@ -330,13 +333,132 @@ void createRoseStock(const std::string &filename)
 
 } // namespace CSV
 
+#pragma mark - CSV_JSON
+
+namespace CSV_JSON
+{
+struct notaPosition {
+    std::string pharma_code;
+    std::string quantity;
+    std::string status;
+    std::string delivery_date;
+    std::string last_order_date;
+};
+
+struct notaDoctor {
+    std::string id;
+    std::vector<notaPosition> notaVec;
+};
+
+std::vector<notaDoctor> doctorVec;
+
+// Parse-phase stats
+unsigned int statsNotaNumLines = 0;
+
+void parseNota(const std::string &filename)
+{
+    std::clog << "Reading " << filename << std::endl;
+    try {
+        std::ifstream file(filename);
+        
+        std::string str;
+
+        while (std::getline(file, str)) {
+
+            boost::algorithm::trim_right_if(str, boost::is_any_of("\n\r"));
+            statsNotaNumLines++;
+
+            // No header
+            
+            std::vector<std::string> columnVector;
+            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
+
+            // Variable number of columns, but in multiples of 5, plus 1
+
+            auto n = columnVector.size();
+            if ((n - 1) % 5 != 0) {
+                std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            notaDoctor doctor;
+            doctor.id = columnVector[0];
+            doctor.notaVec.clear();
+
+            for (int i=1; i<=(n-5); i+= 5) {
+                notaPosition np;
+                np.pharma_code = columnVector[i];
+                np.quantity = columnVector[i+1];
+                np.status = columnVector[i+2];
+                np.delivery_date = columnVector[i+3]; // could be empty
+                np.last_order_date = columnVector[i+4];
+                doctor.notaVec.push_back(np);
+            }
+
+            // TODO:: stats update max num of items per doctor from doctor.notaVec.size()
+
+            doctorVec.push_back(doctor);
+        }
+    }
+    catch (std::exception &e) {
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << " Error " << e.what()
+        << std::endl;
+    }
+    
+#ifdef DEBUG
+    std::clog
+    << "Parsed " << statsNotaNumLines << " lines"
+    << "\n\t" << doctorVec.size() << " doctors"
+    << std::endl;
+#endif
+}
+
+void createNota(const std::string &filename)
+{
+    std::clog << "Preparing data for rose_nota.json"  << std::endl;
+
+    pt::ptree tree;
+
+    for (auto d : doctorVec) {
+
+        pt::ptree children;
+
+        for (auto n : d.notaVec) {
+
+            pt::ptree child;
+
+            child.put("delivery_date", n.delivery_date);
+            child.put("last_order_date", n.last_order_date);
+            child.put("pharma_code", n.pharma_code);
+            
+            // FIXME: boost seems to treat everything as strings
+            // possible solution is https://github.com/nlohmann/json#json-as-first-class-data-type
+            child.put("quantity", std::stoi(n.quantity));
+
+            child.put("status", n.status);
+            children.push_back(std::make_pair("", child));
+        }
+
+        tree.add_child(d.id, children);
+    }
+
+    std::clog << "\nWriting (Boost)" << filename << std::endl;
+    pt::write_json(filename, tree);
+}
+
+} // namespace CSV_JSON
+
 #pragma mark -
 
+#ifdef OBSOLETE_STUFF
 // See file DispoParse.java line 861
 void getAtcMap()
 {
     // TODO: parse './downloads/epha_atc_codes_csv.csv'
 }
+#endif
 
 // See file DispoParse.java line 725
 void getSLMap()
@@ -370,6 +492,48 @@ void generateFullSQLiteDB(const std::string dir, const std::string type)
 {
     // TODO: use type
     CSV::parseVollstamm(dir + "/zurrose/artikel_vollstamm_zurrose.csv", type);
+    
+#ifdef WITH_PROGRESS_BAR
+        unsigned int ii = 1;
+        int n = articles.size();
+#endif
+        for (auto a : articles) {
+            
+#ifdef WITH_PROGRESS_BAR
+            // Show progress
+            if ((ii++ % 100) == 0)
+                std::cerr << "\r" << 100*ii/n << " % ";
+#endif
+            sqlDb.bindText(1, a.pack_title);
+            sqlDb.bindInt(2, a.pack_size);
+            sqlDb.bindText(3, a.galen_form);
+            sqlDb.bindText(4, a.pack_unit);
+            sqlDb.bindText(5, a.ean_code + ";" + a.regnr);
+            sqlDb.bindText(6, a.pharma_code);
+            sqlDb.bindText(7, a.atc_code + ";" + a.atc_class);
+            sqlDb.bindText(8, a.therapy_code);
+            sqlDb.bindInt(9, a.stock);
+            sqlDb.bindText(10, a.rose_base_price);
+            sqlDb.bindText(11, a.availability);
+            sqlDb.bindText(12, a.rose_supplier);
+            sqlDb.bindInt(13, a.likes);
+            sqlDb.bindText(14, a.replace_ean_code);
+            sqlDb.bindText(15, a.replace_pharma_code);
+            sqlDb.bindBool(16, a.off_the_market);
+            sqlDb.bindText(17, a.flags);
+            sqlDb.bindBool(18, a.npl_article);
+            sqlDb.bindText(19, a.public_price);
+            sqlDb.bindText(20, a.exfactory_price);
+            sqlDb.bindBool(21, a.dlk_flag);
+            sqlDb.bindText(22, a.pack_title_FR);
+            sqlDb.bindText(23, a.galen_code);
+
+            sqlDb.runStatement(TABLE_NAME_ROSE);
+        } // for
+        
+#ifdef WITH_PROGRESS_BAR
+        std::cerr << "\r100 %" << std::endl;
+#endif
 }
 
 // See file DispoParse.java line 582
@@ -382,8 +546,18 @@ void generatePharmaToStockCsv(std::string inDir, std::string outDir)
     CSV::createRoseStock(outDir + "/rose_stock.csv");
 }
 
+void generateNota(std::string inFilename, std::string outFilename)
+{
+    CSV_JSON::parseNota(inFilename);
+    CSV_JSON::createNota(outFilename);
+}
+
 void createDB(const std::string &filename)
 {
+#ifdef DEBUG
+    std::clog << "Create: " << filename << std::endl;
+#endif
+
     sqlDb.openDB(filename);
 
     // See file DispoParse.java line 187 createArticleDB()
@@ -474,13 +648,14 @@ int main(int argc, char **argv)
     ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
     
     // See ShoppingCartRose.java line 24 encryptFiles()
-#if 0 // we don't need this
+#ifdef OBSOLETE_STUFF
     // TODO: parse 'Abverkaufszahlen.csv' to generate 'rose_sales_fig.ser'
 #endif
     // TODO: parse 'Kunden_alle.csv' to generate 'Kunden_alle.ser' and 'rose_ids.ser'
     // TODO: parse 'Autogenerika.csv' to generate 'rose_autogenerika.ser'
     // TODO: parse 'direct_subst_zurrose.csv' to generate 'rose_direct_subst.ser'
-    // TODO: parse 'nota_zurrose.csv' to generate 'rose_nota.ser'
+    generateNota(opt_inputDirectory + "/zurrose/nota_zurrose.csv",
+                 opt_workDirectory + "/output/rose_nota.json"); // .ser in Java
 
     if ((opt_zurrose == "fulldb") || (opt_zurrose == "atcdb"))
     {
@@ -494,10 +669,10 @@ int main(int argc, char **argv)
         sqlDb.prepareStatement(TABLE_NAME_ROSE,
                                "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
         
-        // Process atc map
+#ifdef OBSOLETE_STUFF
         getAtcMap();
+#endif
 
-        // Get SL map
         getSLMap();
 
         // Enhance SL map with information on"Abgabekategorie"
@@ -512,51 +687,8 @@ int main(int argc, char **argv)
 
         // Process CSV file and generate Sqlite DB
         generateFullSQLiteDB(opt_inputDirectory, opt_zurrose);
-        
-#ifdef WITH_PROGRESS_BAR
-        unsigned int ii = 1;
-        int n = articles.size();
-#endif
-        for (auto a : articles) {
-            
-#ifdef WITH_PROGRESS_BAR
-            // Show progress
-            if ((ii++ % 100) == 0)
-                std::cerr << "\r" << 100*ii/n << " % ";
-#endif
-            sqlDb.bindText(1, a.pack_title);
-            sqlDb.bindInt(2, a.pack_size);
-            sqlDb.bindText(3, a.galen_form);
-            sqlDb.bindText(4, a.pack_unit);
-            sqlDb.bindText(5, a.ean_code + ";" + a.regnr);
-            sqlDb.bindText(6, a.pharma_code);
-            sqlDb.bindText(7, a.atc_code + ";" + a.atc_class);
-            sqlDb.bindText(8, a.therapy_code);
-            sqlDb.bindInt(9, a.stock);
-            sqlDb.bindText(10, a.rose_base_price);
-            sqlDb.bindText(11, a.availability);
-            sqlDb.bindText(12, a.rose_supplier);
-            sqlDb.bindInt(13, a.likes);
-            sqlDb.bindText(14, a.replace_ean_code);
-            sqlDb.bindText(15, a.replace_pharma_code);
-            sqlDb.bindBool(16, a.off_the_market);
-            sqlDb.bindText(17, a.flags);
-            sqlDb.bindBool(18, a.npl_article);
-            sqlDb.bindText(19, a.public_price);
-            sqlDb.bindText(20, a.exfactory_price);
-            sqlDb.bindBool(21, a.dlk_flag);
-            sqlDb.bindText(22, a.pack_title_FR);
-            sqlDb.bindText(23, a.galen_code);
-
-            sqlDb.runStatement(TABLE_NAME_ROSE);
-        } // for
-        
-#ifdef WITH_PROGRESS_BAR
-        std::cerr << "\r100 %" << std::endl;
-#endif
     }
     else if (opt_zurrose == "quick") {
-        // Generate GLN to stock map (csv file)
         generatePharmaToStockCsv(opt_inputDirectory, opt_workDirectory + "/output");
     }
     
