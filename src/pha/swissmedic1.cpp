@@ -48,8 +48,7 @@
 
 #define FIRST_DATA_ROW_INDEX    6
 
-#define OUTPUT_FILE_SEPARATOR   ";"
-#define CELL_ESCAPE             "\""
+static constexpr std::string_view CELL_ESCAPE = "\"";
 
 //#define DEBUG_DOSAGE_REGEX
 
@@ -466,6 +465,7 @@ void createCSV(const std::string &outDir, bool storageColumn)
     std::ofstream ofs;
     std::string filename = outDir + "/pharma.csv";
     ofs.open(filename);
+    constexpr std::string_view OUTPUT_FILE_SEPARATOR = ";";
  
     std::clog << std::endl << "Creating CSV" << std::endl;
 

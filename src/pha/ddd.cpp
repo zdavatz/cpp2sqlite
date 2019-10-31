@@ -33,7 +33,8 @@ void parseCSV(const std::string &filename)
         std::ifstream file(filename);
 
         std::string str;
-        while (std::getline(file, str)) {
+        while (std::getline(file, str))
+        {
             std::string firstColumn;
             std::string thirdColumn;
 #if 0
