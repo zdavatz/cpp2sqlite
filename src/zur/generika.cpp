@@ -37,7 +37,7 @@ std::vector<std::string> eanVec;
 
 void parseCSV(const std::string &filename)
 {
-    std::clog << "Reading " << filename << std::endl;
+    std::clog << std::endl << "Reading " << filename << std::endl;
 
     try {
         std::ifstream file(filename);

@@ -32,7 +32,7 @@ std::map<std::string, stockStruct> pharmaStockMap;
 
 void parseCSV(const std::string &filename)
 {
-    std::clog << std::endl << "Reading artikel_stamm_zurrose CSV" << std::endl;
+    std::clog << std::endl << "Reading " << filename << std::endl;
 
     try {
         std::ifstream file(filename);
