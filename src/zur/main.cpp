@@ -99,7 +99,7 @@ void parseVollstamm(const std::string &filename, const std::string type)
             // TODO: if 0 parse the size from the title
             
             a.therapy_code = columnVector[6];
-            if (a.therapy_code.size() > 0)
+            if (a.therapy_code.size() == 0)
                 a.therapy_code = NO_DETAILS;
 
             a.atc_code = boost::to_upper_copy<std::string>(columnVector[7]); // H
@@ -298,12 +298,6 @@ void createDB(const std::string &filename)
 
     // See file DispoParse.java line 187 createArticleDB()
     sqlDb.createTable(TABLE_NAME_ROSE, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, size TEXT, galen TEXT, unit TEXT, eancode TEXT, pharmacode TEXT, atc TEXT, theracode TEXT, stock INTEGER, price TEXT, availability TEXT, supplier TEXT, likes INTEGER, replaceean TEXT, replacepharma TEXT, offmarket TEXT, flags TEXT, npl TEXT, publicprice TEXT, exfprice TEXT, dlkflag TEXT, title_FR TEXT, galencode TEXT");
-#if 0
-    sqlDb.createIndex(TABLE_NAME_ROSE, "idx_", {"title", "auth", "atc", "substances", "regnrs", "atc_class"});
-
-    sqlDb.createTable("productdb", "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, author TEXT, eancodes TEXT, pack_info_str TEXT, packages TEXT");
-    sqlDb.createIndex("productdb", "idx_prod_", {"title", "author", "eancodes"});
-    #endif
 
     sqlDb.createTable(TABLE_NAME_ANDROID, "locale TEXT default 'en_US'");
     sqlDb.insertInto(TABLE_NAME_ANDROID, "locale", "'en_US'");
