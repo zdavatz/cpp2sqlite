@@ -268,20 +268,21 @@ void generateKunden(std::string inDir, std::string outDir)
     KUNDEN::createIdsJSON(outDir + "/rose_ids.json"); // .ser in Java
 }
 
+// See ShoppingCartRose.java 260 encryptAutoGenerikaToFile()
 void generateAutogenerika(std::string inDir, std::string outDir)
 {
     GENERIKA::parseCSV(inDir + "/zurrose/Autogenerika.csv");
     GENERIKA::createJSON(outDir + "/rose_autogenerika.json"); // .ser in Java
 }
 
-// See ShoppingCartRose.java 303
+// See ShoppingCartRose.java 303 encryptDirectSubstToFile()
 void generateDirect(std::string inDir, std::string outDir)
 {
     DIREKT::parseCSV(inDir + "/zurrose/direct_subst_zurrose.csv");
     DIREKT::createJSON(outDir + "/output/rose_direct_subst.json"); // .ser in Java
 }
 
-// See ShoppingCartRose.java 339
+// See ShoppingCartRose.java 339 encryptNotaToFile()
 void generateNota(std::string inDir, std::string outDir)
 {
     NOTA::parseCSV(inDir + "/zurrose/nota_zurrose.csv");

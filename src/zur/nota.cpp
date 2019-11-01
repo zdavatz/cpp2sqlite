@@ -26,6 +26,7 @@ namespace pt = boost::property_tree;
 
 namespace NOTA
 {
+
 struct notaPosition {
     std::string pharma_code;
     std::string quantity;
@@ -47,13 +48,14 @@ unsigned int statsNotaNumLines = 0;
 void parseCSV(const std::string &filename)
 {
     std::clog << "Reading " << filename << std::endl;
+
     try {
         std::ifstream file(filename);
         
         std::string str;
 
-        while (std::getline(file, str)) {
-
+        while (std::getline(file, str))
+        {
             boost::algorithm::trim_right_if(str, boost::is_any_of("\n\r"));
             statsNotaNumLines++;
 
