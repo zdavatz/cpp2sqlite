@@ -100,7 +100,12 @@ add_executable(zurrose
 	src/zur/main.cpp
 	src/zur/Article.hpp src/zur/Article.cpp
 	src/zur/atc.hpp src/zur/atc.cpp
-	src/zur/sqlDatabase.hpp src/zur/sqlDatabase.cpp)
+	src/zur/direkt.hpp src/zur/direkt.cpp
+	src/zur/generika.hpp src/zur/generika.cpp
+	src/zur/kunden.hpp src/zur/kunden.cpp
+	src/zur/nota.hpp src/zur/nota.cpp
+	src/zur/sqlDatabase.hpp src/zur/sqlDatabase.cpp
+	src/zur/stamm.hpp src/zur/stamm.cpp)
 
 target_include_directories(zurrose PUBLIC "${CMAKE_SOURCE_DIR}/src/zur")
 target_link_libraries(zurrose ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})

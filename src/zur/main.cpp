@@ -13,8 +13,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
 #include <libgen.h>     // for basename()
 
@@ -22,24 +20,23 @@
 #include "sqlDatabase.hpp"
 #include "Article.hpp"
 #include "atc.hpp"
+#include "stamm.hpp"
+#include "kunden.hpp"
+#include "generika.hpp"
+#include "direkt.hpp"
+#include "nota.hpp"
 
 #define WITH_PROGRESS_BAR
-#define TABLE_NAME_ROSE     "rosedb"
-#define NO_DETAILS          "k.A."  // keine Angaben
+static constexpr std::string_view TABLE_NAME_ROSE = "rosedb";
+static constexpr std::string_view TABLE_NAME_ANDROID = "android_metadata";
+static constexpr std::string_view NO_DETAILS = "k.A.";    // keine Angaben
 
 namespace po = boost::program_options;
-namespace pt = boost::property_tree;
 
 static std::string appName;
 
 static DB::Sql sqlDb;
 std::vector<Article> articles;
-
-struct stockStruct {
-    int zurrose {0};
-    int voigt {0};
-};
-std::map<std::string, stockStruct> pharmaStockMap;
 
 #pragma mark - CSV
 
@@ -165,290 +162,7 @@ void parseVollstamm(const std::string &filename, const std::string type)
 #endif
 }
 
-void parseStamm(const std::string &filename)
-{
-    std::clog << std::endl << "Reading artikel_stamm_zurrose CSV" << std::endl;
-
-    try {
-        std::ifstream file(filename);
-        
-        std::string str;
-        bool header = true;
-        while (std::getline(file, str)) {
-            
-            if (header) {
-                header = false;
-
-#ifdef DEBUG
-                std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(";"));
-                std::clog << "Number of columns: " << headerTitles.size() << std::endl;
-                auto colLetter = 'A';
-                for (auto t : headerTitles)
-                    std::clog << colLetter++ << "\t" << t << std::endl;
-#endif
-                continue;
-            }
-            
-            std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
-            
-            if (columnVector.size() != 21) {
-                std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            
-            std::string pharma = columnVector[0]; // A
-            if (pharma.length() > 0) {
-                stockStruct stock;
-                stock.zurrose = std::stoi(columnVector[8]); // I
-                pharmaStockMap.insert(std::make_pair(pharma, stock));
-            }
-        } // while
-    }
-    catch (std::exception &e) {
-        std::cerr
-        << basename((char *)__FILE__) << ":" << __LINE__
-        << " Error " << e.what()
-        << std::endl;
-    }
-    
-#ifdef DEBUG
-    std::clog << "Parsed " << pharmaStockMap.size() << " map items" << std::endl;
-#endif
-}
-
-// Parse-phase stats
-unsigned int statsVoigtNumValidLines = 0;
-unsigned int statsVoigtEmptyAnot7 = 0;
-unsigned int statsVoigtEmptyB = 0;
-unsigned int statsVoigtMapAdditions = 0;
-unsigned int statsVoigtMapUpdates = 0;
-
-void parseStammVoigt(const std::string &filename)
-{
-    std::clog << std::endl << "Reading artikel_stamm_voigt CSV" << std::endl;
-
-    try {
-        std::ifstream file(filename);
-        
-        std::string str;
-        bool header = true;
-        while (std::getline(file, str))
-        {
-            // Trim the line, otherwise when it's split in cells the B
-            // column instead of being an empty cell it contains '\r'
-            boost::algorithm::trim_right_if(str, boost::is_any_of("\n\r"));
-
-            if (header) {
-                header = false;
-
-#ifdef DEBUG
-                std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(";"));
-                std::clog << "Number of columns: " << headerTitles.size() << std::endl;
-                auto colLetter = 'A';
-                for (auto t : headerTitles)
-                    std::clog << colLetter++ << "\t" << t << std::endl;
-#endif
-                continue;
-            }
-            
-            std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
-            
-            if (columnVector.size() != 2) {
-                std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
-                exit(EXIT_FAILURE);
-            }
-
-            statsVoigtNumValidLines++;
-            std::string pharma = columnVector[0];
-            int voigtStock = 0;
-            if (columnVector[1].length() > 0)
-                voigtStock = std::stoi(columnVector[1]);
-            else
-                statsVoigtEmptyB++;
-
-            if (pharma.length() == 7)
-            {
-                auto search = pharmaStockMap.find(pharma);
-                if (search != pharmaStockMap.end()) {
-                    //stock = search->second;   // Get saved stock
-                    search->second.voigt = voigtStock; // Update saved stock
-                    statsVoigtMapUpdates++;
-                }
-                else {
-                    stockStruct stock {0, voigtStock};
-                    pharmaStockMap.insert(std::make_pair(pharma, stock));
-                    statsVoigtMapAdditions++;
-                }
-            }
-            else {
-                statsVoigtEmptyAnot7++;
-            }
-        } // while
-    }
-    catch (std::exception &e) {
-        std::cerr
-        << basename((char *)__FILE__) << ":" << __LINE__
-        << " Error " << e.what()
-        << std::endl;
-    }
-    
-#ifdef DEBUG
-    std::clog
-    << "Parsed " << statsVoigtNumValidLines << " valid lines"
-    << "\n\t" << statsVoigtMapUpdates+statsVoigtMapAdditions << " = "
-        << statsVoigtMapUpdates << " map updates + "
-        << statsVoigtMapAdditions << " map additions"
-    << "\n\t" << statsVoigtEmptyAnot7 << " A column code length not 7"
-    << "\n\t" << statsVoigtEmptyB << " B column empty"
-    << "\n\t" << pharmaStockMap.size() << " items in stock map"
-    << std::endl;
-#endif
-}
-
-void createRoseStock(const std::string &filename)
-{
-    std::ofstream ofs;
-    ofs.open(filename);
-    constexpr std::string_view OUTPUT_FILE_SEPARATOR = ";";
-    
-    std::clog << std::endl << "Creating CSV" << std::endl;
-    
-    for (auto item : pharmaStockMap) {
-        ofs
-        << item.first << OUTPUT_FILE_SEPARATOR          // A
-        << item.second.zurrose << OUTPUT_FILE_SEPARATOR // B
-        << item.second.voigt << std::endl;              // C
-    }
-    
-    ofs.close();
-
-#ifdef DEBUG
-    std::clog << std::endl << "Created " << filename << std::endl;
-#endif
-}
-
 } // namespace CSV
-
-#pragma mark - CSV_JSON
-
-namespace CSV_JSON
-{
-struct notaPosition {
-    std::string pharma_code;
-    std::string quantity;
-    std::string status;
-    std::string delivery_date;
-    std::string last_order_date;
-};
-
-struct notaDoctor {
-    std::string id;
-    std::vector<notaPosition> notaVec;
-};
-
-std::vector<notaDoctor> doctorVec;
-
-// Parse-phase stats
-unsigned int statsNotaNumLines = 0;
-
-void parseNota(const std::string &filename)
-{
-    std::clog << "Reading " << filename << std::endl;
-    try {
-        std::ifstream file(filename);
-        
-        std::string str;
-
-        while (std::getline(file, str)) {
-
-            boost::algorithm::trim_right_if(str, boost::is_any_of("\n\r"));
-            statsNotaNumLines++;
-
-            // No header
-            
-            std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
-
-            // Variable number of columns, but in multiples of 5, plus 1
-
-            auto n = columnVector.size();
-            if ((n - 1) % 5 != 0) {
-                std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
-                exit(EXIT_FAILURE);
-            }
-
-            notaDoctor doctor;
-            doctor.id = columnVector[0];
-            doctor.notaVec.clear();
-
-            for (int i=1; i<=(n-5); i+= 5) {
-                notaPosition np;
-                np.pharma_code = columnVector[i];
-                np.quantity = columnVector[i+1];
-                np.status = columnVector[i+2];
-                np.delivery_date = columnVector[i+3]; // could be empty
-                np.last_order_date = columnVector[i+4];
-                doctor.notaVec.push_back(np);
-            }
-
-            // TODO:: stats update max num of items per doctor from doctor.notaVec.size()
-
-            doctorVec.push_back(doctor);
-        }
-    }
-    catch (std::exception &e) {
-        std::cerr
-        << basename((char *)__FILE__) << ":" << __LINE__
-        << " Error " << e.what()
-        << std::endl;
-    }
-    
-#ifdef DEBUG
-    std::clog
-    << "Parsed " << statsNotaNumLines << " lines"
-    << "\n\t" << doctorVec.size() << " doctors"
-    << std::endl;
-#endif
-}
-
-void createNota(const std::string &filename)
-{
-    std::clog << "Preparing data for rose_nota.json"  << std::endl;
-
-    pt::ptree tree;
-
-    for (auto d : doctorVec) {
-
-        pt::ptree children;
-
-        for (auto n : d.notaVec) {
-
-            pt::ptree child;
-
-            child.put("delivery_date", n.delivery_date);
-            child.put("last_order_date", n.last_order_date);
-            child.put("pharma_code", n.pharma_code);
-            
-            // FIXME: boost seems to treat everything as strings
-            // possible solution is https://github.com/nlohmann/json#json-as-first-class-data-type
-            child.put("quantity", std::stoi(n.quantity));
-
-            child.put("status", n.status);
-            children.push_back(std::make_pair("", child));
-        }
-
-        tree.add_child(d.id, children);
-    }
-
-    std::clog << "\nWriting (Boost)" << filename << std::endl;
-    pt::write_json(filename, tree);
-}
-
-} // namespace CSV_JSON
 
 #pragma mark -
 
@@ -488,10 +202,10 @@ void processLikes()
 
 // See file DispoParse.java line 363
 // fulldb,atcdb
-void generateFullSQLiteDB(const std::string dir, const std::string type)
+void generateFullSQLiteDB(const std::string inDir, const std::string type)
 {
     // TODO: use type
-    CSV::parseVollstamm(dir + "/zurrose/artikel_vollstamm_zurrose.csv", type);
+    CSV::parseVollstamm(inDir + "/zurrose/artikel_vollstamm_zurrose.csv", type);
     
 #ifdef WITH_PROGRESS_BAR
         unsigned int ii = 1;
@@ -540,16 +254,38 @@ void generateFullSQLiteDB(const std::string dir, const std::string type)
 // quick
 void generatePharmaToStockCsv(std::string inDir, std::string outDir)
 {
-    CSV::parseStamm(inDir + "/zurrose/artikel_stamm_zurrose.csv");
-    CSV::parseStammVoigt(inDir + "/zurrose/artikel_stamm_voigt.csv");
+    STAMM::parseCSV(inDir + "/zurrose/artikel_stamm_zurrose.csv");
+    STAMM::parseVoigtCSV(inDir + "/zurrose/artikel_stamm_voigt.csv");
     
-    CSV::createRoseStock(outDir + "/rose_stock.csv");
+    STAMM::createStockCSV(outDir + "/rose_stock.csv");
 }
 
-void generateNota(std::string inFilename, std::string outFilename)
+void generateKunden(std::string inDir, std::string outDir)
 {
-    CSV_JSON::parseNota(inFilename);
-    CSV_JSON::createNota(outFilename);
+    KUNDEN::parseCSV(inDir + "/zurrose/Kunden_alle.csv");
+
+    KUNDEN::createKundenJSON(outDir + "/Kunden_alle.json"); // .ser in Java
+    KUNDEN::createIdsJSON(outDir + "/rose_ids.json"); // .ser in Java
+}
+
+void generateAutogenerika(std::string inDir, std::string outDir)
+{
+    GENERIKA::parseCSV(inDir + "/zurrose/Autogenerika.csv");
+    GENERIKA::createJSON(outDir + "/rose_autogenerika.json"); // .ser in Java
+}
+
+// See ShoppingCartRose.java 303
+void generateDirect(std::string inDir, std::string outDir)
+{
+    DIREKT::parseCSV(inDir + "/zurrose/direct_subst_zurrose.csv");
+    DIREKT::createJSON(outDir + "/output/rose_direct_subst.json"); // .ser in Java
+}
+
+// See ShoppingCartRose.java 339
+void generateNota(std::string inDir, std::string outDir)
+{
+    NOTA::parseCSV(inDir + "/zurrose/nota_zurrose.csv");
+    NOTA::createJSON(outDir + "/output/rose_nota.json"); // .ser in Java
 }
 
 void createDB(const std::string &filename)
@@ -567,10 +303,10 @@ void createDB(const std::string &filename)
 
     sqlDb.createTable("productdb", "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, author TEXT, eancodes TEXT, pack_info_str TEXT, packages TEXT");
     sqlDb.createIndex("productdb", "idx_prod_", {"title", "author", "eancodes"});
-    
-    sqlDb.createTable("android_metadata", "locale TEXT default 'en_US'");
-    sqlDb.insertInto("android_metadata", "locale", "'en_US'");
-#endif
+    #endif
+
+    sqlDb.createTable(TABLE_NAME_ANDROID, "locale TEXT default 'en_US'");
+    sqlDb.insertInto(TABLE_NAME_ANDROID, "locale", "'en_US'");
 
     //createTable("sqlite_sequence", "");  // created automatically
 }
@@ -651,11 +387,11 @@ int main(int argc, char **argv)
 #ifdef OBSOLETE_STUFF
     // TODO: parse 'Abverkaufszahlen.csv' to generate 'rose_sales_fig.ser'
 #endif
-    // TODO: parse 'Kunden_alle.csv' to generate 'Kunden_alle.ser' and 'rose_ids.ser'
-    // TODO: parse 'Autogenerika.csv' to generate 'rose_autogenerika.ser'
-    // TODO: parse 'direct_subst_zurrose.csv' to generate 'rose_direct_subst.ser'
-    generateNota(opt_inputDirectory + "/zurrose/nota_zurrose.csv",
-                 opt_workDirectory + "/output/rose_nota.json"); // .ser in Java
+
+    generateKunden(opt_inputDirectory, opt_workDirectory + "/output");
+    generateAutogenerika(opt_inputDirectory, opt_workDirectory + "/output");
+    generateDirect(opt_inputDirectory, opt_workDirectory);
+    generateNota(opt_inputDirectory, opt_workDirectory);
 
     if ((opt_zurrose == "fulldb") || (opt_zurrose == "atcdb"))
     {
