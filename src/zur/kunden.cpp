@@ -21,6 +21,7 @@
 
 namespace KUNDEN
 {
+constexpr std::string_view CSV_SEPARATOR = ";";
 
 struct User {
     std::string gln_code;   // D
@@ -38,6 +39,7 @@ std::map<std::string, User> user_map;
 
 // Parse-phase stats
 unsigned int statsCsvNumLines = 0;
+unsigned int statsLinesWrongNumFields = 0; // TODO: use a vector to store each line number
 
 void parseCSV(const std::string &filename)
 {
@@ -56,7 +58,7 @@ void parseCSV(const std::string &filename)
                 header = false;
 #ifdef DEBUG
                 std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(";"));
+                boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR));
                 std::clog << "Number of columns: " << headerTitles.size() << std::endl;
                 auto colLetter = 'A';
                 for (auto t : headerTitles)
@@ -66,13 +68,14 @@ void parseCSV(const std::string &filename)
             }
             
             std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
+            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
             
             if (columnVector.size() != 31) {
                 std::clog
-                << "Line " << statsCsvNumLines
+                << "CSV Line " << statsCsvNumLines
                 << ", unexpected # columns: " << columnVector.size() << std::endl;
-                exit(EXIT_FAILURE);
+
+                statsLinesWrongNumFields++;
             }
             
             User user;
@@ -103,6 +106,7 @@ void parseCSV(const std::string &filename)
 #ifdef DEBUG
     std::clog
     << "Parsed " << user_map.size() << " doctors"
+    << ", bad line(s):" << statsLinesWrongNumFields
     << std::endl;
 #endif
 }

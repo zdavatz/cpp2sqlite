@@ -29,6 +29,7 @@ struct directArticle {
 
 namespace DIREKT
 {
+constexpr std::string_view CSV_SEPARATOR = ";";
 
 std::vector<directArticle> articleVec;
 
@@ -54,7 +55,7 @@ void parseCSV(const std::string &filename)
             boost::algorithm::trim_right_if(str, boost::is_any_of("\n\r"));
 
             std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
+            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
             
             if (columnVector.size() != 2) {
                 std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
@@ -81,7 +82,9 @@ void parseCSV(const std::string &filename)
               );
 
 #ifdef DEBUG
-    std::clog << "Parsed " << articleVec.size() <<  " articles" << std::endl;
+    std::clog
+    << "Parsed " << articleVec.size() <<  " articles"
+    << std::endl;
 #endif
 }
 

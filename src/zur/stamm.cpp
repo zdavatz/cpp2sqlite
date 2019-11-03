@@ -20,6 +20,8 @@
 
 namespace STAMM
 {
+constexpr std::string_view CSV_SEPARATOR1 = ";";
+constexpr std::string_view CSV_SEPARATOR2 = ";";
 
 // Parse-phase stats
 unsigned int statsVoigtNumValidLines = 0;
@@ -46,7 +48,7 @@ void parseCSV(const std::string &filename)
 
 #ifdef DEBUG
                 std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(";"));
+                boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR1));
                 std::clog << "Number of columns: " << headerTitles.size() << std::endl;
                 auto colLetter = 'A';
                 for (auto t : headerTitles)
@@ -56,7 +58,7 @@ void parseCSV(const std::string &filename)
             }
             
             std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
+            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR1));
             
             if (columnVector.size() != 21) {
                 std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
@@ -103,7 +105,7 @@ void parseVoigtCSV(const std::string &filename)
 
 #ifdef DEBUG
                 std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(";"));
+                boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR2));
                 std::clog << "Number of columns: " << headerTitles.size() << std::endl;
                 auto colLetter = 'A';
                 for (auto t : headerTitles)
@@ -113,7 +115,7 @@ void parseVoigtCSV(const std::string &filename)
             }
             
             std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
+            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR2));
             
             if (columnVector.size() != 2) {
                 std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;

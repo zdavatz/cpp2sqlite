@@ -26,6 +26,7 @@ namespace pt = boost::property_tree;
 
 namespace NOTA
 {
+constexpr std::string_view CSV_SEPARATOR = ";";
 
 struct notaPosition {
     std::string pharma_code;
@@ -62,7 +63,7 @@ void parseCSV(const std::string &filename)
             // No header
             
             std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
+            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
 
             // Variable number of columns, but in multiples of 5, plus 1
 

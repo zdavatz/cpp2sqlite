@@ -19,21 +19,45 @@
 
 #define CREATE_JSON_WITHOUT_BOOST
 
-#define WORKAROUND_CSV_HEADER_WITH_CRLF
-
-#ifdef WORKAROUND_CSV_HEADER_WITH_CRLF
-#define CSV_HEADER_LINES     5
-#else
-#define CSV_HEADER_LINES     1
-#endif
-
 namespace GENERIKA
 {
+constexpr std::string_view CSV_SEPARATOR = ";";
 
 // Parse-phase stats
 unsigned int statsNumDataLines = 0;
 
 std::vector<std::string> eanVec;
+
+// Adapted from http://mybyteofcode.blogspot.com/2010/11/parse-csv-file-with-embedded-new-lines.html
+// Retain newlines if they are within double quotes
+void getCsvLine(std::ifstream &file, std::string &line)
+{
+    bool inside_quotes(false);
+    size_t last_quote(0);
+
+    line.clear();
+    std::string buffer;
+    while (std::getline(file, buffer))
+    {
+        last_quote = buffer.find_first_of('"');
+        while (last_quote != std::string::npos)
+        {
+            inside_quotes = !inside_quotes;
+            last_quote = buffer.find_first_of('"', last_quote + 1);
+        }
+
+        line.append(buffer);
+
+        if (inside_quotes) {
+            //line.append("\n");
+            continue;
+        }
+        
+        break;
+    }
+    
+    boost::algorithm::trim_right_if(line, boost::is_any_of("\n\r"));
+}
 
 void parseCSV(const std::string &filename)
 {
@@ -41,19 +65,27 @@ void parseCSV(const std::string &filename)
 
     try {
         std::ifstream file(filename);
-        
+
+        std::string header;
+        getCsvLine(file, header);
+#ifdef DEBUG
+        std::vector<std::string> headerTitles;
+        boost::algorithm::split(headerTitles, header, boost::is_any_of(CSV_SEPARATOR));
+        std::clog << "Number of columns: " << headerTitles.size() << std::endl;
+        auto colLetter = 'A';
+        for (auto t : headerTitles)
+            std::clog << colLetter++ << "\t" << t << std::endl;
+#endif
+
         std::string str;
-        int headerLines = CSV_HEADER_LINES;
 
         // Problem: some cells in the header contain CRLF (admittedly withih "")
         while (std::getline(file, str))
-        {
-            if (headerLines-- > 0)
-                continue;
-            
+        {            
+            boost::algorithm::trim_right_if(str, boost::is_any_of("\n\r"));
             statsNumDataLines++;
             std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
+            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
             
             if (columnVector.size() != 15) {
                 std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;

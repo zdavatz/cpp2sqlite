@@ -42,6 +42,7 @@ std::vector<Article> articles;
 
 namespace CSV
 {
+constexpr std::string_view CSV_SEPARATOR = ";";
 
 // See DispoParse.java line 363 generateFullSQLiteDB()
 void parseVollstamm(const std::string &filename, const std::string type)
@@ -64,7 +65,7 @@ void parseVollstamm(const std::string &filename, const std::string type)
 
 #ifdef DEBUG
                 std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(";"));
+                boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR));
                 std::clog << "Number of columns: " << headerTitles.size() << std::endl;
                 auto colLetter = 'A';
                 for (auto t : headerTitles)
@@ -74,7 +75,7 @@ void parseVollstamm(const std::string &filename, const std::string type)
             }
             
             std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(";"));
+            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
             
             if (columnVector.size() != 21) {
                 std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
