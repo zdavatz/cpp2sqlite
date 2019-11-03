@@ -27,6 +27,7 @@
 #include "direkt.hpp"
 #include "nota.hpp"
 #include "report.hpp"
+#include "bag.hpp"
 
 namespace po = boost::program_options;
 
@@ -42,12 +43,6 @@ void getAtcMap()
 }
 #endif
 
-// See file DispoParse.java line 725
-void getSLMap()
-{
-    // TODO: parse './downloads/bag_preparations_xml.xml'
-}
-
 // See file DispoParse.java line 818
 void enhanceFlags()
 {
@@ -57,7 +52,7 @@ void enhanceFlags()
 // See file DispoParse.java line 277
 void getGalenicCodeMap()
 {
-    // TODO: parse './input/zurrose/galenic_codes_map_zurrose.csv'
+    // TODO: parse './input/zurrose/galenic_codes_map_zurrose.txt'
 }
 
 #ifdef OBSOLETE_STUFF
@@ -226,7 +221,8 @@ int main(int argc, char **argv)
         getAtcMap();
 #endif
 
-        getSLMap();
+        // See file DispoParse.java line 725 getSLMap()
+        BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", language, false);
 
         // Enhance SL map with information on"Abgabekategorie"
         enhanceFlags();

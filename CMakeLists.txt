@@ -98,13 +98,15 @@ target_link_libraries(pharma ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 #-------------------------------------------------------------------------------
 add_executable(zurrose
 	src/zur/main.cpp
+	src/bag.hpp src/bag.cpp
+	src/gtin.hpp src/gtin.cpp
+	src/report.hpp src/report.cpp
 	src/zur/Article.hpp src/zur/Article.cpp
 	src/zur/atc.hpp src/zur/atc.cpp
 	src/zur/direkt.hpp src/zur/direkt.cpp
 	src/zur/generika.hpp src/zur/generika.cpp
 	src/zur/kunden.hpp src/zur/kunden.cpp
 	src/zur/nota.hpp src/zur/nota.cpp
-	src/report.hpp src/report.cpp
 	src/zur/sqlDatabase.hpp src/zur/sqlDatabase.cpp
 	src/zur/stamm.hpp src/zur/stamm.cpp
 	src/zur/voll.hpp src/zur/voll.cpp)

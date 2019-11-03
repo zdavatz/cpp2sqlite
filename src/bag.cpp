@@ -1,6 +1,6 @@
 //
 //  bag.cpp
-//  cpp2sqlite, pharma
+//  cpp2sqlite, pharma, zurrose
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
