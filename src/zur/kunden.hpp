@@ -14,7 +14,7 @@ namespace KUNDEN
 {
 void parseCSV(const std::string &filename);
 
-void createKundenJSON(const std::string &filename);
+void createConditionsJSON(const std::string &filename);
 void createIdsJSON(const std::string &filename);
 }
 

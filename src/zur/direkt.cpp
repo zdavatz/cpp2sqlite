@@ -8,8 +8,8 @@
 //
 
 #include <iostream>
-#include <vector>
 #include <fstream>
+#include <vector>
 #include <string>
 
 #include <boost/algorithm/string.hpp>

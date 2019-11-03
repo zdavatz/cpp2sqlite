@@ -260,11 +260,12 @@ void generatePharmaToStockCsv(std::string inDir, std::string outDir)
     STAMM::createStockCSV(outDir + "/rose_stock.csv");
 }
 
+// See ShoppingCartRose.java 54 encryptCustomerMapToFile()
 void generateKunden(std::string inDir, std::string outDir)
 {
     KUNDEN::parseCSV(inDir + "/zurrose/Kunden_alle.csv");
 
-    KUNDEN::createKundenJSON(outDir + "/Kunden_alle.json"); // .ser in Java
+    KUNDEN::createConditionsJSON(outDir + "/rose_conditions.json"); // .ser in Java
     KUNDEN::createIdsJSON(outDir + "/rose_ids.json"); // .ser in Java
 }
 
