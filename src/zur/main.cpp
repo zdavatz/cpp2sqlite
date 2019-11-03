@@ -33,31 +33,72 @@ namespace po = boost::program_options;
 
 static std::string appName;
 
+std::map<int, std::string> galenicMap;
+
 #pragma mark -
 
 #ifdef OBSOLETE_STUFF
 // See file DispoParse.java line 861
-void getAtcMap()
+void getAtcMap(const std::string downloadDir)
 {
     // TODO: parse './downloads/epha_atc_codes_csv.csv'
 }
 #endif
 
+// See file DispoParse.java line 725
+void getSLMap(const std::string downloadDir,
+              const std::string &language,
+              bool verbose)
+{
+    BAG::parseXML(downloadDir + "/bag_preparations.xml", language, false);
+}
+
 // See file DispoParse.java line 818
-void enhanceFlags()
+void enhanceFlags(const std::string downloadDir)
 {
     // TODO: parse './downloads/swissmedic_packages_xlsx.xlsx'
 }
 
 // See file DispoParse.java line 277
-void getGalenicCodeMap()
+void getGalenicCodeMap(const std::string inDir)
 {
-    // TODO: parse './input/zurrose/galenic_codes_map_zurrose.txt'
+    // TODO: parse ''
+    std::string filename = inDir + "/zurrose/galenic_codes_map_zurrose.txt";
+    
+    try {
+        //std::clog << std::endl << "Reading atc TXT" << std::endl;
+        std::ifstream file(filename);
+        
+        std::string str;
+        while (std::getline(file, str)) {
+            
+            if (str.length() == 0)
+                continue; // skip empty lines
+
+            const std::string separator1(" ");
+            std::string::size_type pos1 = str.find(separator1);
+            auto galenicCode = std::stoi(str.substr(0, pos1)); // pos, len
+            auto galenicForm = str.substr(pos1+separator1.length());
+
+            galenicMap.insert(std::make_pair(galenicCode, galenicForm));
+        }
+    }
+    catch (std::exception &e) {
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << " Error " << e.what()
+        << std::endl;
+    }
+#ifdef DEBUG
+    std::clog
+    << "Parsed " << galenicMap.size() << " galenic codes"
+    << std::endl;
+#endif
 }
 
 #ifdef OBSOLETE_STUFF
 // See file DispoParse.java line 312
-void processLikes()
+void processLikes(const std::string inDir)
 {
     // TODO: parse './input/zurrose/like_db_zurrose.csv'
 }
@@ -179,7 +220,7 @@ int main(int argc, char **argv)
         opt_workDirectory = opt_inputDirectory + "/..";
     }
     
-#if 1
+    // Report
     std::string reportFilename("zurrose_report_" + opt_language + ".html");
     std::string language = opt_language;
     boost::to_upper(language);
@@ -194,8 +235,6 @@ int main(int argc, char **argv)
     
     // TODO: create index with links to expected h1 titles
     REP::html_h1("File Analysis");
-
-#endif
     
     // Parse input files
     // For French names of medicines
@@ -218,20 +257,20 @@ int main(int argc, char **argv)
         VOLL::openDB(opt_workDirectory + "/output/" + dbName);
 
 #ifdef OBSOLETE_STUFF
-        getAtcMap();
+        getAtcMap(opt_workDirectory + "/downloads");
 #endif
 
-        // See file DispoParse.java line 725 getSLMap()
-        BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", language, false);
+        // See file DispoParse.java line 725
+        getSLMap(opt_workDirectory + "/downloads", language, false);
 
         // Enhance SL map with information on"Abgabekategorie"
-        enhanceFlags();
+        enhanceFlags(opt_workDirectory + "/downloads");
 
         // Get galenic form to galenic code map
-        getGalenicCodeMap();
+        getGalenicCodeMap(opt_inputDirectory);
 
 #ifdef OBSOLETE_STUFF
-        processLikes();
+        processLikes(opt_inputDirectory);
 #endif
 
         // Process CSV file and generate Sqlite DB
@@ -244,8 +283,6 @@ int main(int argc, char **argv)
     if ((opt_zurrose == "fulldb") ||
         (opt_zurrose == "atcdb"))
     {
-//        sqlDb.destroyStatement();
-//        sqlDb.closeDB();
         VOLL::closeDB();
     }
 
