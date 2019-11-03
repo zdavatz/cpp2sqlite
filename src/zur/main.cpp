@@ -25,6 +25,7 @@
 #include "generika.hpp"
 #include "direkt.hpp"
 #include "nota.hpp"
+#include "report.hpp"
 
 #define WITH_PROGRESS_BAR
 static constexpr std::string_view TABLE_NAME_ROSE = "rosedb";
@@ -376,6 +377,24 @@ int main(int argc, char **argv)
         opt_workDirectory = opt_inputDirectory + "/..";
     }
     
+#if 1
+    std::string reportFilename("zurrose_report_" + opt_language + ".html");
+    std::string language = opt_language;
+    boost::to_upper(language);
+    //ofs2 << "<title>" << title << " Report " << language << "</title>";
+    std::string reportTitle("Zurrose Report " + language);
+    REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, flagVerbose);
+    REP::html_start_ul();
+    for (int i=0; i<argc; i++)
+        REP::html_li(argv[i]);
+
+    REP::html_end_ul();
+    
+    // TODO: create index with links to expected h1 titles
+    REP::html_h1("File Analysis");
+
+#endif
+    
     // Parse input files
     // For French names of medicines
     ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
@@ -431,6 +450,8 @@ int main(int argc, char **argv)
         sqlDb.destroyStatement();
         sqlDb.closeDB();
     }
+
+    REP::terminate();
 
     return EXIT_SUCCESS;
 }

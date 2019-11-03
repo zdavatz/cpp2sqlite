@@ -18,6 +18,7 @@
 #include <libgen.h>     // for basename()
 
 #include "kunden.hpp"
+#include "report.hpp"
 
 namespace KUNDEN
 {
@@ -39,7 +40,24 @@ std::map<std::string, User> user_map;
 
 // Parse-phase stats
 unsigned int statsCsvNumLines = 0;
-unsigned int statsLinesWrongNumFields = 0; // TODO: use a vector to store each line number
+std::vector<int> statsLinesWrongNumFields;
+
+static
+void printFileStats(const std::string &filename)
+{
+    REP::html_h2("KUNDEN");
+    //REP::html_p(std::string(basename((char *)filename.c_str())));
+    REP::html_p(filename);
+    
+    if (statsLinesWrongNumFields.size() > 0) {
+        REP::html_p("Number of lines with wrong number of fields: " + std::to_string(statsLinesWrongNumFields.size()));
+        REP::html_start_ul();
+        for (auto s : statsLinesWrongNumFields)
+            REP::html_li("Line " + std::to_string(s));
+        
+        REP::html_end_ul();
+    }
+}
 
 void parseCSV(const std::string &filename)
 {
@@ -75,7 +93,7 @@ void parseCSV(const std::string &filename)
                 << "CSV Line " << statsCsvNumLines
                 << ", unexpected # columns: " << columnVector.size() << std::endl;
 
-                statsLinesWrongNumFields++;
+                statsLinesWrongNumFields.push_back(statsCsvNumLines);
             }
             
             User user;
@@ -103,10 +121,12 @@ void parseCSV(const std::string &filename)
         << std::endl;
     }
     
+    printFileStats(filename);
+
 #ifdef DEBUG
     std::clog
     << "Parsed " << user_map.size() << " doctors"
-    << ", bad line(s):" << statsLinesWrongNumFields
+    << ", bad line(s):" << statsLinesWrongNumFields.size()
     << std::endl;
 #endif
 }

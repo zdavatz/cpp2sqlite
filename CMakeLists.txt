@@ -104,6 +104,7 @@ add_executable(zurrose
 	src/zur/generika.hpp src/zur/generika.cpp
 	src/zur/kunden.hpp src/zur/kunden.cpp
 	src/zur/nota.hpp src/zur/nota.cpp
+	src/report.hpp src/report.cpp
 	src/zur/sqlDatabase.hpp src/zur/sqlDatabase.cpp
 	src/zur/stamm.hpp src/zur/stamm.cpp)
 
