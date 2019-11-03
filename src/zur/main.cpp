@@ -21,150 +21,16 @@
 #include "Article.hpp"
 #include "atc.hpp"
 #include "stamm.hpp"
+#include "voll.hpp"
 #include "kunden.hpp"
 #include "generika.hpp"
 #include "direkt.hpp"
 #include "nota.hpp"
 #include "report.hpp"
 
-#define WITH_PROGRESS_BAR
-static constexpr std::string_view TABLE_NAME_ROSE = "rosedb";
-static constexpr std::string_view TABLE_NAME_ANDROID = "android_metadata";
-static constexpr std::string_view NO_DETAILS = "k.A.";    // keine Angaben
-
 namespace po = boost::program_options;
 
 static std::string appName;
-
-static DB::Sql sqlDb;
-std::vector<Article> articles;
-
-#pragma mark - CSV
-
-namespace CSV
-{
-constexpr std::string_view CSV_SEPARATOR = ";";
-
-// See DispoParse.java line 363 generateFullSQLiteDB()
-void parseVollstamm(const std::string &filename, const std::string type)
-{
-    std::clog << std::endl << "Reading artikel_vollstamm_zurrose CSV" << std::endl;
-
-#ifdef DEBUG
-    std::clog  << "Filename: " << filename << std::endl;
-#endif
-    
-    try {
-        std::ifstream file(filename);
-        
-        std::string str;
-        bool header = true;
-        while (std::getline(file, str)) {
-            
-            if (header) {
-                header = false;
-
-#ifdef DEBUG
-                std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR));
-                std::clog << "Number of columns: " << headerTitles.size() << std::endl;
-                auto colLetter = 'A';
-                for (auto t : headerTitles)
-                    std::clog << colLetter++ << "\t" << t << std::endl;
-#endif
-                continue;
-            }
-            
-            std::vector<std::string> columnVector;
-            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
-            
-            if (columnVector.size() != 21) {
-                std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
-                exit(EXIT_FAILURE);
-            }
-
-            Article a;
-            a.pharma_code = columnVector[0]; // A
-            a.pack_title = columnVector[1];
-            
-            a.ean_code = columnVector[2];   // C
-            // TODO: a.flags = ...
-            // TODO: a.regnr = ...
-
-            a.likes = 0; // TODO:
-
-            a.availability = columnVector[3];
-            
-            // TODO: columnVector[4]; // E unused ?
-
-            a.pack_size = std::stoi(columnVector[5]);
-            // TODO: if 0 parse the size from the title
-            
-            a.therapy_code = columnVector[6];
-            if (a.therapy_code.size() == 0)
-                a.therapy_code = NO_DETAILS;
-
-            a.atc_code = boost::to_upper_copy<std::string>(columnVector[7]); // H
-            if (a.atc_code.size() > 0) {
-                a.atc_class = ATC::getTextByAtc(a.atc_code); // Java uses epha_atc_codes_csv.csv instead
-            }
-            else {
-                a.atc_code = NO_DETAILS;
-                a.atc_class = NO_DETAILS;
-            }
-
-            a.stock = std::stoi(columnVector[8]); // I
-            
-            a.rose_supplier = columnVector[9]; // J
-            
-            std::string gal = columnVector[10]; // K
-            a.galen_form = gal;
-            a.galen_code = gal; // TODO: m_galenic_code_to_form_bimap
-            
-            a.pack_unit = columnVector[11]; // L
-            a.rose_base_price = columnVector[12]; // M TODO: see bag formatPriceAsMoney
-            
-            std::string ean = columnVector[13];  // N TODO: check that length is 13
-            a.replace_ean_code = ean;
-
-            a.replace_pharma_code = columnVector[14]; // O
-            
-            a.off_the_market = (boost::to_lower_copy<std::string>(columnVector[15]) == "ja"); // P
-            a.npl_article = (boost::to_lower_copy<std::string>(columnVector[16]) == "ja"); // Q
-
-            // TODO: use ean and m_bag_public_price_map
-            a.public_price = columnVector[17]; // R
-            //a.exfactory_price = ...
-            
-            // Column S unused ?
-            
-            a.dlk_flag = boost::contains(columnVector[19], "100%"); // T
-            a.pack_title_FR = columnVector[20]; // U
-
-            if (type == "fulldb") {
-                articles.push_back(a);
-            }
-            else if ((type == "atcdb") &&
-                     (a.atc_code.size() > 0) &&
-                     a.atc_code != NO_DETAILS) {
-                // Add only products which have an ATC code
-                articles.push_back(a);
-            }
-        }  // while
-    }
-    catch (std::exception &e) {
-        std::cerr
-        << basename((char *)__FILE__) << ":" << __LINE__
-        << " Error " << e.what()
-        << std::endl;
-    }
-    
-#ifdef DEBUG
-    std::clog << "Parsed " << articles.size() << " articles" << std::endl;
-#endif
-}
-
-} // namespace CSV
 
 #pragma mark -
 
@@ -206,50 +72,8 @@ void processLikes()
 // fulldb,atcdb
 void generateFullSQLiteDB(const std::string inDir, const std::string type)
 {
-    // TODO: use type
-    CSV::parseVollstamm(inDir + "/zurrose/artikel_vollstamm_zurrose.csv", type);
-    
-#ifdef WITH_PROGRESS_BAR
-        unsigned int ii = 1;
-        int n = articles.size();
-#endif
-        for (auto a : articles) {
-            
-#ifdef WITH_PROGRESS_BAR
-            // Show progress
-            if ((ii++ % 100) == 0)
-                std::cerr << "\r" << 100*ii/n << " % ";
-#endif
-            sqlDb.bindText(1, a.pack_title);
-            sqlDb.bindInt(2, a.pack_size);
-            sqlDb.bindText(3, a.galen_form);
-            sqlDb.bindText(4, a.pack_unit);
-            sqlDb.bindText(5, a.ean_code + ";" + a.regnr);
-            sqlDb.bindText(6, a.pharma_code);
-            sqlDb.bindText(7, a.atc_code + ";" + a.atc_class);
-            sqlDb.bindText(8, a.therapy_code);
-            sqlDb.bindInt(9, a.stock);
-            sqlDb.bindText(10, a.rose_base_price);
-            sqlDb.bindText(11, a.availability);
-            sqlDb.bindText(12, a.rose_supplier);
-            sqlDb.bindInt(13, a.likes);
-            sqlDb.bindText(14, a.replace_ean_code);
-            sqlDb.bindText(15, a.replace_pharma_code);
-            sqlDb.bindBool(16, a.off_the_market);
-            sqlDb.bindText(17, a.flags);
-            sqlDb.bindBool(18, a.npl_article);
-            sqlDb.bindText(19, a.public_price);
-            sqlDb.bindText(20, a.exfactory_price);
-            sqlDb.bindBool(21, a.dlk_flag);
-            sqlDb.bindText(22, a.pack_title_FR);
-            sqlDb.bindText(23, a.galen_code);
-
-            sqlDb.runStatement(TABLE_NAME_ROSE);
-        } // for
-        
-#ifdef WITH_PROGRESS_BAR
-        std::cerr << "\r100 %" << std::endl;
-#endif
+    VOLL::parseCSV(inDir + "/zurrose/artikel_vollstamm_zurrose.csv", type);
+    VOLL::createDB();
 }
 
 // See file DispoParse.java line 582
@@ -290,23 +114,6 @@ void generateNota(std::string inDir, std::string outDir)
 {
     NOTA::parseCSV(inDir + "/zurrose/nota_zurrose.csv");
     NOTA::createJSON(outDir + "/output/rose_nota.json"); // .ser in Java
-}
-
-void createDB(const std::string &filename)
-{
-#ifdef DEBUG
-    std::clog << "Create: " << filename << std::endl;
-#endif
-
-    sqlDb.openDB(filename);
-
-    // See file DispoParse.java line 187 createArticleDB()
-    sqlDb.createTable(TABLE_NAME_ROSE, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, size TEXT, galen TEXT, unit TEXT, eancode TEXT, pharmacode TEXT, atc TEXT, theracode TEXT, stock INTEGER, price TEXT, availability TEXT, supplier TEXT, likes INTEGER, replaceean TEXT, replacepharma TEXT, offmarket TEXT, flags TEXT, npl TEXT, publicprice TEXT, exfprice TEXT, dlkflag TEXT, title_FR TEXT, galencode TEXT");
-
-    sqlDb.createTable(TABLE_NAME_ANDROID, "locale TEXT default 'en_US'");
-    sqlDb.insertInto(TABLE_NAME_ANDROID, "locale", "'en_US'");
-
-    //createTable("sqlite_sequence", "");  // created automatically
 }
 
 void on_version()
@@ -413,14 +220,8 @@ int main(int argc, char **argv)
     {
         // See .java initSqliteDB()
         std::string dbName = (opt_zurrose == "fulldb") ? "rose_db_new_full.db" : "rose_db_new_atc_only.db";
-        
-        std::string dbFullname = opt_workDirectory + "/output/" + dbName;
+        VOLL::openDB(opt_workDirectory + "/output/" + dbName);
 
-        createDB(dbFullname);
-        
-        sqlDb.prepareStatement(TABLE_NAME_ROSE,
-                               "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
-        
 #ifdef OBSOLETE_STUFF
         getAtcMap();
 #endif
@@ -447,8 +248,9 @@ int main(int argc, char **argv)
     if ((opt_zurrose == "fulldb") ||
         (opt_zurrose == "atcdb"))
     {
-        sqlDb.destroyStatement();
-        sqlDb.closeDB();
+//        sqlDb.destroyStatement();
+//        sqlDb.closeDB();
+        VOLL::closeDB();
     }
 
     REP::terminate();

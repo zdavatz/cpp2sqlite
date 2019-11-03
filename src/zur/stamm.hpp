@@ -23,4 +23,4 @@ void parseVoigtCSV(const std::string &filename);
 void createStockCSV(const std::string &filename);
 }
 
-#endif /* nota_hpp */
+#endif /* stamm_hpp */
