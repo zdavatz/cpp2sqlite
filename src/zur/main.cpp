@@ -62,11 +62,14 @@ void enhanceFlags(const std::string downloadDir)
 // See file DispoParse.java line 277
 void getGalenicCodeMap(const std::string inDir)
 {
-    // TODO: parse ''
+#if 0
+    // TODO: GALEN::parseTXT(inDir + "/zurrose/galenic_codes_map_zurrose.txt");
+#else
     std::string filename = inDir + "/zurrose/galenic_codes_map_zurrose.txt";
     
+    std::clog << std::endl << "Reading " << filename << std::endl;
+    
     try {
-        //std::clog << std::endl << "Reading atc TXT" << std::endl;
         std::ifstream file(filename);
         
         std::string str;
@@ -93,6 +96,7 @@ void getGalenicCodeMap(const std::string inDir)
     std::clog
     << "Parsed " << galenicMap.size() << " galenic codes"
     << std::endl;
+#endif
 #endif
 }
 
@@ -127,29 +131,29 @@ void generateKunden(std::string inDir, std::string outDir)
 {
     KUNDEN::parseCSV(inDir + "/zurrose/Kunden_alle.csv");
 
-    KUNDEN::createConditionsJSON(outDir + "/rose_conditions.json"); // .ser in Java
-    KUNDEN::createIdsJSON(outDir + "/rose_ids.json"); // .ser in Java
+    KUNDEN::createConditionsJSON(outDir + "/rose_conditions.json");
+    KUNDEN::createIdsJSON(outDir + "/rose_ids.json");
 }
 
 // See ShoppingCartRose.java 260 encryptAutoGenerikaToFile()
 void generateAutogenerika(std::string inDir, std::string outDir)
 {
     GENERIKA::parseCSV(inDir + "/zurrose/Autogenerika.csv");
-    GENERIKA::createJSON(outDir + "/rose_autogenerika.json"); // .ser in Java
+    GENERIKA::createJSON(outDir + "/rose_autogenerika.json");
 }
 
 // See ShoppingCartRose.java 303 encryptDirectSubstToFile()
 void generateDirect(std::string inDir, std::string outDir)
 {
     DIREKT::parseCSV(inDir + "/zurrose/direct_subst_zurrose.csv");
-    DIREKT::createJSON(outDir + "/output/rose_direct_subst.json"); // .ser in Java
+    DIREKT::createJSON(outDir + "/output/rose_direct_subst.json");
 }
 
 // See ShoppingCartRose.java 339 encryptNotaToFile()
 void generateNota(std::string inDir, std::string outDir)
 {
     NOTA::parseCSV(inDir + "/zurrose/nota_zurrose.csv");
-    NOTA::createJSON(outDir + "/output/rose_nota.json"); // .ser in Java
+    NOTA::createJSON(outDir + "/output/rose_nota.json");
 }
 
 void on_version()
