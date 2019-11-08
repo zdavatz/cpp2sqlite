@@ -2,7 +2,15 @@
 
 #STEP_GIT=true
 STEP_DOWNLOAD=true
+
+#STEP_CONFIGURE_XLNT=true
+#STEP_BUILD_XLNT=true
+
+#STEP_CONFIGURE_JSON=true
+#STEP_BUILD_JSON=true
+
 STEP_BUILD_APPS=true
+
 STEP_RUN_C2S=true
 STEP_RUN_PHARMA=true
 #STEP_DEEPL_INTERACTIONS=true
@@ -11,7 +19,18 @@ STEP_RUN_PHARMA=true
 #-------------------------------------------------------------------------------
 SRC_DIR=$(pwd)/..
 BLD_DIR="$SRC_DIR/build"
-BIN_DIR=/usr/local/bin/
+BIN_DIR=/usr/local/bin
+
+SRC_XLNT=$SRC_DIR/xlnt
+SRC_JSON=$SRC_DIR/json
+
+BLD_XLNT=$BLD_DIR/xlnt
+BLD_JSON=$BLD_DIR/json
+BLD_APPS=$BLD_DIR
+
+BIN_XLNT=$BIN_DIR
+BIN_JSON=$BIN_DIR
+BIN_APPS=$BIN_DIR
 
 #-------------------------------------------------------------------------------
 if [ $STEP_GIT ] ; then
@@ -28,14 +47,44 @@ if [ $STEP_DOWNLOAD ] ; then
 fi
 
 #-------------------------------------------------------------------------------
+if [ $STEP_CONFIGURE_XLNT ] ; then
+mkdir -p $BLD_XLNT ; cd $BLD_XLNT
+$CMAKE -G"$GENERATOR" \
+	-D STATIC=ON \
+	-D SAMPLES=ON \
+	-D CMAKE_INSTALL_PREFIX=$BIN_XLNT \
+	-D CMAKE_BUILD_TYPE=$BUILD_TYPE \
+	$SRC_XLNT
+fi
+
+if [ $STEP_BUILD_XLNT ] ; then
+	cd $BLD_XLNT
+	make $MAKE_FLAGS
+    make install
+fi
+
+#------------------------------------------------------------------------------
+if [ $STEP_CONFIGURE_JSON ] ; then
+mkdir -p $BLD_JSON ; cd $BLD_JSON
+$CMAKE -G"$GENERATOR" \
+	-D CMAKE_INSTALL_PREFIX=$BIN_JSON \
+	-D CMAKE_BUILD_TYPE=$BUILD_TYPE \
+	$SRC_JSON
+fi
+
+if [ $STEP_BUILD_JSON ] ; then
+	cd $BLD_JSON
+	make $MAKE_FLAGS
+    make install
+fi
+
+#-------------------------------------------------------------------------------
 if [ $STEP_BUILD_APPS ] ; then
-BIN_XLNT=/usr/local
-rm -rf $BLD_DIR
-mkdir -p $BLD_DIR
-cd $BLD_DIR
+rm -rf $BLD_APPS
+mkdir -p $BLD_APPS ; cd $BLD_APPS
 cmake -G"Unix Makefiles" \
     -D CMAKE_BUILD_TYPE=Release \
-    -D CMAKE_INSTALL_PREFIX=$BIN_DIR \
+    -D CMAKE_INSTALL_PREFIX=$BIN_APPS \
     -D XLNT_DIR=$BIN_XLNT \
 	-D JSON_DIR=$BIN_JSON \
     $SRC_DIR
@@ -46,14 +95,14 @@ fi
 
 #-------------------------------------------------------------------------------
 if [ $STEP_RUN_C2S ] ; then
-cd $BLD_DIR  # it should be $BIN_DIR otherwise there is no point in doing make install
+cd $BLD_APPS  # it should be $BIN_APPS otherwise there is no point in doing make install
 time ./cpp2sqlite --verbose --lang=fr --inDir $SRC_DIR/input&
 time ./cpp2sqlite --verbose --inDir $SRC_DIR/input&
 fi
 
 #-------------------------------------------------------------------------------
 if [ $STEP_RUN_PHARMA ] ; then
-cd $BLD_DIR
+cd $BLD_APPS
 ./pharma --inDir $SRC_DIR/input
 fi
 

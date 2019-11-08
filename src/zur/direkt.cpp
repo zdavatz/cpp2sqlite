@@ -48,7 +48,7 @@ void parseCSV(const std::string &filename)
         while (std::getline(file, str))
         {
             if (header) {
-                header = false;
+                header = false; // 1 line header
                 continue;
             }
             

@@ -133,6 +133,11 @@ void printFileStats(const std::string &filename)
     }
 }
 
+// The original input file is ISO-8859-1 encoded
+// Some columns (for example R) might contain "extended ASCII" characters
+// possibly requiring "escaping" when written out with typed JSON module
+// This can be avoided by converting the input file to UTF8 before using it here
+//  $ iconv -f ISO-8859-1 -t UTF-8 Kunden_alle.csv
 void parseCSV(const std::string &filename, bool dumpHeader)
 {
     std::clog << std::endl << "Reading " << filename << std::endl;
@@ -206,8 +211,6 @@ void parseCSV(const std::string &filename, bool dumpHeader)
             user.gln_code = gln_code;
             user.name1 = columnVector[14];      // O
 
-            // Column R might contain extended ASCII characters
-            // possibly requiring "escaping" when written out with typed JSON
             user.street = columnVector[17];     // R
 
             user.zip = columnVector[19];        // T
@@ -338,7 +341,8 @@ void createConditionsJSON(const std::string &filename)
     }
     
     std::ofstream out(filename);
-    out << tree.dump(1, '\t', false, nlohmann::json::error_handler_t::replace);
+    out << tree.dump(1, '\t');          // UTF-8
+    //out << tree.dump(1, '\t', true);  // ASCII with escaped UTF-8 characters, like Java
     out.close();
 }
 
