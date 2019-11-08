@@ -49,7 +49,7 @@ fi
 #-------------------------------------------------------------------------------
 if [ $STEP_CONFIGURE_XLNT ] ; then
 mkdir -p $BLD_XLNT ; cd $BLD_XLNT
-$CMAKE -G"$GENERATOR" \
+cmake -G"$GENERATOR" \
 	-D STATIC=ON \
 	-D SAMPLES=ON \
 	-D CMAKE_INSTALL_PREFIX=$BIN_XLNT \
@@ -66,7 +66,7 @@ fi
 #------------------------------------------------------------------------------
 if [ $STEP_CONFIGURE_JSON ] ; then
 mkdir -p $BLD_JSON ; cd $BLD_JSON
-$CMAKE -G"$GENERATOR" \
+cmake -G"$GENERATOR" \
 	-D CMAKE_INSTALL_PREFIX=$BIN_JSON \
 	-D CMAKE_BUILD_TYPE=$BUILD_TYPE \
 	$SRC_JSON
