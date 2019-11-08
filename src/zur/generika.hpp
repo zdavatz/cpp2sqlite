@@ -12,7 +12,7 @@
 
 namespace GENERIKA
 {
-void parseCSV(const std::string &filename);
+void parseCSV(const std::string &filename, bool dumpHeader = false);
 void createJSON(const std::string &filename);
 }
 

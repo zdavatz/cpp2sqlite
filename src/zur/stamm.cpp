@@ -32,7 +32,7 @@ unsigned int statsVoigtMapUpdates = 0;
 
 std::map<std::string, stockStruct> pharmaStockMap;
 
-void parseCSV(const std::string &filename)
+void parseCSV(const std::string &filename, bool dumpHeader)
 {
     std::clog << std::endl << "Reading " << filename << std::endl;
 
@@ -46,14 +46,18 @@ void parseCSV(const std::string &filename)
             if (header) {
                 header = false;
 
-#ifdef DEBUG
-                std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR1));
-                std::clog << "Number of columns: " << headerTitles.size() << std::endl;
-                auto colLetter = 'A';
-                for (auto t : headerTitles)
-                    std::clog << colLetter++ << "\t" << t << std::endl;
-#endif
+                if (dumpHeader) {
+                    std::ofstream outHeader(filename + ".header.txt");
+                    std::vector<std::string> headerTitles;
+                    boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR1));
+                    outHeader << "Number of columns: " << headerTitles.size() << std::endl;
+                    auto colLetter = 'A';
+                    for (auto t : headerTitles)
+                        outHeader << colLetter++ << "\t" << t << std::endl;
+
+                    outHeader.close();
+                }
+
                 continue;
             }
             
@@ -85,9 +89,9 @@ void parseCSV(const std::string &filename)
 #endif
 }
 
-void parseVoigtCSV(const std::string &filename)
+void parseVoigtCSV(const std::string &filename, bool dumpHeader)
 {
-    std::clog << std::endl << "Reading artikel_stamm_voigt CSV" << std::endl;
+    std::clog << std::endl << "Reading " << filename << std::endl;
 
     try {
         std::ifstream file(filename);
@@ -103,14 +107,18 @@ void parseVoigtCSV(const std::string &filename)
             if (header) {
                 header = false;
 
-#ifdef DEBUG
-                std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR2));
-                std::clog << "Number of columns: " << headerTitles.size() << std::endl;
-                auto colLetter = 'A';
-                for (auto t : headerTitles)
-                    std::clog << colLetter++ << "\t" << t << std::endl;
-#endif
+                if (dumpHeader) {
+                    std::ofstream outHeader(filename + ".header.txt");
+                    std::vector<std::string> headerTitles;
+                    boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR2));
+                    outHeader << "Number of columns: " << headerTitles.size() << std::endl;
+                    auto colLetter = 'A';
+                    for (auto t : headerTitles)
+                        outHeader << colLetter++ << "\t" << t << std::endl;
+
+                    outHeader.close();
+                }
+
                 continue;
             }
             

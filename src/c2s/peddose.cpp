@@ -184,7 +184,7 @@ void parseXML(const std::string &filename,
     pt::ptree tree;
     
     try {
-        std::clog << std::endl << "Reading Ped XML" << std::endl;
+        std::clog << std::endl << "Reading " << filename << std::endl;
         pt::read_xml(filename, tree);
     }
     catch (std::exception &e) {

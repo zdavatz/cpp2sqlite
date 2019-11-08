@@ -17,8 +17,8 @@ struct stockStruct {
 
 namespace STAMM
 {
-void parseCSV(const std::string &filename);
-void parseVoigtCSV(const std::string &filename);
+void parseCSV(const std::string &filename, bool dumpHeader = false);
+void parseVoigtCSV(const std::string &filename, bool dumpHeader = false);
 
 void createStockCSV(const std::string &filename);
 }

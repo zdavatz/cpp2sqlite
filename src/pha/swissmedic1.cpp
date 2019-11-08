@@ -153,7 +153,7 @@ void parseXLXS(const std::string &filename)
     
     auto date_format = wb.create_format().number_format(xlnt::number_format{"dd.mm.yyyy"}, xlnt::optional<bool>(true));
 
-    std::clog << std::endl << "Reading swissmedic XLSX" << std::endl;
+    std::clog << std::endl << "Reading " << filename << std::endl;
 
     unsigned int skipHeaderCount = 0;
     for (auto row : ws.rows(false)) {

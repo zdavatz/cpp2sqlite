@@ -33,7 +33,7 @@ void parseXLXS(const std::string &filename)
     wb.load(filename);
     auto ws = wb.active_sheet();
     
-    std::clog << std::endl << "Reading swissmedic extended XLSX" << std::endl;
+    std::clog << std::endl << "Reading " << filename << std::endl;
     
     unsigned int skipHeaderCount = 0;
     for (auto row : ws.rows(false)) {

@@ -59,7 +59,7 @@ void getCsvLine(std::ifstream &file, std::string &line)
     boost::algorithm::trim_right_if(line, boost::is_any_of("\n\r"));
 }
 
-void parseCSV(const std::string &filename)
+void parseCSV(const std::string &filename, bool dumpHeader)
 {
     std::clog << std::endl << "Reading " << filename << std::endl;
 
@@ -68,14 +68,18 @@ void parseCSV(const std::string &filename)
 
         std::string header;
         getCsvLine(file, header);
-#ifdef DEBUG
-        std::vector<std::string> headerTitles;
-        boost::algorithm::split(headerTitles, header, boost::is_any_of(CSV_SEPARATOR));
-        std::clog << "Number of columns: " << headerTitles.size() << std::endl;
-        auto colLetter = 'A';
-        for (auto t : headerTitles)
-            std::clog << colLetter++ << "\t" << t << std::endl;
-#endif
+
+        if (dumpHeader) {
+            std::ofstream outHeader(filename + ".header.txt");
+            std::vector<std::string> headerTitles;
+            boost::algorithm::split(headerTitles, header, boost::is_any_of(CSV_SEPARATOR));
+            outHeader << "Number of columns: " << headerTitles.size() << std::endl;
+            auto colLetter = 'A';
+            for (auto t : headerTitles)
+                outHeader << colLetter++ << "\t" << t << std::endl;
+            
+            outHeader.close();
+        }
 
         std::string str;
 

@@ -1,3 +1,7 @@
 [submodule "ean13"]
 	path = src/c2s/ean13
 	url = https://github.com/ywesee/BarcodeGenerator.git
+
+[submodule "json"]
+	path = json
+	url = https://github.com/nlohmann/json.git

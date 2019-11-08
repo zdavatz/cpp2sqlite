@@ -47,7 +47,7 @@ void parseJSON(const std::string &filename, bool verbose)
     pt::ptree tree;
     
     try {
-        std::clog << "Reading epha JSON" << std::endl;
+        std::clog << std::endl << "Reading " << filename << std::endl;
         pt::read_json(filename, tree);
     }
     catch (std::exception &e) {

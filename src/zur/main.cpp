@@ -56,14 +56,14 @@ void getSLMap(const std::string downloadDir,
 // See file DispoParse.java line 818
 void enhanceFlags(const std::string downloadDir)
 {
-    // TODO: parse './downloads/swissmedic_packages_xlsx.xlsx'
+    // TODO: parse './downloads/swissmedic_packages.xlsx'
 }
 
 // See file DispoParse.java line 277
 void getGalenicCodeMap(const std::string inDir)
 {
 #if 0
-    // TODO: GALEN::parseTXT(inDir + "/zurrose/galenic_codes_map_zurrose.txt");
+    // TODO: refactor GALEN::parseTXT(inDir + "/zurrose/galenic_codes_map_zurrose.txt");
 #else
     std::string filename = inDir + "/zurrose/galenic_codes_map_zurrose.txt";
     
@@ -257,7 +257,7 @@ int main(int argc, char **argv)
     if ((opt_zurrose == "fulldb") || (opt_zurrose == "atcdb"))
     {
         // See .java initSqliteDB()
-        std::string dbName = (opt_zurrose == "fulldb") ? "rose_db_new_full.db" : "rose_db_new_atc_only.db";
+        std::string dbName = (opt_zurrose == "fulldb") ? "rose_db_full.db" : "rose_db_atc_only.db";
         VOLL::openDB(opt_workDirectory + "/output/" + dbName);
 
 #ifdef OBSOLETE_STUFF

@@ -13,9 +13,13 @@
 #include <vector>
 #include <map>
 
+// For "all-string" JSON
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+
+// For "typed" JSON
+#include <nlohmann/json.hpp>
 
 #include <libgen.h>     // for basename()
 
@@ -129,10 +133,10 @@ void printFileStats(const std::string &filename)
     }
 }
 
-void parseCSV(const std::string &filename)
+void parseCSV(const std::string &filename, bool dumpHeader)
 {
     std::clog << std::endl << "Reading " << filename << std::endl;
-
+   
     try {
         std::ifstream file(filename);
         
@@ -145,24 +149,29 @@ void parseCSV(const std::string &filename)
 
             if (header) {
                 header = false;
-#ifdef DEBUG
-                std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR));
-                std::clog << "Number of columns: " << headerTitles.size() << std::endl;
-                auto colLetter1 = ' ';
-                auto colLetter2 = 'A';
-                int index = 0;
-                for (auto t : headerTitles) {
-                    std::clog << index++ << ") " << colLetter1 << colLetter2 << "\t" << t << std::endl;
-                    if (colLetter2++ == 'Z') {
-                        colLetter2 = 'A';
-                        if (colLetter1 == ' ')
-                            colLetter1 = 'A';
-                        else
-                            colLetter1++;
+
+                if (dumpHeader) {
+                    std::ofstream outHeader(filename + ".header.txt");
+                    std::vector<std::string> headerTitles;
+                    boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR));
+                    outHeader << "Number of columns: " << headerTitles.size() << std::endl;
+                    auto colLetter1 = ' ';
+                    auto colLetter2 = 'A';
+                    int index = 0;
+                    for (auto t : headerTitles) {
+                        outHeader << index++ << ") " << colLetter1 << colLetter2 << "\t" << t << std::endl;
+                        if (colLetter2++ == 'Z') {
+                            colLetter2 = 'A';
+                            if (colLetter1 == ' ')
+                                colLetter1 = 'A';
+                            else
+                                colLetter1++;
+                        }
                     }
+
+                    outHeader.close();
                 }
-#endif
+
                 continue;
             }
             
@@ -196,7 +205,11 @@ void parseCSV(const std::string &filename)
             user.rose_id = columnVector[0];     // A
             user.gln_code = gln_code;
             user.name1 = columnVector[14];      // O
+
+            // Column R might contain extended ASCII characters
+            // possibly requiring "escaping" when written out with typed JSON
             user.street = columnVector[17];     // R
+
             user.zip = columnVector[19];        // T
             user.city = columnVector[20];       // U
             user.email = columnVector[21];      // V
@@ -255,75 +268,78 @@ void parseCSV(const std::string &filename)
 void createConditionsJSON(const std::string &filename)
 {
     std::clog << "Writing " << filename << std::endl;
-    pt::ptree tree;
+
+    nlohmann::json tree;
 
     for (auto u : user_map)
     {
-        pt::ptree child;
-        child.put("addr_type", u.second.addr_type);
-        child.put("bet_mittel", u.second.bet_mittel);
-        child.put("bm_type", u.second.bm_type);
-        child.put("capabilities", u.second.capabilities);
-        child.put("category", u.second.category);
-        child.put("city", u.second.city);
-        child.put("country", u.second.country);
+        nlohmann::json child;
+        child["addr_type"] = u.second.addr_type;
+        child["bet_mittel"] = u.second.bet_mittel;
+        child["bm_type"] = u.second.bm_type;
+        child["capabilities"] = u.second.capabilities;
+        child["category"] = u.second.category;
+        child["city"] = u.second.city;
+        child["country"] = u.second.country;
 
-        pt::ptree dlkChild;
-        dlkChild.put("helvepharm", u.second.dlk_map.helvepharm);
-        dlkChild.put("mepha", u.second.dlk_map.mepha);
-        dlkChild.put("sandoz", u.second.dlk_map.sandoz);
-        dlkChild.put("spirig", u.second.dlk_map.spirig);
-        child.add_child("dlk_map", dlkChild);
+        nlohmann::json dlkChild;
+        dlkChild["helvepharm"] = u.second.dlk_map.helvepharm;
+        dlkChild["mepha"] = u.second.dlk_map.mepha;
+        dlkChild["sandoz"] = u.second.dlk_map.sandoz;
+        dlkChild["spirig"] = u.second.dlk_map.spirig;
+        child["dlk_map"] = dlkChild;
+        
+        child["email"] = u.second.email;
+        
+        nlohmann::json expensesChild;
+        expensesChild["helvepharm"] = u.second.expenses_map.helvepharm;
+        expensesChild["mepha"] = u.second.expenses_map.mepha;
+        expensesChild["sandoz"] = u.second.expenses_map.sandoz;
+        expensesChild["spirig"] = u.second.expenses_map.spirig;
+        child["expenses_map"] = expensesChild;
 
-        child.put("email", u.second.email);
+        child["fax"] = u.second.fax;
+        child["first_name"] = u.second.first_name;
+        child["gln_code"] = u.second.gln_code;
+        child["ideale_id"] = u.second.ideale_id;
+        child["is_human"] = u.second.is_human;
+        child["last_name"] = u.second.last_name;
+        child["name1"] = u.second.name1;
+        child["name2"] = u.second.name2;
+        child["name3"] = u.second.name3;
+        child["number"] = u.second.number;
+        child["owner"] = u.second.owner;
+        child["phone"] = u.second.phone;
 
-        pt::ptree expensesChild;
-        expensesChild.put("helvepharm", u.second.expenses_map.helvepharm);
-        expensesChild.put("mepha", u.second.expenses_map.mepha);
-        expensesChild.put("sandoz", u.second.expenses_map.sandoz);
-        expensesChild.put("spirig", u.second.expenses_map.spirig);
-        child.add_child("expenses_map", expensesChild);
+        nlohmann::json rebateChild;
+        rebateChild["helvepharm"] = u.second.rebate_map.helvepharm;
+        rebateChild["mepha"] = u.second.rebate_map.mepha;
+        rebateChild["sandoz"] = u.second.rebate_map.sandoz;
+        rebateChild["spirig"] = u.second.rebate_map.spirig;
+        child["rebate_map"] = rebateChild;
 
-        child.put("fax", u.second.fax);
-        child.put("first_name", u.second.first_name);
-        child.put("gln_code", u.second.gln_code);
-        child.put("ideale_id", u.second.ideale_id);
-        child.put("is_human", u.second.is_human);
-        child.put("last_name", u.second.last_name);
-        child.put("name1", u.second.name1);
-        child.put("name2", u.second.name2);
-        child.put("name3", u.second.name3);
-        child.put("number", u.second.number);
-        child.put("owner", u.second.owner);
-        child.put("phone", u.second.phone);
-
-        pt::ptree rebateChild;
-        rebateChild.put("helvepharm", u.second.rebate_map.helvepharm);
-        rebateChild.put("mepha", u.second.rebate_map.mepha);
-        rebateChild.put("sandoz", u.second.rebate_map.sandoz);
-        rebateChild.put("spirig", u.second.rebate_map.spirig);
-        child.add_child("rebate_map", rebateChild);
-
-        child.put("revenue", u.second.revenue);
-        child.put("sap_id", u.second.sap_id);
-        child.put("selbst_disp", u.second.selbst_disp);
-        child.put("special_rebate", u.second.special_rebate);
-        child.put("specialities", u.second.specialities);
-        child.put("status", u.second.status);
-        child.put("street", u.second.street);
-        child.put("title", u.second.title);
-        child.put("top_customer", u.second.top_customer);
-        child.put("xpris_id", u.second.xpris_id);
-        child.put("zip", u.second.zip);
+        child["revenue"] = u.second.revenue;
+        child["sap_id"] = u.second.sap_id;
+        child["selbst_disp"] = u.second.selbst_disp;
+        child["special_rebate"] = u.second.special_rebate;
+        child["specialities"] = u.second.specialities;
+        child["status"] = u.second.status;
+        child["street"] = u.second.street;
+        child["title"] = u.second.title;
+        child["top_customer"] = u.second.top_customer;
+        child["xpris_id"] = u.second.xpris_id;
+        child["zip"] = u.second.zip;
 
         if (u.first.length() > 0) {
-            tree.add_child(u.first, child);
+            tree[u.first] = child;
         }
         else
-            tree.add_child(u.second.rose_id, child);
+            tree[u.second.rose_id] = child;
     }
     
-    pt::write_json(filename, tree);
+    std::ofstream out(filename);
+    out << tree.dump(1, '\t', false, nlohmann::json::error_handler_t::replace);
+    out.close();
 }
 
 // See ShoppingCartRose.java 206 roseid_to_gln_map

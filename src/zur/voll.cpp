@@ -33,7 +33,8 @@ std::vector<Article> articles;
 static DB::Sql sqlDb;
 
 void parseCSV(const std::string &filename,
-              const std::string type)
+              const std::string type,
+              bool dumpHeader)
 {
     std::clog << std::endl << "Reading " << filename << std::endl;
     
@@ -47,14 +48,18 @@ void parseCSV(const std::string &filename,
             if (header) {
                 header = false;
 
-#ifdef DEBUG
-                std::vector<std::string> headerTitles;
-                boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR));
-                std::clog << "Number of columns: " << headerTitles.size() << std::endl;
-                auto colLetter = 'A';
-                for (auto t : headerTitles)
-                    std::clog << colLetter++ << "\t" << t << std::endl;
-#endif
+                if (dumpHeader) {
+                    std::ofstream outHeader(filename + ".header.txt");
+                    std::vector<std::string> headerTitles;
+                    boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR));
+                    outHeader << "Number of columns: " << headerTitles.size() << std::endl;
+                    auto colLetter = 'A';
+                    for (auto t : headerTitles)
+                        outHeader << colLetter++ << "\t" << t << std::endl;
+                    
+                    outHeader.close();
+                }
+
                 continue;
             }
             

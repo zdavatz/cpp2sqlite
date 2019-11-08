@@ -37,6 +37,7 @@ cmake -G"Unix Makefiles" \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_INSTALL_PREFIX=$BIN_DIR \
     -D XLNT_DIR=$BIN_XLNT \
+	-D JSON_DIR=$BIN_JSON \
     $SRC_DIR
 
 make -j9 all

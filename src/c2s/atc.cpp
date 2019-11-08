@@ -58,7 +58,7 @@ void parseTXT(const std::string &filename,
 {
     statsFilename = filename;
     try {
-        std::clog << std::endl << "Reading atc TXT" << std::endl;
+        std::clog << std::endl << "Reading " << filename << std::endl;
         std::ifstream file(filename);
 
         std::string str;

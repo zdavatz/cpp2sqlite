@@ -26,7 +26,7 @@ namespace DDD
 
 void parseCSV(const std::string &filename)
 {
-    std::clog << std::endl << "Reading ddd CSV" << std::endl;
+    std::clog << std::endl << "Reading " << filename << std::endl;
 
     try {
         //std::clog << std::endl << "Reading CSV" << std::endl;
@@ -50,6 +50,7 @@ void parseCSV(const std::string &filename)
             firstColumn = columnVector[0];
             thirdColumn = columnVector[2];
 #else
+            // TODO: see GENERIKA::getCsvLine()
             std::string::size_type pos1 = str.find(";");
             firstColumn = str.substr(0, pos1); // pos, len
             auto col23 = str.substr(pos1+1);

@@ -30,6 +30,11 @@ include_directories(${XLNT_INCLUDEDIR})
 link_directories(${XLNT_LIBRARY_DIRS})
 
 #-------------------------------------------------------------------------------
+message(STATUS "JSON_DIR: ${JSON_DIR}")
+set(CMAKE_PREFIX_PATH ${JSON_DIR} ${CMAKE_PREFIX_PATH})
+find_package(nlohmann_json 3.2.0 REQUIRED)
+
+#-------------------------------------------------------------------------------
 include_directories("${CMAKE_SOURCE_DIR}")
 
 #-------------------------------------------------------------------------------
@@ -114,7 +119,8 @@ add_executable(zurrose
 target_include_directories(zurrose PUBLIC
 			"${CMAKE_SOURCE_DIR}/src"
 			"${CMAKE_SOURCE_DIR}/src/zur")
-target_link_libraries(zurrose ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})
+target_link_libraries(zurrose PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(zurrose PUBLIC ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})
 
 #-------------------------------------------------------------------------------
 

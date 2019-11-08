@@ -5,6 +5,7 @@ amiko_db_full_idx_de.db
 build/
 downloads/
 input/zurrose/
+json/
 output/
 scripts/passwords
 # Lines starting with '#' will be ignored2

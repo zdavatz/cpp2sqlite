@@ -12,7 +12,7 @@
 
 namespace KUNDEN
 {
-void parseCSV(const std::string &filename);
+void parseCSV(const std::string &filename, bool dumpHeader = false);
 
 void createConditionsJSON(const std::string &filename);
 void createIdsJSON(const std::string &filename);
