@@ -53,7 +53,7 @@ cmake -G"Unix Makefiles" \
 	-D STATIC=ON \
 	-D SAMPLES=ON \
 	-D CMAKE_INSTALL_PREFIX=$BIN_XLNT \
-	-D CMAKE_BUILD_TYPE=$BUILD_TYPE \
+	-D CMAKE_BUILD_TYPE=Release \
 	$SRC_XLNT
 fi
 
@@ -68,7 +68,7 @@ if [ $STEP_CONFIGURE_JSON ] ; then
 mkdir -p $BLD_JSON ; cd $BLD_JSON
 cmake -G"Unix Makefiles" \
 	-D CMAKE_INSTALL_PREFIX=$BIN_JSON \
-	-D CMAKE_BUILD_TYPE=$BUILD_TYPE \
+	-D CMAKE_BUILD_TYPE=Release \
 	$SRC_JSON
 fi
 
