@@ -53,7 +53,7 @@ if [ $STEP_CONFIGURE_XLNT ] ; then
 mkdir -p $BLD_XLNT ; cd $BLD_XLNT
 cmake -G"Unix Makefiles" \
 	-D STATIC=ON \
-	-D SAMPLES=ON \
+	-D SAMPLES=OFF \
 	-D CMAKE_INSTALL_PREFIX=$BIN_XLNT \
 	-D CMAKE_BUILD_TYPE=Release \
 	$SRC_XLNT
