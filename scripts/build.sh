@@ -17,6 +17,8 @@ STEP_RUN_PHARMA=true
 #STEP_DEEPL_SAPPINFO=true
 
 #-------------------------------------------------------------------------------
+MAKE_FLAGS="-j9 all"
+
 SRC_DIR=$(pwd)/..
 BLD_DIR="$SRC_DIR/build"
 BIN_DIR=/usr/local/bin
@@ -89,7 +91,7 @@ cmake -G"Unix Makefiles" \
 	-D JSON_DIR=$BIN_JSON \
     $SRC_DIR
 
-make -j9 all
+make $MAKE_FLAGS
 #sudo make install
 fi
 
