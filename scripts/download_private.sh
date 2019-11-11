@@ -23,22 +23,6 @@ mkdir -p $DOWNLOAD_DIR ; cd $DOWNLOAD_DIR
 #echo "OUTPUT_DIR: $OUTPUT_DIR"
 
 #-------------------------------------------------------------------------------
-function urlencode() {
-# urlencode <string>
-    old_lc_collate=$LC_COLLATE
-    LC_COLLATE=C
-local length="${#1}"
-for (( i = 0; i < length; i++ )); do
-local c="${1:i:1}"
-case $c in
-            [a-zA-Z0-9.~_-]) printf "$c" ;;
-*) printf '%%%02X' "'$c" ;;
-esac
-done
-    LC_COLLATE=$old_lc_collate
-}
-
-#-------------------------------------------------------------------------------
 # zurrose
 
 source $WD/passwords
@@ -54,7 +38,6 @@ curl -o artikel_stamm_zurrose.csv -O "${URL}"/Artikelstamm.csv --user "${USERNAM
 curl -o artikel_stamm_voigt.csv -O "${URL}"/Artikelstamm_Voigt.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
 
 # Updated every 30 minutes
-
 ISO_8859_1_FILE=artikel_temp.csv
 curl -o $ISO_8859_1_FILE -O "${URL}"/Artikelstamm_Vollstamm.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
 iconv -f ISO-8859-1 -t UTF-8 $ISO_8859_1_FILE >artikel_vollstamm_zurrose.csv
