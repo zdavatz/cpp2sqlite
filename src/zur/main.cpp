@@ -166,7 +166,8 @@ void on_version()
 
 int main(int argc, char **argv)
 {
-    appName = boost::filesystem::basename(argv[0]);
+    //appName = boost::filesystem::basename(argv[0]);
+    appName = basename(argv[0]);
 
     std::string opt_inputDirectory;
     std::string opt_workDirectory;  // for downloads subdirectory

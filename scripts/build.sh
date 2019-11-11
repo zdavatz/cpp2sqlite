@@ -9,6 +9,7 @@ STEP_DOWNLOAD=true
 #STEP_CONFIGURE_JSON=true
 #STEP_BUILD_JSON=true
 
+STEP_CONFIGURE_APPS=true
 STEP_BUILD_APPS=true
 
 STEP_RUN_C2S=true
@@ -54,6 +55,7 @@ mkdir -p $BLD_XLNT ; cd $BLD_XLNT
 cmake -G"Unix Makefiles" \
 	-D STATIC=ON \
 	-D SAMPLES=OFF \
+	-D TESTS=OFF \
 	-D CMAKE_INSTALL_PREFIX=$BIN_XLNT \
 	-D CMAKE_BUILD_TYPE=Release \
 	$SRC_XLNT
@@ -82,7 +84,7 @@ if [ $STEP_BUILD_JSON ] ; then
 fi
 
 #-------------------------------------------------------------------------------
-if [ $STEP_BUILD_APPS ] ; then
+if [ $STEP_CONFIGURE_APPS ] ; then
 rm -rf $BLD_APPS
 mkdir -p $BLD_APPS ; cd $BLD_APPS
 cmake -G"Unix Makefiles" \
@@ -91,7 +93,9 @@ cmake -G"Unix Makefiles" \
     -D XLNT_DIR=$BIN_XLNT \
 	-D JSON_DIR=$BIN_JSON \
     $SRC_DIR
+fi
 
+if [ $STEP_BUILD_APPS ] ; then
 make $MAKE_FLAGS
 #sudo make install
 fi
