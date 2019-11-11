@@ -21,7 +21,7 @@ This tool is a port of [aips2sqlite](https://github.com/zdavatz/aips2sqlite)
 See [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh)
 ## Usage
 ### cpp2sqlite
-`./cpp2sqlite --inDir ~/.software/aips2sqlite/jars/downloads/`
+`./cpp2sqlite --inDir ~/.software/cpp2sqlite/input`
 ### deepl translation
 _ run `build/sappinfo` to generate the unique language file.\
 _ comment in the line 8 of [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh#L8) to do the translations.\
