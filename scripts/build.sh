@@ -1,7 +1,8 @@
 #!/bin/bash
 
 #STEP_GIT=true
-STEP_DOWNLOAD=true
+STEP_DOWNLOAD_PUBLIC=true
+STEP_DOWNLOAD_PRIVATE=true
 
 #STEP_CONFIGURE_XLNT=true
 #STEP_BUILD_XLNT=true
@@ -46,8 +47,13 @@ popd
 fi
 
 #-------------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD ] ; then
+if [ $STEP_DOWNLOAD_PUBLIC ] ; then
 ./download.sh
+fi
+
+#-------------------------------------------------------------------------------
+if [ $STEP_DOWNLOAD_PRIVATE ] ; then
+./download_private.sh
 fi
 
 #-------------------------------------------------------------------------------
