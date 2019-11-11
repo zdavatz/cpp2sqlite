@@ -11,6 +11,7 @@ This tool is a port of [aips2sqlite](https://github.com/zdavatz/aips2sqlite)
 - gcc-7.3.1
 - [xlnt](https://github.com/tfussell/xlnt) with `cmake -DSTATIC=on`, also apply [swissmedic.patch](https://github.com/zdavatz/cpp2sqlite/files/3584890/swissmedic.patch.txt)
 - jq (Command-line JSON processor)
+- [json](https://github.com/nlohmann/json.git)
 
 ## Installation
 See [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh)
