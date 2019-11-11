@@ -62,13 +62,14 @@ fi
 if [ $STEP_BUILD_XLNT ] ; then
 	cd $BLD_XLNT
 	make $MAKE_FLAGS
-    make install
+    sudo make install
 fi
 
 #------------------------------------------------------------------------------
 if [ $STEP_CONFIGURE_JSON ] ; then
 mkdir -p $BLD_JSON ; cd $BLD_JSON
 cmake -G"Unix Makefiles" \
+	-D JSON_BuildTests=OFF \
 	-D CMAKE_INSTALL_PREFIX=$BIN_JSON \
 	-D CMAKE_BUILD_TYPE=Release \
 	$SRC_JSON
@@ -77,7 +78,7 @@ fi
 if [ $STEP_BUILD_JSON ] ; then
 	cd $BLD_JSON
 	make $MAKE_FLAGS
-    make install
+    sudo make install
 fi
 
 #-------------------------------------------------------------------------------
