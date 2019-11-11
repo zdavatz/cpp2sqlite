@@ -14,9 +14,9 @@ This tool is a port of [aips2sqlite](https://github.com/zdavatz/aips2sqlite)
 - [json](https://github.com/nlohmann/json.git)
 
 ## Installation
-  $ git clone
-  $ git submodule init
-  $ git submodule update
+$ git clone
+$ git submodule init\
+$ git submodule update\
 
 See [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh)
 ## Usage
