@@ -21,15 +21,15 @@ SRC_DIR=$(pwd)/..
 BLD_DIR="$SRC_DIR/build"
 BIN_DIR=/usr/local/bin
 
-SRC_XLNT=$SRC_DIR/xlnt
 SRC_JSON=$SRC_DIR/json
+SRC_XLNT=$SRC_DIR/xlnt
 
-BLD_XLNT=$BLD_DIR/xlnt
 BLD_JSON=$BLD_DIR/json
+BLD_XLNT=$BLD_DIR/xlnt
 BLD_APPS=$BLD_DIR
 
-BIN_XLNT=$BIN_DIR
 BIN_JSON=$BIN_DIR
+BIN_XLNT=$BIN_DIR
 BIN_APPS=$BIN_DIR
 
 #-------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ fi
 #-------------------------------------------------------------------------------
 if [ $STEP_CONFIGURE_XLNT ] ; then
 mkdir -p $BLD_XLNT ; cd $BLD_XLNT
-cmake -G"$GENERATOR" \
+cmake -G"Unix Makefiles" \
 	-D STATIC=ON \
 	-D SAMPLES=ON \
 	-D CMAKE_INSTALL_PREFIX=$BIN_XLNT \
@@ -66,7 +66,7 @@ fi
 #------------------------------------------------------------------------------
 if [ $STEP_CONFIGURE_JSON ] ; then
 mkdir -p $BLD_JSON ; cd $BLD_JSON
-cmake -G"$GENERATOR" \
+cmake -G"Unix Makefiles" \
 	-D CMAKE_INSTALL_PREFIX=$BIN_JSON \
 	-D CMAKE_BUILD_TYPE=$BUILD_TYPE \
 	$SRC_JSON
