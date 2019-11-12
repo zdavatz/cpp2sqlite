@@ -37,6 +37,9 @@ static DB::Sql sqlDb;
 // Parse-phase stats
 unsigned int statsPharmaCodeTooBig = 0;
 unsigned int statsPharmaCodeNotNumeric = 0;
+unsigned int statsEmptyGalenForm = 0;
+unsigned int statsEmptyAtcCode = 0;
+unsigned int statsTotalArticles = 0;
 
 static
 void printFileStats(const std::string &filename)
@@ -46,9 +49,12 @@ void printFileStats(const std::string &filename)
     REP::html_p(filename);
 
     REP::html_start_ul();
-    REP::html_li("Articles: " + std::to_string(articles.size()));
-    REP::html_li("pharma code > 7900000: " + std::to_string(statsPharmaCodeTooBig));
-    REP::html_li("pharma code not numeric: " + std::to_string(statsPharmaCodeNotNumeric));
+    REP::html_li("Total Articles: " + std::to_string(statsTotalArticles));
+    REP::html_li("Used Articles: " + std::to_string(articles.size()));
+    REP::html_li("Column A. 'Pharmacode' > 7900000 (skipped): " + std::to_string(statsPharmaCodeTooBig));
+    REP::html_li("Column A. 'Pharmacode' not numeric (skipped): " + std::to_string(statsPharmaCodeNotNumeric));
+    REP::html_li("Column H. 'ATC-Key' empty: " + std::to_string(statsEmptyAtcCode));
+    REP::html_li("Column K. 'Galen. Form' empty: " + std::to_string(statsEmptyGalenForm));
     REP::html_end_ul();
 }
 
@@ -84,6 +90,8 @@ void parseCSV(const std::string &filename,
                 continue;
             }
             
+            statsTotalArticles++;
+            
             std::vector<std::string> columnVector;
             boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
             
@@ -92,8 +100,10 @@ void parseCSV(const std::string &filename,
                 exit(EXIT_FAILURE);
             }
             
+            // Validate column A
+            std::string pharmaCode = columnVector[0]; // A
             try {
-                auto numericCode = std::stol(columnVector[0]);
+                auto numericCode = std::stol(pharmaCode);
                 if (numericCode > 7900000L) {
                     statsPharmaCodeTooBig++;
                     continue;
@@ -105,8 +115,17 @@ void parseCSV(const std::string &filename,
                 continue;
             }
             
+            // Validate column H
+            std::string atcCode = columnVector[7]; // H
+            if (atcCode.length() == 0)
+            {
+                statsEmptyAtcCode++;
+                if (type == "atcdb")
+                    continue;
+            }
+            
             Article a;
-            a.pharma_code = columnVector[0]; // A
+            a.pharma_code = pharmaCode;
             a.pack_title = columnVector[1];
             
             a.ean_code = columnVector[2];   // C
@@ -126,13 +145,13 @@ void parseCSV(const std::string &filename,
             if (a.therapy_code.size() == 0)
                 a.therapy_code = NO_DETAILS;
 
-            a.atc_code = boost::to_upper_copy<std::string>(columnVector[7]); // H
-            if (a.atc_code.size() > 0) {
-                a.atc_class = ATC::getTextByAtc(a.atc_code); // Java uses epha_atc_codes_csv.csv instead
-            }
-            else {
+            if (atcCode.size() == 0) {
                 a.atc_code = NO_DETAILS;
                 a.atc_class = NO_DETAILS;
+            }
+            else {
+                a.atc_code = boost::to_upper_copy<std::string>(atcCode);
+                a.atc_class = ATC::getTextByAtc(a.atc_code); // Java uses epha_atc_codes_csv.csv instead
             }
 
             a.stock = std::stoi(columnVector[8]); // I
@@ -140,13 +159,19 @@ void parseCSV(const std::string &filename,
             a.rose_supplier = columnVector[9]; // J
             
             std::string gal = columnVector[10]; // K
-            try {
-                auto numericCode = std::stoi(gal);
-                a.galen_form = GALEN::getTextByCode(numericCode);
-                a.galen_code = gal;
+            if (gal.length() == 0) {
+                statsEmptyGalenForm++;
             }
-            catch (std::exception &e) {
-                a.galen_form = gal;
+            else {
+                try {
+                    auto numericCode = std::stoi(gal);
+                    a.galen_form = GALEN::getTextByCode(numericCode);
+                    a.galen_code = gal;
+                }
+                catch (std::exception &e) {
+                    a.galen_form = gal;
+                    //a.galen_code = TODO: reverse lookup ?
+                }
             }
             
             a.pack_unit = columnVector[11]; // L
@@ -169,15 +194,7 @@ void parseCSV(const std::string &filename,
             a.dlk_flag = boost::contains(columnVector[19], "100%"); // T
             a.pack_title_FR = columnVector[20]; // U
 
-            if (type == "fulldb") {
-                articles.push_back(a);
-            }
-            else if ((type == "atcdb") &&
-                     (a.atc_code.size() > 0) &&
-                     a.atc_code != NO_DETAILS) {
-                // Add only products which have an ATC code
-                articles.push_back(a);
-            }
+            articles.push_back(a);
         }  // while
     }
     catch (std::exception &e) {
