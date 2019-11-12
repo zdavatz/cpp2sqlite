@@ -20,6 +20,7 @@
 #include "atc.hpp"
 #include "sqlDatabase.hpp"
 #include "report.hpp"
+#include "galen.hpp"
 
 #define WITH_PROGRESS_BAR
 
@@ -73,8 +74,9 @@ void parseCSV(const std::string &filename,
                     boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR));
                     outHeader << "Number of columns: " << headerTitles.size() << std::endl;
                     auto colLetter = 'A';
+                    int index = 0;
                     for (auto t : headerTitles)
-                        outHeader << colLetter++ << "\t" << t << std::endl;
+                        outHeader << index++ << ") " << colLetter++ << "\t" << t << std::endl;
                     
                     outHeader.close();
                 }
@@ -138,8 +140,14 @@ void parseCSV(const std::string &filename,
             a.rose_supplier = columnVector[9]; // J
             
             std::string gal = columnVector[10]; // K
-            a.galen_form = gal;
-            a.galen_code = gal; // TODO: m_galenic_code_to_form_bimap
+            try {
+                auto numericCode = std::stoi(gal);
+                a.galen_form = GALEN::getTextByCode(numericCode);
+                a.galen_code = gal;
+            }
+            catch (std::exception &e) {
+                a.galen_form = gal;
+            }
             
             a.pack_unit = columnVector[11]; // L
             a.rose_base_price = columnVector[12]; // M TODO: see bag formatPriceAsMoney

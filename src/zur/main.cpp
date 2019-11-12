@@ -28,12 +28,11 @@
 #include "nota.hpp"
 #include "report.hpp"
 #include "bag.hpp"
+#include "galen.hpp"
 
 namespace po = boost::program_options;
 
 static std::string appName;
-
-std::map<int, std::string> galenicMap;
 
 #pragma mark -
 
@@ -57,47 +56,6 @@ void getSLMap(const std::string downloadDir,
 void enhanceFlags(const std::string downloadDir)
 {
     // TODO: parse './downloads/swissmedic_packages.xlsx'
-}
-
-// See file DispoParse.java line 277
-void getGalenicCodeMap(const std::string inDir)
-{
-#if 0
-    // TODO: refactor GALEN::parseTXT(inDir + "/zurrose/galenic_codes_map_zurrose.txt");
-#else
-    std::string filename = inDir + "/zurrose/galenic_codes_map_zurrose.txt";
-    
-    std::clog << std::endl << "Reading " << filename << std::endl;
-    
-    try {
-        std::ifstream file(filename);
-        
-        std::string str;
-        while (std::getline(file, str)) {
-            
-            if (str.length() == 0)
-                continue; // skip empty lines
-
-            const std::string separator1(" ");
-            std::string::size_type pos1 = str.find(separator1);
-            auto galenicCode = std::stoi(str.substr(0, pos1)); // pos, len
-            auto galenicForm = str.substr(pos1+separator1.length());
-
-            galenicMap.insert(std::make_pair(galenicCode, galenicForm));
-        }
-    }
-    catch (std::exception &e) {
-        std::cerr
-        << basename((char *)__FILE__) << ":" << __LINE__
-        << " Error " << e.what()
-        << std::endl;
-    }
-#ifdef DEBUG
-    std::clog
-    << "Parsed " << galenicMap.size() << " galenic codes"
-    << std::endl;
-#endif
-#endif
 }
 
 #ifdef OBSOLETE_STUFF
@@ -271,8 +229,8 @@ int main(int argc, char **argv)
         // Enhance SL map with information on"Abgabekategorie"
         enhanceFlags(opt_workDirectory + "/downloads");
 
-        // Get galenic form to galenic code map
-        getGalenicCodeMap(opt_inputDirectory);
+        // Get galenic form to galenic code map. See file DispoParse.java line 277 getGalenicCodeMap()
+        GALEN::parseTXT(opt_inputDirectory);
 
 #ifdef OBSOLETE_STUFF
         processLikes(opt_inputDirectory);

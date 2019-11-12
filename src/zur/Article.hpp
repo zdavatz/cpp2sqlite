@@ -28,13 +28,13 @@ public:
 
     std::string rose_supplier;  // J
 
-    std::string galen_form;     // K
+    std::string galen_form {};  // K
     std::string galen_code;
 
     std::string pack_unit;      // L
     std::string rose_base_price;    // M
     std::string replace_ean_code;   // N
-    std::string replace_pharma_code; // O
+    std::string replace_pharma_code;// O
  
     std::string public_price;       // R
     std::string exfactory_price;

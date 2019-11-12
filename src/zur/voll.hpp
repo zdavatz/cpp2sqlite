@@ -14,7 +14,7 @@ namespace VOLL
 {
 void parseCSV(const std::string &filename,
               const std::string type,
-              bool dumpHeader = false);
+              bool dumpHeader = true);
 
 void openDB(const std::string &filename);
 void createDB();
