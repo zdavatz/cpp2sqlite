@@ -19,6 +19,7 @@
 #include "Article.hpp"
 #include "atc.hpp"
 #include "sqlDatabase.hpp"
+#include "report.hpp"
 
 #define WITH_PROGRESS_BAR
 
@@ -31,6 +32,24 @@ constexpr std::string_view TABLE_NAME_ANDROID = "android_metadata";
 
 std::vector<Article> articles;
 static DB::Sql sqlDb;
+
+// Parse-phase stats
+unsigned int statsPharmaCodeTooBig = 0;
+unsigned int statsPharmaCodeNotNumeric = 0;
+
+static
+void printFileStats(const std::string &filename)
+{
+    REP::html_h2("ARTIKEL");
+    //REP::html_p(std::string(basename((char *)filename.c_str())));
+    REP::html_p(filename);
+
+    REP::html_start_ul();
+    REP::html_li("Articles: " + std::to_string(articles.size()));
+    REP::html_li("pharma code > 7900000: " + std::to_string(statsPharmaCodeTooBig));
+    REP::html_li("pharma code not numeric: " + std::to_string(statsPharmaCodeNotNumeric));
+    REP::html_end_ul();
+}
 
 void parseCSV(const std::string &filename,
               const std::string type,
@@ -70,7 +89,20 @@ void parseCSV(const std::string &filename,
                 std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
                 exit(EXIT_FAILURE);
             }
-
+            
+            try {
+                auto numericCode = std::stol(columnVector[0]);
+                if (numericCode > 7900000L) {
+                    statsPharmaCodeTooBig++;
+                    continue;
+                }
+            }
+            catch (std::exception &e) {
+                statsPharmaCodeNotNumeric++;
+                //std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
+                continue;
+            }
+            
             Article a;
             a.pharma_code = columnVector[0]; // A
             a.pack_title = columnVector[1];
@@ -147,9 +179,7 @@ void parseCSV(const std::string &filename,
         << std::endl;
     }
     
-#ifdef DEBUG
-    std::clog << "Parsed " << articles.size() << " articles" << std::endl;
-#endif
+    printFileStats(filename);
 }
 
 void openDB(const std::string &filename)
