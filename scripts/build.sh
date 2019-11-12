@@ -59,12 +59,10 @@ fi
 #-------------------------------------------------------------------------------
 if [ $STEP_CONFIGURE_XLNT ] ; then
 mkdir -p $BLD_XLNT ; cd $BLD_XLNT
-COMPILER_FLAGS="$CXXFLAGS -stdlib=libc++ -std=c++11"
 cmake -G"Unix Makefiles" \
 	-D STATIC=ON \
 	-D SAMPLES=OFF \
 	-D TESTS=OFF \
-	-D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
 	-D CMAKE_INSTALL_PREFIX=$BIN_XLNT \
 	-D CMAKE_BUILD_TYPE=Release \
 	$SRC_XLNT
