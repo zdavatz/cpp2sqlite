@@ -1,6 +1,13 @@
 #!/bin/bash
 # Alex Bettarini - 22 Jan 2019
 
+STEP_DOWNLOAD_EPHA=true
+STEP_DOWNLOAD_SWISSMEDIC=true
+STEP_DOWNLOAD_REFDATA=true
+STEP_DOWNLOAD_BAG=true
+STEP_DOWNLOAD_SWISSPEDDOSE=true
+STEP_DOWNLOAD_AIPS=true
+
 WD=$(pwd)
 SRC_DIR=$(realpath ../)
 
@@ -40,22 +47,28 @@ done
 
 #-------------------------------------------------------------------------------
 # epha no longer needed
-#wget -N http://download.epha.ch/cleaned/produkte.json -O epha_products_de_json.json
+
+if [ $STEP_DOWNLOAD_EPHA ] ; then
+wget -N http://download.epha.ch/cleaned/produkte.json -O epha_products_de_json.json
+fi
 
 #-------------------------------------------------------------------------------
-# swissmedic
+
+if [ $STEP_DOWNLOAD_SWISSMEDIC ] ; then
 FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_ham.xlsx"
 wget -N $FILE1 -O swissmedic_packages.xlsx
 
 # Extended drug list
 FILE2="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/erweiterte_ham.xlsx.download.xlsx/Erweiterte_Arzneimittelliste%20HAM.xlsx"
 wget -N $FILE2
+fi
 
 #-------------------------------------------------------------------------------
-# refdata
 # see Java code, file: AllDown.java:254 function: downRefdataPharmaXml
 # https://dev.ywesee.com/Refdata/Wget
 # http://refdatabase.refdata.ch/Service/Article.asmx?op=Download
+
+if [ $STEP_DOWNLOAD_REFDATA ] ; then
 
 URL="http://refdatabase.refdata.ch"  # article and partner
 TARGET=refdata_pharma.xml
@@ -74,16 +87,20 @@ sed -i -e 's/xmlns="[^"]*"//' $TARGET
 
 rm temp.xml
 rm $TARGET-e
+fi
 
 #-------------------------------------------------------------------------------
-# bag
+
+if [ $STEP_DOWNLOAD_BAG ] ; then
 wget http://bag.e-mediat.net/SL2007.Web.External/File.axd?file=XMLPublications.zip -O XMLPublications.zip
 unzip XMLPublications.zip Preparations.xml
 mv -f Preparations.xml bag_preparations.xml
 rm XMLPublications.zip
+fi
 
 #-------------------------------------------------------------------------------
-# swisspeddose
+
+if [ $STEP_DOWNLOAD_SWISSPEDDOSE ] ; then
 
 if [ ! -f $WD/passwords ] ; then
     echo "swisspeddose passwords file not found"
@@ -109,9 +126,12 @@ wget --header "Host: db.swisspeddose.ch" \
     --keep-session-cookies \
 	"$URL/dashboard" -O dashboard.html
 
-FILENAME=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication' dashboard.html | awk -F\" '{print $4}')
+FILENAME_V1=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication-' dashboard.html | awk -F\" '{print $4}')
+FILENAME_V2=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication_v2-' dashboard.html | awk -F\" '{print $4}')
 BASENAME=swisspeddosepublication
 
+for FILENAME in $FILENAME_V1 $FILENAME_V2
+do
 wget --header "Host: db.swisspeddose.ch" \
 	--user-agent "Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0" \
 	--header "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
@@ -120,8 +140,11 @@ wget --header "Host: db.swisspeddose.ch" \
     --cookies=on \
     --load-cookies=cookiesB.txt \
     --header 'Upgrade-Insecure-Requests: 1' \
-    "${URL}${FILENAME}" \
-	-O $BASENAME.zip
+    "${URL}${FILENAME}"
+done
+
+mv $(basename -- $FILENAME_V1)  "${BASENAME}.zip"
+mv $(basename -- $FILENAME_V2)  "${BASENAME}_v2.zip"
 
 unzip $BASENAME.zip
 
@@ -133,10 +156,11 @@ rm cookies*.txt
 rm dashboard.html
 rm signed-in.html
 fi
+fi
 
 #-------------------------------------------------------------------------------
-# AIPS
 
+if [ $STEP_DOWNLOAD_AIPS ] ; then
 URL="http://download.swissmedicinfo.ch"
 TARGET=AipsDownload.zip
 
@@ -208,4 +232,4 @@ else
     rm index*
     rm cookie*.txt
 fi
-
+fi
