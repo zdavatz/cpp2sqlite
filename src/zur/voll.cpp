@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <regex>
 
 #include <boost/algorithm/string.hpp>
 
@@ -60,11 +61,22 @@ void printFileStats(const std::string &filename)
     REP::html_end_ul();
 
     if (statsLinesWrongNumFields.size() > 0) {
-        REP::html_p("Number of lines with wrong number of fields (currently skipped, but they are valid): " + std::to_string(statsLinesWrongNumFields.size()));
+        REP::html_p("Lines with wrong number of fields (currently skipped, but they are valid). Total count: " + std::to_string(statsLinesWrongNumFields.size()));
 
         if (statsLinesWrongNumFields.size() > 0)
             REP::html_div(boost::algorithm::join(statsLinesWrongNumFields, ", "));
     }
+}
+
+static
+std::string parseUnitFromTitle(const std::string &pack_title)
+{
+    std::regex rgx(R"((\d+)(\.\d+)?\s*(ml|mg|g))");  // tested at https://regex101.com
+    std::smatch match;
+    if (std::regex_search(pack_title, match, rgx))
+        return match[0];
+
+    return {};
 }
 
 void parseCSV(const std::string &filename,
@@ -119,6 +131,9 @@ void parseCSV(const std::string &filename,
             try {
                 auto numericCode = std::stol(pharmaCode);
                 if (numericCode > 7900000L) {
+                    // The file seems to be sorted by column A.
+                    // therefore all following lines will fail this validation.
+                    // We could abort parsing here, but we continue to collects stats on the file.
                     statsPharmaCodeTooBig++;
                     continue;
                 }
@@ -189,7 +204,11 @@ void parseCSV(const std::string &filename,
                 }
             }
             
+            // See file DispoParse.java line 497
             a.pack_unit = columnVector[11]; // L
+            if ((a.pack_unit.length() == 0) || (a.pack_unit == "0"))
+                a.pack_unit = parseUnitFromTitle(a.pack_title); // get it from column B
+            
             a.rose_base_price = columnVector[12]; // M TODO: see bag formatPriceAsMoney
             
             std::string ean = columnVector[13];  // N TODO: check that length is 13
