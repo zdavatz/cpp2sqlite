@@ -23,6 +23,7 @@
 #include "sqlDatabase.hpp"
 #include "report.hpp"
 #include "galen.hpp"
+#include "bag.hpp"
 
 #define WITH_PROGRESS_BAR
 
@@ -94,7 +95,10 @@ void parseCSV(const std::string &filename,
             
             boost::algorithm::trim_right_if(str, boost::is_any_of(" \n\r"));
             statsCsvLineCount++;
-            
+#ifdef DEBUG
+            if (statsCsvLineCount % 1000 == 0)
+                std::clog << ", line: " << statsCsvLineCount;
+#endif
             if (header) {
                 header = false;
 
@@ -123,6 +127,7 @@ void parseCSV(const std::string &filename,
                 << ", unexpected # columns: " << columnVector.size() << std::endl;
 
                 statsLinesWrongNumFields.push_back(std::to_string(statsCsvLineCount));
+                // TODO: retry splitting the line with a proper CSV parser
                 continue;
             }
             
@@ -157,9 +162,20 @@ void parseCSV(const std::string &filename,
             a.pharma_code = pharmaCode;
             a.pack_title = columnVector[1];
             
+            // See file DispoParse.java line 417
             a.ean_code = columnVector[2];   // C
-            // TODO: a.flags = ...
-            // TODO: a.regnr = ...
+            if (a.ean_code.length() == 13) {
+                std::string fromSwissmedic = {}; // TODO:
+                std::string cat = {}; // TODO:
+                std::string paf = BAG::getPricesAndFlags(a.ean_code, fromSwissmedic, cat); // update BAG::packMap within this GTIN
+                if (paf.length() > 0) {
+                    BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(a.ean_code); // get it from BAG::packMap
+
+                    a.flags = boost::algorithm::join(fromBag.flags, ", ") ;
+                    a.exfactory_price = fromBag.efp;
+                }
+                a.regnr = a.ean_code.substr(4, 5); // pos, len
+            }
 
             a.likes = 0; // TODO:
 
@@ -221,7 +237,7 @@ void parseCSV(const std::string &filename,
 
             // TODO: use ean and m_bag_public_price_map
             a.public_price = columnVector[17]; // R
-            //a.exfactory_price = ...
+
             
             // Column S unused ?
             

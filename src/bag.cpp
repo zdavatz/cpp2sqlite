@@ -76,6 +76,8 @@ void parseXML(const std::string &filename,
               const std::string &language,
               bool verbose)
 {
+    std::clog << std::endl << "Reading " << filename << std::endl;
+
     pt::ptree tree;
     
     std::string lan = language;
@@ -84,7 +86,6 @@ void parseXML(const std::string &filename,
     const std::string nameTag = "Name" + lan;
 
     try {
-        std::clog << std::endl << "Reading bag XML" << std::endl;
         pt::read_xml(filename, tree);
     }
     catch (std::exception &e) {

@@ -516,8 +516,8 @@ void createCSV(const std::string &outDir, bool storageColumn)
 #endif
 
         std::string cat = getCategoryPackByGtin(pv.gtin13);
-        std::string paf = BAG::getPricesAndFlags(pv.gtin13, "", cat);
-        BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13);
+        (void)BAG::getPricesAndFlags(pv.gtin13, "", cat); // update BAG::packMap within this GTIN
+        BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13); // get it from BAG::packMap
         std::string auth = SWISSMEDIC2::getAuthorizationByAtc(pv.rn5, pv.dosageNr);
         std::string storage = AIPS::getStorageByRN(pv.rn5);
         
