@@ -86,9 +86,9 @@ std::map<std::string, User> user_map;
 std::map<std::string, std::string> roseid_to_gln_map;
 
 // Parse-phase stats
-unsigned int statsCsvNumLines = 0;
+unsigned int statsCsvLineCount = 0;
 std::vector<int> statsLinesWrongNumFields;
-std::vector<std::string> statsLinesEmptyGlnVec; // strings so that they can be comveniently joined
+std::vector<std::string> statsLinesEmptyGlnVec; // strings so that they can be conveniently joined
 std::vector<int> statsLinesGlnIsOz;
 
 static
@@ -106,6 +106,10 @@ void printFileStats(const std::string &filename)
     REP::html_h2("KUNDEN");
     //REP::html_p(std::string(basename((char *)filename.c_str())));
     REP::html_p(filename);
+    
+    REP::html_start_ul();
+    REP::html_li("Total Doctors: " + std::to_string(user_map.size()));
+    REP::html_end_ul();
     
     if (statsLinesWrongNumFields.size() > 0) {
         REP::html_p("Number of lines with wrong number of fields (skipped): " + std::to_string(statsLinesWrongNumFields.size()));
@@ -150,7 +154,7 @@ void parseCSV(const std::string &filename, bool dumpHeader)
         while (std::getline(file, str))
         {
             boost::algorithm::trim_right_if(str, boost::is_any_of(" \n\r"));
-            statsCsvNumLines++;
+            statsCsvLineCount++;
 
             if (header) {
                 header = false;
@@ -185,10 +189,10 @@ void parseCSV(const std::string &filename, bool dumpHeader)
             
             if (columnVector.size() != 31) {
                 std::clog
-                << "CSV Line " << statsCsvNumLines
+                << "CSV Line " << statsCsvLineCount
                 << ", unexpected # columns: " << columnVector.size() << std::endl;
 
-                statsLinesWrongNumFields.push_back(statsCsvNumLines);
+                statsLinesWrongNumFields.push_back(statsCsvLineCount);
                 
                 // Try to recover as much as possible: assume column A and D are correct
                 roseid_to_gln_map.insert(std::make_pair(columnVector[0], columnVector[3]));
@@ -198,12 +202,12 @@ void parseCSV(const std::string &filename, bool dumpHeader)
             
             std::string gln_code = columnVector[3];    // D
             if (gln_code.length() == 0) {
-                statsLinesEmptyGlnVec.push_back(std::to_string(statsCsvNumLines));
+                statsLinesEmptyGlnVec.push_back(std::to_string(statsCsvLineCount));
             }
             
             if (gln_code == "o z") {
                 // We can still use it, just report it
-                statsLinesGlnIsOz.push_back(statsCsvNumLines);
+                statsLinesGlnIsOz.push_back(statsCsvLineCount);
             }
             
             User user;

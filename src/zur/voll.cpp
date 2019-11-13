@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include <boost/algorithm/string.hpp>
 
@@ -35,11 +36,12 @@ std::vector<Article> articles;
 static DB::Sql sqlDb;
 
 // Parse-phase stats
+std::vector<std::string> statsLinesWrongNumFields; // strings so that they can be conveniently joined
 unsigned int statsPharmaCodeTooBig = 0;
 unsigned int statsPharmaCodeNotNumeric = 0;
 unsigned int statsEmptyGalenForm = 0;
 unsigned int statsEmptyAtcCode = 0;
-unsigned int statsTotalArticles = 0;
+unsigned int statsCsvLineCount = 0;
 
 static
 void printFileStats(const std::string &filename)
@@ -47,15 +49,22 @@ void printFileStats(const std::string &filename)
     REP::html_h2("ARTIKEL");
     //REP::html_p(std::string(basename((char *)filename.c_str())));
     REP::html_p(filename);
-
+    
     REP::html_start_ul();
-    REP::html_li("Total Articles: " + std::to_string(statsTotalArticles));
+    REP::html_li("Total Articles: " + std::to_string(statsCsvLineCount));
     REP::html_li("Used Articles: " + std::to_string(articles.size()));
     REP::html_li("Column A. 'Pharmacode' > 7900000 (skipped): " + std::to_string(statsPharmaCodeTooBig));
     REP::html_li("Column A. 'Pharmacode' not numeric (skipped): " + std::to_string(statsPharmaCodeNotNumeric));
     REP::html_li("Column H. 'ATC-Key' empty: " + std::to_string(statsEmptyAtcCode));
     REP::html_li("Column K. 'Galen. Form' empty: " + std::to_string(statsEmptyGalenForm));
     REP::html_end_ul();
+
+    if (statsLinesWrongNumFields.size() > 0) {
+        REP::html_p("Number of lines with wrong number of fields (currently skipped, but they are valid): " + std::to_string(statsLinesWrongNumFields.size()));
+
+        if (statsLinesWrongNumFields.size() > 0)
+            REP::html_div(boost::algorithm::join(statsLinesWrongNumFields, ", "));
+    }
 }
 
 void parseCSV(const std::string &filename,
@@ -70,6 +79,9 @@ void parseCSV(const std::string &filename,
         std::string str;
         bool header = true;
         while (std::getline(file, str)) {
+            
+            boost::algorithm::trim_right_if(str, boost::is_any_of(" \n\r"));
+            statsCsvLineCount++;
             
             if (header) {
                 header = false;
@@ -89,15 +101,17 @@ void parseCSV(const std::string &filename,
 
                 continue;
             }
-            
-            statsTotalArticles++;
-            
+
             std::vector<std::string> columnVector;
             boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
             
             if (columnVector.size() != 21) {
-                std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
-                exit(EXIT_FAILURE);
+                std::clog
+                << "CSV line: " << statsCsvLineCount
+                << ", unexpected # columns: " << columnVector.size() << std::endl;
+
+                statsLinesWrongNumFields.push_back(std::to_string(statsCsvLineCount));
+                continue;
             }
             
             // Validate column A
@@ -154,6 +168,7 @@ void parseCSV(const std::string &filename,
                 a.atc_class = ATC::getTextByAtc(a.atc_code); // Java uses epha_atc_codes_csv.csv instead
             }
 
+            //if (columnVector[8].length() > 0)
             a.stock = std::stoi(columnVector[8]); // I
             
             a.rose_supplier = columnVector[9]; // J
@@ -200,7 +215,8 @@ void parseCSV(const std::string &filename,
     catch (std::exception &e) {
         std::cerr
         << basename((char *)__FILE__) << ":" << __LINE__
-        << " Error " << e.what()
+        << ", CSV line: " << statsCsvLineCount
+        << ",  Error " << e.what()
         << std::endl;
     }
     
