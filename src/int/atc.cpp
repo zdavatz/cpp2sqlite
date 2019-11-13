@@ -29,8 +29,8 @@ void parseTXT(const std::string &filename,
         std::ifstream file(filename);
         
         std::string str;
-        while (std::getline(file, str)) {
-            
+        while (std::getline(file, str))
+        {
             const std::string separator1(": ");
             std::string::size_type pos1 = str.find(separator1);
             auto atc = str.substr(0, pos1); // pos, len
@@ -44,7 +44,9 @@ void parseTXT(const std::string &filename,
             
             atcMap.insert(std::make_pair(atc,
                                          language == "fr" ? textFr : textDe));
-        }
+        }  // while
+
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr

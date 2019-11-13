@@ -14,7 +14,8 @@
 #include <regex>
 #include <libgen.h>     // for basename()
 
-#include <boost/algorithm/string_regex.hpp>
+#include <boost/algorithm/string.hpp>
+//#include <boost/algorithm/string_regex.hpp>
 
 #include "ddd.hpp"
 
@@ -96,7 +97,9 @@ void parseCSV(const std::string &filename)
                     lineVec.push_back(ln);
                 }
             }
-        }
+        } // while
+
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr

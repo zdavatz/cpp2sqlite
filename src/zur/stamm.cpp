@@ -42,8 +42,8 @@ void parseCSV(const std::string &filename, bool dumpHeader)
         
         std::string str;
         bool header = true;
-        while (std::getline(file, str)) {
-            
+        while (std::getline(file, str))
+        {
             if (header) {
                 header = false;
 
@@ -77,6 +77,8 @@ void parseCSV(const std::string &filename, bool dumpHeader)
                 pharmaStockMap.insert(std::make_pair(pharma, stock));
             }
         } // while
+        
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr
@@ -157,6 +159,8 @@ void parseVoigtCSV(const std::string &filename, bool dumpHeader)
                 statsVoigtEmptyAnot7++;
             }
         } // while
+        
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr

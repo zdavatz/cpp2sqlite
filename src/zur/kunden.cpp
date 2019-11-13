@@ -188,10 +188,11 @@ void parseCSV(const std::string &filename, bool dumpHeader)
             boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
             
             if (columnVector.size() != 31) {
+#ifdef DEBUG
                 std::clog
                 << "CSV Line " << statsCsvLineCount
                 << ", unexpected # columns: " << columnVector.size() << std::endl;
-
+#endif
                 statsLinesWrongNumFields.push_back(statsCsvLineCount);
                 
                 // Try to recover as much as possible: assume column A and D are correct
@@ -253,6 +254,8 @@ void parseCSV(const std::string &filename, bool dumpHeader)
             roseid_to_gln_map.insert(std::make_pair(user.rose_id, user.gln_code));
 
         } // while
+        
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr

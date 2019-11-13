@@ -116,6 +116,10 @@ void getTranslationMap(const std::string &dir,
 
             translatedMap.insert(std::make_pair(key, val));
         }
+        
+        ifsKey.close();
+        ifsValue.close();
+        ifsValue2.close();
     }
     catch (std::exception &e) {
         std::cerr
@@ -139,8 +143,8 @@ void parseCSV(const std::string &inFilename,
         
         std::string str;
         bool header = true;
-        while (std::getline(file, str)) {
-            
+        while (std::getline(file, str))
+        {
             if (header) {
                 header = false;
                 continue;
@@ -184,7 +188,9 @@ void parseCSV(const std::string &inFilename,
 
                 outputInteraction(ofs, translatedVector);
             }
-        }
+        } // while
+
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr

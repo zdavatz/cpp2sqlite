@@ -92,7 +92,9 @@ void parseXML(const std::string &filename,
         std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
     }
     
+#ifdef DEBUG
     std::clog << "Analyzing bag" << std::endl;
+#endif
 
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("Preparations")) {
@@ -322,7 +324,7 @@ std::string getPricesAndFlags(const std::string &gtin,
                 packMap[gtin] = pf;
                 found = true;
                 goto prepareResult; // abort the two for loops
-            }
+            } // if
 
 prepareResult:
     // The category (input parameter) must be added even if the GTIN was not found

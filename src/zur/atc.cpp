@@ -45,6 +45,8 @@ void parseTXT(const std::string &filename,
             atcMap.insert(std::make_pair(atc,
                                          language == "fr" ? textFr : textDe));
         }
+
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr

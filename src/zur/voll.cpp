@@ -43,7 +43,11 @@ unsigned int statsPharmaCodeTooBig = 0;
 unsigned int statsPharmaCodeNotNumeric = 0;
 unsigned int statsEmptyGalenForm = 0;
 unsigned int statsEmptyAtcCode = 0;
-unsigned int statsCsvLineCount = 0;
+unsigned long int statsCsvLineCount = 0;
+
+constexpr long maxAcceptablePharmaCode = 7900000L;
+unsigned long int statsFirstLinePharmaOverMax = -1;
+unsigned long int statsLineWithPharmaMax = -1;
 
 static
 void printFileStats(const std::string &filename)
@@ -59,6 +63,14 @@ void printFileStats(const std::string &filename)
     REP::html_li("Column A. 'Pharmacode' not numeric (skipped): " + std::to_string(statsPharmaCodeNotNumeric));
     REP::html_li("Column H. 'ATC-Key' empty: " + std::to_string(statsEmptyAtcCode));
     REP::html_li("Column K. 'Galen. Form' empty: " + std::to_string(statsEmptyGalenForm));
+
+    if (statsFirstLinePharmaOverMax >= 0)
+        REP::html_li("First line with 'Pharmacode' >= 7900000: " + std::to_string(statsFirstLinePharmaOverMax));
+
+    if (statsLineWithPharmaMax >= 0)
+        REP::html_li("Line with 'Pharmacode' = 7900000: " + std::to_string(statsLineWithPharmaMax));
+
+
     REP::html_end_ul();
 
     if (statsLinesWrongNumFields.size() > 0) {
@@ -88,17 +100,14 @@ void parseCSV(const std::string &filename,
     
     try {
         std::ifstream file(filename);
-        
+
         std::string str;
         bool header = true;
-        while (std::getline(file, str)) {
-            
+        while (std::getline(file, str))
+        {
             boost::algorithm::trim_right_if(str, boost::is_any_of(" \n\r"));
             statsCsvLineCount++;
-#ifdef DEBUG
-            if (statsCsvLineCount % 1000 == 0)
-                std::clog << ", line: " << statsCsvLineCount;
-#endif
+
             if (header) {
                 header = false;
 
@@ -122,12 +131,14 @@ void parseCSV(const std::string &filename,
             boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
             
             if (columnVector.size() != 21) {
+#ifdef DEBUG
                 std::clog
                 << "CSV line: " << statsCsvLineCount
                 << ", unexpected # columns: " << columnVector.size() << std::endl;
-
+#endif
                 statsLinesWrongNumFields.push_back(std::to_string(statsCsvLineCount));
-                // TODO: retry splitting the line with a proper CSV parser
+                // TODO: we could retry splitting the line with a proper CSV parser
+                // but these lines have pharmacode >= 7900000 anyway and they would be skipped later
                 continue;
             }
             
@@ -135,11 +146,20 @@ void parseCSV(const std::string &filename,
             std::string pharmaCode = columnVector[0]; // A
             try {
                 auto numericCode = std::stol(pharmaCode);
-                if (numericCode > 7900000L) {
+                
+                if (numericCode == maxAcceptablePharmaCode)
+                    statsLineWithPharmaMax = statsCsvLineCount;
+
+                if (numericCode >= maxAcceptablePharmaCode) {
                     // The file seems to be sorted by column A.
                     // therefore all following lines will fail this validation.
                     // We could abort parsing here, but we continue to collects stats on the file.
                     statsPharmaCodeTooBig++;
+                    
+                    //std::cerr << " CSV " << statsCsvLineCount << ", " << str << std::endl;
+                    if (statsFirstLinePharmaOverMax == -1)
+                        statsFirstLinePharmaOverMax = statsCsvLineCount;
+
                     continue;
                 }
             }
@@ -164,7 +184,9 @@ void parseCSV(const std::string &filename,
             
             // See file DispoParse.java line 417
             a.ean_code = columnVector[2];   // C
-            if (a.ean_code.length() == 13) {
+            if ((a.ean_code.length() == 13) &&
+                (a.ean_code.substr(0, 4) == "7680"))
+            {
                 std::string fromSwissmedic = {}; // TODO:
                 std::string cat = {}; // TODO:
                 std::string paf = BAG::getPricesAndFlags(a.ean_code, fromSwissmedic, cat); // update BAG::packMap within this GTIN
@@ -246,6 +268,8 @@ void parseCSV(const std::string &filename,
 
             articles.push_back(a);
         }  // while
+        
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr
@@ -260,9 +284,7 @@ void parseCSV(const std::string &filename,
 
 void openDB(const std::string &filename)
 {
-#ifdef DEBUG
-    std::clog << "Create: " << filename << std::endl;
-#endif
+    std::clog << std::endl << "Create DB: " << filename << std::endl;
 
     sqlDb.openDB(filename);
 
@@ -280,6 +302,8 @@ void openDB(const std::string &filename)
 
 void createDB()
 {
+    std::clog << "Writing DB" << std::endl;
+
 #ifdef WITH_PROGRESS_BAR
     unsigned int ii = 1;
     int n = articles.size();

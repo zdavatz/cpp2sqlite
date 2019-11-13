@@ -302,8 +302,8 @@ void getDeeplTranslationMap(const std::string &dir,
 #endif
         
         std::string key, val;
-        while (std::getline(ifsKey, key)) {
-            
+        while (std::getline(ifsKey, key))
+        {
             std::getline(ifsValue, val);
 #ifdef WITH_DEEPL_MANUALLY_TRANSLATED
             if (val.empty())                    // DeepL failed to translate it
@@ -314,7 +314,13 @@ void getDeeplTranslationMap(const std::string &dir,
 #endif
 
             map.insert(std::make_pair(key, val));
-        }
+        } // while
+        
+        ifsKey.close();
+        ifsValue.close();
+#ifdef WITH_DEEPL_MANUALLY_TRANSLATED
+        ifsValue2.close();
+#endif
     }
     catch (std::exception &e) {
         std::cerr

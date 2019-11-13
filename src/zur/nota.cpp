@@ -90,7 +90,9 @@ void parseCSV(const std::string &filename)
             // TODO:: stats update max num of items per doctor from doctor.notaVec.size()
 
             doctorVec.push_back(doctor);
-        }
+        }  // while
+        
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr

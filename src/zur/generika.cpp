@@ -103,6 +103,8 @@ void parseCSV(const std::string &filename, bool dumpHeader)
 #endif
             eanVec.push_back(ean_code);
         }
+        
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr

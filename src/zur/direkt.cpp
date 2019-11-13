@@ -66,6 +66,8 @@ void parseCSV(const std::string &filename)
             articleVec.push_back(da);
 
         } // while
+
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr

@@ -42,6 +42,8 @@ void parseTXT(const std::string &inDir)
 
             galenicMap.insert(std::make_pair(galenicCode, galenicForm));
         }
+
+        file.close();
     }
     catch (std::exception &e) {
         std::cerr
