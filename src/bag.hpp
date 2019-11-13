@@ -11,6 +11,7 @@
 #define bag_hpp
 
 #include <iostream>
+#include <set>
 #include <map>
 #include "gtin.hpp"
 
