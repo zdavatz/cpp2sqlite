@@ -52,6 +52,8 @@ void init(std::string logDir,
     std::string fullFilename(logDir);
     fullFilename += filename;
 
+    std::clog << std::endl << "Create report: " << fullFilename << std::endl;
+
     ofs2.open(fullFilename.c_str());
     ofs2 << "<html>";
     ofs2 << "<head>";

@@ -74,7 +74,7 @@ void printFileStats(const std::string &filename)
     REP::html_end_ul();
 
     if (statsLinesWrongNumFields.size() > 0) {
-        REP::html_p("Lines with wrong number of fields (currently skipped, but they are valid). Total count: " + std::to_string(statsLinesWrongNumFields.size()));
+        REP::html_p("Lines with wrong number of fields due to embedded separators (Skipped. Valid syntax. Probably 'Pharmacode' >= 7900000). Total count: " + std::to_string(statsLinesWrongNumFields.size()));
 
         if (statsLinesWrongNumFields.size() > 0)
             REP::html_div(boost::algorithm::join(statsLinesWrongNumFields, ", "));
