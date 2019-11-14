@@ -115,6 +115,7 @@ add_executable(zurrose
 	src/zur/nota.hpp src/zur/nota.cpp
 	src/zur/sqlDatabase.hpp src/zur/sqlDatabase.cpp
 	src/zur/stamm.hpp src/zur/stamm.cpp
+	src/zur/swissmedic.hpp src/zur/swissmedic.cpp
 	src/zur/voll.hpp src/zur/voll.cpp)
 
 target_include_directories(zurrose PUBLIC

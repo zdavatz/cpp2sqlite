@@ -24,6 +24,7 @@
 #include "report.hpp"
 #include "galen.hpp"
 #include "bag.hpp"
+#include "swissmedic.hpp"
 
 #define WITH_PROGRESS_BAR
 
@@ -98,6 +99,8 @@ void parseCSV(const std::string &filename,
 {
     std::clog << std::endl << "Reading " << filename << std::endl;
     
+    const std::string fromSwissmedic = {};
+
     try {
         std::ifstream file(filename);
 
@@ -187,8 +190,7 @@ void parseCSV(const std::string &filename,
             if ((a.ean_code.length() == 13) &&
                 (a.ean_code.substr(0, 4) == "7680"))
             {
-                std::string fromSwissmedic = {}; // TODO:
-                std::string cat = {}; // TODO:
+                std::string cat = SWISSMEDIC::getCategoryPackByGtin(a.ean_code);
                 std::string paf = BAG::getPricesAndFlags(a.ean_code, fromSwissmedic, cat); // update BAG::packMap within this GTIN
                 if (paf.length() > 0) {
                     BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(a.ean_code); // get it from BAG::packMap

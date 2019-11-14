@@ -134,6 +134,12 @@ int getAdditionalNames(const std::string &rn,
                        GTIN::oneFachinfoPackages &packages,
                        const std::string &language)
 {
+    // See RealExpertInfo.java:1544
+    //  "a.H." --> "ev.nn.i.H."
+    //  "p.c." --> "ev.ep.e.c."
+    if (language == "fr")
+        fromSwissmedic = "ev.ep.e.c.";
+
     std::set<std::string>::iterator it;
     int countAdded = 0;
     
@@ -163,12 +169,6 @@ int getAdditionalNames(const std::string &rn,
                 onePackageInfo += " " + duVec[rowInt].dosage;
                 onePackageInfo += " " + duVec[rowInt].units;
             }
-
-            // See RealExpertInfo.java:1544
-            //  "a.H." --> "ev.nn.i.H."
-            //  "p.c." --> "ev.ep.e.c."
-            if (language == "fr")
-                fromSwissmedic = "ev.ep.e.c.";
 
             std::string paf = BAG::getPricesAndFlags(g13, fromSwissmedic, categoryVec[rowInt]);
             if (!paf.empty())

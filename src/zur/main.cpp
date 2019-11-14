@@ -29,6 +29,7 @@
 #include "report.hpp"
 #include "bag.hpp"
 #include "galen.hpp"
+#include "swissmedic.hpp"
 
 namespace po = boost::program_options;
 
@@ -235,6 +236,8 @@ int main(int argc, char **argv)
 #ifdef OBSOLETE_STUFF
         processLikes(opt_inputDirectory);
 #endif
+
+        SWISSMEDIC::parseXLXS(opt_workDirectory + "/downloads");
 
         // Process CSV file and generate Sqlite DB
         generateFullSQLiteDB(opt_inputDirectory, opt_zurrose);
