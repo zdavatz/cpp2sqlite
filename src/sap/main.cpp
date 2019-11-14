@@ -91,7 +91,7 @@ void parseXLXS(const std::string &inFilename,
                bool verbose)
 {
     const std::unordered_set<int> acceptedFiltersSet = { 1, 5, 6, 9 };
-    std::clog << std::endl << "Reading sappinfo XLSX" << std::endl;
+    std::clog << std::endl << "Reading " << inFilename << std::endl;
     xlnt::workbook wb;
     wb.load(inFilename);
     
