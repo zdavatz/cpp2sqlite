@@ -14,10 +14,10 @@
 
 namespace SWISSMEDIC
 {
-    struct dosageUnits {
-        std::string dosage;
-        std::string units;
-    };
+//    struct dosageUnits {
+//        std::string dosage;
+//        std::string units;
+//    };
 
     struct pharmaRow {
         std::string rn5;        // A

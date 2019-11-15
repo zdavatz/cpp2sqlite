@@ -42,7 +42,6 @@ source_group(barcode FILES src/c2s/ean13/functii.cpp src/c2s/ean13/functii.h)
 
 add_executable(cpp2sqlite
 	src/c2s/cpp2sqlite.cpp
-	src/c2s/sqlDatabase.hpp src/c2s/sqlDatabase.cpp
 	src/c2s/aips.hpp src/c2s/aips.cpp
 	src/c2s/refdata.hpp src/c2s/refdata.cpp
 	src/c2s/swissmedic.hpp src/c2s/swissmedic.cpp
@@ -50,6 +49,7 @@ add_executable(cpp2sqlite
 	src/bag.hpp src/bag.cpp
 	src/gtin.hpp src/gtin.cpp
 	src/beautify.hpp src/beautify.cpp
+	src/sqlDatabase.hpp src/sqlDatabase.cpp
 	src/c2s/atc.hpp src/c2s/atc.cpp
 	src/c2s/epha.hpp src/c2s/epha.cpp
 	src/c2s/peddose.hpp src/c2s/peddose.cpp
@@ -103,17 +103,17 @@ target_link_libraries(pharma ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 #-------------------------------------------------------------------------------
 add_executable(zurrose
 	src/zur/main.cpp
-	src/bag.hpp src/bag.cpp
 	src/gtin.hpp src/gtin.cpp
 	src/report.hpp src/report.cpp
+	src/sqlDatabase.hpp src/sqlDatabase.cpp
 	src/zur/Article.hpp src/zur/Article.cpp
 	src/zur/atc.hpp src/zur/atc.cpp
+	src/zur/bag.hpp src/zur/bag.cpp
 	src/zur/direkt.hpp src/zur/direkt.cpp
 	src/zur/galen.hpp src/zur/galen.cpp
 	src/zur/generika.hpp src/zur/generika.cpp
 	src/zur/kunden.hpp src/zur/kunden.cpp
 	src/zur/nota.hpp src/zur/nota.cpp
-	src/zur/sqlDatabase.hpp src/zur/sqlDatabase.cpp
 	src/zur/stamm.hpp src/zur/stamm.cpp
 	src/zur/swissmedic.hpp src/zur/swissmedic.cpp
 	src/zur/voll.hpp src/zur/voll.cpp)

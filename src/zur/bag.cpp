@@ -1,6 +1,6 @@
 //
 //  bag.cpp
-//  cpp2sqlite, pharma
+//  zurrose
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
@@ -231,6 +231,7 @@ void parseXML(const std::string &filename,
     }
 }
 
+#if 0
 // Return count added
 int getAdditionalNames(const std::string &rn,
                        std::set<std::string> &gtinUsed,
@@ -258,7 +259,7 @@ int getAdditionalNames(const std::string &rn,
                 onePackageInfo += pre.name + " " + pre.description;
                 onePackageInfo += ", " + p.description;
 
-                std::string paf = getPricesAndFlags(g13, "", p.category);
+                std::string paf = getPricesAndFlags(g13, p.category);
                 if (!paf.empty())
                     onePackageInfo += paf;
 
@@ -271,10 +272,10 @@ int getAdditionalNames(const std::string &rn,
 
     return countAdded;
 }
+#endif
 
 // Also build a map(gtin) to be used later when writing packages column
 std::string getPricesAndFlags(const std::string &gtin,
-                              const std::string &fromSwissmedic,
                               const std::string &category)
 {
     std::string prices;
@@ -341,9 +342,6 @@ prepareResult:
     std::string paf;
     if (!prices.empty())
         paf += ", " + prices;
-    
-    if (!fromSwissmedic.empty())
-        paf += ", " + fromSwissmedic;
 
     if (flagsVector.size() > 0)
         paf += " [" + boost::algorithm::join(flagsVector, ", ") + "]";

@@ -13,6 +13,7 @@
 #include <regex>
 #include <iomanip>
 #include <sstream>
+#include <map>
 #include <boost/algorithm/string.hpp>
 
 #include <xlnt/xlnt.hpp>
@@ -52,14 +53,9 @@ static constexpr std::string_view CELL_ESCAPE = "\"";
 
 namespace SWISSMEDIC
 {
-    std::vector< std::vector<std::string> > theWholeSpreadSheet;
+//    std::vector< std::vector<std::string> > theWholeSpreadSheet;
 //    std::vector<std::string> regnrs;        // padded to 5 characters (digits)
-#if 1
-    std::vector<pharmaRow> pharmaVec;
-#else
-    std::vector<std::string> packingCode;   // padded to 3 characters (digits)
-    std::vector<std::string> gtin;
-#endif
+    std::map<std::string, std::string> pharmaMap;
 
 //    std::string fromSwissmedic("ev.nn.i.H.");
     
@@ -70,7 +66,7 @@ namespace SWISSMEDIC
 //    std::vector<dosageUnits> duVec;
 
     // Parse-phase stats
-
+    unsigned int statsCsvLineCount = 0;
 
 static
 void printFileStats(const std::string &filename)
@@ -79,7 +75,8 @@ void printFileStats(const std::string &filename)
     //REP::html_p(std::string(basename((char *)filename.c_str())));
     REP::html_p(filename);
     REP::html_start_ul();
-    REP::html_li("rows: " + std::to_string(theWholeSpreadSheet.size()));
+//    REP::html_li("rows: " + std::to_string(theWholeSpreadSheet.size()));
+    REP::html_li("rows: " + std::to_string(statsCsvLineCount));
     REP::html_end_ul();
 }
 
@@ -129,7 +126,8 @@ void parseXLXS(const std::string &downloadDir, bool dumpHeader)
             }
         }
 
-        theWholeSpreadSheet.push_back(aSingleRow);
+        statsCsvLineCount++;
+        //theWholeSpreadSheet.push_back(aSingleRow);
 
         pharmaRow pr;
         pr.rn5 = GTIN::padToLength(5, aSingleRow[COLUMN_A]);
@@ -145,6 +143,7 @@ void parseXLXS(const std::string &downloadDir, bool dumpHeader)
         char checksum = GTIN::getGtin13Checksum(gtin12);
         pr.gtin13 = gtin12 + checksum;
 
+#if 0
         std::string nameString = aSingleRow[COLUMN_C];
         boost::replace_all(nameString, CELL_ESCAPE, ""); // double quotes interfere with CSV
         boost::replace_all(nameString, ";", ","); // sometimes the galenic form is after ';' not ','
@@ -152,7 +151,6 @@ void parseXLXS(const std::string &downloadDir, bool dumpHeader)
         std::vector<std::string> nameComponents;
         boost::algorithm::split(nameComponents, nameString, boost::is_any_of(","));
 
-#if 0
         // Use the name only up to first comma (Issue #68, 5)
         pr.name = nameComponents[0];
 
@@ -178,7 +176,7 @@ void parseXLXS(const std::string &downloadDir, bool dumpHeader)
         if ((pr.categoryPack == "A") && (aSingleRow[COLUMN_W] == "a"))
             pr.categoryPack += "+";
 
-        pharmaVec.push_back(pr);
+        pharmaMap.insert(std::make_pair(pr.gtin13, pr.categoryPack));
     }
 
     printFileStats(filename);
@@ -186,15 +184,7 @@ void parseXLXS(const std::string &downloadDir, bool dumpHeader)
 
 std::string getCategoryPackByGtin(const std::string &g)
 {
-    std::string cat;
-
-    for (auto pv : pharmaVec)
-        if (pv.gtin13 == g) {
-            cat = pv.categoryPack;
-            break;
-        }
-
-    return cat;
+    return pharmaMap[g];
 }
 
 }

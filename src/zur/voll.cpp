@@ -98,8 +98,6 @@ void parseCSV(const std::string &filename,
               bool dumpHeader)
 {
     std::clog << std::endl << "Reading " << filename << std::endl;
-    
-    const std::string fromSwissmedic = {};
 
     try {
         std::ifstream file(filename);
@@ -191,7 +189,7 @@ void parseCSV(const std::string &filename,
                 (a.ean_code.substr(0, 4) == "7680"))
             {
                 std::string cat = SWISSMEDIC::getCategoryPackByGtin(a.ean_code);
-                std::string paf = BAG::getPricesAndFlags(a.ean_code, fromSwissmedic, cat); // update BAG::packMap within this GTIN
+                std::string paf = BAG::getPricesAndFlags(a.ean_code, cat); // update BAG::packMap within this GTIN
                 if (paf.length() > 0) {
                     BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(a.ean_code); // get it from BAG::packMap
 
@@ -284,6 +282,7 @@ void parseCSV(const std::string &filename,
     printFileStats(filename);
 }
 
+// See DispoParse.java:65
 void openDB(const std::string &filename)
 {
     std::clog << std::endl << "Create DB: " << filename << std::endl;
@@ -314,7 +313,7 @@ void createDB()
         
 #ifdef WITH_PROGRESS_BAR
         // Show progress
-        if ((ii++ % 100) == 0)
+        if ((ii++ % 300) == 0)
             std::cerr << "\r" << 100*ii/n << " % ";
 #endif
         sqlDb.bindText(1, a.pack_title);

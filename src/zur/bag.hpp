@@ -1,6 +1,6 @@
 //
 //  bag.hpp
-//  cpp2sqlite, pharma
+//  zurrose
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
@@ -14,6 +14,8 @@
 #include <set>
 #include <map>
 #include "gtin.hpp"
+
+#define ZURROSE
 
 namespace BAG
 {
@@ -61,12 +63,11 @@ namespace BAG
                   const std::string &language,
                   bool verbose);
 
-    int getAdditionalNames(const std::string &rn,
-                           std::set<std::string> &gtinUsed,
-                           GTIN::oneFachinfoPackages &packages);
+//    int getAdditionalNames(const std::string &rn,
+//                           std::set<std::string> &gtinUsed,
+//                           GTIN::oneFachinfoPackages &packages);
 
     std::string getPricesAndFlags(const std::string &gtin,
-                                  const std::string &fromSwissmedic,
                                   const std::string &category="");
 
     std::vector<std::string> getGtinList();

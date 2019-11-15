@@ -1,10 +1,10 @@
 //
 //  sqlDatabase.hpp
-//  zurrose
+//  cpp2sqlite, zurrose
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
-//  Created by Alex Bettarini on 30 Oct 2019
+//  Created by Alex Bettarini on 16 Jan 2019, 30 Oct 2019
 //
 
 #ifndef sqlDatabase_hpp
@@ -15,7 +15,6 @@
 
 namespace DB
 {
-
 struct Sql
 {
 private:
@@ -48,7 +47,6 @@ public:
                     const std::string &keys,
                     const std::string &values);
 };
-
 
 }
 

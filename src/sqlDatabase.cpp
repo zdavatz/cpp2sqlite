@@ -1,10 +1,10 @@
 //
 //  sqlDatabase.cpp
-//  zurrose
+//  cpp2sqlite, zurrose
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
-//  Created by Alex Bettarini on 30 Oct 2019
+//  Created by Alex Bettarini on 16 Jan 2019, 30 Oct 2019
 //
 
 #include <iostream>
@@ -14,7 +14,6 @@
 
 #include "sqlDatabase.hpp"
 
-// See DispoParse.java:65
 #define FI_DB_VERSION   "140"
 
 namespace DB
@@ -105,7 +104,6 @@ void Sql::prepareStatement(const std::string_view &tableName,
     std::ostringstream sqlStream;
     sqlStream << "INSERT INTO " << tableName
               << " VALUES (" << placeholders << ");";
-    //std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " " << sqlStream.str() << std::endl;
     
     int rc = sqlite3_prepare_v2(db, sqlStream.str().c_str(), -1, &statement, NULL);
     if (rc != SQLITE_OK)
@@ -126,7 +124,7 @@ void Sql::insertInto(const std::string_view &tableName,
     sqlStream << "INSERT INTO " << tableName
               << " (" << keys << ") "
               << "VALUES (" << values << ");";
-    //std::cout << basename((char *)__FILE__) << ":" << __LINE__ << " " << sqlStream.str() << std::endl;
+
     rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, &errmsg);
     if (rc != SQLITE_OK) {
         std::cerr
@@ -178,15 +176,24 @@ void Sql::createTable(const std::string_view &tableName,
 void Sql::openDB(const std::string &filename)
 {
     int rc = sqlite3_open(filename.c_str(), &db);
-    if (rc != SQLITE_OK)
+    if (rc != SQLITE_OK) {
         std::cerr
         << basename((char *)__FILE__) << ":" << __LINE__
         << ", error " << rc
         << std::endl;
+        
+        return;
+    }
+    
+    char *errmsg;
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &errmsg);
 }
 
 void Sql::closeDB()
 {
+    char *errmsg;
+    sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &errmsg);
+
     int rc = sqlite3_close(db);
     if (rc != SQLITE_OK)
         std::cerr

@@ -76,8 +76,13 @@
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
 
+constexpr std::string_view TABLE_NAME_AMIKO = "amikodb";
+constexpr std::string_view TABLE_NAME_PRODUCT = "productdb";
+constexpr std::string_view TABLE_NAME_ANDROID = "android_metadata";
+
 static std::string appName;
 std::map<std::string, std::string> statsTitleStrSeparatorMap;
+static DB::Sql sqlDb;
 
 void on_version()
 {
@@ -758,7 +763,34 @@ doExtraSections:
     html += "\n</html>";
 }
 
-#pragma mark - main
+// See SqlDatabase.java:65
+void openDB(const std::string &filename)
+{
+    std::clog << std::endl << "Create DB: " << filename << std::endl;
+
+    sqlDb.openDB(filename);
+    
+    sqlDb.createTable(TABLE_NAME_AMIKO, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, auth TEXT, atc TEXT, substances TEXT, regnrs TEXT, atc_class TEXT, tindex_str TEXT, application_str TEXT, indications_str TEXT, customer_id INTEGER, pack_info_str TEXT, add_info_str TEXT, ids_str TEXT, titles_str TEXT, content TEXT, style_str TEXT, packages TEXT");
+    sqlDb.createIndex(TABLE_NAME_AMIKO, "idx_", {"title", "auth", "atc", "substances", "regnrs", "atc_class"});
+    sqlDb.prepareStatement(TABLE_NAME_AMIKO,
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+
+    sqlDb.createTable(TABLE_NAME_PRODUCT, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, author TEXT, eancodes TEXT, pack_info_str TEXT, packages TEXT");
+    sqlDb.createIndex(TABLE_NAME_PRODUCT, "idx_prod_", {"title", "author", "eancodes"});
+    
+    sqlDb.createTable(TABLE_NAME_ANDROID, "locale TEXT default 'en_US'");
+    sqlDb.insertInto(TABLE_NAME_ANDROID, "locale", "'en_US'");
+    
+    //createTable("sqlite_sequence", "");  // created automatically
+}
+
+void closeDB()
+{
+    sqlDb.destroyStatement();
+    sqlDb.closeDB();
+}
+
+#pragma mark -
 
 int main(int argc, char **argv)
 {
@@ -929,13 +961,8 @@ int main(int argc, char **argv)
     }
     else {
         std::string dbFilename = opt_workDirectory + "/output/amiko_db_full_idx_" + opt_language + ".db";
-        sqlite3 *db = AIPS::createDB(dbFilename);
+        openDB(dbFilename);
 
-        sqlite3_stmt *statement;
-        AIPS::prepareStatement("amikodb", &statement,
-                               "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
-
-        std::clog << std::endl << "Populating " << dbFilename << std::endl;
         unsigned int statsRnFoundRefdataCount = 0;
         unsigned int statsRnNotFoundRefdataCount = 0;
         unsigned int statsRnFoundSwissmedicCount = 0;
@@ -966,22 +993,22 @@ int main(int argc, char **argv)
 
             // See DispoParse.java:164 addArticleDB()
             // See SqlDatabase.java:347 addExpertDB()
-            AIPS::bindText("amikodb", statement, 1, m.title);
-            AIPS::bindText("amikodb", statement, 2, m.auth);
-            AIPS::bindText("amikodb", statement, 3, m.atc);
-            AIPS::bindText("amikodb", statement, 4, m.subst);
-            AIPS::bindText("amikodb", statement, 5, m.regnrs);
+            sqlDb.bindText(1, m.title);
+            sqlDb.bindText(2, m.auth);
+            sqlDb.bindText(3, m.atc);
+            sqlDb.bindText(4, m.subst);
+            sqlDb.bindText(5, m.regnrs);
             
             // atc_class
             std::string atcClass = ATC::getClassByAtcColumn(m.atc);
-            AIPS::bindText("amikodb", statement, 6, atcClass);
+            sqlDb.bindText(6, atcClass);
 
             // tindex_str
             std::string tindex = BAG::getTindex(regnrs[0]);
             if (tindex.empty())
-                AIPS::bindText("amikodb", statement, 7, "");
+                sqlDb.bindText(7, "");
             else
-                AIPS::bindText("amikodb", statement, 7, tindex);
+                sqlDb.bindText(7, tindex);
 
             // application_str
             {
@@ -991,16 +1018,16 @@ int main(int argc, char **argv)
                 application += ";" + appBag;
 
             if (application.empty())
-                AIPS::bindText("amikodb", statement, 8, "");
+                sqlDb.bindText(8, "");
             else
-                AIPS::bindText("amikodb", statement, 8, application);
+                sqlDb.bindText(8, application);
             }
             
             // TODO: indications_str
-            AIPS::bindText("amikodb", statement, 9, "");
+            sqlDb.bindText(9, "");
             
             // TODO: customer_id
-            AIPS::bindText("amikodb", statement, 10, "");  // "0"
+            sqlDb.bindText(10, "");  // "0"
 
 #if 1
             // pack_info_str
@@ -1040,13 +1067,13 @@ int main(int argc, char **argv)
             std::string packInfo = boost::algorithm::join(packages.name, "\n");
 
             if (packInfo.empty())
-                AIPS::bindText("amikodb", statement, 11, "");
+                sqlDb.bindText(11, "");
             else
-                AIPS::bindText("amikodb", statement, 11, packInfo);
+                sqlDb.bindText(11, packInfo);
 #endif
 
             // TODO: add_info__str
-            AIPS::bindText("amikodb", statement, 12, "");
+            sqlDb.bindText(12, "");
 
             // content
             auto firstAtc = ATC::getFirstAtcInAtcColumn(m.atc);
@@ -1071,19 +1098,19 @@ int main(int argc, char **argv)
                                opt_language,    // for barcode section
                                flagVerbose,
                                flagNoSappinfo);
-                AIPS::bindText("amikodb", statement, 15, html);
+                sqlDb.bindText(15, html);
             }
             
             // ids_str
             {
                 std::string ids_str = boost::algorithm::join(sectionId, ",");
-                AIPS::bindText("amikodb", statement, 13, ids_str);
+                sqlDb.bindText(13, ids_str);
             }
 
             // titles_str
             {
                 std::string titles_str = boost::algorithm::join(sectionTitle, TITLES_STR_SEPARATOR);
-                AIPS::bindText("amikodb", statement, 14, titles_str);
+                sqlDb.bindText(14, titles_str);
             }
 
             // TODO: style_str
@@ -1149,10 +1176,10 @@ int main(int argc, char **argv)
                 // Create a single multi-line string from the vector
                 std::string packages = boost::algorithm::join(lines, "\n");
 
-                AIPS::bindText("amikodb", statement, 17, packages);
+                sqlDb.bindText(17, packages);
             }
             
-            AIPS::runStatement("amikodb", statement);
+            sqlDb.runStatement(TABLE_NAME_AMIKO);
         } // for
         
 #ifdef WITH_PROGRESS_BAR
@@ -1190,14 +1217,8 @@ int main(int argc, char **argv)
             SAPP::printUsageStats();
         }
 
-        AIPS::destroyStatement(statement);
+        closeDB();
 
-        int rc = sqlite3_close(db);
-        if (rc != SQLITE_OK)
-            std::cerr
-            << basename((char *)__FILE__) << ":" << __LINE__
-            << ", rc" << rc
-            << std::endl;
     } // if flagXml
 
     REP::terminate();
