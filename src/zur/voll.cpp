@@ -144,7 +144,7 @@ void parseCSV(const std::string &filename,
             }
             
             // Validate column A
-            std::string pharmaCode = columnVector[0]; // A
+            auto pharmaCode = columnVector[0]; // A
             try {
                 auto numericCode = std::stol(pharmaCode);
                 
@@ -171,7 +171,7 @@ void parseCSV(const std::string &filename,
             }
             
             // Validate column H
-            std::string atcCode = columnVector[7]; // H
+            auto atcCode = columnVector[7]; // H
             if (atcCode.length() == 0)
             {
                 statsEmptyAtcCode++;
@@ -188,12 +188,16 @@ void parseCSV(const std::string &filename,
             if ((a.ean_code.length() == 13) &&
                 (a.ean_code.substr(0, 4) == "7680"))
             {
-                std::string cat = SWISSMEDIC::getCategoryPackByGtin(a.ean_code);
-                std::string paf = BAG::getPricesAndFlags(a.ean_code, cat); // update BAG::packMap within this GTIN
+                auto cat = SWISSMEDIC::getCategoryPackByGtin(a.ean_code);
+                auto paf = BAG::getPricesAndFlags(a.ean_code, cat); // update BAG::packMap within this GTIN
                 if (paf.length() > 0) {
                     BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(a.ean_code); // get it from BAG::packMap
 
                     a.flags = boost::algorithm::join(fromBag.flags, ", ") ;
+                    auto bioT = SWISSMEDIC::getCategoryMedByGtin(a.ean_code);
+                    if (bioT == "Biotechnologika")
+                        a.flags += ", BioT";
+
                     a.exfactory_price = fromBag.efp;
                 }
                 a.regnr = a.ean_code.substr(4, 5); // pos, len
@@ -226,7 +230,7 @@ void parseCSV(const std::string &filename,
             
             a.rose_supplier = columnVector[9]; // J
             
-            std::string gal = columnVector[10]; // K
+            auto gal = columnVector[10]; // K
             if (gal.length() == 0) {
                 statsEmptyGalenForm++;
             }
@@ -249,7 +253,7 @@ void parseCSV(const std::string &filename,
             
             a.rose_base_price = columnVector[12]; // M TODO: see bag formatPriceAsMoney
             
-            std::string ean = columnVector[13];  // N TODO: check that length is 13
+            auto ean = columnVector[13];  // N TODO: check that length is 13
             a.replace_ean_code = ean;
 
             a.replace_pharma_code = columnVector[14]; // O
@@ -259,7 +263,6 @@ void parseCSV(const std::string &filename,
 
             // TODO: use ean and m_bag_public_price_map
             a.public_price = columnVector[17]; // R
-
             
             // Column S unused ?
             

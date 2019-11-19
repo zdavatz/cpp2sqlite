@@ -56,6 +56,7 @@ namespace SWISSMEDIC
 //    std::vector< std::vector<std::string> > theWholeSpreadSheet;
 //    std::vector<std::string> regnrs;        // padded to 5 characters (digits)
     std::map<std::string, std::string> pharmaMap;
+    std::map<std::string, std::string> catMedMap;
 
 //    std::string fromSwissmedic("ev.nn.i.H.");
     
@@ -159,10 +160,17 @@ void parseXLXS(const std::string &downloadDir, bool dumpHeader)
         boost::algorithm::trim(pr.galenicForm);
 
         pr.owner = aSingleRow[COLUMN_D];
+#endif
 
         pr.categoryMed = aSingleRow[COLUMN_E];
-        if ((pr.categoryMed != "Impfstoffe") && (pr.categoryMed != "Blutprodukte"))
+        catMedMap.insert(std::make_pair(pr.gtin13, pr.categoryMed));
+
+#if 0
+        if ((pr.categoryMed != "Impfstoffe") &&
+            (pr.categoryMed != "Blutprodukte"))
+        {
             pr.categoryMed.clear();
+        }
         
         pr.itNumber = aSingleRow[COLUMN_F];
         pr.regDate = aSingleRow[COLUMN_H];      // Date
@@ -185,6 +193,11 @@ void parseXLXS(const std::string &downloadDir, bool dumpHeader)
 std::string getCategoryPackByGtin(const std::string &g)
 {
     return pharmaMap[g];
+}
+
+std::string getCategoryMedByGtin(const std::string &g)
+{
+    return catMedMap[g];
 }
 
 }

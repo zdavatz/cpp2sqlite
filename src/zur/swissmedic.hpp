@@ -28,7 +28,7 @@ namespace SWISSMEDIC
 //        std::string galenicForm;
 //        std::string owner;
 //        std::string itNumber;
-//        std::string categoryMed;
+        std::string categoryMed;
         std::string categoryPack;
 //        std::string regDate;
 //        std::string validUntil;
@@ -38,6 +38,7 @@ namespace SWISSMEDIC
 
     void parseXLXS(const std::string &filename, bool dumpHeader = false);
     std::string getCategoryPackByGtin(const std::string &gtin);
+    std::string getCategoryMedByGtin(const std::string &g);
 }
 
 #endif /* swissmedic_hpp */
