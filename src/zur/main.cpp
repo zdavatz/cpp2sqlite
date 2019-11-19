@@ -30,6 +30,7 @@
 #include "bag.hpp"
 #include "galen.hpp"
 #include "swissmedic.hpp"
+#include "neu.hpp"
 
 namespace po = boost::program_options;
 
@@ -92,6 +93,12 @@ void generateKunden(std::string inDir, std::string outDir)
 
     KUNDEN::createConditionsJSON(outDir + "/rose_conditions.json");
     KUNDEN::createIdsJSON(outDir + "/rose_ids.json");
+}
+
+void generateKundenNeu(std::string inDir, std::string outDir)
+{
+    NEU::parseCSV(inDir + "/zurrose/Kunden_alle_NEU.csv");
+    NEU::createConditionsNewJSON(outDir + "/rose_conditions_new.json");
 }
 
 // See ShoppingCartRose.java 260 encryptAutoGenerikaToFile()
@@ -210,6 +217,7 @@ int main(int argc, char **argv)
 #endif
 
     generateKunden(opt_inputDirectory, opt_workDirectory + "/output");
+    generateKundenNeu(opt_inputDirectory, opt_workDirectory + "/output");
     generateAutogenerika(opt_inputDirectory, opt_workDirectory + "/output");
     generateDirect(opt_inputDirectory, opt_workDirectory);
     generateNota(opt_inputDirectory, opt_workDirectory);

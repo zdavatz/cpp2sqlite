@@ -113,6 +113,7 @@ add_executable(zurrose
 	src/zur/galen.hpp src/zur/galen.cpp
 	src/zur/generika.hpp src/zur/generika.cpp
 	src/zur/kunden.hpp src/zur/kunden.cpp
+	src/zur/neu.hpp src/zur/neu.cpp
 	src/zur/nota.hpp src/zur/nota.cpp
 	src/zur/stamm.hpp src/zur/stamm.cpp
 	src/zur/swissmedic.hpp src/zur/swissmedic.cpp

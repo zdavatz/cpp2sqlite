@@ -13,8 +13,9 @@
 #include <vector>
 #include <map>
 
-// For "all-string" JSON
 #include <boost/algorithm/string.hpp>
+
+// For "all-string" JSON
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -90,6 +91,7 @@ unsigned int statsCsvLineCount = 0;
 std::vector<int> statsLinesWrongNumFields;
 std::vector<std::string> statsLinesEmptyGlnVec; // strings so that they can be conveniently joined
 std::vector<int> statsLinesGlnIsOz;
+unsigned int statsGlnIsNotUniqueCount;
 
 static
 float getFloatOrZero(const std::string &cell)
@@ -109,6 +111,7 @@ void printFileStats(const std::string &filename)
     
     REP::html_start_ul();
     REP::html_li("Total Doctors: " + std::to_string(user_map.size()));
+    REP::html_li("GLNs not unique: " + std::to_string(statsGlnIsNotUniqueCount));
     REP::html_end_ul();
     
     if (statsLinesWrongNumFields.size() > 0) {
@@ -247,9 +250,10 @@ void parseCSV(const std::string &filename, bool dumpHeader)
                 getFloatOrZero(columnVector[25]),     // Z
                 getFloatOrZero(columnVector[26]),     // AA
                 getFloatOrZero(columnVector[27])};    // AB
-
-            // TODO:
             
+            if (user_map.find(user.gln_code) != user_map.end())
+                statsGlnIsNotUniqueCount++;
+
             user_map.insert(std::make_pair(user.gln_code, user));
             roseid_to_gln_map.insert(std::make_pair(user.rose_id, user.gln_code));
 
@@ -269,6 +273,7 @@ void parseCSV(const std::string &filename, bool dumpHeader)
 #ifdef DEBUG
     std::clog
     << "Parsed " << user_map.size() << " doctors"
+    << "CSV Lines " << statsCsvLineCount
     << ", bad line(s):" << statsLinesWrongNumFields.size()
     << std::endl;
 #endif
