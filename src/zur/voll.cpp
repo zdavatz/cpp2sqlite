@@ -193,11 +193,13 @@ void parseCSV(const std::string &filename,
                 if (paf.length() > 0) {
                     BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(a.ean_code); // get it from BAG::packMap
 
-                    a.flags = boost::algorithm::join(fromBag.flags, ", ") ;
                     auto bioT = SWISSMEDIC::getCategoryMedByGtin(a.ean_code);
-                    if (bioT == "Biotechnologika")
-                        a.flags += ", BioT";
+                    if (bioT == "Biotechnologika") {
+                        //a.flags += ", BioT";
+                        fromBag.flags.push_back("BioT");
+                    }
 
+                    a.flags = boost::algorithm::join(fromBag.flags, ", ") ;
                     a.exfactory_price = fromBag.efp;
                 }
                 a.regnr = a.ean_code.substr(4, 5); // pos, len
