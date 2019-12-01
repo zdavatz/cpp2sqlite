@@ -225,7 +225,7 @@ int main(int argc, char **argv)
     if ((opt_zurrose == "fulldb") || (opt_zurrose == "atcdb"))
     {
         // See .java initSqliteDB()
-        std::string dbName = (opt_zurrose == "fulldb") ? "rose_db_full.db" : "rose_db_atc_only.db";
+        std::string dbName = (opt_zurrose == "fulldb") ? "rose_db_new_full.db" : "rose_db_new_atc_only.db";
         VOLL::openDB(opt_workDirectory + "/output/" + dbName);
 
 #ifdef OBSOLETE_STUFF
