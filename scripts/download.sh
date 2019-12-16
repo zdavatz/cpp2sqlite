@@ -1,7 +1,7 @@
 #!/bin/bash
 # Alex Bettarini - 22 Jan 2019
 
-# Usage: before running r'ìthis file do
+# Usage: before running this file do
 #   either
 #       source steps_public1.source
 #   or

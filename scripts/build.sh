@@ -60,8 +60,7 @@ if [ $STEP_DOWNLOAD_ZR ] ; then
 source steps_public2.source
 ./download.sh
 
-./download_zr
-.sh
+./download_zr.sh
 fi
 
 #-------------------------------------------------------------------------------
