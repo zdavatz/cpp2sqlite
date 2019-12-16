@@ -1,12 +1,13 @@
 #!/bin/bash
 # Alex Bettarini - 22 Jan 2019
 
-STEP_DOWNLOAD_EPHA=true
-STEP_DOWNLOAD_SWISSMEDIC=true
-STEP_DOWNLOAD_REFDATA=true
-STEP_DOWNLOAD_BAG=true
-STEP_DOWNLOAD_SWISSPEDDOSE=true
-STEP_DOWNLOAD_AIPS=true
+# Usage: before running r'ìthis file do
+#   either
+#       source steps_public1.source
+#   or
+#       source steps_public2.source
+
+#STEP_DOWNLOAD_EPHA=true
 
 WD=$(pwd)
 SRC_DIR=$(realpath ../)
@@ -54,10 +55,14 @@ fi
 
 #-------------------------------------------------------------------------------
 
-if [ $STEP_DOWNLOAD_SWISSMEDIC ] ; then
+if [ $STEP_DOWNLOAD_SWISSMEDIC_PACKAGES ] ; then
+# Needed in AmiKo
 FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_ham.xlsx"
 wget -N $FILE1 -O swissmedic_packages.xlsx
+fi
 
+if [ $STEP_DOWNLOAD_SWISSMEDIC_HAM ] ; then
+# Needed in pharma
 # Extended drug list
 FILE2="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/erweiterte_ham.xlsx.download.xlsx/Erweiterte_Arzneimittelliste%20HAM.xlsx"
 wget -N $FILE2

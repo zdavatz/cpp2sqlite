@@ -2,7 +2,7 @@
 
 #STEP_GIT=true
 STEP_DOWNLOAD_PUBLIC=true
-STEP_DOWNLOAD_PRIVATE=true
+STEP_DOWNLOAD_ZR=true
 
 #STEP_CONFIGURE_XLNT=true
 #STEP_BUILD_XLNT=true
@@ -48,12 +48,20 @@ fi
 
 #-------------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_PUBLIC ] ; then
+source steps_public1.source
+./download.sh
+
+source steps_public2.source
 ./download.sh
 fi
 
 #-------------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_PRIVATE ] ; then
-./download_private.sh
+if [ $STEP_DOWNLOAD_ZR ] ; then
+source steps_public2.source
+./download.sh
+
+./download_zr
+.sh
 fi
 
 #-------------------------------------------------------------------------------
