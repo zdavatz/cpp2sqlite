@@ -61,6 +61,7 @@ source steps_public2.source
 ./download.sh
 
 ./download_zr.sh
+#./download_zr.sh test
 fi
 
 #-------------------------------------------------------------------------------

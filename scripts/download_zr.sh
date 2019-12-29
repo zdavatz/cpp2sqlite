@@ -4,30 +4,24 @@
 WD=$(pwd)
 SRC_DIR=$(realpath ../)
 
-if [ ! -z "$1" ] ; then
-    SRC_DIR=$(realpath $1)
+if [ "test" == "$1" ] ; then
+    URL="ftp://ftp.zur-rose.ch/ywesee OutTest"
+else
+    URL="ftp://ftp.zur-rose.ch/ywesee Out"
 fi
+
 
 BLD_DIR=$SRC_DIR/build
 BIN_DIR=$BLD_DIR
 
-# Issue #3 specifications:
-DOWNLOAD_DIR=$SRC_DIR/downloads
-OUTPUT_DIR=$SRC_DIR/output
-
-mkdir -p $OUTPUT_DIR
-mkdir -p $DOWNLOAD_DIR ; cd $DOWNLOAD_DIR
-
 #echo "SRC_DIR: $SRC_DIR"
-#echo "DOWNLOAD_DIR: $DOWNLOAD_DIR"
-#echo "OUTPUT_DIR: $OUTPUT_DIR"
 
 #-------------------------------------------------------------------------------
 # zurrose
 
 source $WD/passwords
-URL="ftp://ftp.zur-rose.ch/ywesee OutTest"
 ZURROSE_DIR="${SRC_DIR}/input/zurrose"
+#echo "ZURROSE_DIR: $ZURROSE_DIR"
 mkdir -p $ZURROSE_DIR
 pushd $ZURROSE_DIR
 
