@@ -87,8 +87,21 @@ std::string parseUnitFromTitle(const std::string &pack_title)
 {
     std::regex rgx(R"((\d+)(\.\d+)?\s*(ml|mg|g))");  // tested at https://regex101.com
     std::smatch match;
-    if (std::regex_search(pack_title, match, rgx))
-        return match[0];
+    std::string dosage;
+    if (std::regex_search(pack_title, match, rgx)) {
+        dosage = match[0];
+    }
+
+    if (dosage.length() == 0) {
+        std::regex rgx2(R"((\d+)(\.\d+)?\/((\d+)(\.\d+)?))");  // tested at https://regex101.com
+        if (std::regex_search(pack_title, match, rgx2)) {
+            dosage = match[3];
+        }
+    }
+
+    if (dosage.length() > 0) {
+        return dosage;
+    }
 
     return {};
 }
@@ -250,8 +263,9 @@ void parseCSV(const std::string &filename,
             
             // See file DispoParse.java line 497
             a.pack_unit = columnVector[11]; // L
-            if ((a.pack_unit.length() == 0) || (a.pack_unit == "0"))
+            if ((a.pack_unit.length() == 0) || (a.pack_unit == "0")) {
                 a.pack_unit = parseUnitFromTitle(a.pack_title); // get it from column B
+            }
             
             a.rose_base_price = columnVector[12]; // M TODO: see bag formatPriceAsMoney
             

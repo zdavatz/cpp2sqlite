@@ -436,11 +436,17 @@ std::string getDosageFromName(const std::string &name)
     // TODO: use a separate regex if the name ends with "stk"
 
     std::string dosage;
-    std::regex rgx(R"(\d+(\.\d+)?\s*(mg|g(\s|$)|i.u.|e(\s|$)|mcg|ie|mmol)(\s?\/\s?(\d(\.\d+)?)*\s*(ml|g|mcg))*)");  // tested at https://regex101.com
+    std::regex rgx(R"(\d+(\.\d+)?\s*(mg|g(\s|$)|i.u.|e(\s|$)|mcg|ie|mmol|ds)(\s?\/\s?(\d(\.\d+)?)*\s*(ml|g|mcg))*)");  // tested at https://regex101.com
     std::smatch match;
     if (std::regex_search(name, match, rgx))
         dosage = match[0];
     
+    if (boost::iends_with(dosage, "ds")) {
+        boost::algorithm::erase_last(dosage, "ds");
+        boost::algorithm::erase_last(dosage, "Ds");
+        boost::algorithm::trim(dosage);
+    }
+
     // TODO: trim trailing space
     // TODO: change " / " to "/"
     
