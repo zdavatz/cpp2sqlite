@@ -92,11 +92,13 @@ std::string parseUnitFromTitle(const std::string &pack_title)
         dosage = match[0];
     }
 
-    if (dosage.length() == 0) {
-        std::regex rgx2(R"((\d+)(\.\d+)?\s*(Ds|ds))");  // tested at https://regex101.com
-        if (std::regex_search(pack_title, match, rgx2)) {
-            dosage = match[0];
-        }
+    std::string dosage2;
+    std::regex rgx2(R"((\d+)(\.\d+)?\/(\d+)(\.\d+)?\s*(Ds|ds|mg)?)");  // tested at https://regex101.com
+    if (std::regex_search(pack_title, match, rgx2)) {
+        dosage2 = match[0];
+    }
+    if (dosage.empty() || boost::algorithm::contains(dosage2, dosage)) {
+        return dosage2;
     }
 
     if (dosage.length() > 0) {
