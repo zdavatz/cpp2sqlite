@@ -442,7 +442,7 @@ std::string getDosageFromName(const std::string &name)
         dosage = match[0];
 
     std::string dosage2;
-    std::regex rgx2(R"((\d+)(\.\d+)?\/(\d+)(\.\d+)?\s*(ds|mg))");  // tested at https://regex101.com
+    std::regex rgx2(R"((\d+)(\.\d+)?\/(\d+)(\.\d+)?\s*(Ds|ds|mg)?)");  // tested at https://regex101.com
     if (std::regex_search(name, match, rgx2))
         dosage2 = match[0];
 
