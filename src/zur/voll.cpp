@@ -93,9 +93,9 @@ std::string parseUnitFromTitle(const std::string &pack_title)
     }
 
     if (dosage.length() == 0) {
-        std::regex rgx2(R"((\d+)(\.\d+)?\/((\d+)(\.\d+)?))");  // tested at https://regex101.com
+        std::regex rgx2(R"((\d+)(\.\d+)?\s*(Ds|ds))");  // tested at https://regex101.com
         if (std::regex_search(pack_title, match, rgx2)) {
-            dosage = match[3];
+            dosage = match[0];
         }
     }
 
