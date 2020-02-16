@@ -436,16 +436,20 @@ std::string getDosageFromName(const std::string &name)
     // TODO: use a separate regex if the name ends with "stk"
 
     std::string dosage;
-    std::regex rgx(R"(\d+(\.\d+)?\s*(mg|g(\s|$)|i.u.|e(\s|$)|mcg|ie|mmol|ds)(\s?\/\s?(\d(\.\d+)?)*\s*(ml|g|mcg))*)");  // tested at https://regex101.com
+    std::regex rgx(R"(\d+(\.\d+)?\s*(mg|g(\s|$)|i.u.|e(\s|$)|mcg|ie|mmol)(\s?\/\s?(\d(\.\d+)?)*\s*(ml|g|mcg))?)");  // tested at https://regex101.com
     std::smatch match;
     if (std::regex_search(name, match, rgx))
         dosage = match[0];
-    
-    if (boost::iends_with(dosage, "ds")) {
-        boost::algorithm::erase_last(dosage, "ds");
-        boost::algorithm::erase_last(dosage, "Ds");
-        boost::algorithm::trim(dosage);
+
+    std::string dosage2;
+    std::regex rgx2(R"((\d+)(\.\d+)?\/(\d+)(\.\d+)?\s*(ds|mg))");  // tested at https://regex101.com
+    if (std::regex_search(name, match, rgx2))
+        dosage2 = match[0];
+
+    if (dosage.empty() || boost::algorithm::contains(dosage2, dosage)) {
+        return dosage2;
     }
+    
 
     // TODO: trim trailing space
     // TODO: change " / " to "/"
