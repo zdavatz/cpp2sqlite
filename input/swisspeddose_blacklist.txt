@@ -1,0 +1,2 @@
+# See issue https://github.com/zdavatz/cpp2sqlite/issues/119
+31096
