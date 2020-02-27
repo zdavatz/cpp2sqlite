@@ -1,2 +1,2 @@
-# See issue https://github.com/zdavatz/cpp2sqlite/issues/119
+# Do not show swisspeddose tables for the following 5-digit Swissmedic Registration numbers. See issue https://github.com/zdavatz/cpp2sqlite/issues/119
 31096
