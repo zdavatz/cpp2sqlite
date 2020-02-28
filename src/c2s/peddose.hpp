@@ -80,7 +80,7 @@ namespace PED
     std::string getIndicationByKey(const std::string &key);
 
     void getDosageById(const std::string &id, std::vector<_dosage> &dosages);
-    
+    bool isRegnrsInBlacklist(const std::string regnrs);
 
     //std::string getRoaDescription(const std::string &codeValue);
 

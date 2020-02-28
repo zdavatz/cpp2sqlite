@@ -676,7 +676,7 @@ void getHtmlFromXml(std::string &xml,
 doExtraSections:
     // Add a section that was not in the XML contents
     // PedDose
-    if (!atc.empty())
+    if (!atc.empty() && !PED::isRegnrsInBlacklist(regnrs))
     {
         std::string pedHtml = PED::getHtmlByAtc(atc);
         if (!pedHtml.empty()) {

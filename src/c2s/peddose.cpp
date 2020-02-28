@@ -438,6 +438,11 @@ void getDosageById(const std::string &id, std::vector<_dosage> &dosages)
             dosages.push_back(d);
 }
 
+bool isRegnrsInBlacklist(const std::string regnrs)
+{
+    return std::find(blacklist.begin(), blacklist.end(), regnrs) != blacklist.end();
+}
+
 // Each "case" generates one table
 // One ATC can have mnay cases and therefore multiple tables
 //
