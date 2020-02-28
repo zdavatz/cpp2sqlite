@@ -18,12 +18,12 @@ namespace PED
         std::string indicationKey;
         std::string RoaCode;
     };
-    
+
     struct _indication {
         std::string name;
         std::string recStatus;
     };
-    
+
     struct _code {
         std::string value;
         std::string description;
@@ -80,11 +80,12 @@ namespace PED
 
     void getDosageById(const std::string &id, std::vector<_dosage> &dosages);
     
+
     //std::string getRoaDescription(const std::string &codeValue);
-    
+
     std::string getHtmlByAtc(const std::string atc);
     void showPedDoseByAtc(const std::string atc);
-    
+
     void printUsageStats();
 }
 
