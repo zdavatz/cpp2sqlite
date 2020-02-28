@@ -923,6 +923,7 @@ int main(int argc, char **argv)
 
     PED::parseXML(opt_workDirectory + "/downloads/swisspeddosepublication.xml",
                   opt_language);
+    PED::parseBlacklistTXT(opt_inputDirectory + "/swisspeddose_blacklist.txt");
 #ifdef DEBUG_PED_DOSE
     PED::showPedDoseByAtc("N02BA01");
     PED::showPedDoseByAtc("J05AB01");

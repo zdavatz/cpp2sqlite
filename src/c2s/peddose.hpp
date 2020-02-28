@@ -69,7 +69,8 @@ namespace PED
         std::string caseId;
         std::string type;
     };
-    
+
+    void parseBlacklistTXT(const std::string &filename);
     void parseXML(const std::string &filename,
                   const std::string &language);
 

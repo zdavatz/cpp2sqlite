@@ -163,6 +163,34 @@ void printUsageStats()
     REP::html_end_ul();
 }
 
+void parseBlacklistTXT(const std::string &filename)
+{
+    try {
+        std::clog << std::endl << "Reading " << filename << std::endl;
+        std::ifstream file(filename);
+
+        std::string str;
+        while (std::getline(file, str))
+        {
+            if (str.size() == 0) {
+                continue;
+            }
+            if (str[0] == '#') {
+                continue;
+            }
+            blacklist.push_back(str);
+        } // while
+
+        file.close();
+    }
+    catch (std::exception &e) {
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << " Error " << e.what()
+        << std::endl;
+    }
+}
+
 void parseXML(const std::string &filename,
               const std::string &language)
 {
