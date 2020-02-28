@@ -125,7 +125,7 @@ int countBagGtinInRefdata(std::vector<std::string> &list)
         if (REFDATA::findGtin(g))
             count++;
     }
-    
+
     return count;
 }
 
@@ -135,10 +135,10 @@ std::string getBarcodesFromGtins(const GTIN::oneFachinfoPackages &packages)
     std::string html;
     int i=0;
     for (auto gtin : packages.gtin) {
-        
+
         if (i < packages.name.size()) // possibly redundant check
             html += "  <p class=\"spacing1\">" + packages.name[i++] + "</p>\n";
-        
+
         std::string svg = EAN13::createSvg("", gtin);
         // TODO: onmouseup="addShoppingCart(this)"
         html += "<p class=\"barcode\">" + svg + "</p>\n";
@@ -163,7 +163,7 @@ void modifyColgroup(pt::ptree &colgroup)
 
     BOOST_FOREACH(pt::ptree::value_type &col, colgroup) {
         std::string style = col.second.get<std::string>("<xmlattr>.style");
-        
+
         float val = 0.0;
         // Test string: "width:1.77222in;"
         std::regex rgx(R"(\d*\.\d*)");  // tested at https://regex101.com
@@ -179,7 +179,7 @@ void modifyColgroup(pt::ptree &colgroup)
     int index = 0;
     BOOST_FOREACH(pt::ptree::value_type &col, colgroup) {
         float newValue = 100.0 * oldValue[index++] / sum;
-        
+
         std::ostringstream s;
         s << std::fixed << std::setprecision(6) << newValue;
         std::string newStyle = "width:" + s.str() + "%25;background-color: #EEEEEE; padding-right: 5px; padding-left: 5px";
@@ -190,7 +190,7 @@ void modifyColgroup(pt::ptree &colgroup)
 
 void removeTagFromXml(std::string &xml, const std::string &tag)
 {
-    
+
 }
 
 // Here we modify the HTML contents and possibly children tags, not the parent tags
@@ -207,13 +207,13 @@ static void cleanupTitle(std::string &title)
 static void cleanupSection_1_Title(std::string &title)
 {
     cleanupTitle(title);
-    
+
     // All titles in XML "type 2" terminate with "<br />". Remove it
     size_t lastindex = title.rfind("<br />");
     if (lastindex != std::string::npos) {
         // Remove the "<br />" suffix
         title = title.substr(0, lastindex);
-        
+
         // Some titles have another "<br />" in the middle
         // Leave it there for the HTML
     }
@@ -236,10 +236,10 @@ static void cleanupSection_not1_Title(std::string &title,
                                       const std::string regnrs)
 {
     cleanupSection_not1_Title(title);
-    
+
     if (title.find(TITLES_STR_SEPARATOR) != std::string::npos) {
         statsTitleStrSeparatorMap.insert(std::make_pair(regnrs, title));
-        
+
         // Replace section separator ";" with something else
         // (not ',' because it's the decimal point separator on some locales)
         boost::replace_all(title, TITLES_STR_SEPARATOR,  "·"); // &middot;
@@ -304,7 +304,7 @@ void getHtmlFromXml(std::string &xml,
         std::smatch match;
         if (std::regex_search(xml, match, rgx)) {
             std::string title = match[match.size() - 1];
-            
+
             // Note: the title from "MonTitle" is used in two places in AmiKo,
             // in the middle pane (HTML), and on the right pane (chapter name)
 
@@ -314,7 +314,7 @@ void getHtmlFromXml(std::string &xml,
             boost::replace_all(title, ESCAPED_SUP_L, "<sup>");
             boost::replace_all(title, ESCAPED_SUP_R, "</sup>");
             boost::replace_all(title, ESCAPED_BR,    "<br />");
-    
+
             // HTML
             std::string titleDiv = "   <div class=\"MonTitle\" id=\"section1\">\n";
             titleDiv += title + "\n";
@@ -342,7 +342,7 @@ void getHtmlFromXml(std::string &xml,
 
         std::string::size_type posDivFrom = xml.find(divFromText);
         while (posDivFrom != std::string::npos) {
-            
+
             // Append 'section#' to a vector to be used in column "ids_str"
             std::string::size_type posIdFrom = xml.find("Section", posDivFrom);
             std::string::size_type posIdTo   = xml.find("\">", posIdFrom);
@@ -356,7 +356,7 @@ void getHtmlFromXml(std::string &xml,
             std::string::size_type from = posTitleFrom + sectTitleText.length();
             std::string sTitle = xml.substr(from, posTitleTo - from);
             sectionTitle.push_back(sTitle);
-          
+
 #ifdef DEBUG
             //std::clog << sId << ", " << sTitle << ", " << sectionNumber << std::endl;
 #endif
@@ -364,7 +364,7 @@ void getHtmlFromXml(std::string &xml,
             // Next
             posDivFrom = xml.find(divFromText, posDivFrom + divFromText.length());
         }
-        
+
         // Insert barcodes
         std::string htmlBarcodes = getBarcodesFromGtins(packages);
         std::string barcodeFromText("<div class=\"absTitle\">Packungen</div>");
@@ -374,7 +374,7 @@ void getHtmlFromXml(std::string &xml,
         std::string::size_type from = posBarcodeFrom + barcodeFromText.length();
         std::string::size_type posBarcodeTo = xml.find("</div>", from);
         xml.replace(from, posBarcodeTo - from, "\n" + htmlBarcodes);
-        
+
 #ifdef WORKAROUND_SUB_SUP_BR
         // Restore children
         boost::replace_all(xml, ESCAPED_SUP_L, "<sup>");
@@ -399,7 +399,7 @@ void getHtmlFromXml(std::string &xml,
 
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("div")) {
-  
+
             // The following call changes "&lt;" into "<"
             // "&amp;" into "&"
             std::string tagContent = v.second.data();
@@ -451,14 +451,14 @@ void getHtmlFromXml(std::string &xml,
 #else
             std::regex r1("<");
             tagContent = std::regex_replace(tagContent, r1, "&lt;");
-            
+
             std::regex r2(">");
             tagContent = std::regex_replace(tagContent, r2, "&gt;");
-            
+
             //std::regex r3("'");
             //tagContent = std::regex_replace(tagContent, r3, "&apos;");
 #endif
-            
+
             if (v.first == "p")
             {
                 ++statsParCount;
@@ -490,7 +490,7 @@ void getHtmlFromXml(std::string &xml,
                     std::string chapterName = tagContent;
                     cleanupSection_not1_Title(chapterName, regnrs);
                     sectionTitle.push_back(chapterName);
-                    
+
                     std::string divClass;
                     if (sectionNumber == 1) {
                         divClass = "MonTitle";
@@ -531,7 +531,7 @@ void getHtmlFromXml(std::string &xml,
                         html += getBarcodesFromGtins(packages);
                         section18Done = true;
                     }
-                    
+
                     // Append 'section#' to a vector to be used in column "ids_str"
                     sectionId.push_back(section);
 
@@ -545,7 +545,7 @@ void getHtmlFromXml(std::string &xml,
                 // Skip before section 1
                 if (!section1Done)
                     continue;
-                
+
                 // Skip all the remaining before section 2
                 if ((sectionNumber < 2) && (section1Done))
                     continue;
@@ -565,7 +565,7 @@ void getHtmlFromXml(std::string &xml,
                             std::string style = v2.second.get<std::string>("<xmlattr>.style");
                             if (!style.empty())
                                 img += " Style=\"" + style + "\"";
-                            
+
                             std::string alt;
                             try {
                                 alt = v2.second.get<std::string>("<xmlattr>.alt");
@@ -581,7 +581,7 @@ void getHtmlFromXml(std::string &xml,
                             html += "  <p class=\"spacing1\">" + img + "</p>\n";
                         }
                     } // BOOST
-                    
+
                     if (imgFound)
                         continue;  // already added this <p> to html
                 }
@@ -593,7 +593,7 @@ void getHtmlFromXml(std::string &xml,
                 // See HtmlUtils.java:472
                 bool needItalicSpan = true;
                 boost::algorithm::trim(tagContent); // sometimes it ends with ". "
-                
+
                 if (tagContent.empty()) // for example in rn 51704
                     continue; // TBC
 
@@ -605,7 +605,7 @@ void getHtmlFromXml(std::string &xml,
                 {
                     needItalicSpan = false;
                 }
-                
+
                 // See HtmlUtils.java:602
 #if 0
                 std::regex r("^[–|·|-|•]");
@@ -650,7 +650,7 @@ void getHtmlFromXml(std::string &xml,
                 std::stringstream ss;
                 tree.add_child("table", v.second);
                 pt::write_xml(ss, tree);
-                
+
                 std::string table = ss.str();
 
                 // Clean up the "serialized" string
@@ -676,7 +676,7 @@ void getHtmlFromXml(std::string &xml,
 doExtraSections:
     // Add a section that was not in the XML contents
     // PedDose
-    if (!atc.empty())
+    if (!atc.empty() && !PED::isRegnrsInBlacklist(regnrs))
     {
         std::string pedHtml = PED::getHtmlByAtc(atc);
         if (!pedHtml.empty()) {
@@ -711,15 +711,15 @@ doExtraSections:
             if (language == "fr")
                 sectionSappInfoName1 = "ASPP: F. enceintes";
 
-            
+
             if (hasXmlHeader && atc.empty())
                 html += "\n  </div>"; // terminate previous section before starting a new one
-            
+
             html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo1 + "\">\n";
             html += "<div class=\"absTitle\">" + sectionSappInfoName1 + "</div>";
             html += htmlPregnancy;
             html += "   </div>\n";
-            
+
             // Append 'section#' to a vector to be used in column "ids_str"
             sectionId.push_back(sectionSappInfo1);
             sectionTitle.push_back(sectionSappInfoName1);
@@ -730,15 +730,15 @@ doExtraSections:
             std::string sectionSappInfoName2("SAPP: Stillende");
             if (language == "fr")
                 sectionSappInfoName2 = "ASPP: F. allaitantes";
-            
+
             if (hasXmlHeader && atc.empty())
                 html += "\n  </div>"; // terminate previous section before starting a new one
-            
+
             html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo2 + "\">\n";
             html += "<div class=\"absTitle\">" + sectionSappInfoName2 + "</div>";
             html += htmlBreastfeed;
             html += "   </div>\n";
-            
+
             // Append 'section#' to a vector to be used in column "ids_str"
             sectionId.push_back(sectionSappInfo2);
             sectionTitle.push_back(sectionSappInfoName2);
@@ -757,7 +757,7 @@ doExtraSections:
         url += appName;
         html += "<p class=\"footer\">Auto-generated by <a href=\"" + url + "\">" + appName + "</a> on " + curtime + "</p>";
     }
-    
+
     html += "\n  </div>";
     html += "\n </body>";
     html += "\n</html>";
@@ -769,7 +769,7 @@ void openDB(const std::string &filename)
     std::clog << std::endl << "Create DB: " << filename << std::endl;
 
     sqlDb.openDB(filename);
-    
+
     sqlDb.createTable(TABLE_NAME_AMIKO, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, auth TEXT, atc TEXT, substances TEXT, regnrs TEXT, atc_class TEXT, tindex_str TEXT, application_str TEXT, indications_str TEXT, customer_id INTEGER, pack_info_str TEXT, add_info_str TEXT, ids_str TEXT, titles_str TEXT, content TEXT, style_str TEXT, packages TEXT");
     sqlDb.createIndex(TABLE_NAME_AMIKO, "idx_", {"title", "auth", "atc", "substances", "regnrs", "atc_class"});
     sqlDb.prepareStatement(TABLE_NAME_AMIKO,
@@ -777,10 +777,10 @@ void openDB(const std::string &filename)
 
     sqlDb.createTable(TABLE_NAME_PRODUCT, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, author TEXT, eancodes TEXT, pack_info_str TEXT, packages TEXT");
     sqlDb.createIndex(TABLE_NAME_PRODUCT, "idx_prod_", {"title", "author", "eancodes"});
-    
+
     sqlDb.createTable(TABLE_NAME_ANDROID, "locale TEXT default 'en_US'");
     sqlDb.insertInto(TABLE_NAME_ANDROID, "locale", "'en_US'");
-    
+
     //createTable("sqlite_sequence", "");  // created automatically
 }
 
@@ -795,7 +795,7 @@ void closeDB()
 int main(int argc, char **argv)
 {
     //std::setlocale(LC_ALL, "en_US.utf8");
-    
+
     appName = boost::filesystem::basename(argv[0]);
 
     std::string opt_inputDirectory;
@@ -845,17 +845,17 @@ int main(int argc, char **argv)
         ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
         ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
         ;
-    
+
     po::variables_map vm;
 
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm); // populate vm
-        
+
         if (vm.count("help")) {
             std::cout << desc << std::endl;
             return EXIT_SUCCESS;
         }
-        
+
         if (vm.count("version")) {
             on_version();
             return EXIT_SUCCESS;
@@ -880,7 +880,7 @@ int main(int argc, char **argv)
     if (vm.count("verbose")) {
         flagVerbose = true;
     }
-    
+
     if (vm.count("without-sappinfo")) {
         flagNoSappinfo = true;
     }
@@ -889,13 +889,13 @@ int main(int argc, char **argv)
         flagXml = true;
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagXml: " << flagXml << std::endl;
     }
-    
+
     if (vm.count("pinfo")) {
         //flagPinfo = true;
         type = "pi";
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
-    
+
     if (!vm.count("workDir")) {
         opt_workDirectory = opt_inputDirectory + "/..";
     }
@@ -911,7 +911,7 @@ int main(int argc, char **argv)
         REP::html_li(argv[i]);
 
     REP::html_end_ul();
-    
+
     // TODO: create index with links to expected h1 titles
     REP::html_h1("File Analysis");
 
@@ -920,9 +920,10 @@ int main(int argc, char **argv)
     std::string jsonFilename = "/epha_products_" + opt_language + "_json.json";
     EPHA::parseJSON(opt_workDirectory + "/downloads" + jsonFilename, flagVerbose);
 #endif
-    
+
     PED::parseXML(opt_workDirectory + "/downloads/swisspeddosepublication.xml",
                   opt_language);
+    PED::parseBlacklistTXT(opt_inputDirectory + "/swisspeddose_blacklist.txt");
 #ifdef DEBUG_PED_DOSE
     PED::showPedDoseByAtc("N02BA01");
     PED::showPedDoseByAtc("J05AB01");
@@ -940,7 +941,7 @@ int main(int argc, char **argv)
                                               flagVerbose);
 
     REP::html_p("Swissmedic has " + std::to_string(countAipsPackagesInSwissmedic(list)) + " matching packages");
-    
+
     REFDATA::parseXML(opt_workDirectory + "/downloads/refdata_pharma.xml", opt_language);
 
     BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", opt_language, flagVerbose);
@@ -952,7 +953,7 @@ int main(int argc, char **argv)
         REP::html_li(std::to_string(countBagGtinInRefdata(bagList)) + " GTIN are also in refdata");
         REP::html_end_ul();
     }
-    
+
     if (!flagNoSappinfo)
         SAPP::parseXLXS(opt_inputDirectory, "/sappinfo.xlsx", opt_language);
 
@@ -976,7 +977,7 @@ int main(int argc, char **argv)
         int n = list.size();
 #endif
         for (AIPS::Medicine m : list) {
-            
+
 #ifdef WITH_PROGRESS_BAR
             // Show progress
             if ((ii++ % 60) == 0)
@@ -987,7 +988,7 @@ int main(int argc, char **argv)
             std::vector<std::string> regnrs;
             boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
             //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << ", regnrs size: " << regnrs.size() << std::endl;
-            
+
             if (regnrs[0] == "00000")
                 continue;
 
@@ -998,7 +999,7 @@ int main(int argc, char **argv)
             sqlDb.bindText(3, m.atc);
             sqlDb.bindText(4, m.subst);
             sqlDb.bindText(5, m.regnrs);
-            
+
             // atc_class
             std::string atcClass = ATC::getClassByAtcColumn(m.atc);
             sqlDb.bindText(6, atcClass);
@@ -1022,10 +1023,10 @@ int main(int argc, char **argv)
             else
                 sqlDb.bindText(8, application);
             }
-            
+
             // TODO: indications_str
             sqlDb.bindText(9, "");
-            
+
             // TODO: customer_id
             sqlDb.bindText(10, "");  // "0"
 
@@ -1100,7 +1101,7 @@ int main(int argc, char **argv)
                                flagNoSappinfo);
                 sqlDb.bindText(15, html);
             }
-            
+
             // ids_str
             {
                 std::string ids_str = boost::algorithm::join(sectionId, ",");
@@ -1131,7 +1132,7 @@ int main(int argc, char **argv)
                     std::string oneLine = name.substr(0, len);  // pos, len
 
                     oneLine += "|";
-                    
+
                     // Field 1
                     oneLine += du.dosage;
                     oneLine += "|";
@@ -1162,7 +1163,7 @@ int main(int argc, char **argv)
                     // Field 9
                     oneLine += *itGtin;
                     oneLine += "|";
-                    
+
                     // Field 10
                     oneLine += REFDATA::getPharByGtin(*itGtin);
 
@@ -1172,21 +1173,21 @@ int main(int argc, char **argv)
                     lines.push_back(oneLine);
                     itGtin++;
                 }
-                
+
                 // Create a single multi-line string from the vector
                 std::string packages = boost::algorithm::join(lines, "\n");
 
                 sqlDb.bindText(17, packages);
             }
-            
+
             sqlDb.runStatement(TABLE_NAME_AMIKO);
         } // for
-        
+
 #ifdef WITH_PROGRESS_BAR
         std::cerr << "\r100 %" << std::endl;
 #endif
         REP::html_h1("Usage");
-        
+
         REP::html_h2("aips REGNRS (found/not found)");
         REP::html_start_ul();
         REP::html_li("in refdata: " + std::to_string(statsRnFoundRefdataCount) + "/" + std::to_string(statsRnNotFoundRefdataCount) + " (" + std::to_string(statsRnFoundRefdataCount + statsRnNotFoundRefdataCount) + ")");
@@ -1196,14 +1197,14 @@ int main(int argc, char **argv)
         REP::html_end_ul();
         if (statsRegnrsNotFound.size() > 0)
             REP::html_div(boost::algorithm::join(statsRegnrsNotFound, ", "));
-        
+
         if (statsTitleStrSeparatorMap.size() > 0) {
             REP::html_h3("XML");
             REP::html_p("title_str separator '" + std::string(TITLES_STR_SEPARATOR) + "' was replaced for rgnrs");
             REP::html_start_ul();
             for (auto s : statsTitleStrSeparatorMap)
                 REP::html_li(s.first + " \"" + s.second + "\"");
-            
+
             REP::html_end_ul();
         }
 

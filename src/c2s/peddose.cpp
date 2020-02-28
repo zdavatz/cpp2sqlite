@@ -41,7 +41,7 @@ namespace PED
     unsigned int statsCodeEVIDENZ = 0;
     unsigned int statsCodeRoa = 0;
     unsigned int statsCodeZEIT = 0; // Time
-    
+
     // Usage stats
     unsigned int statsCasesForAtcFoundCount = 0;
     unsigned int statsCasesForAtcNotFoundCount = 0;
@@ -51,7 +51,7 @@ namespace PED
     std::set<std::string> caseCaseIDSet; // TODO: obsolete
     std::set<std::string> caseAtcCodeSet;// TODO: obsolete
     std::set<std::string> caseRoaCodeSet;// TODO: obsolete
-    
+
     std::map<std::string, _indication> indicationMap; // key is IndicationKey
 
     std::map<std::string, _code> codeAlterMap; // key is CodeValue
@@ -64,6 +64,8 @@ namespace PED
 
     std::vector<_dosage> dosageVec;
     std::set<std::string> dosageCaseIDSet;// TODO: obsolete
+
+    std::vector<std::string> blacklist;
 
 #define TH_KEY_AGE      "age"
 #define TH_KEY_WEIGHT   "weight"
@@ -104,25 +106,25 @@ void printFileStats(const std::string &filename)
     REP::html_h2("swisspeddose.ch");
     //REP::html_p(std::string(basename((char *)filename.c_str())));
     REP::html_p(filename);
-    
+
     REP::html_h3("Cases " + std::to_string(statsCasesCount));
     REP::html_start_ul();
     REP::html_li("<CaseID> set: " + std::to_string(caseCaseIDSet.size()));
     REP::html_li("<ATCCode> set: " + std::to_string(caseAtcCodeSet.size()));
     REP::html_li("<ROACode> set: " + std::to_string(caseRoaCodeSet.size()));
     REP::html_end_ul();
-    
+
     REP::html_h3("Indications " + std::to_string(statsIndicationsCount));
     REP::html_start_ul();
     REP::html_li("<IndicationKey> map: " + std::to_string(indicationMap.size()));
     REP::html_end_ul();
-    
+
     REP::html_h3("Dosages " + std::to_string(statsDosagesCount));
     REP::html_start_ul();
     REP::html_li("<CaseId> set: " + std::to_string(dosageCaseIDSet.size()));
     REP::html_li("vec: " + std::to_string(dosageVec.size()));
     REP::html_end_ul();
-    
+
     REP::html_h3("Codes " + std::to_string(statsCodesCount));
     REP::html_start_ul();
     REP::html_li("_ALTERRELATION: " + std::to_string(statsCode_ALTERRELATION));
@@ -149,16 +151,44 @@ void printFileStats(const std::string &filename)
     REP::html_li("ZEIT: " + std::to_string(statsCodeZEIT));
     REP::html_end_ul();
 }
-    
+
 void printUsageStats()
 {
     REP::html_h2("swisspeddose.ch");
-    
+
     REP::html_start_ul();
     REP::html_li("ATC with <Case>: " + std::to_string(statsCasesForAtcFoundCount));
     REP::html_li("ATC without <Case>: " + std::to_string(statsCasesForAtcNotFoundCount));
     REP::html_li("tables created: " + std::to_string(statsTablesCount));
     REP::html_end_ul();
+}
+
+void parseBlacklistTXT(const std::string &filename)
+{
+    try {
+        std::clog << std::endl << "Reading " << filename << std::endl;
+        std::ifstream file(filename);
+
+        std::string str;
+        while (std::getline(file, str))
+        {
+            if (str.size() == 0) {
+                continue;
+            }
+            if (str[0] == '#') {
+                continue;
+            }
+            blacklist.push_back(str);
+        } // while
+
+        file.close();
+    }
+    catch (std::exception &e) {
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << " Error " << e.what()
+        << std::endl;
+    }
 }
 
 void parseXML(const std::string &filename,
@@ -176,13 +206,13 @@ void parseXML(const std::string &filename,
             th = th_fr;
             indicationTitle = "Indication";
         }
-        
+
         for (int i=0; i< th_key.size(); i++)
             thTitleMap.insert(std::make_pair(th_key[i], th[i]));
     }
 
     pt::ptree tree;
-    
+
     try {
         std::clog << std::endl << "Reading " << filename << std::endl;
         pt::read_xml(filename, tree);
@@ -190,7 +220,7 @@ void parseXML(const std::string &filename,
     catch (std::exception &e) {
         std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
     }
-    
+
     std::clog << "Analyzing Ped " << language << std::endl;
     int i=0;
 
@@ -209,7 +239,7 @@ void parseXML(const std::string &filename,
                 statsDosagesCount = v.second.size();
             }
         }  // FOREACH
-        
+
         i = 0;
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Cases")) {
             if (v.first == "Case") {
@@ -226,7 +256,7 @@ void parseXML(const std::string &filename,
                 caseCaseIDSet.insert(v.second.get("CaseID", ""));
                 caseAtcCodeSet.insert(v.second.get("ATCCode", ""));
                 caseRoaCodeSet.insert(v.second.get("ROACode", ""));
-                
+
                 _case ca;
                 ca.caseId = v.second.get("CaseID", "");
                 ca.atcCode = v.second.get("ATCCode", "");
@@ -257,7 +287,7 @@ void parseXML(const std::string &filename,
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Codes")) {
             if (v.first == "Code") {
                 std::string codeType = v.second.get("CodeType", "");
-                
+
                 _code co;
                 co.value = v.second.get("CodeValue", "");
                 if (language == "de")
@@ -294,7 +324,7 @@ void parseXML(const std::string &filename,
                 }
                 else if (codeType == "ROA") {
                     statsCodeRoa++;
-                    
+
                     // Both the following are still unused
                     // One of them will be used to fetch the localized description if required
                     // So far we are just using the ROA from the cases struct instead.
@@ -313,7 +343,7 @@ void parseXML(const std::string &filename,
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Dosages")) {
             if (v.first == "Dosage") {
                 dosageCaseIDSet.insert(v.second.get("CaseID", ""));
-                
+
                 _dosage dos;
                 dos.key = v.second.get("DosageKey", "");
 
@@ -371,7 +401,7 @@ void parseXML(const std::string &filename,
 
     printFileStats(filename);
 }
-    
+
 std::string getDescriptionByAtc(const std::string &atc)
 {
     return codeAtcMap[atc].description;
@@ -382,7 +412,7 @@ std::string getTextByAtcs(const std::string atcs)
 {
     std::string text;
     std::string firstAtc = ATC::getFirstAtc(atcs);
-    
+
     return codeAtcMap[firstAtc].description;
 }
 
@@ -394,7 +424,7 @@ void getCasesByAtc(const std::string &atc, std::vector<_case> &cases)
             cases.push_back(c);
     }
 }
-    
+
 std::string getIndicationByKey(const std::string &key)
 {
     return indicationMap[key].name;
@@ -408,6 +438,11 @@ void getDosageById(const std::string &id, std::vector<_dosage> &dosages)
             dosages.push_back(d);
 }
 
+bool isRegnrsInBlacklist(const std::string regnrs)
+{
+    return std::find(blacklist.begin(), blacklist.end(), regnrs) != blacklist.end();
+}
+
 // Each "case" generates one table
 // One ATC can have mnay cases and therefore multiple tables
 //
@@ -416,7 +451,7 @@ std::string getHtmlByAtc(const std::string atc)
     std::string html;
     std::vector<_case> cases;
     PED::getCasesByAtc(atc, cases);
-    
+
     if (cases.empty()) {
         statsCasesForAtcNotFoundCount++;
         return {};  // empty string
@@ -431,7 +466,7 @@ std::string getHtmlByAtc(const std::string atc)
         auto indication = PED::getIndicationByKey(ca.indicationKey);
         std::vector<_dosage> dosages;
         PED::getDosageById(ca.caseId, dosages);
-        
+
         // Check for optional columns
         std::map<std::string, bool> optionalColumnMap = {
             {TH_KEY_ROA, false},
@@ -472,14 +507,14 @@ std::string getHtmlByAtc(const std::string atc)
                 optionalColumnMap[TH_KEY_WEIGHT] = true;
                 numColumns++;
             }
-            
+
             if (!optionalColumnMap[TH_KEY_MAX] &&
                 (dosage.maxDailyDose != "0"))
             {
                 optionalColumnMap[TH_KEY_MAX] = true;
                 numColumns++;
             }
-            
+
             if (!optionalColumnMap[TH_KEY_REPEAT] &&
                 ((dosage.dailyRepetitionsLow != "0") ||
                  (dosage.dailyRepetitionsHigh != "0")))
@@ -509,10 +544,10 @@ std::string getHtmlByAtc(const std::string atc)
 
         std::string tableBody;
         tableBody.clear();
-        
+
         if (dosages.size() > 0) {
             tableHeader += TAG_TH_L + thTitleMap[TH_KEY_AGE] + TAG_TH_R;
-            
+
             if (optionalColumnMap[TH_KEY_WEIGHT])
                 tableHeader += TAG_TH_L + thTitleMap[TH_KEY_WEIGHT] + TAG_TH_R;
 
@@ -520,7 +555,7 @@ std::string getHtmlByAtc(const std::string atc)
                 tableHeader += TAG_TH_L + thTitleMap[TH_KEY_TYPE] + TAG_TH_R;
 
             tableHeader += TAG_TH_L + thTitleMap[TH_KEY_DOSE] + TAG_TH_R;
-            
+
             if (optionalColumnMap[TH_KEY_REPEAT])
                 tableHeader += TAG_TH_L + thTitleMap[TH_KEY_REPEAT] + TAG_TH_R;
 
@@ -615,7 +650,7 @@ std::string getHtmlByAtc(const std::string atc)
             tableRow = "<tr>" + tableRow + "</tr>";
             tableBody += tableRow;
         } // for dosages
-        
+
         tableBody = "<tbody>" + tableBody + "</tbody>";
 
         std::string table = tableColGroup;
@@ -636,7 +671,7 @@ void showPedDoseByAtc(const std::string atc)
 {
     std::vector<_case> cases;
     PED::getCasesByAtc(atc, cases);
-    
+
     if (cases.empty()) {
         std::cout << "No cases for ATC: " << atc << std::endl;
         return;
@@ -647,10 +682,10 @@ void showPedDoseByAtc(const std::string atc)
     for (auto ca : cases) {
         auto description = PED::getDescriptionByAtc(atc);
         auto indication = PED::getIndicationByKey(ca.indicationKey);
-        
+
         std::vector<_dosage> dosages;
         PED::getDosageById(ca.caseId, dosages);
-        
+
         std::cout
         << "\t caseId: " << ca.caseId
         << "\n\t\t " << description << " (" << ca.RoaCode << ")"
@@ -666,9 +701,9 @@ void showPedDoseByAtc(const std::string atc)
             << "\n\t\t\t dosage: " << dosage.doseLow << " - " << dosage.doseHigh << " " << dosage.doseUnit << "/" << dosage.doseUnitRef1 << "/" << dosage.doseUnitRef2
 
             << "\n\t\t\t daily repetitions: " << dosage.dailyRepetitionsLow << " - " << dosage.dailyRepetitionsHigh
-            
+
             << "\n\t\t\t max single dose: " << dosage.maxSingleDose << " " << dosage.maxSingleDoseUnit << "/" << dosage.maxSingleDoseUnitRef1 << "/" << dosage.maxSingleDoseUnitRef2
-            
+
             << "\n\t\t\t max daily dose: " << dosage.maxDailyDose << " " << dosage.maxDailyDoseUnit << "/" << dosage.maxDailyDoseUnitRef1 << "/" << dosage.maxDailyDoseUnitRef2;
 
             if (!dosage.remarks.empty())

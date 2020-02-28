@@ -18,12 +18,12 @@ namespace PED
         std::string indicationKey;
         std::string RoaCode;
     };
-    
+
     struct _indication {
         std::string name;
         std::string recStatus;
     };
-    
+
     struct _code {
         std::string value;
         std::string description;
@@ -69,7 +69,8 @@ namespace PED
         std::string caseId;
         std::string type;
     };
-    
+
+    void parseBlacklistTXT(const std::string &filename);
     void parseXML(const std::string &filename,
                   const std::string &language);
 
@@ -79,12 +80,13 @@ namespace PED
     std::string getIndicationByKey(const std::string &key);
 
     void getDosageById(const std::string &id, std::vector<_dosage> &dosages);
-    
+    bool isRegnrsInBlacklist(const std::string regnrs);
+
     //std::string getRoaDescription(const std::string &codeValue);
-    
+
     std::string getHtmlByAtc(const std::string atc);
     void showPedDoseByAtc(const std::string atc);
-    
+
     void printUsageStats();
 }
 
