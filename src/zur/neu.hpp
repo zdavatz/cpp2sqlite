@@ -13,6 +13,7 @@
 namespace NEU
 {
 void parseCSV(const std::string &filename, bool dumpHeader = false);
+void parseMedixCSV(const std::string &filename);
 
 void createConditionsNewJSON(const std::string &filename);
 }
