@@ -41,6 +41,7 @@ struct User {
     std::string street;     // H
     std::string zip;        // I
     std::string city;       // J
+    std::string special_group; // whether the user is in medix_kunden.csv
 };
 
 std::map<std::string, User> user_map;
@@ -149,7 +150,8 @@ void parseCSV(const std::string &filename, bool dumpHeader)
             user.street = columnVector[7];    // H
             user.zip = columnVector[8];    // I
             user.city = columnVector[9];    // J
-            
+            user.special_group = "";
+
 #ifdef DEBUG
             if (user_map.find(user.rose_id) != user_map.end())
                 std::cerr << __LINE__ << " doctor exists " << user.rose_id
@@ -159,7 +161,71 @@ void parseCSV(const std::string &filename, bool dumpHeader)
             user_map.insert(std::make_pair(user.rose_id, user));
 
         } // while
-     
+
+        file.close();
+    }
+    catch (std::exception &e) {
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << " Error " << e.what()
+        << std::endl;
+    }
+
+#ifdef DEBUG
+    std::clog
+    << "Parsed " << user_map.size() << " doctors" << std::endl
+    << "CSV Lines " << statsCsvLineCount
+//    << ", bad line(s):" << statsLinesWrongNumFields.size()
+    << std::endl;
+#endif
+}
+
+void parseMedixCSV(const std::string &filename)
+{
+    std::clog << std::endl << "Reading " << filename << std::endl;
+
+    try {
+        std::ifstream file(filename);
+        statsCsvLineCount = 0;
+
+        std::string str;
+        bool header = true;
+        while (std::getline(file, str))
+        {
+            boost::algorithm::trim_right_if(str, boost::is_any_of(" \n\r"));
+            statsCsvLineCount++;
+
+            if (header) {
+                header = false;
+                continue;
+            }
+
+            std::vector<std::string> columnVector;
+            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
+
+            if (columnVector.size() != 6) {
+#ifdef DEBUG
+                std::clog
+                << "CSV Line " << statsCsvLineCount
+                << ", unexpected # columns: " << columnVector.size() << std::endl;
+#endif
+                continue;
+            }
+
+            std::string rose_id = columnVector[0];    // B
+
+            try {
+                User user = user_map.at(rose_id);
+                user.special_group = "medix";
+                user_map.at(rose_id) = user;
+            } catch (std::exception &e) {
+                std::cerr
+                << basename((char *)__FILE__) << ":" << __LINE__
+                << " Error " << e.what()
+                << std::endl;
+            }
+        } // while
+
         file.close();
     }
     catch (std::exception &e) {
@@ -201,6 +267,7 @@ void createConditionsNewJSON(const std::string &filename)
         child["street"] = u.second.street;
         child["zip"] = u.second.zip;
         child["city"] = u.second.city;
+        child["special_group"] = u.second.special_group;
 
         tree[u.first] = child;
     }
