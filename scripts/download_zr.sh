@@ -54,6 +54,8 @@ curl -o $ISO_8859_1_FILE -O "${URL}"/Kunden_alle_NEU.csv --user "${USERNAME_ZUR}
 iconv -f ISO-8859-1 -t UTF-8 $ISO_8859_1_FILE >Kunden_alle_NEU.csv
 rm $ISO_8859_1_FILE
 
+curl -o medix_kunden.csv -O "${URL}"/medix_kunden.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+
 popd
 
 
