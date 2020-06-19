@@ -330,8 +330,13 @@ std::string getPricesAndFlags(const std::string &gtin,
 prepareResult:
     // The category (input parameter) must be added even if the GTIN was not found
     if (!found) {
-        if (!category.empty())
+        if (!category.empty()) {
             flagsVector.push_back(category);
+
+            packageFields pf;
+            pf.flags = flagsVector;
+            packMap[gtin] = pf;
+        }
 
 //        std::clog
 //        << basename((char *)__FILE__) << ":" << __LINE__
