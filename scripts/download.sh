@@ -57,7 +57,7 @@ fi
 
 if [ $STEP_DOWNLOAD_SWISSMEDIC_PACKAGES ] ; then
 # Needed in AmiKo
-FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_ham.xlsx"
+FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_human.xlsx.download.xlsx/zugelassene_packungen_ham.xlsx"
 wget -N $FILE1 -O swissmedic_packages.xlsx
 fi
 
