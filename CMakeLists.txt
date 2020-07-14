@@ -112,7 +112,6 @@ add_executable(zurrose
 	src/zur/direkt.hpp src/zur/direkt.cpp
 	src/zur/galen.hpp src/zur/galen.cpp
 	src/zur/generika.hpp src/zur/generika.cpp
-	src/zur/kunden.hpp src/zur/kunden.cpp
 	src/zur/neu.hpp src/zur/neu.cpp
 	src/zur/nota.hpp src/zur/nota.cpp
 	src/zur/stamm.hpp src/zur/stamm.cpp

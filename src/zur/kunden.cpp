@@ -147,7 +147,7 @@ void printFileStats(const std::string &filename)
 //  $ iconv -f ISO-8859-1 -t UTF-8 Kunden_alle.csv
 void parseCSV(const std::string &filename, bool dumpHeader)
 {
-    std::clog << std::endl << "Reading " << filename << std::endl;
+    std::clog << "Reading " << filename << std::endl;
    
     try {
         std::ifstream file(filename);

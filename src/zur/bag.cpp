@@ -76,7 +76,7 @@ void parseXML(const std::string &filename,
               const std::string &language,
               bool verbose)
 {
-    std::clog << std::endl << "Reading " << filename << std::endl;
+    std::clog << "Reading " << filename << std::endl;
 
     pt::ptree tree;
     

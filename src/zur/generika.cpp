@@ -61,7 +61,7 @@ void getCsvLine(std::ifstream &file, std::string &line)
 
 void parseCSV(const std::string &filename, bool dumpHeader)
 {
-    std::clog << std::endl << "Reading " << filename << std::endl;
+    std::clog << "Reading " << filename << std::endl;
 
     try {
         std::ifstream file(filename);

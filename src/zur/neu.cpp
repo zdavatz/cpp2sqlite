@@ -15,12 +15,19 @@
 
 #include <boost/algorithm/string.hpp>
 
+// For "all-string" JSON
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 // For "typed" JSON
 #include <nlohmann/json.hpp>
 
 #include <libgen.h>     // for basename()
 
 #include "neu.hpp"
+#include "report.hpp"
+
+namespace pt = boost::property_tree;
 
 namespace NEU
 {
@@ -45,9 +52,15 @@ struct User {
 };
 
 std::map<std::string, User> user_map;
+std::map<std::string, std::string> roseid_to_gln_map;
 
 // Parse-phase stats
 unsigned int statsCsvLineCount = 0;
+unsigned int statsMedixCsvLineCount = 0;
+std::vector<int> statsLinesWrongNumFields;
+std::vector<std::string> statsLinesEmptyGlnVec; // strings so that they can be conveniently joined
+std::vector<int> statsLinesGlnIsOz;
+unsigned int statsGlnIsNotUniqueCount;
 
 static
 int getCellValue(const std::string &cell)
@@ -58,13 +71,56 @@ int getCellValue(const std::string &cell)
     return 1;
 }
 
+static
+void printFileStats(const std::string &filename)
+{
+    REP::html_h2("KUNDEN NEU");
+    //REP::html_p(std::string(basename((char *)filename.c_str())));
+    REP::html_p(filename);
+    
+    REP::html_start_ul();
+    REP::html_li("Total Doctors: " + std::to_string(user_map.size()));
+    REP::html_li("GLNs not unique: " + std::to_string(statsGlnIsNotUniqueCount));
+    REP::html_end_ul();
+    
+    if (statsLinesWrongNumFields.size() > 0) {
+        REP::html_p("Number of lines with wrong number of fields (skipped): " + std::to_string(statsLinesWrongNumFields.size()));
+        REP::html_start_ul();
+        for (auto s : statsLinesWrongNumFields)
+            REP::html_li("Line " + std::to_string(s));
+        
+        REP::html_end_ul();
+    }
+
+    if (statsLinesEmptyGlnVec.size() > 0) {
+        REP::html_p("Lines with empty 'GLN' (column D). Note that 'Knr Rose' (column A) will be used instead in 'rose_conditions_new.json'. Total count: " + std::to_string(statsLinesEmptyGlnVec.size()));
+
+        if (statsLinesEmptyGlnVec.size() > 0)
+            REP::html_div(boost::algorithm::join(statsLinesEmptyGlnVec, ", "));
+    }
+    
+    if (statsLinesGlnIsOz.size() > 0) {
+        REP::html_p("Number of lines with GLN set to 'o z' (test client, still used): " + std::to_string(statsLinesGlnIsOz.size()));
+        REP::html_start_ul();
+        for (auto s : statsLinesGlnIsOz)
+            REP::html_li("Line " + std::to_string(s));
+        
+        REP::html_end_ul();
+    }
+}
+
 // The file starts with BOM "EF BB BF"
 void parseCSV(const std::string &filename, bool dumpHeader)
 {
-    std::clog << std::endl << "Reading " << filename << std::endl;
+    if (user_map.size() > 0) {
+        std::clog << "Already parsed " << filename << std::endl;
+        return;
+    }
+
+    std::clog << "Reading " << filename << std::endl;
     
     try {
-         std::ifstream file(filename);
+        std::ifstream file(filename);
         
         std::string str;
         bool header = true;
@@ -110,31 +166,23 @@ void parseCSV(const std::string &filename, bool dumpHeader)
                 << "CSV Line " << statsCsvLineCount
                 << ", unexpected # columns: " << columnVector.size() << std::endl;
 #endif
-//                statsLinesWrongNumFields.push_back(statsCsvLineCount);
+                statsLinesWrongNumFields.push_back(statsCsvLineCount);
                 
-                // Try to recover as much as possible: assume column A and D are correct
-//                roseid_to_gln_map.insert(std::make_pair(columnVector[0], columnVector[3]));
+                // Try to recover as much as possible: assume column A and B are correct
+                roseid_to_gln_map.insert(std::make_pair(columnVector[0], columnVector[1]));
 
                 continue;
             }
 
             std::string gln_code = columnVector[1];    // B
-#ifdef DEBUG
-            if (gln_code.length() == 0) {
-                std::cerr << __LINE__ << " statsLinesEmptyGlnVec "
-                << ", CSV Line " << statsCsvLineCount
-                << std::endl;
-                //statsLinesEmptyGlnVec.push_back(std::to_string(statsCsvLineCount));
-            }
+
+            if (gln_code.length() == 0)
+                statsLinesEmptyGlnVec.push_back(std::to_string(statsCsvLineCount));
             
             if (gln_code == "o z") {
-                std::cerr << __LINE__ << " statsLinesGlnIsOz "
-                << ", CSV Line " << statsCsvLineCount
-                << std::endl;
                 // We can still use it, just report it
-                //statsLinesGlnIsOz.push_back(statsCsvLineCount);
+                statsLinesGlnIsOz.push_back(statsCsvLineCount);
             }
-#endif
             
             User user;
             user.rose_id = columnVector[0];     // A
@@ -146,9 +194,9 @@ void parseCSV(const std::string &filename, bool dumpHeader)
                 getCellValue(columnVector[3]),      // D
                 getCellValue(columnVector[4])};     // E
 
-            user.name1 = columnVector[6];    // G        Company name 1
-            user.street = columnVector[7];    // H
-            user.zip = columnVector[8];    // I
+            user.name1 = columnVector[6];   // G        Company name 1
+            user.street = columnVector[7];  // H
+            user.zip = columnVector[8];     // I
             user.city = columnVector[9];    // J
             user.special_group = "";
 
@@ -158,7 +206,12 @@ void parseCSV(const std::string &filename, bool dumpHeader)
                 << ", CSV Line " << statsCsvLineCount
                 << std::endl;
 #endif
+            
+            if (user_map.find(user.gln_code) != user_map.end())
+                statsGlnIsNotUniqueCount++;
+
             user_map.insert(std::make_pair(user.rose_id, user));
+            roseid_to_gln_map.insert(std::make_pair(user.rose_id, user.gln_code));
 
         } // while
 
@@ -170,30 +223,31 @@ void parseCSV(const std::string &filename, bool dumpHeader)
         << " Error " << e.what()
         << std::endl;
     }
+    
+    printFileStats(filename);
 
 #ifdef DEBUG
     std::clog
     << "Parsed " << user_map.size() << " doctors" << std::endl
     << "CSV Lines " << statsCsvLineCount
-//    << ", bad line(s):" << statsLinesWrongNumFields.size()
+    << ", bad line(s):" << statsLinesWrongNumFields.size()
     << std::endl;
 #endif
 }
 
 void parseMedixCSV(const std::string &filename)
 {
-    std::clog << std::endl << "Reading " << filename << std::endl;
+    std::clog << "Reading " << filename << std::endl;
 
     try {
         std::ifstream file(filename);
-        statsCsvLineCount = 0;
 
         std::string str;
         bool header = true;
         while (std::getline(file, str))
         {
             boost::algorithm::trim_right_if(str, boost::is_any_of(" \n\r"));
-            statsCsvLineCount++;
+            statsMedixCsvLineCount++;
 
             if (header) {
                 header = false;
@@ -206,7 +260,7 @@ void parseMedixCSV(const std::string &filename)
             if (columnVector.size() != 6) {
 #ifdef DEBUG
                 std::clog
-                << "CSV Line " << statsCsvLineCount
+                << "Medix CSV Line " << statsMedixCsvLineCount
                 << ", unexpected # columns: " << columnVector.size() << std::endl;
 #endif
                 continue;
@@ -238,8 +292,8 @@ void parseMedixCSV(const std::string &filename)
 #ifdef DEBUG
     std::clog
     << "Parsed " << user_map.size() << " doctors" << std::endl
-    << "CSV Lines " << statsCsvLineCount
-//    << ", bad line(s):" << statsLinesWrongNumFields.size()
+    << "CSV Lines " << statsMedixCsvLineCount
+    << ", bad line(s):" << statsLinesWrongNumFields.size()
     << std::endl;
 #endif
 }
@@ -276,6 +330,19 @@ void createConditionsNewJSON(const std::string &filename)
     out << tree.dump(1, '\t');          // UTF-8
     //out << tree.dump(1, '\t', true);  // ASCII with escaped UTF-8 characters, like Java
     out.close();
+}
+
+// See ShoppingCartRose.java 206 roseid_to_gln_map
+void createIdsJSON(const std::string &filename)
+{
+    std::clog << "Writing " << filename << std::endl;
+
+    pt::ptree tree;
+
+    for (auto d : roseid_to_gln_map)
+        tree.put(d.first, d.second);
+    
+    pt::write_json(filename, tree);
 }
 
 }

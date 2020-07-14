@@ -80,31 +80,27 @@ void generateFullSQLiteDB(const std::string inDir, const std::string type)
 // quick
 void generatePharmaToStockCsv(std::string inDir, std::string outDir)
 {
+    std::clog << std::endl;
     STAMM::parseCSV(inDir + "/zurrose/artikel_stamm_zurrose.csv");
     STAMM::parseVoigtCSV(inDir + "/zurrose/artikel_stamm_voigt.csv");
     
     STAMM::createStockCSV(outDir + "/rose_stock.csv");
 }
 
-// See ShoppingCartRose.java 54 encryptCustomerMapToFile()
-void generateKunden(std::string inDir, std::string outDir)
-{
-    KUNDEN::parseCSV(inDir + "/zurrose/Kunden_alle.csv");
-
-    KUNDEN::createConditionsJSON(outDir + "/rose_conditions.json");
-    KUNDEN::createIdsJSON(outDir + "/rose_ids.json");
-}
-
 void generateKundenNeu(std::string inDir, std::string outDir)
 {
+    std::clog << std::endl;
     NEU::parseCSV(inDir + "/zurrose/Kunden_alle_NEU.csv");
     NEU::parseMedixCSV(inDir + "/zurrose/medix_kunden.csv");
+
     NEU::createConditionsNewJSON(outDir + "/rose_conditions_new.json");
+    NEU::createIdsJSON(outDir + "/rose_ids.json");
 }
 
 // See ShoppingCartRose.java 260 encryptAutoGenerikaToFile()
 void generateAutogenerika(std::string inDir, std::string outDir)
 {
+    std::clog << std::endl;
     GENERIKA::parseCSV(inDir + "/zurrose/Autogenerika.csv");
     GENERIKA::createJSON(outDir + "/rose_autogenerika.json");
 }
@@ -112,6 +108,7 @@ void generateAutogenerika(std::string inDir, std::string outDir)
 // See ShoppingCartRose.java 303 encryptDirectSubstToFile()
 void generateDirect(std::string inDir, std::string outDir)
 {
+    std::clog << std::endl;
     DIREKT::parseCSV(inDir + "/zurrose/direct_subst_zurrose.csv");
     DIREKT::createJSON(outDir + "/output/rose_direct_subst.json");
 }
@@ -119,6 +116,7 @@ void generateDirect(std::string inDir, std::string outDir)
 // See ShoppingCartRose.java 339 encryptNotaToFile()
 void generateNota(std::string inDir, std::string outDir)
 {
+    std::clog << std::endl;
     NOTA::parseCSV(inDir + "/zurrose/nota_zurrose.csv");
     NOTA::createJSON(outDir + "/output/rose_nota.json");
 }
@@ -217,7 +215,6 @@ int main(int argc, char **argv)
     // TODO: parse 'Abverkaufszahlen.csv' to generate 'rose_sales_fig.ser'
 #endif
 
-    generateKunden(opt_inputDirectory, opt_workDirectory + "/output");
     generateKundenNeu(opt_inputDirectory, opt_workDirectory + "/output");
     generateAutogenerika(opt_inputDirectory, opt_workDirectory + "/output");
     generateDirect(opt_inputDirectory, opt_workDirectory);
