@@ -57,8 +57,23 @@ fi
 
 if [ $STEP_DOWNLOAD_SWISSMEDIC_PACKAGES ] ; then
 # Needed in AmiKo
+TEMP_FILE=swissmedic_packages_temp.xlsx
 FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_human.xlsx.download.xlsx/zugelassene_packungen_ham.xlsx"
-wget -N $FILE1 -O swissmedic_packages.xlsx
+wget -N $FILE1 -O $TEMP_FILE
+# Issue 126 check integrity of downloaded xlsx (ZIP) file
+unzip -t -qq $TEMP_FILE
+retVal = $?
+if [ $retVal -ne 0 ] ; then
+    echo "Error $retVal downloading swissmedic_packages.xlsx"
+    if [ ! -f swissmedic_packages.xlsx ] ; then
+        echo "First download: abort !"
+        exit $retVal
+    fi
+    echo "Use old file: swissmedic_packages.xlsx"
+    rm $TEMP_FILE
+else
+    mv -f $TEMP_FILE swissmedic_packages.xlsx
+fi
 fi
 
 if [ $STEP_DOWNLOAD_SWISSMEDIC_HAM ] ; then
@@ -189,7 +204,7 @@ BODY_DATA="${VS}&${VSG}&${EVVAL}&${BTN_OK}"
 wget --header 'Host: download.swissmedicinfo.ch' \
     --user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0.3' \
 	--header 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
-   	--referer 'https://download.swissmedicinfo.ch/Accept.aspx?ReturnUrl=%2f' \
+   	--referer '$URL/Accept.aspx?ReturnUrl=%2f' \
     --load-cookies=cookieA.txt \
     --save-cookies cookieB.txt --keep-session-cookies \
     --header 'Upgrade-Insecure-Requests: 1' \
@@ -214,7 +229,7 @@ wget --header 'Host: download.swissmedicinfo.ch' \
 	--user-agent 'Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0' \
 	--header 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' \
 	--header 'Accept-Language: de,en-US;q=0.7,en;q=0.3' \
-	--referer 'https://download.swissmedicinfo.ch/' \
+	--referer '$URL/' \
 	--header 'Content-Type: application/x-www-form-urlencoded' \
     --load-cookies=cookieA.txt \
     --load-cookies=cookieB.txt \
