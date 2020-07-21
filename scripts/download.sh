@@ -46,6 +46,16 @@ done
     LC_COLLATE=$old_lc_collate
 }
 
+# https://gist.github.com/hrwgc/7455343
+function validate_url() {
+    echo "wget -S --spider $1 2>&1 | grep 'HTTP/1.1 200 OK'"
+  if [[ `wget -S --spider $1 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 #-------------------------------------------------------------------------------
 # epha no longer needed
 
@@ -57,23 +67,39 @@ fi
 
 if [ $STEP_DOWNLOAD_SWISSMEDIC_PACKAGES ] ; then
 # Needed in AmiKo
-TEMP_FILE=swissmedic_packages_temp.xlsx
-FILE1="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_human.xlsx.download.xlsx/zugelassene_packungen_ham.xlsx"
-wget -N $FILE1 -O $TEMP_FILE
-# Issue 126 check integrity of downloaded xlsx (ZIP) file
-unzip -t -qq $TEMP_FILE
-retVal = $?
-if [ $retVal -ne 0 ] ; then
-    echo "Error $retVal downloading swissmedic_packages.xlsx"
-    if [ ! -f swissmedic_packages.xlsx ] ; then
-        echo "First download: abort !"
-        exit $retVal
+URL="https://www.swissmedic.ch"
+FILE1="$URL/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_human.xlsx.download.xlsx/zugelassene_packungen_ham.xlsx"
+
+if validate_url $URL && validate_url $FILE1 ; then
+    TEMP_FILE=swissmedic_packages_temp.xlsx
+
+    # To be extra cautious remove previously downloaded stuff, so there is no way it ends up being reused
+    if [ -f $TEMP_FILE ] ; then
+        rm $TEMP_FILE
     fi
-    echo "Use old file: swissmedic_packages.xlsx"
-    rm $TEMP_FILE
+    
+    # By now we know that $FILE1 is available. Try to download it with a different filename, before it can be validated
+    wget -N $FILE1 -O $TEMP_FILE
+
+    # Issue 126 check integrity of downloaded xlsx (ZIP) file
+    unzip -t -qq $TEMP_FILE
+    retVal = $?
+    if [ $retVal -ne 0 ] ; then
+        echo "Error $retVal downloading swissmedic_packages.xlsx"
+        if [ ! -f swissmedic_packages.xlsx ] ; then
+            echo "First download: abort !"
+            exit $retVal
+        fi
+        echo "Use old file: swissmedic_packages.xlsx"
+        rm $TEMP_FILE
+    else
+        # Download and validation successful. Give it the intended name, possibly overwriting previous download
+        mv -f $TEMP_FILE swissmedic_packages.xlsx
+    fi    
 else
-    mv -f $TEMP_FILE swissmedic_packages.xlsx
+    echo "Swissmedic currently not available"
 fi
+
 fi
 
 if [ $STEP_DOWNLOAD_SWISSMEDIC_HAM ] ; then
