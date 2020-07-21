@@ -82,7 +82,7 @@ if validate_url $URL && validate_url $FILE1 ; then
 
     # Issue 126 check integrity of downloaded xlsx (ZIP) file
     unzip -t -qq $TEMP_FILE
-    retVal = $?
+    retVal=$?
     if [ $retVal -ne 0 ] ; then
         echo "Error $retVal downloading swissmedic_packages.xlsx"
         if [ ! -f swissmedic_packages.xlsx ] ; then
