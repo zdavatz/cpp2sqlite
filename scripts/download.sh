@@ -48,7 +48,6 @@ done
 
 # https://gist.github.com/hrwgc/7455343
 function validate_url() {
-    echo "wget -S --spider $1 2>&1 | grep 'HTTP/1.1 200 OK'"
   if [[ `wget -S --spider $1 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
     return 0
   else
