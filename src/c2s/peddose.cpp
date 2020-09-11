@@ -531,8 +531,14 @@ std::string getHtmlByAtc(const std::string atc)
             textBeforeTable += "ATC-Code: " + atc + "<br />\n";
             textBeforeTable += indicationTitle + ": " + indication;
 
-            if (!optionalColumnMap[TH_KEY_TYPE] && !dosages[0].type.empty())
-                textBeforeTable += "<br />\n" + thTitleMap[TH_KEY_TYPE] + ": " + dosages[0].type;
+            if (!optionalColumnMap[TH_KEY_TYPE] &&
+                dosages.size() > 0 && // Issue #130
+                !dosages[0].type.empty())
+            {
+                textBeforeTable += "<br />\n" +
+                                   thTitleMap[TH_KEY_TYPE] +
+                                   ": " + dosages[0].type;
+            }
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
 
