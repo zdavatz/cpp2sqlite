@@ -281,9 +281,9 @@ void parseCSV(const std::string &filename,
 
             // TODO: use ean and m_bag_public_price_map
             a.public_price = columnVector[17]; // R
-            
-            // Column S unused ?
-            
+
+            a.dispose_flag = columnVector[18]; // S
+
             a.dlk_flag = boost::contains(columnVector[19], "100%"); // T
             a.pack_title_FR = columnVector[20]; // U
 
@@ -311,7 +311,7 @@ void openDB(const std::string &filename)
     sqlDb.openDB(filename);
 
     // See file DispoParse.java line 187 createArticleDB()
-    sqlDb.createTable(TABLE_NAME_ROSE, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, size TEXT, galen TEXT, unit TEXT, eancode TEXT, pharmacode TEXT, atc TEXT, theracode TEXT, stock INTEGER, price TEXT, availability TEXT, supplier TEXT, likes INTEGER, replaceean TEXT, replacepharma TEXT, offmarket TEXT, flags TEXT, npl TEXT, publicprice TEXT, exfprice TEXT, dlkflag TEXT, title_FR TEXT, galencode TEXT");
+    sqlDb.createTable(TABLE_NAME_ROSE, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, size TEXT, galen TEXT, unit TEXT, eancode TEXT, pharmacode TEXT, atc TEXT, theracode TEXT, stock INTEGER, price TEXT, availability TEXT, supplier TEXT, likes INTEGER, replaceean TEXT, replacepharma TEXT, offmarket TEXT, flags TEXT, npl TEXT, publicprice TEXT, exfprice TEXT, dlkflag TEXT, title_FR TEXT, galencode TEXT, disposeflag TEXT");
 
     sqlDb.createTable(TABLE_NAME_ANDROID, "locale TEXT default 'en_US'");
     sqlDb.insertInto(TABLE_NAME_ANDROID, "locale", "'en_US'");
@@ -319,7 +319,7 @@ void openDB(const std::string &filename)
     //createTable("sqlite_sequence", "");  // created automatically
     
     sqlDb.prepareStatement(TABLE_NAME_ROSE,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 }
 
 void createDB()

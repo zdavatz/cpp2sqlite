@@ -39,6 +39,7 @@ public:
     std::string public_price;       // R
     std::string exfactory_price;
 
+    std::string dispose_flag;       // S
     std::string pack_title_FR;      // U
 
     int pack_size;  // F
