@@ -73,6 +73,7 @@ void processLikes(const std::string inDir)
 void generateFullSQLiteDB(const std::string inDir, const std::string type)
 {
     VOLL::parseCSV(inDir + "/zurrose/artikel_vollstamm_zurrose.csv", type);
+    VOLL::parseNonFullCSV(inDir + "/zurrose/artikel_stamm_zurrose.csv", type);
     VOLL::createDB();
 }
 

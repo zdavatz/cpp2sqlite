@@ -49,6 +49,7 @@ unsigned long int statsCsvLineCount = 0;
 constexpr long maxAcceptablePharmaCode = 7900000L;
 unsigned long int statsFirstLinePharmaOverMax = -1;
 unsigned long int statsLineWithPharmaMax = -1;
+std::map<std::string, size_t> pharmaArticleIndexMap;
 
 static
 void printFileStats(const std::string &filename)
@@ -112,7 +113,7 @@ void parseCSV(const std::string &filename,
               const std::string type,
               bool dumpHeader)
 {
-    std::clog << std::endl << "Reading " << filename << std::endl;
+    std::cout << "Reading " << filename << std::endl;
 
     try {
         std::ifstream file(filename);
@@ -288,6 +289,7 @@ void parseCSV(const std::string &filename,
             a.pack_title_FR = columnVector[20]; // U
 
             articles.push_back(a);
+            pharmaArticleIndexMap.insert(std::make_pair(a.pharma_code, articles.size()-1));
         }  // while
         
         file.close();
@@ -301,6 +303,78 @@ void parseCSV(const std::string &filename,
     }
     
     printFileStats(filename);
+}
+
+void parseNonFullCSV(const std::string &filename,
+                     const std::string type,
+                     bool dumpHeader)
+{
+    std::cout << "Reading " << filename << std::endl;
+
+    try {
+        std::ifstream file(filename);
+
+        int patchedCount = 0;
+        std::string str;
+        bool header = true;
+        while (std::getline(file, str))
+        {
+            if (header) {
+                header = false;
+
+                if (dumpHeader) {
+                    std::ofstream outHeader(filename + ".header.txt");
+                    std::vector<std::string> headerTitles;
+                    boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR));
+                    outHeader << "Number of columns: " << headerTitles.size() << std::endl;
+                    auto colLetter = 'A';
+                    for (auto t : headerTitles)
+                        outHeader << colLetter++ << "\t" << t << std::endl;
+
+                    outHeader.close();
+                }
+
+                continue;
+            }
+
+            std::vector<std::string> columnVector;
+            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
+
+            if (columnVector.size() != 21) {
+                std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            std::string pharma = columnVector[0]; // A
+            if (pharma.length() > 0) {
+                int stock = std::stoi(columnVector[8]); // I
+
+                auto search = pharmaArticleIndexMap.find(pharma);
+                if (search != pharmaArticleIndexMap.end()) {
+                    size_t index = search->second;
+                    auto a = articles.at(index);
+                    if (a.stock != stock) {
+                        a.stock = stock;
+                        patchedCount++;
+                    }
+                    articles.at(index) = a;
+                }
+            }
+        } // while
+
+        file.close();
+        std::clog << "Patched stock count for " << std::to_string(patchedCount) << " articles" << std::endl;
+    }
+    catch (std::exception &e) {
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << " Error " << e.what()
+        << std::endl;
+    }
+
+#ifdef DEBUG
+    std::clog << "Parsed " << pharmaStockMap.size() << " map items" << std::endl;
+#endif
 }
 
 // See DispoParse.java:65
@@ -360,6 +434,7 @@ void createDB()
         sqlDb.bindBool(21, a.dlk_flag);
         sqlDb.bindText(22, a.pack_title_FR);
         sqlDb.bindText(23, a.galen_code);
+        sqlDb.bindText(24, a.dispose_flag);
 
         sqlDb.runStatement(TABLE_NAME_ROSE);
     } // for
