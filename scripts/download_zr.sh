@@ -51,6 +51,8 @@ rm $ISO_8859_1_FILE
 
 curl -o medix_kunden.csv -O "${URL}"/medix_kunden.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
 
+curl -o Grippeimpfstoff.csv -O "${URL}"/Grippeimpfstoff.csv --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
+
 popd
 
 
