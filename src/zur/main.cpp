@@ -31,6 +31,7 @@
 #include "galen.hpp"
 #include "swissmedic.hpp"
 #include "neu.hpp"
+#include "gripp.hpp"
 
 namespace po = boost::program_options;
 
@@ -120,6 +121,13 @@ void generateNota(std::string inDir, std::string outDir)
     std::clog << std::endl;
     NOTA::parseCSV(inDir + "/zurrose/nota_zurrose.csv");
     NOTA::createJSON(outDir + "/output/rose_nota.json");
+}
+
+void generateGripp(std::string inDir, std::string outDir)
+{
+    std::clog << std::endl;
+    GRIPP::parseCSV(inDir + "/zurrose/Grippeimpfstoff.csv");
+    GRIPP::createJSON(outDir + "/output/Grippeimpfstoff.json");
 }
 
 void on_version()
@@ -220,6 +228,7 @@ int main(int argc, char **argv)
     generateAutogenerika(opt_inputDirectory, opt_workDirectory + "/output");
     generateDirect(opt_inputDirectory, opt_workDirectory);
     generateNota(opt_inputDirectory, opt_workDirectory);
+    generateGripp(opt_inputDirectory, opt_workDirectory);
 
     if ((opt_zurrose == "fulldb") || (opt_zurrose == "atcdb"))
     {

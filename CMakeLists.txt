@@ -115,6 +115,7 @@ add_executable(zurrose
 	src/zur/neu.hpp src/zur/neu.cpp
 	src/zur/nota.hpp src/zur/nota.cpp
 	src/zur/stamm.hpp src/zur/stamm.cpp
+	src/zur/gripp.hpp src/zur/gripp.cpp
 	src/zur/swissmedic.hpp src/zur/swissmedic.cpp
 	src/zur/voll.hpp src/zur/voll.cpp)
 
