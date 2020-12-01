@@ -24,7 +24,7 @@ See [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.s
 `./cpp2sqlite --inDir ~/.software/cpp2sqlite/input`
 ### deepl translation
 _ run `build/sappinfo` to generate the unique language file.\
-_ comment in the line 8 of [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh#L8) to do the translations.\
+_ comment in the line 20 of [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh#L20) to do the translations.\
 _ if there are no errors, then commit `intput/deepl.sappinfo.out.fr.txt`.
 ## Input Sources
 _ [AIPS](http://download.swissmedicinfo.ch)\
