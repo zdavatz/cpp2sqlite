@@ -225,7 +225,7 @@ void parseXML(const std::string &filename,
     int i=0;
 
     try {
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication")) {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublicationV3")) {
             if (v.first == "Cases") {
                 statsCasesCount = v.second.size();
             }
@@ -241,7 +241,7 @@ void parseXML(const std::string &filename,
         }  // FOREACH
 
         i = 0;
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Cases")) {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublicationV3.Cases")) {
             if (v.first == "Case") {
 #if 0
 
@@ -267,7 +267,7 @@ void parseXML(const std::string &filename,
         } // FOREACH Cases
 
         i = 0;
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Indications")) {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublicationV3.Indications")) {
             if (v.first == "Indication") {
 
                 _indication in;
@@ -284,7 +284,7 @@ void parseXML(const std::string &filename,
         }
 
         i = 0;
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Codes")) {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublicationV3.Codes")) {
             if (v.first == "Code") {
                 std::string codeType = v.second.get("CodeType", "");
 
@@ -340,7 +340,7 @@ void parseXML(const std::string &filename,
         } // FOREACH Codes
 
         i = 0;
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublication.Dosages")) {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublicationV3.Dosages")) {
             if (v.first == "Dosage") {
                 dosageCaseIDSet.insert(v.second.get("CaseID", ""));
 
