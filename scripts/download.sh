@@ -173,9 +173,10 @@ wget --header "Host: db.swisspeddose.ch" \
 
 FILENAME_V1=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication-' dashboard.html | awk -F\" '{print $4}')
 FILENAME_V2=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication_v2-' dashboard.html | awk -F\" '{print $4}')
+FILENAME_V3=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication_v3-' dashboard.html | awk -F\" '{print $4}')
 BASENAME=swisspeddosepublication
 
-for FILENAME in $FILENAME_V1 $FILENAME_V2
+for FILENAME in $FILENAME_V1 $FILENAME_V2 $FILENAME_V3
 do
 wget --header "Host: db.swisspeddose.ch" \
 	--user-agent "Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0" \
@@ -190,12 +191,13 @@ done
 
 mv $(basename -- $FILENAME_V1)  "${BASENAME}.zip"
 mv $(basename -- $FILENAME_V2)  "${BASENAME}_v2.zip"
+mv $(basename -- $FILENAME_V3)  "${BASENAME}_v3.zip"
 
-unzip $BASENAME.zip
+unzip "${BASENAME}_v3.zip"
 
-rm $BASENAME.zip
-rm SwissPedDosePublication.xsd
-mv SwissPedDosePublication.xml $BASENAME.xml
+rm $BASENAME_v3.zip
+rm SwissPedDosePublicationV3.xsd
+mv SwissPedDosePublicationV3.xml "${BASENAME}_v3.xml"
 
 rm cookies*.txt
 rm dashboard.html
