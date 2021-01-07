@@ -17,6 +17,7 @@ AT2-Antagonisten können den blutdrucksenkenden Effekt von Hydrochlorothiazid ve
 Abgeschwächte Blutdrucksenkung
 Abgeschwächte Blutdrucksenkung und Diurese
 Abgeschwächte Proguanilwirkung nicht auszuschliessen
+Abgeschwächte bronchodilatatorische Wirkung des Beta-Sympathomimetikums möglich
 Abwägung der Indikation für Ginkgo. Klinisch auf Blutungszeichen achten.
 Acenocoumarol wird u.a. über CYP2C9 metabolisiert. Rosuvastatin wird nur kleiner 10% über CYP (2C9) metabolisiert und hemmt oder induziert CYP nicht klinisch relevant.
 Acetylsalicylsäure hat eine thrombozytenaggregationshemmende Wirkung. Da auch das in Ginkgozubereitungen enthaltene Ginkgolid B über eine Hemmung der PAF-induzierten Plättchenaggregation  das Blutungsrisiko erhöht, ist in der Kombination mit additiven Effekten zu rechnen. 
@@ -342,6 +343,7 @@ Beide Substanzen wurden mit Krampfanfällen assoziiert.
 Beim kombinierten Einsatz von Tizanidin mit oralen Kontrazeptiva sollte eine niedrige Startdosis von Tizanidin (z.B. 3x1mg/d) gewählt werden, da eine erhöhte Tizanidinexposition erwartet wird. Langsames Aufdosieren der Tizanidin-Dosis unter klinischer Kontrolle der Verträglichkeit (Blutdruck, Herzfrequenz, Sedation).
 Beim kombinierten Einsatz von Tizanidin mit oralen Kontrazeptiva sollte eine niedrige Startdosis von Tizanidin (z.B. 3x1mg/d) gewählt werden, da eine erhöhte Tizanidinexposition erwartet wird. Langsames Aufdosieren der Tizanidin-Dosis unter klinischer Kontrolle der Verträglichkeit (Blutdruck, Herzfrequenz, Sedation). 
 Beta-adrenerge Blocker können die Wirkung von Beta-2-adrenergen Agonisten abschwächen oder antagonisieren.
+Bevorzugt kardioselektive Betablocker einsetzen wie Bisoprolol, Metoprolol, Nebivolol oder Atenolol. Anmerkung: Bei Asthma-Patienten sind formal sowohl kardioselektive als auch nicht-kardioselektive Betablocker kontraindiziert (gemäss Fachinformationen der Beta-Blocker schweres Asthma). Empfehlungen wie GINA 2017 (Global Initiative for Asthma) erlauben jedoch den Einsatz kardioselektiver Betablocker nach Nutzen-/Risiko-Evaluation. Bei COPD-Patienten können kardioselektive Betablocker (möglichst niedrig dosiert) eingesetzt werden (Hinweise, dass sich Betablocker sogar günstig auf die Mortalität auswirken) [Rutten FH, 2010].
 Bis auf gelegentliche Blutdruckkontrollen keine spezifischen Massnahmen erforderlich.
 Bisher existieren keine Daten, die darauf hinweisen, dass Citalopram die Wirkung von Tamoxifen in relevantem Ausmass abschwächt. Aktuell gilt Citalopram allerdings als Therapie 2. Wahl in der Behandlung von Depressionen/Hitzewallungen bei Frauen, die Tamoxifen einnehmen, während Venlafaxin aufgrund des noch geringeren/fehlenden Interaktionspotentials als Mittel 1. Wahl gilt. Falls Citalopram eingesetzt wird, klinische Wirksamkeit von Tamoxifen sicherheitshalber monitorisieren. 
 Bisoprolol wird zu 50% unverändert renal eliminiert und nur zu 50% hepatisch über CYP2D6 und CYP3A4 metabolisiert. Citalopram hemmt CYP2D6 nur leicht.
@@ -2030,6 +2032,7 @@ Nevirapin induziert bei längerer Behandlung CYP3A4. Tadalafil wird primär übe
 Nevirapin induziert bei längerer Behandlung CYP3A4. Vardenafil wird primär über CYP3A4 metabolisiert. Von einem verstärkten Vardenafil-Metabolismus ist auszugehen.  
 Nicht bekannt
 Nicht bekannt.
+Nicht-kardioselektive Beta-Blocker können die Wirkungen von Beta-Sympathomimetika an Beta2- Rezeptoren im Bronchialsystem antagonisieren. Die gilt auch für Beta-Blocker-Augentropfen, die zu ca. 80 % absorbiert werden (Umgehung des hepatischen First-Pass-Effektes, woraus systemisch relevante Plasmakonzentrationen resultieren können). 
 Nicht-steroidale Antiphlogistika können die blutdrucksenkende Wirkung von Bisoprolol vermindern. Durch die COX-2-Hemmung in der Niere wird die Prostaglandinsynthese gehemmt. Dies ist assoziiert mit antinatriuretischen und vasokonstriktorischen Effekten. In vielen Fällen haben diese pathophysiologischen Effekte Einfluss auf die Kontrolle des Blutdrucks.
 Nichtsteroidale Antiphlogistika hemmen die Thrombozytenaggregation und dadurch kommt es zu einer additiven Wirkung auf die Blutgerinnung.
 Nichtsteroidale Antiphlogistika hemmen wie auch Prasugrel die Thrombozytenaggregation und dadurch kommt es zu einer additiven Wirkung auf die Blutgerinnung.
