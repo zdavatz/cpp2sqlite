@@ -16,6 +16,7 @@ STEP_BUILD_APPS=true
 STEP_RUN_C2S=true
 STEP_RUN_PHARMA=true
 STEP_RUN_ZURROSE=true
+STEP_RUN_DRUGSHORTAGE=true
 #STEP_DEEPL_INTERACTIONS=true
 #STEP_DEEPL_SAPPINFO=true
 
@@ -132,6 +133,12 @@ fi
 if [ $STEP_RUN_ZURROSE ] ; then
 cd $BLD_APPS
 ./zurrose --zurrose=quick --inDir $SRC_DIR/input
+fi
+
+#-------------------------------------------------------------------------------
+if [ $STEP_RUN_DRUGSHORTAGE ] ; then
+cd $BLD_APPS
+./drugshortage --inDir $SRC_DIR/input
 fi
 
 #-------------------------------------------------------------------------------
