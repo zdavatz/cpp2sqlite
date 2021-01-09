@@ -18,7 +18,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string_regex.hpp>
-
+#include <nlohmann/json.hpp>
 #include <xlnt/xlnt.hpp>
 
 #include "config.h"
@@ -39,13 +39,34 @@ void on_version()
     std::cout << "C++ " << __cplusplus << std::endl;
 }
 
-int callback(void *NotUsed, int argc, char **argv, char **azColName){
-  int i;
-  for(i=0; i<argc; i++){
-    printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-  }
-  printf("\n");
-  return 0;
+static nlohmann::json drugshortageJson;
+
+nlohmann::json jsonEntryForGtin(std::string gtinStr) {
+    for (nlohmann::json::iterator it = drugshortageJson.begin(); it != drugshortageJson.end(); ++it) {
+        auto entry = it.value();
+        int64_t thisGtin = entry["gtin"].get<int64_t>();
+        if (std::to_string(thisGtin) == gtinStr) {
+            return entry;
+        }
+    }
+    return nlohmann::json::object();
+}
+
+int onProcessRow(void *NotUsed, int argc, char **argv, char **azColName){
+    std::string packageStr = std::string(argv[17]);
+    std::cout << "packageStr: " << packageStr << std::endl;
+    std::vector<std::string> lines;
+    boost::algorithm::split(lines, packageStr, boost::is_any_of("\n"), boost::token_compress_on);
+    for (std::string line : lines){
+        std::vector<std::string> parts;
+        boost::algorithm::split(parts, line, boost::is_any_of("|"), boost::token_compress_on);
+        std::string gtinString = parts[6];
+        std::cout << "gtin: " << gtinString << std::endl;
+        
+        auto result = jsonEntryForGtin(gtinString);
+        std::cout << "found json entry: " << result << std::endl;
+    }
+    return 0;
 }
 
 int main(int argc, char **argv)
@@ -106,6 +127,10 @@ int main(int argc, char **argv)
         opt_workDirectory = opt_inputDirectory + "/..";
     }
 
+    std::string jsonFilename = opt_inputDirectory + "/drugshortage.json";
+    std::ifstream jsonInputStream(jsonFilename);
+    jsonInputStream >> drugshortageJson;
+
     std::string dbFilename = opt_workDirectory + "/output/amiko_db_full_idx_" + opt_language + ".db";
     sqlite3 *db;
     int rc = sqlite3_open(dbFilename.c_str(), &db);
@@ -117,9 +142,8 @@ int main(int argc, char **argv)
         
         return 1;
     }
-    
     char *errmsg;
-    sqlite3_exec(db, "select * from amikodb where title LIKE 'ponstan%';", callback, NULL, &errmsg);
+    sqlite3_exec(db, "select * from amikodb where title LIKE 'ACETALGIN%';", onProcessRow, NULL, &errmsg);
     sqlite3_close(db);
     
     return EXIT_SUCCESS;
