@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <string>
+#include <regex>
 #include <set>
 #include <unordered_set>
 #include <sqlite3.h>
@@ -41,30 +42,110 @@ void on_version()
 
 static std::map<int64_t, nlohmann::json> drugshortageJsonMap;
 
-nlohmann::json jsonEntryForGtin(std::string gtinStr) {
-    for (nlohmann::json::iterator it = drugshortageJson.begin(); it != drugshortageJson.end(); ++it) {
-        auto entry = it.value();
-        int64_t thisGtin = entry["gtin"].get<int64_t>();
-        if (std::to_string(thisGtin) == gtinStr) {
-            return entry;
-        }
+std::string updateChapterTitles(std::string chapterTitles) {
+    std::string result = std::string(chapterTitles);
+    if (opt_language == "de") {
+        boost::replace_all(result, ";Packungen;", ";Packungen/Drugshortage;");
+    } else {
+        boost::replace_all(result, ";Présentation;", ";Présentation/Drugshortge;");
     }
-    return nlohmann::json::object();
+    return result;
 }
 
-int onProcessRow(void *NotUsed, int argc, char **argv, char **azColName){
+std::string updateContent(
+    std::string contentHtml,
+    std::vector<std::string> packageNames,
+    std::vector<nlohmann::json> drugshortageJsonEntries
+) {
+    std::regex rgx;
+    if (opt_language == "de") {
+        rgx = R"(<div class=\"absTitle\">\s*Packungen\s*</div>)";    // tested at https://regex101.com
+    } else {
+        rgx = R"(<div class=\"absTitle\">\s*Présentation\s*</div>)";    // tested at https://regex101.com
+    }
+    std::smatch match;
+    if (std::regex_search(contentHtml, match, rgx)) {
+        int lastIndex = match.size() - 1;
+        std::string matched = match[lastIndex];
+        std::string before = contentHtml.substr(0, match.position(lastIndex));
+        std::string after = contentHtml.substr(match.position(lastIndex) + match.length(lastIndex));
+        if (opt_language == "de") {
+            boost::replace_first(matched, "Packungen", "Packungen/Drugshortage");
+        } else {
+            boost::replace_first(matched, "Présentation", "Présentation/Drugshortge");
+        }
+        contentHtml = before + matched + after;
+    }
+    for (int i = 0; i < packageNames.size(); i++) {
+        std::string packageName = packageNames[i];
+        nlohmann::json jsonEntry = drugshortageJsonEntries[i];
+        std::string extraString;
+        if (jsonEntry.contains("status")) {
+            extraString = "<p>Status: " + jsonEntry["status"].get<std::string>() + "</p>\n";
+        }
+        if (jsonEntry.contains("datumLieferfahigkeit")) {
+            extraString += "<p>Geschaetztes Datum Lieferfaehigkeit: " + jsonEntry["datumLieferfahigkeit"].get<std::string>() + "</p>\n";
+        }
+        if (jsonEntry.contains("datumLetzteMutation")) {
+            extraString += "<p>Datum Letzte Mutation: " + jsonEntry["datumLetzteMutation"].get<std::string>() + "</p>\n";
+        }
+        std::string searchString = "<p class=\"spacing1\">" + packageName;
+        boost::replace_first(contentHtml, searchString, extraString + searchString);
+    }
+    return contentHtml;
+}
+
+void insertDrugStorage(
+    sqlite3 *db, 
+    std::string id, 
+    std::string chapterTitles, 
+    std::string htmlString, 
+    std::vector<std::string> packageNames, 
+    std::vector<nlohmann::json> drugshortageJsonEntries
+) {
+    std::string updatedTitles = updateChapterTitles(chapterTitles);
+    std::string updatedContent = updateContent(htmlString, packageNames, drugshortageJsonEntries);
+    sqlite3_stmt *statement = NULL;
+    sqlite3_prepare_v2(db, "UPDATE amikodb SET titles_str = ?, content = ? WHERE _id = ? ", -1, &statement, NULL);
+    sqlite3_bind_text(statement, 1, updatedTitles.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(statement, 2, updatedContent.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(statement, 3, id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_step(statement);
+    sqlite3_finalize(statement);
+}
+
+int onProcessRow(void *_processingGtin, int argc, char **argv, char **azColName) {
+    int64_t processingGtin = (int64_t)_processingGtin;
     std::string packageStr = std::string(argv[17]);
-    std::cout << "packageStr: " << packageStr << std::endl;
     std::vector<std::string> lines;
-    boost::algorithm::split(lines, packageStr, boost::is_any_of("\n"), boost::token_compress_on);
-    for (std::string line : lines){
+    boost::algorithm::split(lines, packageStr, boost::is_any_of("\n"));
+    std::vector<std::string> packageNames;
+    std::vector<nlohmann::json> jsonEntries;
+    for (std::string line : lines) {
         std::vector<std::string> parts;
-        boost::algorithm::split(parts, line, boost::is_any_of("|"), boost::token_compress_on);
-        std::string gtinString = parts[6];
-        std::cout << "gtin: " << gtinString << std::endl;
-        
-        auto result = jsonEntryForGtin(gtinString);
-        std::cout << "found json entry: " << result << std::endl;
+        boost::algorithm::split(parts, line, boost::is_any_of("|"));
+        std::string packageName = parts[0];
+        std::string gtinString = parts[9];
+
+        try {
+            int64_t thisGtin = std::stoll(gtinString);
+            if (thisGtin == processingGtin) {
+                auto result = drugshortageJsonMap[thisGtin];
+                std::clog << "Adding drug shortage: " << gtinString << std::endl;
+                packageNames.push_back(packageName);
+                jsonEntries.push_back(result);
+            }
+        } catch (...) {}
+    }
+    if (!jsonEntries.empty()) {
+        insertDrugStorage(
+            (sqlite3 *)db, 
+            std::string(argv[0]), 
+            std::string(argv[14]), 
+            std::string(argv[15]), 
+            packageNames,
+            jsonEntries
+        );
     }
     return 0;
 }
