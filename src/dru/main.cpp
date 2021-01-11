@@ -1,6 +1,6 @@
 //
 //  main.cpp
-//  sappinfo
+//  drugshortage
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
@@ -221,7 +221,7 @@ int main(int argc, char **argv)
     char *errmsg;
 
     nlohmann::json drugshortageJson;
-    std::string jsonFilename = opt_inputDirectory + "/drugshortage.json";
+    std::string jsonFilename = opt_workDirectory + "/downloads/drugshortage.json";
     std::ifstream jsonInputStream(jsonFilename);
     jsonInputStream >> drugshortageJson;
     for (nlohmann::json::iterator it = drugshortageJson.begin(); it != drugshortageJson.end(); ++it) {

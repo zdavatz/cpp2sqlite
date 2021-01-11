@@ -139,6 +139,7 @@ fi
 if [ $STEP_RUN_DRUGSHORTAGE ] ; then
 cd $BLD_APPS
 ./drugshortage --inDir $SRC_DIR/input
+./drugshortage --inDir $SRC_DIR/input --lang=fr
 fi
 
 #-------------------------------------------------------------------------------
