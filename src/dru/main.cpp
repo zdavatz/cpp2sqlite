@@ -23,10 +23,10 @@
 
 #include "config.h"
 
-#define FIRST_DATA_ROW_INDEX    1
-
 namespace po = boost::program_options;
 static std::string appName;
+std::string opt_language;
+sqlite3 *db;
 
 #pragma mark -
 
@@ -39,7 +39,7 @@ void on_version()
     std::cout << "C++ " << __cplusplus << std::endl;
 }
 
-static nlohmann::json drugshortageJson;
+static std::map<int64_t, nlohmann::json> drugshortageJsonMap;
 
 nlohmann::json jsonEntryForGtin(std::string gtinStr) {
     for (nlohmann::json::iterator it = drugshortageJson.begin(); it != drugshortageJson.end(); ++it) {
@@ -75,7 +75,6 @@ int main(int argc, char **argv)
     
     std::string opt_inputDirectory;
     std::string opt_workDirectory;  // for downloads subdirectory
-    std::string opt_language;
     bool flagVerbose = false;
     
     po::options_description desc("Allowed options");
@@ -127,12 +126,8 @@ int main(int argc, char **argv)
         opt_workDirectory = opt_inputDirectory + "/..";
     }
 
-    std::string jsonFilename = opt_inputDirectory + "/drugshortage.json";
-    std::ifstream jsonInputStream(jsonFilename);
-    jsonInputStream >> drugshortageJson;
-
     std::string dbFilename = opt_workDirectory + "/output/amiko_db_full_idx_" + opt_language + ".db";
-    sqlite3 *db;
+    
     int rc = sqlite3_open(dbFilename.c_str(), &db);
     if (rc != SQLITE_OK) {
         std::cerr
@@ -143,7 +138,18 @@ int main(int argc, char **argv)
         return 1;
     }
     char *errmsg;
-    sqlite3_exec(db, "select * from amikodb where title LIKE 'ACETALGIN%';", onProcessRow, NULL, &errmsg);
+
+    nlohmann::json drugshortageJson;
+    std::string jsonFilename = opt_inputDirectory + "/drugshortage.json";
+    std::ifstream jsonInputStream(jsonFilename);
+    jsonInputStream >> drugshortageJson;
+    for (nlohmann::json::iterator it = drugshortageJson.begin(); it != drugshortageJson.end(); ++it) {
+        auto entry = it.value();
+        int64_t thisGtin = entry["gtin"].get<int64_t>();
+        drugshortageJsonMap[thisGtin] = entry;
+        sqlite3_exec(db, ("select * from amikodb where packages LIKE '%|" + std::to_string(thisGtin) + "|%';").c_str(), onProcessRow, (void *)thisGtin, &errmsg);
+    }
+
     sqlite3_close(db);
     
     return EXIT_SUCCESS;
