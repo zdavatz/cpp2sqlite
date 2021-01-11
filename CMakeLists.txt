@@ -83,6 +83,13 @@ target_include_directories(sappinfo PUBLIC "${CMAKE_SOURCE_DIR}/src/sap")
 target_link_libraries(sappinfo ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 
 #-------------------------------------------------------------------------------
+add_executable(drugshortage
+	src/dru/main.cpp)
+
+target_include_directories(drugshortage PUBLIC "${CMAKE_SOURCE_DIR}/src/dru")
+target_link_libraries(drugshortage ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})
+
+#-------------------------------------------------------------------------------
 add_executable(pharma
 	src/gtin.hpp src/gtin.cpp
 	src/bag.hpp src/bag.cpp
