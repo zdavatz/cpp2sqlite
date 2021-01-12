@@ -53,6 +53,7 @@ add_executable(cpp2sqlite
 	src/c2s/atc.hpp src/c2s/atc.cpp
 	src/c2s/epha.hpp src/c2s/epha.cpp
 	src/c2s/peddose.hpp src/c2s/peddose.cpp
+	src/c2s/drugshortage.hpp src/c2s/drugshortage.cpp
     src/report.hpp src/report.cpp
 	src/c2s/ean13/functii.cpp src/c2s/ean13/functii.h
 	src/c2s/medicine.h
@@ -81,13 +82,6 @@ add_executable(sappinfo
 
 target_include_directories(sappinfo PUBLIC "${CMAKE_SOURCE_DIR}/src/sap")
 target_link_libraries(sappinfo ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
-
-#-------------------------------------------------------------------------------
-add_executable(drugshortage
-	src/dru/main.cpp)
-
-target_include_directories(drugshortage PUBLIC "${CMAKE_SOURCE_DIR}/src/dru")
-target_link_libraries(drugshortage ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})
 
 #-------------------------------------------------------------------------------
 add_executable(pharma

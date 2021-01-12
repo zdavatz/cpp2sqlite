@@ -43,6 +43,7 @@
 #include "epha.hpp"
 #include "gtin.hpp"
 #include "peddose.hpp"
+#include "drugshortage.hpp"
 #include "report.hpp"
 #include "config.h"
 
@@ -135,13 +136,35 @@ std::string getBarcodesFromGtins(const GTIN::oneFachinfoPackages &packages)
     std::string html;
     int i=0;
     for (auto gtin : packages.gtin) {
-
-        if (i < packages.name.size()) // possibly redundant check
-            html += "  <p class=\"spacing1\">" + packages.name[i++] + "</p>\n";
+        auto drugShortage = DRUGSHORTAGE::getEntryByGtin(std::stoll(gtin));
+        bool hasDrugshortage = !drugShortage.empty();
+        if (i < packages.name.size()) {// possibly redundant check
+            html += "  <p class=\"spacing1\">" + packages.name[i++];
+            if (hasDrugshortage) {
+                html += "<span style='color:red'>●</span>";
+            }
+            html += "</p>\n";
+        }
 
         std::string svg = EAN13::createSvg("", gtin);
         // TODO: onmouseup="addShoppingCart(this)"
         html += "<p class=\"barcode\">" + svg + "</p>\n";
+
+        try {
+            if (hasDrugshortage) {
+                html += "<p>";
+                if (drugShortage.contains("status")) {
+                    html = "Status: " + drugShortage["status"].get<std::string>() + "<br>\n";
+                }
+                if (drugShortage.contains("datumLieferfahigkeit")) {
+                    html += "Geschaetztes Datum Lieferfaehigkeit: " + drugShortage["datumLieferfahigkeit"].get<std::string>() + "<br>\n";
+                }
+                if (drugShortage.contains("datumLetzteMutation")) {
+                    html += "Datum Letzte Mutation: " + drugShortage["datumLetzteMutation"].get<std::string>() + "\n";
+                }
+                html += "</p>";
+            }
+        } catch (...) {}
     }
 
     return html;
@@ -934,6 +957,8 @@ int main(int argc, char **argv)
     SWISSMEDIC::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages.xlsx");
 
     ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
+
+    DRUGSHORTAGE::parseJSON(opt_workDirectory + "/downloads/drugshortage.json");
 
     AIPS::MedicineList &list = AIPS::parseXML(opt_workDirectory + "/downloads/aips.xml",
                                               opt_language,
