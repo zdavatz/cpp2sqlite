@@ -154,7 +154,7 @@ std::string getBarcodesFromGtins(const GTIN::oneFachinfoPackages &packages)
             if (hasDrugshortage) {
                 html += "<p>";
                 if (drugShortage.contains("status")) {
-                    html = "Status: " + drugShortage["status"].get<std::string>() + "<br>\n";
+                    html += "Status: " + drugShortage["status"].get<std::string>() + "<br>\n";
                 }
                 if (drugShortage.contains("datumLieferfahigkeit")) {
                     html += "Geschaetztes Datum Lieferfaehigkeit: " + drugShortage["datumLieferfahigkeit"].get<std::string>() + "<br>\n";
@@ -512,7 +512,23 @@ void getHtmlFromXml(std::string &xml,
 
                     std::string chapterName = tagContent;
                     cleanupSection_not1_Title(chapterName, regnrs);
-                    sectionTitle.push_back(chapterName);
+
+                    bool hasDrugshortage = false;
+                    if (sectionNumber == 18) {
+                        for (auto gtin : packages.gtin) {
+                            auto drugShortage = DRUGSHORTAGE::getEntryByGtin(std::stoll(gtin));
+                            if (!drugShortage.empty()) {
+                                hasDrugshortage = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (sectionNumber == 18 && hasDrugshortage) {
+                        sectionTitle.push_back(chapterName + (language == "de" ? "/Drugshortage" : "/Drugshortge"));
+                    } else {
+                        sectionTitle.push_back(chapterName);
+                    }
 
                     std::string divClass;
                     if (sectionNumber == 1) {
@@ -520,7 +536,12 @@ void getHtmlFromXml(std::string &xml,
                     }
                     else {
                         divClass = "paragraph";
-                        tagContent = " <div class=\"absTitle\">\n " + tagContent + "\n </div>\n";
+                        if (hasDrugshortage) {
+                            std::string extraString = language == "de" ? "/Drugshortage" : "/Drugshortge";
+                            tagContent = " <div class=\"absTitle\">\n " + tagContent + extraString + "\n </div>\n";
+                        } else {
+                            tagContent = " <div class=\"absTitle\">\n " + tagContent + "\n </div>\n";
+                        }
                     }
 
                     if (sectionNumber > 1)
