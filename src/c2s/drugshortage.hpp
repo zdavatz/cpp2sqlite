@@ -18,6 +18,7 @@ namespace DRUGSHORTAGE
     void parseJSON(const std::string &filename);
     
     nlohmann::json getEntryByGtin(int64_t gtin);
+    static void printFileStats(const std::string &filename);
 }
 
 #endif /* drugshortage_hpp */
