@@ -130,9 +130,12 @@ int countBagGtinInRefdata(std::vector<std::string> &list)
     return count;
 }
 
-static
-std::string getBarcodesFromGtins(const GTIN::oneFachinfoPackages &packages)
-{
+static std::string getBarcodesFromGtins(
+    const GTIN::oneFachinfoPackages &packages, 
+    const std::string language,
+    std::vector<std::string> &sectionId,
+    std::vector<std::string> &sectionTitle
+) {
     std::string html;
     int i=0;
     for (auto gtin : packages.gtin) {
@@ -153,6 +156,8 @@ std::string getBarcodesFromGtins(const GTIN::oneFachinfoPackages &packages)
         try {
             if (hasDrugshortage) {
                 html += "<p>";
+                std::string title = language == "de" ? "Drugshortage" : "Drugshortge";
+                html += " <div class=\"absTitle\" id=\"section18-" + gtin + "\">\n" + title + "\n </div>\n";
                 if (drugShortage.contains("status")) {
                     html += "Status: " + drugShortage["status"].get<std::string>() + "<br>\n";
                 }
@@ -163,6 +168,8 @@ std::string getBarcodesFromGtins(const GTIN::oneFachinfoPackages &packages)
                     html += "Datum Letzte Mutation: " + drugShortage["datumLetzteMutation"].get<std::string>() + "\n";
                 }
                 html += "</p>";
+                sectionId.push_back("section18-" + gtin);
+                sectionTitle.push_back(title);
             }
         } catch (...) {}
     }
@@ -389,7 +396,7 @@ void getHtmlFromXml(std::string &xml,
         }
 
         // Insert barcodes
-        std::string htmlBarcodes = getBarcodesFromGtins(packages);
+        std::string htmlBarcodes = getBarcodesFromGtins(packages, language, sectionId, sectionTitle);
         std::string barcodeFromText("<div class=\"absTitle\">Packungen</div>");
         if (language == "fr")
             barcodeFromText = "<div class=\"absTitle\">Présentation</div>";
@@ -513,22 +520,9 @@ void getHtmlFromXml(std::string &xml,
                     std::string chapterName = tagContent;
                     cleanupSection_not1_Title(chapterName, regnrs);
 
-                    bool hasDrugshortage = false;
-                    if (sectionNumber == 18) {
-                        for (auto gtin : packages.gtin) {
-                            auto drugShortage = DRUGSHORTAGE::getEntryByGtin(std::stoll(gtin));
-                            if (!drugShortage.empty()) {
-                                hasDrugshortage = true;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (sectionNumber == 18 && hasDrugshortage) {
-                        sectionTitle.push_back(chapterName + (language == "de" ? "/Drugshortage" : "/Drugshortge"));
-                    } else {
-                        sectionTitle.push_back(chapterName);
-                    }
+                    sectionTitle.push_back(chapterName);
+                    // Append 'section#' to a vector to be used in column "ids_str"
+                    sectionId.push_back(section);
 
                     std::string divClass;
                     if (sectionNumber == 1) {
@@ -536,12 +530,7 @@ void getHtmlFromXml(std::string &xml,
                     }
                     else {
                         divClass = "paragraph";
-                        if (hasDrugshortage) {
-                            std::string extraString = language == "de" ? "/Drugshortage" : "/Drugshortge";
-                            tagContent = " <div class=\"absTitle\">\n " + tagContent + extraString + "\n </div>\n";
-                        } else {
-                            tagContent = " <div class=\"absTitle\">\n " + tagContent + "\n </div>\n";
-                        }
+                        tagContent = " <div class=\"absTitle\">\n " + tagContent + "\n </div>\n";
                     }
 
                     if (sectionNumber > 1)
@@ -572,12 +561,9 @@ void getHtmlFromXml(std::string &xml,
                     // see RealExpertInfo.java:1562
                     // see BarCode.java:77
                     if (sectionNumber == 18) {
-                        html += getBarcodesFromGtins(packages);
+                        html += getBarcodesFromGtins(packages, language, sectionId, sectionTitle);
                         section18Done = true;
                     }
-
-                    // Append 'section#' to a vector to be used in column "ids_str"
-                    sectionId.push_back(section);
 
                     continue;
                 }
