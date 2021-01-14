@@ -19,6 +19,7 @@ namespace DRUGSHORTAGE
     
     nlohmann::json getEntryByGtin(int64_t gtin);
     static void printFileStats(const std::string &filename);
+    static std::string stringForColourCode(int64_t number);
 }
 
 #endif /* drugshortage_hpp */

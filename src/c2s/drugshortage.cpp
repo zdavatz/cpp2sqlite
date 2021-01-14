@@ -24,6 +24,7 @@
 namespace DRUGSHORTAGE
 {
     std::map<int64_t, nlohmann::json> drugshortageJsonMap;
+    std::map<int64_t, int64_t> colourCodeCounts;
     
     void parseJSON (const std::string &filename) {
         try {
@@ -36,6 +37,15 @@ namespace DRUGSHORTAGE
                 auto entry = it.value();
                 int64_t thisGtin = entry["gtin"].get<int64_t>();
                 drugshortageJsonMap[thisGtin] = entry;
+
+                try {
+                    int colourCode = entry["colorCode"]["#"].get<int64_t>();
+                    if (colourCodeCounts.find(colourCode) == colourCodeCounts.end()) {
+                        colourCodeCounts[colourCode] = 1;
+                    } else {
+                        colourCodeCounts[colourCode]++;
+                    }
+                }catch(...){}
             }
         }
         catch (std::exception &e) {
@@ -62,6 +72,27 @@ namespace DRUGSHORTAGE
         
         REP::html_start_ul();
         REP::html_li("GTINs : " + std::to_string(drugshortageJsonMap.size()));
+        for (int i = 1; i <= 5; i++) {
+            int64_t count = colourCodeCounts.find(i) != colourCodeCounts.end() ? colourCodeCounts[i] : 0;
+            REP::html_li(stringForColourCode(i) + "(" + std::to_string(i) + "): " + std::to_string(count));
+        }
         REP::html_end_ul();
+    }
+
+    static std::string stringForColourCode(int64_t number) {
+        switch (number) {
+            case 1:
+                return "Total grün";
+            case 2:
+                return "Total hellgrün";
+            case 3:
+                return "Total orange";
+            case 4:
+                return "Total rot";
+            case 5:
+                return "Total Gelb.";
+            default:
+                return "";
+        }
     }
 }
