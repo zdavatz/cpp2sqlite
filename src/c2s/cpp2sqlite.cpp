@@ -138,6 +138,7 @@ static std::string getBarcodesFromGtins(
 ) {
     std::string html;
     int i=0;
+    int sectionNumber = 0;
     for (auto gtin : packages.gtin) {
         auto drugShortage = DRUGSHORTAGE::getEntryByGtin(std::stoll(gtin));
         bool hasDrugshortage = !drugShortage.empty();
@@ -155,9 +156,9 @@ static std::string getBarcodesFromGtins(
 
         try {
             if (hasDrugshortage) {
-                html += "<p>";
+                html += "<p class=\"spacing1\">";
                 std::string title = language == "de" ? "Drugshortage" : "Drugshortge";
-                html += " <div class=\"absTitle\" id=\"section18-" + gtin + "\">\n" + title + "\n </div>\n";
+                html += " <div class=\"absTitle\" id=\"section18" + std::to_string(sectionNumber) + "\">\n" + title + "\n </div>\n";
                 if (drugShortage.contains("status")) {
                     html += "Status: " + drugShortage["status"].get<std::string>() + "<br>\n";
                 }
@@ -168,10 +169,11 @@ static std::string getBarcodesFromGtins(
                     html += "Datum Letzte Mutation: " + drugShortage["datumLetzteMutation"].get<std::string>() + "\n";
                 }
                 html += "</p>";
-                sectionId.push_back("section18-" + gtin);
+                sectionId.push_back("section18" + std::to_string(sectionNumber));
                 sectionTitle.push_back(title);
             }
         } catch (...) {}
+        sectionNumber++;
     }
 
     return html;
