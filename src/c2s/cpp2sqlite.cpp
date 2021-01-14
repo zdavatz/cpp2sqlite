@@ -156,7 +156,7 @@ static std::string getBarcodesFromGtins(
 
         try {
             if (hasDrugshortage) {
-                html += "<p>";
+                html += "<p class=\"spacing1\">";
                 std::string title = language == "de" ? "Drugshortage" : "Drugshortge";
                 html += " <div class=\"absTitle\" id=\"section18" + std::to_string(sectionNumber) + "\">\n" + title + "\n </div>\n";
                 if (drugShortage.contains("status")) {
