@@ -158,7 +158,7 @@ static std::string getBarcodesFromGtins(
             if (hasDrugshortage) {
                 html += "<p class=\"spacing1\">";
                 std::string title = language == "de" ? "Drugshortage" : "Drugshortge";
-                html += " <div class=\"absTitle\" id=\"section18" + std::to_string(sectionNumber) + "\">\n" + title + "\n </div>\n";
+                html += " <div class=\"absTitle\" id=\"Section18" + std::to_string(sectionNumber) + "\">\n" + title + "\n </div>\n";
                 if (drugShortage.contains("status")) {
                     html += "Status: " + drugShortage["status"].get<std::string>() + "<br>\n";
                 }
@@ -169,7 +169,7 @@ static std::string getBarcodesFromGtins(
                     html += "Datum Letzte Mutation: " + drugShortage["datumLetzteMutation"].get<std::string>() + "\n";
                 }
                 html += "</p>";
-                sectionId.push_back("section18" + std::to_string(sectionNumber));
+                sectionId.push_back("Section18" + std::to_string(sectionNumber));
                 sectionTitle.push_back(title);
             }
         } catch (...) {}
