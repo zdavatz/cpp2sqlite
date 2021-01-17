@@ -44,6 +44,7 @@
 #include "gtin.hpp"
 #include "peddose.hpp"
 #include "drugshortage.hpp"
+#include "dhcphpcbatchrecalls.hpp"
 #include "report.hpp"
 #include "config.h"
 
@@ -73,6 +74,7 @@
 #define SECTION_NUMBER_SAPPINFO         9052
 #define SECTION_NUMBER_SAPPINFO_P       9053
 #define SECTION_NUMBER_SAPPINFO_BF      9054
+#define SECTION_NUMBER_BATCH_RECALL     9055
 
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
@@ -777,6 +779,81 @@ doExtraSections:
         }
     }
 
+    {
+        std::vector<std::string> regnrsList;
+        boost::algorithm::split(regnrsList, regnrs, boost::is_any_of(", "), boost::token_compress_on);
+        bool addedSectionTitle = false;
+        for (auto regnrs : regnrsList) {
+            auto recall = DHCPHPCBATCHRECALLS::getRecallByRegnrs(regnrs);
+            if (recall.title.length()) {
+                if (!addedSectionTitle) {
+                    const std::string sectionBatchRecall("Section" + std::to_string(SECTION_NUMBER_BATCH_RECALL));
+                    std::string sectionBatchRecallName("Chargenrückrufe");
+                    if (language == "fr") {
+                        sectionBatchRecallName = "Retraits de lots";
+                    }
+                    html += "   <div class=\"paragraph\" id=\"" + sectionBatchRecall + "\">\n";
+                    html += "<div class=\"absTitle\">" + sectionBatchRecallName + "</div>";
+                    addedSectionTitle = true;
+                    sectionId.push_back(sectionBatchRecall);
+                    sectionTitle.push_back(sectionBatchRecallName);
+                }
+                html += "<p>";
+                if (recall.title.length()) {
+                    html += "Titel: "+ recall.title + "<br/>\n";
+                }
+                if (recall.date.length()) {
+                    html += "Datum: "+ recall.date + "<br/>\n";
+                }
+                if (recall.preparation.length()) {
+                    if (language == "fr") {
+                        html += "Préparation: "+ recall.preparation + "<br/>\n";
+                    } else {
+                        html += "Präparat: "+ recall.preparation + "<br/>\n";
+                    }
+                }
+                if (recall.regnrs.length()) {
+                    if (language == "fr") {
+                        html += "No d'autorisation: " + recall.regnrs + "<br/>\n";
+                    } else {
+                        html += "Zulassungsnummer: "+ recall.regnrs + "<br/>\n";
+                    }
+                }
+                if (recall.substance.length()) {
+                    if (language == "fr") {
+                        html += "Principe actif: " + recall.substance + "<br/>\n";
+                    } else {
+                        html += "Wirkstoff: "+ recall.substance + "<br/>\n";
+                    }
+                }
+                if (recall.licensee.length()) {
+                    if (language == "fr") {
+                        html += "Titulaire de l'autorisation: " + recall.licensee + "<br/>\n";
+                    } else {
+                        html += "Zulassungsinhaberin: "+ recall.licensee + "<br/>\n";
+                    }
+                }
+                if (recall.withdrawalOfTheaBatch.length()) {
+                    if (language == "fr") {
+                        html += "Retrait du lot: " + recall.withdrawalOfTheaBatch + "<br/>\n";
+                    } else {
+                        html += "Rückzug der Charge: "+ recall.withdrawalOfTheaBatch + "<br/>\n";
+                    }
+                }
+                if (recall.description.length()) {
+                    html += "Text: "+ recall.description + "<br/>\n";
+                }
+                if (recall.pdfLink.length()) {
+                    html += "<a href='" + recall.pdfLink + "'>PDF Link</a>\n";
+                }
+                html += "</p>";
+            }
+        }
+        if (addedSectionTitle) {
+            html += "   </div>\n";
+        }
+    }
+
     // Add a section that was not in the XML contents
     // Note that this section id and name don't get added to the chapter name list
     // Footer
@@ -968,6 +1045,12 @@ int main(int argc, char **argv)
     ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
 
     DRUGSHORTAGE::parseJSON(opt_workDirectory + "/downloads/drugshortage.json");
+
+    if (opt_language == "fr") {
+        DHCPHPCBATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_fr.json");
+    } else {
+        DHCPHPCBATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_de.json");
+    }
 
     AIPS::MedicineList &list = AIPS::parseXML(opt_workDirectory + "/downloads/aips.xml",
                                               opt_language,
