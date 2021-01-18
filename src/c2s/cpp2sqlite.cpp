@@ -784,8 +784,8 @@ doExtraSections:
         boost::algorithm::split(regnrsList, regnrs, boost::is_any_of(", "), boost::token_compress_on);
         bool addedSectionTitle = false;
         for (auto regnrs : regnrsList) {
-            auto recall = DHCPHPCBATCHRECALLS::getRecallByRegnrs(regnrs);
-            if (recall.title.length()) {
+            auto recalls = DHCPHPCBATCHRECALLS::getRecallsByRegnrs(regnrs);
+            for (auto recall : recalls) {
                 if (!addedSectionTitle) {
                     const std::string sectionBatchRecall("Section" + std::to_string(SECTION_NUMBER_BATCH_RECALL));
                     std::string sectionBatchRecallName("Chargenrückrufe");

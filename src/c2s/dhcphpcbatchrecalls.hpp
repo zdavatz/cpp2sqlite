@@ -21,6 +21,7 @@ namespace DHCPHPCBATCHRECALLS
         std::string date;
         std::string preparation;
         std::string regnrs;
+        std::vector<std::string> regnrsParsed;
         std::string substance;
         std::string licensee;
         std::string withdrawalOfTheaBatch;
@@ -29,7 +30,7 @@ namespace DHCPHPCBATCHRECALLS
     };
     void parseJSON(const std::string &filename);
     Recall jsonToRecall(nlohmann::json entry);
-    Recall getRecallByRegnrs(std::string regnrs);
+    std::vector<Recall> getRecallsByRegnrs(std::string regnrs);
     static void printFileStats(const std::string &filename);
 }
 

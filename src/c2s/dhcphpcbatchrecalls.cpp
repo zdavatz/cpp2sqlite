@@ -23,7 +23,8 @@
 
 namespace DHCPHPCBATCHRECALLS
 {
-    std::map<std::string, Recall> regnrsToRecall;
+    std::map<std::string, std::vector<Recall>> regnrsToRecalls;
+    int64_t withoutRegnrsCount = 0;
     void parseJSON(const std::string &filename) {
         try {
             std::clog << std::endl << "Reading " << filename << std::endl;
@@ -34,7 +35,20 @@ namespace DHCPHPCBATCHRECALLS
             for (nlohmann::json::iterator it = recallJson.begin(); it != recallJson.end(); ++it) {
                 auto entry = it.value();
                 Recall r = jsonToRecall(entry);
-                regnrsToRecall[r.regnrs] = r;
+                if (r.regnrs == "") {
+                    withoutRegnrsCount++;
+                    continue;
+                }
+                for (auto regnrs : r.regnrsParsed ) {
+                    if (regnrsToRecalls.find(regnrs) == regnrsToRecalls.end()) {
+                        std::vector<Recall> v = { r };
+                        regnrsToRecalls[regnrs] = v;
+                    } else {
+                        auto v = regnrsToRecalls[regnrs];
+                        v.push_back(r);
+                        regnrsToRecalls[regnrs] = v;
+                    }
+                }
             }
         }
         catch (std::exception &e) {
@@ -60,6 +74,9 @@ namespace DHCPHPCBATCHRECALLS
             }
             if (prop == "Zulassungsnummer" || prop == "No d'autorisation") {
                 recall.regnrs = prep["field"].get<std::string>();
+                std::vector<std::string> regnrsVector;
+                boost::algorithm::split(regnrsVector, recall.regnrs, boost::is_any_of(", und"), boost::token_compress_on);
+                recall.regnrsParsed = regnrsVector;
             }
             if (prop == "Wirkstoff" || prop == "Principe actif") {
                 recall.substance = prep["field"].get<std::string>();
@@ -74,13 +91,12 @@ namespace DHCPHPCBATCHRECALLS
         return recall;
     }
     
-    Recall getRecallByRegnrs(std::string regnrs) {
-        if (regnrsToRecall.find(regnrs) != regnrsToRecall.end()) {
-            return regnrsToRecall[regnrs];
+    std::vector<Recall> getRecallsByRegnrs(std::string regnrs) {
+        if (regnrsToRecalls.find(regnrs) != regnrsToRecalls.end()) {
+            return regnrsToRecalls[regnrs];
         }
-        Recall r;
-        r.title = "";
-        return r;
+        std::vector<Recall> empty;
+        return empty;
 
     }
 
@@ -90,7 +106,12 @@ namespace DHCPHPCBATCHRECALLS
         REP::html_p(filename);
         
         REP::html_start_ul();
-        REP::html_li("Count : " + std::to_string(regnrsToRecall.size()));
+        int64_t count = 0;
+        for (auto entry : regnrsToRecalls) {
+            count += entry.second.size();
+        }
+        REP::html_li("Count: " + std::to_string(count));
+        REP::html_li("Without Zulassungsnummer: " + std::to_string(withoutRegnrsCount));
         REP::html_end_ul();
     }
 }
