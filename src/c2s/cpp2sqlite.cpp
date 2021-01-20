@@ -792,6 +792,9 @@ doExtraSections:
                     if (language == "fr") {
                         sectionBatchRecallName = "Retraits de lots";
                     }
+                    if (hasXmlHeader) {
+                        html += "\n  </div>"; // terminate previous section before starting a new one
+                    }
                     html += "   <div class=\"paragraph\" id=\"" + sectionBatchRecall + "\">\n";
                     html += "<div class=\"absTitle\">" + sectionBatchRecallName + "</div>";
                     addedSectionTitle = true;
