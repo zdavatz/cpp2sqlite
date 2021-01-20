@@ -37,9 +37,12 @@ namespace DHCPHPCBATCHRECALLS
                 Recall r = jsonToRecall(entry);
                 if (r.regnrs == "") {
                     withoutRegnrsCount++;
+                    if (r.title != "") {
+                        std::clog << "Title without regnrs: " << r.title << std::endl;
+                    }
                     continue;
                 }
-                for (auto regnrs : r.regnrsParsed ) {
+                for (auto regnrs : r.regnrsParsed) {
                     if (regnrsToRecalls.find(regnrs) == regnrsToRecalls.end()) {
                         std::vector<Recall> v = { r };
                         regnrsToRecalls[regnrs] = v;
@@ -69,10 +72,20 @@ namespace DHCPHPCBATCHRECALLS
         for (nlohmann::json::iterator it = entry["prep"].begin(); it != entry["prep"].end(); ++it) {
             auto prep = it.value();
             std::string prop = prep["prop"].get<std::string>();
-            if (prop == "Präparat" || prop == "Préparation") {
+            if (prop == "Präparat" || prop == "Präparate" || prop == "Préparation" || prop == "Préparations") {
                 recall.preparation = prep["field"].get<std::string>();
             }
-            if (prop == "Zulassungsnummer" || prop == "No d'autorisation") {
+            if (prop == "Zulassungsnummer"
+                || prop == "Zulassungsnummern"
+                || prop == "Zulasssungsnumer"
+                || prop == "Zulaswsungsnummer"
+                || prop == "No d'autorisation"
+                || prop == "No d’autorisation"
+                || prop == "No d’autorisation :"
+                || prop == "Nos d’autorisation"
+                || prop == "Nos. d'autorisation"
+                || prop == "Nos. d’autorisation"
+            ) {
                 recall.regnrs = prep["field"].get<std::string>();
                 std::vector<std::string> regnrsVector;
                 boost::algorithm::split(regnrsVector, recall.regnrs, boost::is_any_of(", und"), boost::token_compress_on);
@@ -81,10 +94,10 @@ namespace DHCPHPCBATCHRECALLS
             if (prop == "Wirkstoff" || prop == "Principe actif") {
                 recall.substance = prep["field"].get<std::string>();
             }
-            if (prop == "Zulassungsinhaberin" || prop == "Titulaire de l'autorisation") {
+            if (prop == "Zulassungsinhaberin" || prop == "Titulaire de l'autorisation" || prop == "Titulaire de l’autorisation") {
                 recall.licensee = prep["field"].get<std::string>();
             }
-            if (prop == "Rückzug der Charge" || prop == "Retrait du lot") {
+            if (prop == "Rückzug der Charge" || prop == "Rückzug der Chargen" || prop == "Rückzug der Chargen:" || prop == "Retrait du lot" || prop == "Retrait des lots") {
                 recall.withdrawalOfTheaBatch = prep["field"].get<std::string>();
             }
         }
