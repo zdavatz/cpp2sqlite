@@ -801,7 +801,7 @@ doExtraSections:
                     sectionId.push_back(sectionBatchRecall);
                     sectionTitle.push_back(sectionBatchRecallName);
                 }
-                html += "<p>";
+                html += "<p class=\"spacing1\">";
                 if (recall.title.length()) {
                     html += "Titel: "+ recall.title + "<br/>\n";
                 }
