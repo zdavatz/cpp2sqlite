@@ -158,9 +158,9 @@ static std::string getBarcodesFromGtins(
 
         try {
             if (hasDrugshortage) {
-                html += "<p class=\"spacing1\">";
                 std::string title = language == "de" ? "Drugshortage" : "Drugshortage";
                 html += " <div class=\"absTitle\" id=\"Section18" + std::to_string(sectionNumber) + "\">\n" + title + "\n </div>\n";
+                html += "<p class=\"spacing1\">";
                 if (drugShortage.contains("status")) {
                     html += "Status: " + drugShortage["status"].get<std::string>() + "<br>\n";
                 }
@@ -787,13 +787,13 @@ doExtraSections:
             auto recalls = DHCPHPCBATCHRECALLS::getRecallsByRegnrs(regnrs);
             for (auto recall : recalls) {
                 if (!addedSectionTitle) {
+                    if (hasXmlHeader) {
+                        html += "\n  </div>"; // terminate previous section before starting a new one
+                    }
                     const std::string sectionBatchRecall("Section" + std::to_string(SECTION_NUMBER_BATCH_RECALL));
                     std::string sectionBatchRecallName("Chargenrückrufe");
                     if (language == "fr") {
                         sectionBatchRecallName = "Retraits de lots";
-                    }
-                    if (hasXmlHeader) {
-                        html += "\n  </div>"; // terminate previous section before starting a new one
                     }
                     html += "   <div class=\"paragraph\" id=\"" + sectionBatchRecall + "\">\n";
                     html += "<div class=\"absTitle\">" + sectionBatchRecallName + "</div>";
