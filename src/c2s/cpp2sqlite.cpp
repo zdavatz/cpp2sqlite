@@ -803,10 +803,18 @@ doExtraSections:
                 }
                 html += "<p class=\"spacing1\">";
                 if (recall.title.length()) {
-                    html += "Titel: "+ recall.title + "<br/>\n";
+                    if (language == "fr") {
+                        html += "Titre: "+ recall.title + "<br/>\n";
+                    } else {
+                        html += "Titel: "+ recall.title + "<br/>\n";
+                    }
                 }
                 if (recall.date.length()) {
-                    html += "Datum: "+ recall.date + "<br/>\n";
+                    if (language == "fr") {
+                        html += "Date: "+ recall.date + "<br/>\n";
+                    } else {
+                        html += "Datum: "+ recall.date + "<br/>\n";
+                    }
                 }
                 if (recall.preparation.length()) {
                     if (language == "fr") {
@@ -844,7 +852,11 @@ doExtraSections:
                     }
                 }
                 if (recall.description.length()) {
-                    html += "Text: "+ recall.description + "<br/>\n";
+                    if (language == "fr") {
+                        html += "Texte: "+ recall.description + "<br/>\n";
+                    } else {
+                        html += "Text: "+ recall.description + "<br/>\n";
+                    }
                 }
                 if (recall.pdfLink.length()) {
                     html += "<a href='" + recall.pdfLink + "'>PDF Link</a>\n";
