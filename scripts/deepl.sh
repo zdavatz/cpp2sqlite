@@ -16,7 +16,7 @@ if [ ! -z "$2" ] ; then
 fi
 
 source passwords
-URL="https://api.deepl.com/v1"
+URL="https://api.deepl.com/v2"
 
 mkdir -p $IN_DIR
 IN_FILE=$IN_DIR/deepl${TARGET_JOB}.in.txt
