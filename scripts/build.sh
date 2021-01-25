@@ -19,6 +19,7 @@ STEP_RUN_ZURROSE=true
 STEP_RUN_DRUGSHORTAGE=true
 #STEP_DEEPL_INTERACTIONS=true
 #STEP_DEEPL_SAPPINFO=true
+STEP_DEEPL_DRUGSHORTAGE=true
 
 #-------------------------------------------------------------------------------
 MAKE_FLAGS="-j9 all"
@@ -136,13 +137,6 @@ cd $BLD_APPS
 fi
 
 #-------------------------------------------------------------------------------
-if [ $STEP_RUN_DRUGSHORTAGE ] ; then
-cd $BLD_APPS
-./drugshortage --inDir $SRC_DIR/input
-./drugshortage --inDir $SRC_DIR/input --lang=fr
-fi
-
-#-------------------------------------------------------------------------------
 if [ $STEP_DEEPL_INTERACTIONS ] ; then
 # STEP 1
 # Read file:
@@ -217,3 +211,37 @@ if [ "$(wc -l < $SRC_DIR/input/deepl.${JOB}.in.txt)" -ne "$(wc -l < $SRC_DIR/inp
 fi
 fi
 
+#-------------------------------------------------------------------------------
+if [ $STEP_DEEPL_DRUGSHORTAGE ] ; then
+JOB=drugshortage
+# STEP 1
+# Read file:
+#       input/drugshortage.xlsx
+# Write files:
+#       input/deepl.${JOB}.in.txt
+cd $BLD_DIR
+./drugshortage --inDir $SRC_DIR/input
+
+# STEP 2 for each language other than "de"
+export TARGET_LANG=fr
+# Read file:
+#       input/deepl.${JOB}.in.txt
+# Write files:
+#       input/deepl.${JOB}.out.$TARGET_LANG.txt
+#       input/deepl.${JOB}.err.$TARGET_LANG.txt
+cd $SRC_DIR/scripts
+./deepl.sh $SRC_DIR/input $JOB
+
+# STEP 3
+# Manual translation
+# Read file:
+#       input/deepl.${JOB}.err.$TARGET_LANG.txt
+# Write file:
+#       input/deepl.${JOB}.out2.$TARGET_LANG.txt
+
+# STEP 4
+# Validate translated files
+if [ "$(wc -l < $SRC_DIR/input/deepl.${JOB}.in.txt)" -ne "$(wc -l < $SRC_DIR/input/deepl.${JOB}.out.$TARGET_LANG.txt)" ]; then
+    echo 'deepl.${JOB}.in.txt and deepl.${JOB}.out.$TARGET_LANG.txt must have the same number of lines'
+fi
+fi
