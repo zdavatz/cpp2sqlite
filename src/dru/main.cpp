@@ -33,6 +33,15 @@ namespace DEEPL
 {
 std::set<std::string> toBeTranslatedSet; // no duplicates, sorted
 
+bool anyAlpha(std::string s) {
+    for (std::string::size_type i = 0; i < s.size(); i++) {
+        if (std::isalpha(s[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void validateAndAdd(const std::string s)
 {
     if (s.empty())
@@ -40,7 +49,7 @@ void validateAndAdd(const std::string s)
 
     // Skip if it starts with a number
     // sheet 1, column I, could be like "120mg" or "keine Angaben"
-    if (std::isdigit(s[0]))
+    if (!anyAlpha(s))
         return;
     
     // Sometimes it start with a number, but after a space: " 80mg"
@@ -66,7 +75,7 @@ void parseJSON(const std::string &inFilename,
     for (nlohmann::json::iterator it = drugshortageJson.begin(); it != drugshortageJson.end(); ++it) {
         auto entry = it.value();
         try {
-            if (entry.contains("entry")) {
+            if (entry.contains("status")) {
                 validateAndAdd(entry["status"].get<std::string>());
             }
             if (entry.contains("datumLieferfahigkeit")) {
