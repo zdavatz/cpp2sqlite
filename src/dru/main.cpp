@@ -38,6 +38,20 @@ void validateAndAdd(const std::string s)
     if (s.empty())
         return;
 
+    // Skip if it starts with a number
+    // sheet 1, column I, could be like "120mg" or "keine Angaben"
+    if (std::isdigit(s[0]))
+        return;
+    
+    // Sometimes it start with a number, but after a space: " 80mg"
+    // example sheet 2, column K, ATC C05AD01
+    if (std::isspace(s[0]) && std::isdigit(s[1]))
+        return;
+
+    // Treat this as an empty cell
+    if (s == "-")
+        return;
+
     toBeTranslatedSet.insert(s);
 }
 
@@ -54,6 +68,12 @@ void parseJSON(const std::string &inFilename,
         try {
             if (entry.contains("entry")) {
                 validateAndAdd(entry["status"].get<std::string>());
+            }
+            if (entry.contains("datumLieferfahigkeit")) {
+                validateAndAdd(entry["datumLieferfahigkeit"].get<std::string>());
+            }
+            if (entry.contains("datumLetzteMutation")) {
+                validateAndAdd(entry["datumLetzteMutation"].get<std::string>());
             }
             if (entry.contains("colorCode")) {
                 auto cEntry = entry["colorCode"];
