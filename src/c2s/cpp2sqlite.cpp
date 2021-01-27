@@ -143,7 +143,7 @@ static std::string getBarcodesFromGtins(
     int sectionNumber = 0;
     for (auto gtin : packages.gtin) {
         auto drugShortage = DRUGSHORTAGE::getEntryByGtin(std::stoll(gtin));
-        bool hasDrugshortage = !drugShortage.empty();
+        bool hasDrugshortage = drugShortage.gtin != 0;
         if (i < packages.name.size()) {// possibly redundant check
             html += "  <p class=\"spacing1\">" + packages.name[i++];
             if (hasDrugshortage) {
@@ -161,14 +161,26 @@ static std::string getBarcodesFromGtins(
                 std::string title = language == "de" ? "Drugshortage" : "Drugshortage";
                 html += " <div class=\"absTitle\" id=\"Section18" + std::to_string(sectionNumber) + "\">\n" + title + "\n </div>\n";
                 html += "<p class=\"spacing1\">";
-                if (drugShortage.contains("status")) {
-                    html += "Status: " + drugShortage["status"].get<std::string>() + "<br>\n";
+                if (drugShortage.status != "") {
+                    if (language == "fr") {
+                        html += "Statut: " + drugShortage.status + "<br>\n"; 
+                    } else {
+                        html += "Status: " + drugShortage.status + "<br>\n";
+                    }
                 }
-                if (drugShortage.contains("datumLieferfahigkeit")) {
-                    html += "Geschaetztes Datum Lieferfaehigkeit: " + drugShortage["datumLieferfahigkeit"].get<std::string>() + "<br>\n";
+                if (drugShortage.estimatedDateOfDelivery != "") {
+                    if (language == "fr") {
+                        html += "Date prévue d'accouchement: " + drugShortage.estimatedDateOfDelivery + "<br>\n"; 
+                    } else {
+                        html += "Geschaetztes Datum Lieferfaehigkeit: " + drugShortage.estimatedDateOfDelivery + "<br>\n";
+                    }
                 }
-                if (drugShortage.contains("datumLetzteMutation")) {
-                    html += "Datum Letzte Mutation: " + drugShortage["datumLetzteMutation"].get<std::string>() + "\n";
+                if (drugShortage.dateLastMutation != "") {
+                    if (language == "fr") {
+                        html += "Date du dernier changement: " + drugShortage.dateLastMutation + "\n"; 
+                    } else {
+                        html += "Datum Letzte Mutation: " + drugShortage.dateLastMutation + "\n";
+                    }
                 }
                 html += "</p>";
                 sectionId.push_back("Section18" + std::to_string(sectionNumber));
@@ -1059,7 +1071,7 @@ int main(int argc, char **argv)
 
     ATC::parseTXT(opt_inputDirectory + "/atc_codes_multi_lingual.txt", opt_language, flagVerbose);
 
-    DRUGSHORTAGE::parseJSON(opt_workDirectory + "/downloads/drugshortage.json");
+    DRUGSHORTAGE::parseJSON(opt_workDirectory + "/downloads/drugshortage.json", opt_inputDirectory, opt_language);
 
     if (opt_language == "fr") {
         DHCPHPCBATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_fr.json");

@@ -14,7 +14,6 @@
 #include <vector>
 #include <string>
 #include <regex>
-#include <map>
 #include <libgen.h>     // for basename()
 
 #include <boost/algorithm/string.hpp>
@@ -23,10 +22,14 @@
 
 namespace DRUGSHORTAGE
 {
-    std::map<int64_t, nlohmann::json> drugshortageJsonMap;
+    std::map<int64_t, DrugShortage> drugshortageMap;
     std::map<int64_t, int64_t> colourCodeCounts;
+    std::map<std::string, std::string> deeplTranslatedMap;
     
-    void parseJSON (const std::string &filename) {
+    void parseJSON (const std::string &filename, const std::string &inDir, const std::string &language) {
+        if (language != "de")
+            getDeeplTranslationMap(inDir, "drugshortage", language, deeplTranslatedMap);
+
         try {
             std::clog << std::endl << "Reading " << filename << std::endl;
 
@@ -35,17 +38,8 @@ namespace DRUGSHORTAGE
             jsonInputStream >> drugshortageJson;
             for (nlohmann::json::iterator it = drugshortageJson.begin(); it != drugshortageJson.end(); ++it) {
                 auto entry = it.value();
-                int64_t thisGtin = entry["gtin"].get<int64_t>();
-                drugshortageJsonMap[thisGtin] = entry;
-
-                try {
-                    int colourCode = entry["colorCode"]["#"].get<int64_t>();
-                    if (colourCodeCounts.find(colourCode) == colourCodeCounts.end()) {
-                        colourCodeCounts[colourCode] = 1;
-                    } else {
-                        colourCodeCounts[colourCode]++;
-                    }
-                }catch(...){}
+                auto drugshortage = jsonEntryToDrugShortage(entry, language);
+                drugshortageMap[drugshortage.gtin] = drugshortage;
             }
         }
         catch (std::exception &e) {
@@ -54,45 +48,150 @@ namespace DRUGSHORTAGE
             << " Error " << e.what()
             << std::endl;
         }
-        printFileStats(filename);
-    }
-    
-    nlohmann::json getEntryByGtin(int64_t gtin) {
-        if (drugshortageJsonMap.find(gtin) != drugshortageJsonMap.end()) {
-            return drugshortageJsonMap[gtin];
-        }
-        return nlohmann::json::object();
+        printFileStats(filename, language);
     }
 
-    static void printFileStats(const std::string &filename)
+    DrugShortage jsonEntryToDrugShortage(nlohmann::json entry, std::string language) {
+        DrugShortage d;
+        d.gtin = entry["gtin"].get<int64_t>();
+        d.status = getLocalized(language, entry["status"].get<std::string>());
+        d.estimatedDateOfDelivery = getLocalized(language, entry["datumLieferfahigkeit"].get<std::string>());
+        d.dateLastMutation = getLocalized(language, entry["datumLetzteMutation"].get<std::string>());
+        try {
+            int colourCode = entry["colorCode"]["#"].get<int64_t>();
+            d.colourCode = colourCode;
+        } catch(...){}
+        return d;
+    }
+    
+    DrugShortage getEntryByGtin(int64_t gtin) {
+        if (drugshortageMap.find(gtin) != drugshortageMap.end()) {
+            return drugshortageMap[gtin];
+        }
+        DrugShortage d;
+        d.gtin = 0;
+        return d;
+    }
+
+    static void printFileStats(const std::string &filename, std::string language)
     {
         REP::html_h2("Drugshortage");
 
         REP::html_p(filename);
         
         REP::html_start_ul();
-        REP::html_li("GTINs : " + std::to_string(drugshortageJsonMap.size()));
+        REP::html_li("GTINs : " + std::to_string(drugshortageMap.size()));
         for (int i = 1; i <= 5; i++) {
             int64_t count = colourCodeCounts.find(i) != colourCodeCounts.end() ? colourCodeCounts[i] : 0;
-            REP::html_li(stringForColourCode(i) + "(" + std::to_string(i) + "): " + std::to_string(count));
+            REP::html_li(stringForColourCode(i, language) + "(" + std::to_string(i) + "): " + std::to_string(count));
         }
         REP::html_end_ul();
     }
 
-    static std::string stringForColourCode(int64_t number) {
+    static std::string stringForColourCode(int64_t number, std::string language) {
         switch (number) {
             case 1:
+                if (language == "fr") {
+                    return "Total vert";
+                }
                 return "Total grün";
             case 2:
+                if (language == "fr") {
+                    return "Total vert clair";
+                }
                 return "Total hellgrün";
             case 3:
+                if (language == "fr") {
+                    return "Total orange";
+                }
                 return "Total orange";
             case 4:
+                if (language == "fr") {
+                    return "Total rouge";
+                }
                 return "Total rot";
             case 5:
-                return "Total Gelb.";
+                if (language == "fr") {
+                    return "Total Jaune";
+                }
+                return "Total Gelb";
             default:
                 return "";
+        }
+    }
+
+    std::string getLocalized(const std::string &language,
+                             const std::string &s)
+    {
+        if (language == "de")
+            return s;
+        
+        if (s.empty())
+            return s;
+
+        // No localization if it starts with a number
+        if (std::isdigit(s[0]))
+            return s;
+        
+        // No localization if it starts with a number, but after a space: " 80mg"
+        if (std::isspace(s[0]) && std::isdigit(s[1]))
+            return s;
+        
+        // Treat this as an empty cell
+        if (s == "-")
+            return {};
+        if (deeplTranslatedMap.find(s) == deeplTranslatedMap.end()) {
+            std::clog << "No translation for <" << s << ">" << std::endl;
+            return s;
+        }
+        return deeplTranslatedMap[s];
+    }
+
+    // Define deeplTranslatedMap
+    // key "input/deepl.in.txt"
+    // val "input/deepl.out.fr.txt"
+    void getDeeplTranslationMap(const std::string &dir,
+                                const std::string &job,
+                                const std::string &language,
+                                std::map<std::string, std::string> &map)
+    {
+        try {
+            std::string dotJob;
+            if (!job.empty())
+                dotJob = "." + job;
+            
+            std::ifstream ifsKey(dir + "/deepl" + dotJob + ".in.txt");
+            std::ifstream ifsValue(dir + "/deepl" + dotJob + ".out." + language + ".txt");   // translated by deepl.sh
+    #ifdef WITH_DEEPL_MANUALLY_TRANSLATED
+            std::ifstream ifsValue2(dir + "/deepl" + dotJob + ".out2." + language + ".txt"); // translated manually
+    #endif
+            
+            std::string key, val;
+            while (std::getline(ifsKey, key))
+            {
+                std::getline(ifsValue, val);
+    #ifdef WITH_DEEPL_MANUALLY_TRANSLATED
+                if (val.empty())                    // DeepL failed to translate it
+                    std::getline(ifsValue2, val);   // Get it from manually translated file
+    #endif
+    #ifdef DEBUG
+                assert(!val.empty());
+    #endif
+
+                map.insert(std::make_pair(key, val));
+            } // while
+            
+            ifsKey.close();
+            ifsValue.close();
+    #ifdef WITH_DEEPL_MANUALLY_TRANSLATED
+            ifsValue2.close();
+    #endif
+        }
+        catch (std::exception &e) {
+            std::cerr
+            << basename((char *)__FILE__) << ":" << __LINE__
+            << " Error " << e.what()
+            << std::endl;
         }
     }
 }
