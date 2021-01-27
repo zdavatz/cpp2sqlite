@@ -33,9 +33,32 @@ namespace DEEPL
 {
 std::set<std::string> toBeTranslatedSet; // no duplicates, sorted
 
+bool anyAlpha(std::string s) {
+    for (std::string::size_type i = 0; i < s.size(); i++) {
+        if (std::isalpha(s[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void validateAndAdd(const std::string s)
 {
     if (s.empty())
+        return;
+
+    // Skip if it starts with a number
+    // sheet 1, column I, could be like "120mg" or "keine Angaben"
+    if (!anyAlpha(s))
+        return;
+    
+    // Sometimes it start with a number, but after a space: " 80mg"
+    // example sheet 2, column K, ATC C05AD01
+    if (std::isspace(s[0]) && std::isdigit(s[1]))
+        return;
+
+    // Treat this as an empty cell
+    if (s == "-")
         return;
 
     toBeTranslatedSet.insert(s);
@@ -52,8 +75,14 @@ void parseJSON(const std::string &inFilename,
     for (nlohmann::json::iterator it = drugshortageJson.begin(); it != drugshortageJson.end(); ++it) {
         auto entry = it.value();
         try {
-            if (entry.contains("entry")) {
+            if (entry.contains("status")) {
                 validateAndAdd(entry["status"].get<std::string>());
+            }
+            if (entry.contains("datumLieferfahigkeit")) {
+                validateAndAdd(entry["datumLieferfahigkeit"].get<std::string>());
+            }
+            if (entry.contains("datumLetzteMutation")) {
+                validateAndAdd(entry["datumLetzteMutation"].get<std::string>());
             }
             if (entry.contains("colorCode")) {
                 auto cEntry = entry["colorCode"];
@@ -154,6 +183,7 @@ int main(int argc, char **argv)
         std::string toBeTran = boost::algorithm::join(DEEPL::toBeTranslatedSet, "\n");
         std::ofstream outfile(opt_inputDirectory + "/deepl.drugshortage.in.txt");
         outfile << toBeTran;
+        outfile << "\n";
         outfile.close();
     }
     
