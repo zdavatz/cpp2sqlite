@@ -154,6 +154,7 @@ int main(int argc, char **argv)
         std::string toBeTran = boost::algorithm::join(DEEPL::toBeTranslatedSet, "\n");
         std::ofstream outfile(opt_inputDirectory + "/deepl.drugshortage.in.txt");
         outfile << toBeTran;
+        outfile << "\n";
         outfile.close();
     }
     
