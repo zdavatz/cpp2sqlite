@@ -129,14 +129,6 @@ namespace DRUGSHORTAGE
         if (s.empty())
             return s;
 
-        // No localization if it starts with a number
-        if (std::isdigit(s[0]))
-            return s;
-        
-        // No localization if it starts with a number, but after a space: " 80mg"
-        if (std::isspace(s[0]) && std::isdigit(s[1]))
-            return s;
-        
         // Treat this as an empty cell
         if (s == "-")
             return {};
@@ -144,7 +136,11 @@ namespace DRUGSHORTAGE
             std::clog << "No translation for <" << s << ">" << std::endl;
             return s;
         }
-        return deeplTranslatedMap[s];
+        auto translated = deeplTranslatedMap[s];
+        if (translated.empty()) {
+            return s;
+        }
+        return translated;
     }
 
     // Define deeplTranslatedMap
