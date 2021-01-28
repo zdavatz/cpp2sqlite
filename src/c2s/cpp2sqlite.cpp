@@ -160,7 +160,8 @@ static std::string getBarcodesFromGtins(
             if (hasDrugshortage) {
                 std::string title = language == "de" ? "Drugshortage" : "Drugshortage";
                 html += " <div class=\"absTitle\" id=\"Section18" + std::to_string(sectionNumber) + "\">\n" + title + "\n </div>\n";
-                html += "<p class=\"spacing1\">";
+                // margin for more space at the bottom https://github.com/zdavatz/cpp2sqlite/issues/167
+                html += "<p class=\"spacing1\" style=\"margin-bottom:1em\">";
                 if (drugShortage.status != "") {
                     if (language == "fr") {
                         html += "Statut: " + drugShortage.status + "<br>\n"; 
