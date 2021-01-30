@@ -1,6 +1,6 @@
 //
-//  dhcphpcbatchrecalls.cpp
-//  dhcphpcbatchrecalls
+//  batchrecalls.cpp
+//  batchrecalls
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
@@ -18,10 +18,10 @@
 #include <libgen.h>     // for basename()
 
 #include <boost/algorithm/string.hpp>
-#include "dhcphpcbatchrecalls.hpp"
+#include "batchrecalls.hpp"
 #include "report.hpp"
 
-namespace DHCPHPCBATCHRECALLS
+namespace BATCHRECALLS
 {
     std::map<std::string, std::vector<Recall>> regnrsToRecalls;
     int64_t withoutRegnrsCount = 0;
@@ -114,7 +114,7 @@ namespace DHCPHPCBATCHRECALLS
     }
 
     static void printFileStats(const std::string &filename) {
-        REP::html_h2("Dhcphpcbatchrecalls");
+        REP::html_h2("Batchrecalls");
 
         REP::html_p(filename);
         

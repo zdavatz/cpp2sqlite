@@ -1,6 +1,6 @@
 //
-//  dhcphpcbatchrecalls.hpp
-//  dhcphpcbatchrecalls
+//  batchrecalls.hpp
+//  batchrecalls
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
@@ -8,12 +8,12 @@
 //
 // https://github.com/zdavatz/cpp2sqlite/issues/140
 
-#ifndef dhcphpcbatchrecalls_hpp
-#define dhcphpcbatchrecalls_hpp
+#ifndef batchrecalls_hpp
+#define batchrecalls_hpp
 
 #include <nlohmann/json.hpp>
 
-namespace DHCPHPCBATCHRECALLS
+namespace BATCHRECALLS
 {
     class Recall {
     public:
@@ -34,4 +34,4 @@ namespace DHCPHPCBATCHRECALLS
     static void printFileStats(const std::string &filename);
 }
 
-#endif /* dhcphpcbatchrecalls_hpp */
+#endif /* batchrecalls_hpp */

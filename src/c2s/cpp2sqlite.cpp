@@ -44,7 +44,7 @@
 #include "gtin.hpp"
 #include "peddose.hpp"
 #include "drugshortage.hpp"
-#include "dhcphpcbatchrecalls.hpp"
+#include "batchrecalls.hpp"
 #include "report.hpp"
 #include "config.h"
 
@@ -797,7 +797,7 @@ doExtraSections:
         boost::algorithm::split(regnrsList, regnrs, boost::is_any_of(", "), boost::token_compress_on);
         bool addedSectionTitle = false;
         for (auto regnrs : regnrsList) {
-            auto recalls = DHCPHPCBATCHRECALLS::getRecallsByRegnrs(regnrs);
+            auto recalls = BATCHRECALLS::getRecallsByRegnrs(regnrs);
             for (auto recall : recalls) {
                 if (!addedSectionTitle) {
                     if (hasXmlHeader) {
@@ -1075,9 +1075,9 @@ int main(int argc, char **argv)
     DRUGSHORTAGE::parseJSON(opt_workDirectory + "/downloads/drugshortage.json", opt_inputDirectory, opt_language);
 
     if (opt_language == "fr") {
-        DHCPHPCBATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_fr.json");
+        BATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_fr.json");
     } else {
-        DHCPHPCBATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_de.json");
+        BATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_de.json");
     }
 
     AIPS::MedicineList &list = AIPS::parseXML(opt_workDirectory + "/downloads/aips.xml",

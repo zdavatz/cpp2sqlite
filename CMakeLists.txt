@@ -54,7 +54,7 @@ add_executable(cpp2sqlite
 	src/c2s/epha.hpp src/c2s/epha.cpp
 	src/c2s/peddose.hpp src/c2s/peddose.cpp
 	src/c2s/drugshortage.hpp src/c2s/drugshortage.cpp
-	src/c2s/dhcphpcbatchrecalls.hpp src/c2s/dhcphpcbatchrecalls.cpp
+	src/c2s/batchrecalls.hpp src/c2s/batchrecalls.cpp
     src/report.hpp src/report.cpp
 	src/c2s/ean13/functii.cpp src/c2s/ean13/functii.h
 	src/c2s/medicine.h
