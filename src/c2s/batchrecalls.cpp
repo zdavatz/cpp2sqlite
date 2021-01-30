@@ -1,6 +1,6 @@
 //
-//  dhcphpcbatchrecalls.cpp
-//  dhcphpcbatchrecalls
+//  batchrecalls.cpp
+//  batchrecalls
 //
 //  ©ywesee GmbH -- all rights reserved
 //  License GPLv3.0 -- see License File
@@ -18,10 +18,10 @@
 #include <libgen.h>     // for basename()
 
 #include <boost/algorithm/string.hpp>
-#include "dhcphpcbatchrecalls.hpp"
+#include "batchrecalls.hpp"
 #include "report.hpp"
 
-namespace DHCPHPCBATCHRECALLS
+namespace BATCHRECALLS
 {
     std::map<std::string, std::vector<Recall>> regnrsToRecalls;
     int64_t withoutRegnrsCount = 0;
@@ -72,9 +72,6 @@ namespace DHCPHPCBATCHRECALLS
         for (nlohmann::json::iterator it = entry["prep"].begin(); it != entry["prep"].end(); ++it) {
             auto prep = it.value();
             std::string prop = prep["prop"].get<std::string>();
-            if (prop == "Präparat" || prop == "Präparate" || prop == "Préparation" || prop == "Préparations") {
-                recall.preparation = prep["field"].get<std::string>();
-            }
             if (prop == "Zulassungsnummer"
                 || prop == "Zulassungsnummern"
                 || prop == "Zulasssungsnumer"
@@ -90,15 +87,10 @@ namespace DHCPHPCBATCHRECALLS
                 std::vector<std::string> regnrsVector;
                 boost::algorithm::split(regnrsVector, recall.regnrs, boost::is_any_of(", und"), boost::token_compress_on);
                 recall.regnrsParsed = regnrsVector;
-            }
-            if (prop == "Wirkstoff" || prop == "Principe actif") {
-                recall.substance = prep["field"].get<std::string>();
-            }
-            if (prop == "Zulassungsinhaberin" || prop == "Titulaire de l'autorisation" || prop == "Titulaire de l’autorisation") {
-                recall.licensee = prep["field"].get<std::string>();
-            }
-            if (prop == "Rückzug der Charge" || prop == "Rückzug der Chargen" || prop == "Rückzug der Chargen:" || prop == "Retrait du lot" || prop == "Retrait des lots") {
-                recall.withdrawalOfTheaBatch = prep["field"].get<std::string>();
+            } else {
+                try {
+                    recall.extras[prop] = prep["field"].get<std::string>();
+                } catch(...) {}
             }
         }
         return recall;
@@ -114,7 +106,7 @@ namespace DHCPHPCBATCHRECALLS
     }
 
     static void printFileStats(const std::string &filename) {
-        REP::html_h2("Dhcphpcbatchrecalls");
+        REP::html_h2("Batchrecalls");
 
         REP::html_p(filename);
         

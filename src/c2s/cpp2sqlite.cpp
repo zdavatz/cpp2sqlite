@@ -44,7 +44,8 @@
 #include "gtin.hpp"
 #include "peddose.hpp"
 #include "drugshortage.hpp"
-#include "dhcphpcbatchrecalls.hpp"
+#include "batchrecalls.hpp"
+#include "dhpchpc.hpp"
 #include "report.hpp"
 #include "config.h"
 
@@ -75,6 +76,7 @@
 #define SECTION_NUMBER_SAPPINFO_P       9053
 #define SECTION_NUMBER_SAPPINFO_BF      9054
 #define SECTION_NUMBER_BATCH_RECALL     9055
+#define SECTION_NUMBER_DHPC_HPC         9056
 
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
@@ -797,7 +799,7 @@ doExtraSections:
         boost::algorithm::split(regnrsList, regnrs, boost::is_any_of(", "), boost::token_compress_on);
         bool addedSectionTitle = false;
         for (auto regnrs : regnrsList) {
-            auto recalls = DHCPHPCBATCHRECALLS::getRecallsByRegnrs(regnrs);
+            auto recalls = BATCHRECALLS::getRecallsByRegnrs(regnrs);
             for (auto recall : recalls) {
                 if (!addedSectionTitle) {
                     if (hasXmlHeader) {
@@ -829,39 +831,11 @@ doExtraSections:
                         html += "Datum: "+ recall.date + "<br/>\n";
                     }
                 }
-                if (recall.preparation.length()) {
-                    if (language == "fr") {
-                        html += "Préparation: "+ recall.preparation + "<br/>\n";
-                    } else {
-                        html += "Präparat: "+ recall.preparation + "<br/>\n";
-                    }
-                }
                 if (recall.regnrs.length()) {
                     if (language == "fr") {
                         html += "No d'autorisation: " + recall.regnrs + "<br/>\n";
                     } else {
                         html += "Zulassungsnummer: "+ recall.regnrs + "<br/>\n";
-                    }
-                }
-                if (recall.substance.length()) {
-                    if (language == "fr") {
-                        html += "Principe actif: " + recall.substance + "<br/>\n";
-                    } else {
-                        html += "Wirkstoff: "+ recall.substance + "<br/>\n";
-                    }
-                }
-                if (recall.licensee.length()) {
-                    if (language == "fr") {
-                        html += "Titulaire de l'autorisation: " + recall.licensee + "<br/>\n";
-                    } else {
-                        html += "Zulassungsinhaberin: "+ recall.licensee + "<br/>\n";
-                    }
-                }
-                if (recall.withdrawalOfTheaBatch.length()) {
-                    if (language == "fr") {
-                        html += "Retrait du lot: " + recall.withdrawalOfTheaBatch + "<br/>\n";
-                    } else {
-                        html += "Rückzug der Charge: "+ recall.withdrawalOfTheaBatch + "<br/>\n";
                     }
                 }
                 if (recall.description.length()) {
@@ -871,8 +845,73 @@ doExtraSections:
                         html += "Text: "+ recall.description + "<br/>\n";
                     }
                 }
+                for (auto extra : recall.extras) {
+                    html += extra.first + ": "+ extra.second + "<br/>\n";
+                }
                 if (recall.pdfLink.length()) {
                     html += "<a href='" + recall.pdfLink + "'>PDF Link</a>\n";
+                }
+                html += "</p>";
+            }
+        }
+        if (addedSectionTitle) {
+            html += "   </div>\n";
+        }
+    }
+
+    {
+        std::vector<std::string> regnrsList;
+        boost::algorithm::split(regnrsList, regnrs, boost::is_any_of(", "), boost::token_compress_on);
+        bool addedSectionTitle = false;
+        for (auto regnrs : regnrsList) {
+            auto news = DHPCHPC::getNewsByRegnrs(regnrs);
+            for (auto news : news) {
+                if (!addedSectionTitle) {
+                    if (hasXmlHeader) {
+                        html += "\n  </div>"; // terminate previous section before starting a new one
+                    }
+                    const std::string sectionDHPCHPC("Section" + std::to_string(SECTION_NUMBER_DHPC_HPC));
+                    std::string sectionDHPCHPCName("DHPC / HPC");
+                    html += "   <div class=\"paragraph\" id=\"" + sectionDHPCHPC + "\">\n";
+                    html += "<div class=\"absTitle\">" + sectionDHPCHPCName + "</div>";
+                    addedSectionTitle = true;
+                    sectionId.push_back(sectionDHPCHPC);
+                    sectionTitle.push_back(sectionDHPCHPCName);
+                }
+                html += "<p class=\"spacing1\">";
+                if (news.title.length()) {
+                    if (language == "fr") {
+                        html += "Titre: "+ news.title + "<br/>\n";
+                    } else {
+                        html += "Titel: "+ news.title + "<br/>\n";
+                    }
+                }
+                if (news.date.length()) {
+                    if (language == "fr") {
+                        html += "Date: "+ news.date + "<br/>\n";
+                    } else {
+                        html += "Datum: "+ news.date + "<br/>\n";
+                    }
+                }
+                if (news.description.length()) {
+                    if (language == "fr") {
+                        html += "Texte: "+ news.description + "<br/>\n";
+                    } else {
+                        html += "Text: "+ news.description + "<br/>\n";
+                    }
+                }
+                if (news.regnrs.length()) {
+                    if (language == "fr") {
+                        html += "No d'autorisation: " + news.regnrs + "<br/>\n";
+                    } else {
+                        html += "Zulassungsnummer: "+ news.regnrs + "<br/>\n";
+                    }
+                }
+                for (auto extra : news.extras) {
+                    html += extra.first + ": " + extra.second + "<br/>\n";
+                }
+                if (news.pdfLink.length()) {
+                    html += "<a href='" + news.pdfLink + "'>PDF Link</a>\n";
                 }
                 html += "</p>";
             }
@@ -1075,9 +1114,15 @@ int main(int argc, char **argv)
     DRUGSHORTAGE::parseJSON(opt_workDirectory + "/downloads/drugshortage.json", opt_inputDirectory, opt_language);
 
     if (opt_language == "fr") {
-        DHCPHPCBATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_fr.json");
+        BATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_fr.json");
     } else {
-        DHCPHPCBATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_de.json");
+        BATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_de.json");
+    }
+
+    if (opt_language == "fr") {
+        DHPCHPC::parseJSON(opt_workDirectory + "/downloads/dhpc_hpc_fr.json");
+    } else {
+        DHPCHPC::parseJSON(opt_workDirectory + "/downloads/dhpc_hpc_de.json");
     }
 
     AIPS::MedicineList &list = AIPS::parseXML(opt_workDirectory + "/downloads/aips.xml",
