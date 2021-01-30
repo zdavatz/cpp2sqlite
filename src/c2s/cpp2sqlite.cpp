@@ -45,6 +45,7 @@
 #include "peddose.hpp"
 #include "drugshortage.hpp"
 #include "batchrecalls.hpp"
+#include "dhpchpc.hpp"
 #include "report.hpp"
 #include "config.h"
 
@@ -75,6 +76,7 @@
 #define SECTION_NUMBER_SAPPINFO_P       9053
 #define SECTION_NUMBER_SAPPINFO_BF      9054
 #define SECTION_NUMBER_BATCH_RECALL     9055
+#define SECTION_NUMBER_DHPC_HPC         9056
 
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
@@ -882,6 +884,68 @@ doExtraSections:
         }
     }
 
+    {
+        std::vector<std::string> regnrsList;
+        boost::algorithm::split(regnrsList, regnrs, boost::is_any_of(", "), boost::token_compress_on);
+        bool addedSectionTitle = false;
+        for (auto regnrs : regnrsList) {
+            auto news = DHPCHPC::getNewsByRegnrs(regnrs);
+            for (auto news : news) {
+                if (!addedSectionTitle) {
+                    if (hasXmlHeader) {
+                        html += "\n  </div>"; // terminate previous section before starting a new one
+                    }
+                    const std::string sectionDHPCHPC("Section" + std::to_string(SECTION_NUMBER_DHPC_HPC));
+                    std::string sectionDHPCHPCName("DHPC / HPC");
+                    html += "   <div class=\"paragraph\" id=\"" + sectionDHPCHPC + "\">\n";
+                    html += "<div class=\"absTitle\">" + sectionDHPCHPCName + "</div>";
+                    addedSectionTitle = true;
+                    sectionId.push_back(sectionDHPCHPC);
+                    sectionTitle.push_back(sectionDHPCHPCName);
+                }
+                html += "<p class=\"spacing1\">";
+                if (news.title.length()) {
+                    if (language == "fr") {
+                        html += "Titre: "+ news.title + "<br/>\n";
+                    } else {
+                        html += "Titel: "+ news.title + "<br/>\n";
+                    }
+                }
+                if (news.date.length()) {
+                    if (language == "fr") {
+                        html += "Date: "+ news.date + "<br/>\n";
+                    } else {
+                        html += "Datum: "+ news.date + "<br/>\n";
+                    }
+                }
+                if (news.description.length()) {
+                    if (language == "fr") {
+                        html += "Texte: "+ news.description + "<br/>\n";
+                    } else {
+                        html += "Text: "+ news.description + "<br/>\n";
+                    }
+                }
+                if (news.regnrs.length()) {
+                    if (language == "fr") {
+                        html += "No d'autorisation: " + news.regnrs + "<br/>\n";
+                    } else {
+                        html += "Zulassungsnummer: "+ news.regnrs + "<br/>\n";
+                    }
+                }
+                for (auto extra : news.extras) {
+                    html += extra.first + ": " + extra.second + "<br/>\n";
+                }
+                if (news.pdfLink.length()) {
+                    html += "<a href='" + news.pdfLink + "'>PDF Link</a>\n";
+                }
+                html += "</p>";
+            }
+        }
+        if (addedSectionTitle) {
+            html += "   </div>\n";
+        }
+    }
+
     // Add a section that was not in the XML contents
     // Note that this section id and name don't get added to the chapter name list
     // Footer
@@ -1078,6 +1142,12 @@ int main(int argc, char **argv)
         BATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_fr.json");
     } else {
         BATCHRECALLS::parseJSON(opt_workDirectory + "/downloads/chargenrueckrufe_de.json");
+    }
+
+    if (opt_language == "fr") {
+        DHPCHPC::parseJSON(opt_workDirectory + "/downloads/dhpc_hpc_fr.json");
+    } else {
+        DHPCHPC::parseJSON(opt_workDirectory + "/downloads/dhpc_hpc_de.json");
     }
 
     AIPS::MedicineList &list = AIPS::parseXML(opt_workDirectory + "/downloads/aips.xml",
