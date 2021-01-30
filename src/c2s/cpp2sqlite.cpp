@@ -831,39 +831,11 @@ doExtraSections:
                         html += "Datum: "+ recall.date + "<br/>\n";
                     }
                 }
-                if (recall.preparation.length()) {
-                    if (language == "fr") {
-                        html += "Préparation: "+ recall.preparation + "<br/>\n";
-                    } else {
-                        html += "Präparat: "+ recall.preparation + "<br/>\n";
-                    }
-                }
                 if (recall.regnrs.length()) {
                     if (language == "fr") {
                         html += "No d'autorisation: " + recall.regnrs + "<br/>\n";
                     } else {
                         html += "Zulassungsnummer: "+ recall.regnrs + "<br/>\n";
-                    }
-                }
-                if (recall.substance.length()) {
-                    if (language == "fr") {
-                        html += "Principe actif: " + recall.substance + "<br/>\n";
-                    } else {
-                        html += "Wirkstoff: "+ recall.substance + "<br/>\n";
-                    }
-                }
-                if (recall.licensee.length()) {
-                    if (language == "fr") {
-                        html += "Titulaire de l'autorisation: " + recall.licensee + "<br/>\n";
-                    } else {
-                        html += "Zulassungsinhaberin: "+ recall.licensee + "<br/>\n";
-                    }
-                }
-                if (recall.withdrawalOfTheaBatch.length()) {
-                    if (language == "fr") {
-                        html += "Retrait du lot: " + recall.withdrawalOfTheaBatch + "<br/>\n";
-                    } else {
-                        html += "Rückzug der Charge: "+ recall.withdrawalOfTheaBatch + "<br/>\n";
                     }
                 }
                 if (recall.description.length()) {
@@ -872,6 +844,9 @@ doExtraSections:
                     } else {
                         html += "Text: "+ recall.description + "<br/>\n";
                     }
+                }
+                for (auto extra : recall.extras) {
+                    html += extra.first + ": "+ extra.second + "<br/>\n";
                 }
                 if (recall.pdfLink.length()) {
                     html += "<a href='" + recall.pdfLink + "'>PDF Link</a>\n";

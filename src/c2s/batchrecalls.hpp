@@ -19,14 +19,11 @@ namespace BATCHRECALLS
     public:
         std::string title;
         std::string date;
-        std::string preparation;
         std::string regnrs;
         std::vector<std::string> regnrsParsed;
-        std::string substance;
-        std::string licensee;
-        std::string withdrawalOfTheaBatch;
         std::string description;
         std::string pdfLink;
+        std::map<std::string, std::string> extras;
     };
     void parseJSON(const std::string &filename);
     Recall jsonToRecall(nlohmann::json entry);
