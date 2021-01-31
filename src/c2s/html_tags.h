@@ -18,7 +18,7 @@
 #define TAG_TABLE_L     "<table class=\"s14\">"
 #define TAG_TABLE_R     "</table>"
 #define TAG_TD_L        "<td class=\"s13\"><p class=\"s11\">"
-#define TAG_TD_R        "</p><div class=\"s12\"/></td>"
+#define TAG_TD_R        "</p><div class=\"s12\"></div></td>"
 
 #ifdef WITH_SEPARATE_TABLE_HEADER
 #define TAG_TH_L        "<th>"
