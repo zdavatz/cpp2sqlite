@@ -197,7 +197,7 @@ MedicineList & parseXML(const std::string &filename,
                             // std::sort( rnVector.begin(), rnVector.end() );
                             rnVector.erase( std::unique( rnVector.begin(), rnVector.end()), rnVector.end());
 
-                            Med.regnrs = boost::algorithm::join(rnVector, ",");
+                            Med.regnrs = boost::algorithm::join(rnVector, ", ");
                             int sizeAfter = rnVector.size();
                             if (sizeBefore != sizeAfter)
                                 statsDuplicateRegnrsVec.push_back(Med.regnrs);
