@@ -854,9 +854,6 @@ doExtraSections:
                 html += "</p>";
             }
         }
-        if (addedSectionTitle) {
-            html += "   </div>\n";
-        }
     }
 
     {
@@ -871,7 +868,7 @@ doExtraSections:
                         html += "\n  </div>"; // terminate previous section before starting a new one
                     }
                     const std::string sectionDHPCHPC("Section" + std::to_string(SECTION_NUMBER_DHPC_HPC));
-                    std::string sectionDHPCHPCName("DHPC / HPC");
+                    std::string sectionDHPCHPCName("DHPC/HPC");
                     html += "   <div class=\"paragraph\" id=\"" + sectionDHPCHPC + "\">\n";
                     html += "<div class=\"absTitle\">" + sectionDHPCHPCName + "</div>";
                     addedSectionTitle = true;
@@ -915,9 +912,6 @@ doExtraSections:
                 }
                 html += "</p>";
             }
-        }
-        if (addedSectionTitle) {
-            html += "   </div>\n";
         }
     }
 
