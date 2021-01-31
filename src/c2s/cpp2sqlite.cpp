@@ -725,15 +725,15 @@ void getHtmlFromXml(std::string &xml,
 doExtraSections:
     // Add a section that was not in the XML contents
     // PedDose
+    if (hasXmlHeader)
+        html += "\n  </div>"; // terminate previous section before starting a new one
+
     if (!atc.empty() && !PED::isRegnrsInBlacklist(regnrs))
     {
         std::string pedHtml = PED::getHtmlByAtc(atc);
         if (!pedHtml.empty()) {
             std::string sectionPedDose("Section" + std::to_string(SECTION_NUMBER_PEDDOSE));
             std::string sectionPedDoseName("Swisspeddose");
-
-            if (hasXmlHeader)
-                html += "\n  </div>"; // terminate previous section before starting a new one
 
             html += "   <div class=\"paragraph\" id=\"" + sectionPedDose + "\">\n";
             html += "<div class=\"absTitle\">" + sectionPedDoseName + "</div>";
@@ -760,10 +760,6 @@ doExtraSections:
             if (language == "fr")
                 sectionSappInfoName1 = "ASPP: F. enceintes";
 
-
-            if (hasXmlHeader && atc.empty())
-                html += "\n  </div>"; // terminate previous section before starting a new one
-
             html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo1 + "\">\n";
             html += "<div class=\"absTitle\">" + sectionSappInfoName1 + "</div>";
             html += htmlPregnancy;
@@ -779,9 +775,6 @@ doExtraSections:
             std::string sectionSappInfoName2("SAPP: Stillende");
             if (language == "fr")
                 sectionSappInfoName2 = "ASPP: F. allaitantes";
-
-            if (hasXmlHeader && atc.empty())
-                html += "\n  </div>"; // terminate previous section before starting a new one
 
             html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo2 + "\">\n";
             html += "<div class=\"absTitle\">" + sectionSappInfoName2 + "</div>";
@@ -802,9 +795,6 @@ doExtraSections:
             auto recalls = BATCHRECALLS::getRecallsByRegnrs(regnrs);
             for (auto recall : recalls) {
                 if (!addedSectionTitle) {
-                    if (hasXmlHeader) {
-                        html += "\n  </div>"; // terminate previous section before starting a new one
-                    }
                     const std::string sectionBatchRecall("Section" + std::to_string(SECTION_NUMBER_BATCH_RECALL));
                     std::string sectionBatchRecallName("Chargenrückrufe");
                     if (language == "fr") {
@@ -864,9 +854,6 @@ doExtraSections:
             auto news = DHPCHPC::getNewsByRegnrs(regnrs);
             for (auto news : news) {
                 if (!addedSectionTitle) {
-                    if (hasXmlHeader) {
-                        html += "\n  </div>"; // terminate previous section before starting a new one
-                    }
                     const std::string sectionDHPCHPC("Section" + std::to_string(SECTION_NUMBER_DHPC_HPC));
                     std::string sectionDHPCHPCName("DHPC/HPC");
                     html += "   <div class=\"paragraph\" id=\"" + sectionDHPCHPC + "\">\n";
