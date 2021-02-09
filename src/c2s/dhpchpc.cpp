@@ -67,7 +67,11 @@ namespace DHPCHPC
         news.title = entry["title"].get<std::string>();
         news.date = entry["date"].get<std::string>();
         news.description = entry["desc"].get<std::string>();
-        news.pdfLink = entry["pdf"].get<std::string>();
+        try {
+            news.pdfLink = entry["pdf"].get<std::string>();
+        } catch(...) {
+            // it may be null
+        }
         for (nlohmann::json::iterator it = entry["prep"].begin(); it != entry["prep"].end(); ++it) {
             auto prep = it.value();
             std::string prop = prep["prop"].get<std::string>();
