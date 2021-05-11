@@ -5,6 +5,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk)
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 find_package(Boost REQUIRED COMPONENTS log program_options)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -77,6 +80,12 @@ add_executable(interaction
 
 target_include_directories(interaction PUBLIC "${CMAKE_SOURCE_DIR}/src/int")
 target_link_libraries(interaction ${Boost_LIBRARIES})
+
+#-------------------------------------------------------------------------------
+add_executable(sai
+	src/sai/main.cpp)
+target_include_directories(sai PUBLIC "${CMAKE_SOURCE_DIR}/src/sai")
+target_link_libraries(sai ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 
 #-------------------------------------------------------------------------------
 add_executable(sappinfo
