@@ -280,3 +280,22 @@ else
     rm cookie*.txt
 fi
 fi
+
+if [ $STEP_DOWNLOAD_SAI ] ; then
+FILE_PATH=$(curl https://sai.refdata.ch/download | grep -Eo '/download/zip/[^"]+' | head -n 1)
+URL="https://sai.refdata.ch$FILE_PATH"
+TARGET="sai.zip"
+
+wget "$URL" --output-document $TARGET
+
+file $TARGET | grep "Zip archive data" # Check that we got a zip file with:
+RESULT=$?
+if [ $RESULT -ne 0 ] ; then
+    file --brief $TARGET
+    echo -e "$TARGET is not a zip file"
+else
+    unzip -o $TARGET -d temp
+    mv temp/Typ1 Typ1
+    rm -r temp
+fi
+fi
