@@ -21,10 +21,18 @@
 
 #include <xlnt/xlnt.hpp>
 
+#include <sqlite3.h>
+#include "sqlDatabase.hpp"
+
 #include "config.h"
+#include "sai.hpp"
+
+constexpr std::string_view TABLE_NAME_SAI = "sai_db";
 
 namespace po = boost::program_options;
 static std::string appName;
+
+static DB::Sql sqlDb;
 
 void on_version()
 {
@@ -32,6 +40,23 @@ void on_version()
     << ", " << __DATE__ << " " << __TIME__ << std::endl;
     
     std::cout << "C++ " << __cplusplus << std::endl;
+}
+
+void openDB(const std::string &filename)
+{
+    std::clog << std::endl << "Create DB: " << filename << std::endl;
+
+    sqlDb.openDB(filename);
+    sqlDb.createTable(TABLE_NAME_SAI, "_id INTEGER PRIMARY KEY AUTOINCREMENT, approval_number TEXT, sequence_number TEXT, package_code TEXT, approval_status TEXT, note_free_text TEXT, package_size TEXT, package_unit TEXT, revocation_waiver_date TEXT, btm_code TEXT, gtin_industry TEXT, in_trade_date_industry TEXT, out_of_trade_date_industry TEXT, description_en_refdata TEXT, description_fr_refdata TEXT");
+    sqlDb.createIndex(TABLE_NAME_SAI, "idx_", {"approval_number", "sequence_number", "package_code"});
+    sqlDb.prepareStatement(TABLE_NAME_SAI,
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+}
+
+void closeDB()
+{
+    sqlDb.destroyStatement();
+    sqlDb.closeDB();
 }
 
 int main(int argc, char **argv)
@@ -92,7 +117,26 @@ int main(int argc, char **argv)
     
     // Parse input files
 
-    std::clog << "OK" << std::endl;
+    SAI::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Packungen.XML");
+
+    std::string dbFilename = opt_workDirectory + "/output/sai.db";
+    openDB(dbFilename);
+    sqlDb.bindText(1, "1");
+    sqlDb.bindText(2, "2");
+    sqlDb.bindText(3, "3");
+    sqlDb.bindText(4, "4");
+    sqlDb.bindText(5, "5");
+    sqlDb.bindText(6, "6");
+    sqlDb.bindText(7, "7");
+    sqlDb.bindText(8, "8");
+    sqlDb.bindText(9, "9");
+    sqlDb.bindText(10, "10");
+    sqlDb.bindText(11, "11");
+    sqlDb.bindText(12, "12");
+    sqlDb.bindText(13, "13");
+    sqlDb.bindText(14, "14");
+    sqlDb.runStatement(TABLE_NAME_SAI);
+    closeDB();
     
     return EXIT_SUCCESS;
 }
