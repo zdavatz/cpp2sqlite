@@ -57,35 +57,8 @@ void parseXML(const std::string &filename)
             package.descriptionEnRefdata = v.second.get("BESCHREIBUNG_DE_REFDATA", "");
             package.descriptionFrRefdata = v.second.get("BESCHREIBUNG_FR_REFDATA", "");
             packagesVec.push_back(package);
-            // if (v.first == "Cases") {
-            //     statsCasesCount = v.second.size();
-            // }
-            // else if (v.first == "Indications") {
-            //     statsIndicationsCount = v.second.size();
-            // }
-            // else if (v.first == "Codes") {
-            //     statsCodesCount = v.second.size();
-            // }
-            // else if (v.first == "Dosages") {
-            //     statsDosagesCount = v.second.size();
-            // }
         }  // FOREACH
 
-        // i = 0;
-        // BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SwissPedDosePublicationV3.Cases")) {
-        //     if (v.first == "Case") {
-        //         caseCaseIDSet.insert(v.second.get("CaseID", ""));
-        //         caseAtcCodeSet.insert(v.second.get("ATCCode", ""));
-        //         caseRoaCodeSet.insert(v.second.get("ROACode", ""));
-
-        //         _case ca;
-        //         ca.caseId = v.second.get("CaseID", "");
-        //         ca.atcCode = v.second.get("ATCCode", "");
-        //         ca.indicationKey = v.second.get("IndicationKey", "");
-        //         ca.RoaCode = v.second.get("ROACode", "");
-        //         caseVec.push_back(ca);
-        //     }
-        // } // FOREACH Cases
     } // try
     catch (std::exception &e) {
         std::cerr
@@ -94,4 +67,9 @@ void parseXML(const std::string &filename)
         << std::endl;
     }
 }
+
+std::vector<_package> getPackages() {
+    return packagesVec;
+}
+
 }

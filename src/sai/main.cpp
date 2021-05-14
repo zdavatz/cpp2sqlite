@@ -121,21 +121,31 @@ int main(int argc, char **argv)
 
     std::string dbFilename = opt_workDirectory + "/output/sai.db";
     openDB(dbFilename);
-    sqlDb.bindText(1, "1");
-    sqlDb.bindText(2, "2");
-    sqlDb.bindText(3, "3");
-    sqlDb.bindText(4, "4");
-    sqlDb.bindText(5, "5");
-    sqlDb.bindText(6, "6");
-    sqlDb.bindText(7, "7");
-    sqlDb.bindText(8, "8");
-    sqlDb.bindText(9, "9");
-    sqlDb.bindText(10, "10");
-    sqlDb.bindText(11, "11");
-    sqlDb.bindText(12, "12");
-    sqlDb.bindText(13, "13");
-    sqlDb.bindText(14, "14");
-    sqlDb.runStatement(TABLE_NAME_SAI);
+
+    int i = 0;
+    auto packages = SAI::getPackages();
+    int total = packages.size();
+    for (auto package : SAI::getPackages()) {
+        std::cerr << "\r" << 100*i/total << " % ";
+        sqlDb.bindText(1, package.approvalNumber);
+        sqlDb.bindText(2, package.sequenceNumber);
+        sqlDb.bindText(3, package.packageCode);
+        sqlDb.bindText(4, package.approvalStatus);
+        sqlDb.bindText(5, package.noteFreeText);
+        sqlDb.bindText(6, package.packageSize);
+        sqlDb.bindText(7, package.packageUnit);
+        sqlDb.bindText(8, package.revocationWaiverDate);
+        sqlDb.bindText(9, package.btmCode);
+        sqlDb.bindText(10, package.gtinIndustry);
+        sqlDb.bindText(11, package.inTradeDateIndustry);
+        sqlDb.bindText(12, package.outOfTradeDateIndustry);
+        sqlDb.bindText(13, package.descriptionEnRefdata);
+        sqlDb.bindText(14, package.descriptionFrRefdata);
+        sqlDb.runStatement(TABLE_NAME_SAI);
+        i++;
+    }
+    std::cerr << "\r" << "100 % ";
+
     closeDB();
     
     return EXIT_SUCCESS;
