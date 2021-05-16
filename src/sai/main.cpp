@@ -27,6 +27,7 @@
 
 #include "config.h"
 #include "sai.hpp"
+#include "praeparate.hpp"
 
 constexpr std::string_view TABLE_NAME_SAI = "sai_db";
 
@@ -48,10 +49,50 @@ void openDB(const std::string &filename)
     std::clog << std::endl << "Create DB: " << filename << std::endl;
 
     sqlDb.openDB(filename);
-    sqlDb.createTable(TABLE_NAME_SAI, "_id INTEGER PRIMARY KEY AUTOINCREMENT, approval_number TEXT, sequence_number TEXT, package_code TEXT, approval_status TEXT, note_free_text TEXT, package_size TEXT, package_unit TEXT, revocation_waiver_date TEXT, btm_code TEXT, gtin_industry TEXT, in_trade_date_industry TEXT, out_of_trade_date_industry TEXT, description_en_refdata TEXT, description_fr_refdata TEXT");
-    sqlDb.createIndex(TABLE_NAME_SAI, "idx_", {"approval_number", "sequence_number", "package_code"});
+    sqlDb.createTable(TABLE_NAME_SAI, "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "zulassungsnummer TEXT, "
+        "sequenznummer TEXT, "
+        "packungscode TEXT, "
+        "zulassungsstatus TEXT, "
+        "bemerkung_freitext TEXT, "
+        "packungsgroesse TEXT, "
+        "packungseinheit TEXT, "
+        "widerruf_verzicht_datum TEXT, "
+        "btm_code TEXT, "
+        "gtin_industry TEXT, "
+        "im_handel_datum_industry TEXT, "
+        "ausser_handel_datum_industry TEXT, "
+        "beschreibung_de_refdata TEXT, "
+        "beschreibung_fr_refdata TEXT, "
+
+        // from Typ1-Praeparate.XML
+        "verwendung TEXT,"
+        "praeparatename TEXT,"
+        "arzneiform TEXT,"
+        "atc_code TEXT,"
+        "heilmittel_code TEXT,"
+        "zulassungskategorie TEXT,"
+        "zulassungsinhaberin TEXT,"
+        "erstzulassungsdatum TEXT,"
+        "basis_zulassungsnummer TEXT,"
+        "abgabekategorie TEXT,"
+        "it_nummer TEXT,"
+        "anwendungsgebiet TEXT,"
+        "ablaufdatum TEXT,"
+        "ausstellungsdatum TEXT,"
+        "chargenblockade_aktiv TEXT,"
+        "chargenfreigabe_pflicht TEXT,"
+        "einzeleinfuhr_bewillig_pflicht TEXT,"
+        "ocabr_standard_common_name TEXT, "
+
+        // from Typ1-Sequenzen.XML
+        "sequenzname TEXT, "
+        "zulassungsart TEXT, "
+        "basis_sequenznummer TEXT "
+    );
+    sqlDb.createIndex(TABLE_NAME_SAI, "idx_", {"zulassungsnummer", "sequenznummer", "packungscode"});
     sqlDb.prepareStatement(TABLE_NAME_SAI,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 }
 
 void closeDB()
@@ -131,6 +172,7 @@ int main(int argc, char **argv)
     // REP::html_h1("Typ1-Packungen.XML");
 
     SAI::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Packungen.XML");
+    PRA::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Praeparate.XML");
 
     std::string dbFilename = opt_workDirectory + "/output/sai.db";
     openDB(dbFilename);
@@ -154,6 +196,32 @@ int main(int argc, char **argv)
         sqlDb.bindText(12, package.outOfTradeDateIndustry);
         sqlDb.bindText(13, package.descriptionEnRefdata);
         sqlDb.bindText(14, package.descriptionFrRefdata);
+
+        PRA::_package praPackage;
+        try {
+            praPackage = PRA::getPackageByZulassungsnummer(package.approvalNumber);
+        } catch (std::out_of_range e) {
+            std::clog << "Not found praeparate: " << package.approvalNumber << std::endl;
+        }
+
+        sqlDb.bindText(15, praPackage.verwendung);
+        sqlDb.bindText(16, praPackage.praeparatename);
+        sqlDb.bindText(17, praPackage.arzneiform);
+        sqlDb.bindText(18, praPackage.atcCode);
+        sqlDb.bindText(19, praPackage.heilmittelCode);
+        sqlDb.bindText(20, praPackage.zulassungskategorie);
+        sqlDb.bindText(21, praPackage.zulassungsinhaberin);
+        sqlDb.bindText(22, praPackage.erstzulassungsdatum);
+        sqlDb.bindText(23, praPackage.basisZulassungsnummer);
+        sqlDb.bindText(24, praPackage.abgabekategorie);
+        sqlDb.bindText(25, praPackage.itNummer);
+        sqlDb.bindText(26, praPackage.anwendungsgebiet);
+        sqlDb.bindText(27, praPackage.ablaufdatum);
+        sqlDb.bindText(28, praPackage.ausstellungsdatum);
+        sqlDb.bindText(29, praPackage.chargenblockadeAktiv);
+        sqlDb.bindText(30, praPackage.chargenfreigabePflicht);
+        sqlDb.bindText(31, praPackage.einzeleinfuhrBewilligPflicht);
+        sqlDb.bindText(32, praPackage.ocabrStandardCommon_name);
         sqlDb.runStatement(TABLE_NAME_SAI);
         i++;
     }
