@@ -22,6 +22,7 @@
 #include <xlnt/xlnt.hpp>
 
 #include <sqlite3.h>
+#include "report.hpp"
 #include "sqlDatabase.hpp"
 
 #include "config.h"
@@ -116,6 +117,18 @@ int main(int argc, char **argv)
     }
     
     // Parse input files
+
+    std::string reportFilename("sai_report.html");
+    std::string reportTitle("SAI Report");
+    REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, false);
+
+    REP::html_start_ul();
+    for (int i=0; i<argc; i++)
+        REP::html_li(argv[i]);
+    
+    REP::html_end_ul();
+
+    // REP::html_h1("Typ1-Packungen.XML");
 
     SAI::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Packungen.XML");
 

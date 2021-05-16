@@ -85,6 +85,7 @@ target_link_libraries(interaction ${Boost_LIBRARIES})
 add_executable(sai
 	src/sai/main.cpp
 	src/sqlDatabase.hpp src/sqlDatabase.cpp
+	src/report.hpp src/report.cpp
 	src/sai/sai.hpp src/sai/sai.cpp)
 target_include_directories(sai PUBLIC "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/src/sai")
 target_link_libraries(sai ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})
