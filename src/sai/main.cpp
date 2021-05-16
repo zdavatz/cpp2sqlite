@@ -29,6 +29,7 @@
 #include "sai.hpp"
 #include "praeparate.hpp"
 #include "sequenzen.hpp"
+#include "deklarationen.hpp"
 
 constexpr std::string_view TABLE_NAME_SAI = "sai_db";
 
@@ -89,11 +90,23 @@ void openDB(const std::string &filename)
         // from Typ1-Sequenzen.XML
         "sequenzname TEXT, "
         "zulassungsart TEXT, "
-        "basis_sequenznummer TEXT "
+        "basis_sequenznummer TEXT, "
+
+        // from Typ1-Deklarationen.XML
+        "komponentennummer TEXT, "
+        "komponente TEXT, "
+        "zeilennummer TEXT, "
+        "sortierung_zeilennummer TEXT, "
+        "zeilentyp TEXT, "
+        "stoff_id TEXT, "
+        "stoffkategorie TEXT, "
+        "menge TEXT, "
+        "mengen_einheit TEXT, "
+        "deklarationsart TEXT "
     );
     sqlDb.createIndex(TABLE_NAME_SAI, "idx_", {"zulassungsnummer", "sequenznummer", "packungscode"});
     sqlDb.prepareStatement(TABLE_NAME_SAI,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 }
 
 void closeDB()
@@ -175,6 +188,7 @@ int main(int argc, char **argv)
     SAI::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Packungen.XML");
     PRA::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Praeparate.XML");
     SEQ::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Sequenzen.XML");
+    DEK::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Deklarationen.XML");
 
     std::string dbFilename = opt_workDirectory + "/output/sai.db";
     openDB(dbFilename);
@@ -234,6 +248,28 @@ int main(int argc, char **argv)
         sqlDb.bindText(33, seqPackage.sequenzname);
         sqlDb.bindText(34, seqPackage.zulassungsart);
         sqlDb.bindText(35, seqPackage.basisSequenznummer);
+
+        std::vector<DEK::_package> dekPackages;
+        DEK::_package dekPackage;
+        try {
+            dekPackages = DEK::getPackagesByZulassungsnummer(package.approvalNumber);
+            // TODO, join by ';'
+            std::clog << "num: " << package.approvalNumber << " Count: " << std::to_string(dekPackages.size()) << std::endl;
+            dekPackage = dekPackages[0];
+        } catch (std::out_of_range e) {
+            std::clog << "Not found deklarationen: " << package.approvalNumber << std::endl;
+        }
+
+        sqlDb.bindText(36, dekPackage.komponentennummer);
+        sqlDb.bindText(37, dekPackage.komponente);
+        sqlDb.bindText(38, dekPackage.zeilennummer);
+        sqlDb.bindText(39, dekPackage.sortierungZeilennummer);
+        sqlDb.bindText(40, dekPackage.zeilentyp);
+        sqlDb.bindText(41, dekPackage.stoffId);
+        sqlDb.bindText(42, dekPackage.stoffkategorie);
+        sqlDb.bindText(43, dekPackage.menge);
+        sqlDb.bindText(44, dekPackage.mengenEinheit);
+        sqlDb.bindText(45, dekPackage.deklarationsart);
 
         sqlDb.runStatement(TABLE_NAME_SAI);
         i++;
