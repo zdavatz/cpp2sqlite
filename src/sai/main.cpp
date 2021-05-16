@@ -28,6 +28,7 @@
 #include "config.h"
 #include "sai.hpp"
 #include "praeparate.hpp"
+#include "sequenzen.hpp"
 
 constexpr std::string_view TABLE_NAME_SAI = "sai_db";
 
@@ -173,6 +174,7 @@ int main(int argc, char **argv)
 
     SAI::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Packungen.XML");
     PRA::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Praeparate.XML");
+    SEQ::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Sequenzen.XML");
 
     std::string dbFilename = opt_workDirectory + "/output/sai.db";
     openDB(dbFilename);
@@ -222,6 +224,17 @@ int main(int argc, char **argv)
         sqlDb.bindText(30, praPackage.chargenfreigabePflicht);
         sqlDb.bindText(31, praPackage.einzeleinfuhrBewilligPflicht);
         sqlDb.bindText(32, praPackage.ocabrStandardCommon_name);
+
+        SEQ::_package seqPackage;
+        try {
+            seqPackage = SEQ::getPackageByZulassungsnummer(package.approvalNumber);
+        } catch (std::out_of_range e) {
+            std::clog << "Not found Sequenzen: " << package.approvalNumber << std::endl;
+        }
+        sqlDb.bindText(33, seqPackage.sequenzname);
+        sqlDb.bindText(34, seqPackage.zulassungsart);
+        sqlDb.bindText(35, seqPackage.basisSequenznummer);
+
         sqlDb.runStatement(TABLE_NAME_SAI);
         i++;
     }
