@@ -32,6 +32,8 @@ namespace SAI
     void parseXML(const std::string &filename);
 
     std::vector<_package> getPackages();
+
+    static void printFileStats(const std::string &filename);
 }
 
 #endif /* sai_hpp */
