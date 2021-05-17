@@ -26,7 +26,7 @@ namespace SAI
 {
 
 std::vector<_package> packagesVec;
-std::vector<std::string> approvalNumbersWithEmptyGTIN;
+std::set<std::string> approvalNumbersWithEmptyGTIN;
 
 void parseXML(const std::string &filename)
 {
@@ -62,7 +62,7 @@ void parseXML(const std::string &filename)
             packagesVec.push_back(package);
 
             if (package.gtinIndustry == "") {
-                approvalNumbersWithEmptyGTIN.push_back(package.approvalNumber);
+                approvalNumbersWithEmptyGTIN.insert(package.approvalNumber);
             }
         }  // FOREACH
 

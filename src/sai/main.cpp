@@ -94,20 +94,11 @@ void openDB(const std::string &filename)
         "basis_sequenznummer TEXT, "
 
         // from Typ1-Deklarationen.XML
-        "komponentennummer TEXT, "
-        "komponente TEXT, "
-        "zeilennummer TEXT, "
-        "sortierung_zeilennummer TEXT, "
-        "zeilentyp TEXT, "
-        "stoff_id TEXT, "
-        "stoffkategorie TEXT, "
-        "menge TEXT, "
-        "mengen_einheit TEXT, "
-        "deklarationsart TEXT "
+        "zusammensetzung TEXT "
     );
     sqlDb.createIndex(TABLE_NAME_SAI, "idx_", {"zulassungsnummer", "sequenznummer", "packungscode"});
     sqlDb.prepareStatement(TABLE_NAME_SAI,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 }
 
 void closeDB()
@@ -198,6 +189,7 @@ int main(int argc, char **argv)
     int i = 0;
     auto packages = SAI::getPackages();
     int total = packages.size();
+    std::set<std::string> missingDeklarationen;
     for (auto package : SAI::getPackages()) {
         std::cerr << "\r" << 100*i/total << " % ";
         sqlDb.bindText(1, package.approvalNumber);
@@ -251,32 +243,56 @@ int main(int argc, char **argv)
         sqlDb.bindText(34, seqPackage.zulassungsart);
         sqlDb.bindText(35, seqPackage.basisSequenznummer);
 
-        std::vector<DEK::_package> dekPackages;
-        DEK::_package dekPackage;
+        std::string zusammensetzungString;
         try {
-            dekPackages = DEK::getPackagesByZulassungsnummer(package.approvalNumber);
-            // TODO, join by ';'
-            std::clog << "num: " << package.approvalNumber << " Count: " << std::to_string(dekPackages.size()) << std::endl;
-            dekPackage = dekPackages[0];
+            std::vector<DEK::_package> dekPackages = DEK::getPackagesByZulassungsnummer(package.approvalNumber);
+            std::sort(dekPackages.begin(), dekPackages.end(),
+                [](DEK::_package const &a, DEK::_package const &b) {
+                    int a1 = std::stoi(a.zeilennummer);
+                    int b1 = std::stoi(b.zeilennummer);
+                    if (a1 != b1) {
+                        return a1 < b1;
+                    }
+                    a1 = std::stoi(a.sortierungZeilennummer);
+                    b1 = std::stoi(b.sortierungZeilennummer);
+                    return a1 < b1;
+                }
+            );
+            
+            for (auto dekPackage : dekPackages) {
+                try {
+                    STO::_package stoPackage = STO::getPackageByStoffId(dekPackage.stoffId);
+                    std::string thisString = 
+                        dekPackage.zeilennummer + ";" +
+                        stoPackage.stoffsynonym + ";" +
+                        stoPackage.synonymCode + ";" +
+                        dekPackage.menge + ";" +
+                        dekPackage.mengenEinheit + ";" +
+                        dekPackage.deklarationsart + ";" +
+                        dekPackage.stoffkategorie + ";" +
+                        dekPackage.komponente;
+                    zusammensetzungString += thisString + "\n";
+                } catch (std::out_of_range e) {
+                    std::clog << "Not found stoff: " << dekPackage.stoffId << std::endl;
+                }
+            }
         } catch (std::out_of_range e) {
-            std::clog << "Not found deklarationen: " << package.approvalNumber << std::endl;
+            missingDeklarationen.insert(package.approvalNumber);
         }
-
-        sqlDb.bindText(36, dekPackage.komponentennummer);
-        sqlDb.bindText(37, dekPackage.komponente);
-        sqlDb.bindText(38, dekPackage.zeilennummer);
-        sqlDb.bindText(39, dekPackage.sortierungZeilennummer);
-        sqlDb.bindText(40, dekPackage.zeilentyp);
-        sqlDb.bindText(41, dekPackage.stoffId);
-        sqlDb.bindText(42, dekPackage.stoffkategorie);
-        sqlDb.bindText(43, dekPackage.menge);
-        sqlDb.bindText(44, dekPackage.mengenEinheit);
-        sqlDb.bindText(45, dekPackage.deklarationsart);
+        sqlDb.bindText(36, zusammensetzungString);
 
         sqlDb.runStatement(TABLE_NAME_SAI);
         i++;
     }
     std::cerr << "\r" << "100 % ";
+
+    REP::html_h2("rows with no deklarationen: ");
+    REP::html_start_ul();
+    for (auto str : missingDeklarationen) {
+        REP::html_li(str);
+    }
+    
+    REP::html_end_ul();
 
     closeDB();
     
