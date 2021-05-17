@@ -29,6 +29,7 @@
 #include "sai.hpp"
 #include "praeparate.hpp"
 #include "sequenzen.hpp"
+#include "stoffsynonyme.hpp"
 #include "deklarationen.hpp"
 
 constexpr std::string_view TABLE_NAME_SAI = "sai_db";
@@ -189,6 +190,7 @@ int main(int argc, char **argv)
     PRA::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Praeparate.XML");
     SEQ::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Sequenzen.XML");
     DEK::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Deklarationen.XML");
+    STO::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Stoff-Synonyme.XML");
 
     std::string dbFilename = opt_workDirectory + "/output/sai.db";
     openDB(dbFilename);
