@@ -25,7 +25,7 @@ namespace pt = boost::property_tree;
 namespace SEQ
 {
 
-std::map<std::string, _package> packagesMap;
+std::map<std::string, std::vector<_package>> packagesMap;
 
 void parseXML(const std::string &filename)
 {
@@ -76,8 +76,14 @@ void parseXML(const std::string &filename)
     printFileStats(filename);
 }
 
-_package getPackageByZulassungsnummer(std::string num) {
-    return packagesMap.at(num);
+_package getPackagesByZulassungsnummerAndSequenznummer(std::string zulassungsnummer, std::string sequenznummer) {
+    for (auto p : packagesMap.at(zulassungsnummer)) {
+        if (p.sequenznummer == sequenznummer) {
+            return p;
+        }
+    }
+    _package p;
+    return p;
 }
 
 static void printFileStats(const std::string &filename)

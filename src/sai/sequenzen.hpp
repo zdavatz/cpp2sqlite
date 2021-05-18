@@ -25,7 +25,7 @@ namespace SEQ
 
     void parseXML(const std::string &filename);
 
-    _package getPackageByZulassungsnummer(std::string num);
+    _package getPackagesByZulassungsnummerAndSequenznummer(std::string zulassungsnummer, std::string sequenznummer);
 
     static void printFileStats(const std::string &filename);
 }
