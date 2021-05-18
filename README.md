@@ -38,7 +38,7 @@ _ [Swissmedic Chargenrückrufe](https://www.swissmedic.ch/swissmedic/de/home/hum
 _ [EPha](http://download.epha.ch/data/matrix/matrix.csv)\
 _ [Swisspeddose](https://swisspeddose.ch)\
 _ [Sappinfo](https://sappinfo.ch)\
-_ [Drugshortage](https://Drugshortage)
+_ [Drugshortage](https://drugshortage.ch)
 ## Output Sqlite Database
 _ [amiko_db_de](http://pillbox.oddb.org/amiko_db_full_idx_de.zip)\
 _ [amiko_db_fr](http://pillbox.oddb.org/amiko_db_full_idx_fr.zip)
