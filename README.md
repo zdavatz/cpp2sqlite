@@ -29,7 +29,9 @@ _ if there are no errors, then commit `intput/deepl.sappinfo.out.fr.txt`.
 ## Input Sources
 _ [AIPS](http://download.swissmedicinfo.ch)\
 _ [BAG XML](http://www.spezialitätenliste.ch/File.axd?file=XMLPublications.zip)\
-_ [Refdata](https://www.refdata.ch/content/page_1.aspx?Nid=6&Aid=628&ID=291)\
+_ [Refdata Artikel](https://www.refdata.ch/de/artikel/abfrage/artikel-refdatabase-gtin)\
+_ [Refdata Partner](https://www.refdata.ch/de/partner/abfrage/partner-refdatabase-gln)\
+_ [Refdata SAI](https://sai.refdata.ch/download)\
 _ [Swissmedic](https://www.swissmedic.ch/dam/swissmedic/de/dokumente/listen/excel-version_zugelasseneverpackungen.xlsx.download.xlsx/excel-version_zugelasseneverpackungen.xlsx)\
 _ [EPha](http://download.epha.ch/data/matrix/matrix.csv)\
 _ [Swisspeddose](https://swisspeddose.ch)\
