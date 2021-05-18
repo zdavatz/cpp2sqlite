@@ -33,9 +33,12 @@ _ [Refdata Artikel](https://www.refdata.ch/de/artikel/abfrage/artikel-refdatabas
 _ [Refdata Partner](https://www.refdata.ch/de/partner/abfrage/partner-refdatabase-gln)\
 _ [Refdata SAI](https://sai.refdata.ch/download)\
 _ [Swissmedic](https://www.swissmedic.ch/dam/swissmedic/de/dokumente/listen/excel-version_zugelasseneverpackungen.xlsx.download.xlsx/excel-version_zugelasseneverpackungen.xlsx)\
+_ [Swissmedic HPC](https://www.swissmedic.ch/swissmedic/de/home/humanarzneimittel/marktueberwachung/health-professional-communication--hpc-.html)\
+_ [Swissmedic Chargenrückrufe](https://www.swissmedic.ch/swissmedic/de/home/humanarzneimittel/marktueberwachung/qualitaetsmaengel-und-chargenrueckrufe/chargenrueckrufe.html)\
 _ [EPha](http://download.epha.ch/data/matrix/matrix.csv)\
 _ [Swisspeddose](https://swisspeddose.ch)\
 _ [Sappinfo](https://sappinfo.ch)
+_ [Drugshortage](https://Drugshortage)
 ## Output Sqlite Database
 _ [amiko_db_de](http://pillbox.oddb.org/amiko_db_full_idx_de.zip)\
 _ [amiko_db_fr](http://pillbox.oddb.org/amiko_db_full_idx_fr.zip)
