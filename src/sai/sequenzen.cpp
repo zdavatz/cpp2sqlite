@@ -43,18 +43,27 @@ void parseXML(const std::string &filename)
     int i=0;
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ns0:SMC_Sequenz")) {
-            _package package;
+            if (v.first == "SEQUENZ") {
+                _package package;
 
-            package.zulassungsnummer = v.second.get("ZULASSUNGSNUMMER", "");
-            package.sequenznummer = v.second.get("SEQUENZNUMMER", "");
-            package.zulassungsstatus = v.second.get("ZULASSUNGSSTATUS", "");
-            package.widerrufVerzichtDatum = v.second.get("WIDERRUF_VERZICHT_DATUM", "");
-            package.sequenzname = v.second.get("SEQUENZNAME", "");
-            package.zulassungsart = v.second.get("ZULASSUNGSART", "");
-            package.basisSequenznummer = v.second.get("BASIS_SEQUENZNUMMER", "");
-            package.anwendungsgebiet = v.second.get("ANWENDUNGSGEBIET", "");
+                package.zulassungsnummer = v.second.get("ZULASSUNGSNUMMER", "");
+                package.sequenznummer = v.second.get("SEQUENZNUMMER", "");
+                package.zulassungsstatus = v.second.get("ZULASSUNGSSTATUS", "");
+                package.widerrufVerzichtDatum = v.second.get("WIDERRUF_VERZICHT_DATUM", "");
+                package.sequenzname = v.second.get("SEQUENZNAME", "");
+                package.zulassungsart = v.second.get("ZULASSUNGSART", "");
+                package.basisSequenznummer = v.second.get("BASIS_SEQUENZNUMMER", "");
+                package.anwendungsgebiet = v.second.get("ANWENDUNGSGEBIET", "");
 
-            packagesMap[package.zulassungsnummer] = package;
+                if (packagesMap.find(package.zulassungsnummer) == packagesMap.end()) {
+                    std::vector<_package> packages = { package };
+                    packagesMap[package.zulassungsnummer] = packages;
+                } else {
+                    auto v = packagesMap[package.zulassungsnummer];
+                    v.push_back(package);
+                    packagesMap[package.zulassungsnummer] = v;
+                }
+            }
         }  // FOREACH
 
     } // try
