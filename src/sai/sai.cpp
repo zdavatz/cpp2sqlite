@@ -45,24 +45,26 @@ void parseXML(const std::string &filename)
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ns0:SMC_Packung")) {
             _package package;
-            package.approvalNumber = v.second.get("ZULASSUNGSNUMMER", "");
-            package.sequenceNumber = v.second.get("SEQUENZNUMMER", "");
-            package.packageCode = v.second.get("PACKUNGSCODE", "");
-            package.approvalStatus = v.second.get("ZULASSUNGSSTATUS", "");
-            package.noteFreeText = v.second.get("BEMERKUNG_FREITEXT", "");
-            package.packageSize = v.second.get("PACKUNGSGROESSE", "");
-            package.packageUnit = v.second.get("PACKUNGSEINHEIT", "");
-            package.revocationWaiverDate = v.second.get("WIDERRUF_VERZICHT_DATUM", "");
-            package.btmCode = v.second.get("BTM_CODE", "");
-            package.gtinIndustry = v.second.get("GTIN_INDUSTRY", "");
-            package.inTradeDateIndustry = v.second.get("IM_HANDEL_DATUM_INDUSTRY", "");
-            package.outOfTradeDateIndustry = v.second.get("AUSSER_HANDEL_DATUM_INDUSTRY", "");
-            package.descriptionEnRefdata = v.second.get("BESCHREIBUNG_DE_REFDATA", "");
-            package.descriptionFrRefdata = v.second.get("BESCHREIBUNG_FR_REFDATA", "");
-            packagesVec.push_back(package);
+            if (v.first == "PACKUNG") {
+                package.approvalNumber = v.second.get("ZULASSUNGSNUMMER", "");
+                package.sequenceNumber = v.second.get("SEQUENZNUMMER", "");
+                package.packageCode = v.second.get("PACKUNGSCODE", "");
+                package.approvalStatus = v.second.get("ZULASSUNGSSTATUS", "");
+                package.noteFreeText = v.second.get("BEMERKUNG_FREITEXT", "");
+                package.packageSize = v.second.get("PACKUNGSGROESSE", "");
+                package.packageUnit = v.second.get("PACKUNGSEINHEIT", "");
+                package.revocationWaiverDate = v.second.get("WIDERRUF_VERZICHT_DATUM", "");
+                package.btmCode = v.second.get("BTM_CODE", "");
+                package.gtinIndustry = v.second.get("GTIN_INDUSTRY", "");
+                package.inTradeDateIndustry = v.second.get("IM_HANDEL_DATUM_INDUSTRY", "");
+                package.outOfTradeDateIndustry = v.second.get("AUSSER_HANDEL_DATUM_INDUSTRY", "");
+                package.descriptionEnRefdata = v.second.get("BESCHREIBUNG_DE_REFDATA", "");
+                package.descriptionFrRefdata = v.second.get("BESCHREIBUNG_FR_REFDATA", "");
+                packagesVec.push_back(package);
 
-            if (package.gtinIndustry == "") {
-                approvalNumbersWithEmptyGTIN.insert(package.approvalNumber);
+                if (package.gtinIndustry == "") {
+                    approvalNumbersWithEmptyGTIN.insert(package.approvalNumber);
+                }
             }
         }  // FOREACH
 

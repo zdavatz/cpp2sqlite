@@ -45,26 +45,28 @@ void parseXML(const std::string &filename)
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ns0:SMC_Deklaration")) {
             _package package;
 
-            package.zulassungsnummer = v.second.get("ZULASSUNGSNUMMER", "");
-            package.sequenznummer = v.second.get("SEQUENZNUMMER", "");
-            package.komponentennummer = v.second.get("KOMPONENTENNUMMER", "");
-            package.komponente = v.second.get("KOMPONENTE", "");
-            package.zeilennummer = v.second.get("ZEILENNUMMER", "");
-            package.sortierungZeilennummer = v.second.get("SORTIERUNG_ZEILENNUMMER", "");
-            package.zeilentyp = v.second.get("ZEILENTYP", "");
-            package.stoffId = v.second.get("STOFF_ID", "");
-            package.stoffkategorie = v.second.get("STOFFKATEGORIE", "");
-            package.menge = v.second.get("MENGE", "");
-            package.mengenEinheit = v.second.get("MENGEN_EINHEIT", "");
-            package.deklarationsart = v.second.get("DEKLARATIONSART", "");
+            if (v.first == "DEKLARATION") {
+                package.zulassungsnummer = v.second.get("ZULASSUNGSNUMMER", "");
+                package.sequenznummer = v.second.get("SEQUENZNUMMER", "");
+                package.komponentennummer = v.second.get("KOMPONENTENNUMMER", "");
+                package.komponente = v.second.get("KOMPONENTE", "");
+                package.zeilennummer = v.second.get("ZEILENNUMMER", "");
+                package.sortierungZeilennummer = v.second.get("SORTIERUNG_ZEILENNUMMER", "");
+                package.zeilentyp = v.second.get("ZEILENTYP", "");
+                package.stoffId = v.second.get("STOFF_ID", "");
+                package.stoffkategorie = v.second.get("STOFFKATEGORIE", "");
+                package.menge = v.second.get("MENGE", "");
+                package.mengenEinheit = v.second.get("MENGEN_EINHEIT", "");
+                package.deklarationsart = v.second.get("DEKLARATIONSART", "");
 
-            if (packagesMap.find(package.zulassungsnummer) == packagesMap.end()) {
-                std::vector<_package> packages = { package };
-                packagesMap[package.zulassungsnummer] = packages;
-            } else {
-                auto v = packagesMap[package.zulassungsnummer];
-                v.push_back(package);
-                packagesMap[package.zulassungsnummer] = v;
+                if (packagesMap.find(package.zulassungsnummer) == packagesMap.end()) {
+                    std::vector<_package> packages = { package };
+                    packagesMap[package.zulassungsnummer] = packages;
+                } else {
+                    auto v = packagesMap[package.zulassungsnummer];
+                    v.push_back(package);
+                    packagesMap[package.zulassungsnummer] = v;
+                }
             }
         }  // FOREACH
 
@@ -78,8 +80,18 @@ void parseXML(const std::string &filename)
     printFileStats(filename);
 }
 
-std::vector<_package> getPackagesByZulassungsnummer(std::string num) {
-    return packagesMap.at(num);
+std::vector<_package> getPackagesByZulassungsnummerAndSequenznummer(std::string zulassungsnummer, std::string sequenznummer) {
+    std::vector<_package> packages;
+    try {
+        std::vector<_package> ps = packagesMap.at(zulassungsnummer);
+        for (auto p : ps) {
+            if (p.sequenznummer == sequenznummer) {
+                packages.push_back(p);
+            }
+        }
+    } catch (std::out_of_range e) {
+    }
+    return packages;
 }
 
 static void printFileStats(const std::string &filename)

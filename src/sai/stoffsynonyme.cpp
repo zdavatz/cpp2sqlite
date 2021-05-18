@@ -45,14 +45,16 @@ void parseXML(const std::string &filename)
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ns0:SMC_Synonyme")) {
             _package package;
 
-            package.stoffId = v.second.get("STOFF_ID", "");
-            package.synonymCode = v.second.get("SYNONYM_CODE", "");
-            package.laufendeNr = v.second.get("LAUFENDE_NR", "");
-            package.stoffsynonym = v.second.get("STOFFSYNONYM", "");
-            package.quelle = v.second.get("QUELLE", "");
-            package.sortierNr = v.second.get("SORTIER_NR", "");
+            if (v.first == "SYNONYME") {
+                package.stoffId = v.second.get("STOFF_ID", "");
+                package.synonymCode = v.second.get("SYNONYM_CODE", "");
+                package.laufendeNr = v.second.get("LAUFENDE_NR", "");
+                package.stoffsynonym = v.second.get("STOFFSYNONYM", "");
+                package.quelle = v.second.get("QUELLE", "");
+                package.sortierNr = v.second.get("SORTIER_NR", "");
 
-            packagesMap[package.stoffId] = package;
+                packagesMap[package.stoffId] = package;
+            }
         }  // FOREACH
 
     } // try

@@ -43,28 +43,30 @@ void parseXML(const std::string &filename)
     int i=0;
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ns0:SMC_Praeparat")) {
-            _package package;
-            package.verwendung = v.second.get("VERWENDUNG", "");
-            package.zulassungsnummer = v.second.get("ZULASSUNGSNUMMER", "");
-            package.praeparatename = v.second.get("PRAEPARATENAME", "");
-            package.arzneiform = v.second.get("ARZNEIFORM", "");
-            package.atcCode = v.second.get("ATC_CODE", "");
-            package.heilmittelCode = v.second.get("HEILMITTEL_CODE", "");
-            package.zulassungsstatus = v.second.get("ZULASSUNGSSTATUS", "");
-            package.zulassungskategorie = v.second.get("ZULASSUNGSKATEGORIE", "");
-            package.zulassungsinhaberin = v.second.get("ZULASSUNGSINHABERIN", "");
-            package.erstzulassungsdatum = v.second.get("ERSTZULASSUNGSDATUM", "");
-            package.basisZulassungsnummer = v.second.get("BASIS_ZULASSUNGSNUMMER", "");
-            package.abgabekategorie = v.second.get("ABGABEKATEGORIE", "");
-            package.itNummer = v.second.get("IT_NUMMER", "");
-            package.anwendungsgebiet = v.second.get("ANWENDUNGSGEBIET", "");
-            package.ablaufdatum = v.second.get("ABLAUFDATUM", "");
-            package.ausstellungsdatum = v.second.get("AUSSTELLUNGSDATUM", "");
-            package.chargenblockadeAktiv = v.second.get("CHARGENBLOCKADE_AKTIV", "");
-            package.chargenfreigabePflicht = v.second.get("CHARGENFREIGABE_PFLICHT", "");
-            package.einzeleinfuhrBewilligPflicht = v.second.get("EINZELEINFUHR_BEWILLIG_PFLICHT", "");
-            package.ocabrStandardCommon_name = v.second.get("OCABR_STANDARD_COMMON_NAME", "");
-            packagesMap[package.zulassungsnummer] = package;
+            if (v.first == "PRAEPARAT") {
+                _package package;
+                package.verwendung = v.second.get("VERWENDUNG", "");
+                package.zulassungsnummer = v.second.get("ZULASSUNGSNUMMER", "");
+                package.praeparatename = v.second.get("PRAEPARATENAME", "");
+                package.arzneiform = v.second.get("ARZNEIFORM", "");
+                package.atcCode = v.second.get("ATC_CODE", "");
+                package.heilmittelCode = v.second.get("HEILMITTEL_CODE", "");
+                package.zulassungsstatus = v.second.get("ZULASSUNGSSTATUS", "");
+                package.zulassungskategorie = v.second.get("ZULASSUNGSKATEGORIE", "");
+                package.zulassungsinhaberin = v.second.get("ZULASSUNGSINHABERIN", "");
+                package.erstzulassungsdatum = v.second.get("ERSTZULASSUNGSDATUM", "");
+                package.basisZulassungsnummer = v.second.get("BASIS_ZULASSUNGSNUMMER", "");
+                package.abgabekategorie = v.second.get("ABGABEKATEGORIE", "");
+                package.itNummer = v.second.get("IT_NUMMER", "");
+                package.anwendungsgebiet = v.second.get("ANWENDUNGSGEBIET", "");
+                package.ablaufdatum = v.second.get("ABLAUFDATUM", "");
+                package.ausstellungsdatum = v.second.get("AUSSTELLUNGSDATUM", "");
+                package.chargenblockadeAktiv = v.second.get("CHARGENBLOCKADE_AKTIV", "");
+                package.chargenfreigabePflicht = v.second.get("CHARGENFREIGABE_PFLICHT", "");
+                package.einzeleinfuhrBewilligPflicht = v.second.get("EINZELEINFUHR_BEWILLIG_PFLICHT", "");
+                package.ocabrStandardCommon_name = v.second.get("OCABR_STANDARD_COMMON_NAME", "");
+                packagesMap[package.zulassungsnummer] = package;
+            }
         }  // FOREACH
 
     } // try
