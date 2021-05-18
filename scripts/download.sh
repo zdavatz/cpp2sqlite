@@ -221,6 +221,7 @@ EVVAL_VALUE=$(grep -w __EVENTVALIDATION index.html | awk '{print $5}' | sed 's/v
 VS_VALUE=$(urlencode $VS_VALUE)
 EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
 
+## First Cookie can be skipped and this code can be deleted if first cookie does not come back.
 #VS="__VIEWSTATE=$VS_VALUE"
 #EVVAL="__EVENTVALIDATION=$EVVAL_VALUE"
 #VSG="__VIEWSTATEGENERATOR=00755B7A"
@@ -245,7 +246,7 @@ EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
 ## urlencode VS_VALUE and EVVAL_VALUE, alternatively use curl with --data-urlencode
 #VS_VALUE=$(urlencode $VS_VALUE)
 #EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
-#
+
 VS="__VIEWSTATE=$VS_VALUE"
 EVVAL="__EVENTVALIDATION=$EVVAL_VALUE"
 VSG="__VIEWSTATEGENERATOR=CA0B0334"
