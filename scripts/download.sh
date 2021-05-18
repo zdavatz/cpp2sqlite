@@ -221,31 +221,31 @@ EVVAL_VALUE=$(grep -w __EVENTVALIDATION index.html | awk '{print $5}' | sed 's/v
 VS_VALUE=$(urlencode $VS_VALUE)
 EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
 
-VS="__VIEWSTATE=$VS_VALUE"
-EVVAL="__EVENTVALIDATION=$EVVAL_VALUE"
-VSG="__VIEWSTATEGENERATOR=00755B7A"
-BTN_OK="ctl00%24MainContent%24btnOK=Ja%2C+ich+akzeptiere+%2F+Oui%2C+j%E2%80%99accepte+%2F+S%C3%AC%2C+accetto"
-BODY_DATA="${VS}&${VSG}&${EVVAL}&${BTN_OK}"
-
-# Then get index2.html and the second cookie
-wget --header 'Host: download.swissmedicinfo.ch' \
-    --user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0.3' \
-	--header 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
-   	--referer '$URL/Accept.aspx?ReturnUrl=%2f' \
-    --load-cookies=cookieA.txt \
-    --save-cookies cookieB.txt --keep-session-cookies \
-    --header 'Upgrade-Insecure-Requests: 1' \
-    --post-data="$BODY_DATA" \
-	"$URL/Accept.aspx?ReturnUrl=%2f" -O index2.html
-
-# Extract data from index2.html hidden fields to be used in POST
-VS_VALUE=$(grep -w __VIEWSTATE index2.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
-EVVAL_VALUE=$(grep -w __EVENTVALIDATION index2.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
-
-# urlencode VS_VALUE and EVVAL_VALUE, alternatively use curl with --data-urlencode
-VS_VALUE=$(urlencode $VS_VALUE)
-EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
-
+#VS="__VIEWSTATE=$VS_VALUE"
+#EVVAL="__EVENTVALIDATION=$EVVAL_VALUE"
+#VSG="__VIEWSTATEGENERATOR=00755B7A"
+#BTN_OK="ctl00%24MainContent%24btnOK=Ja%2C+ich+akzeptiere+%2F+Oui%2C+j%E2%80%99accepte+%2F+S%C3%AC%2C+accetto"
+#BODY_DATA="${VS}&${VSG}&${EVVAL}&${BTN_OK}"
+#
+## Then get index2.html and the second cookie
+#wget --header 'Host: download.swissmedicinfo.ch' \
+#    --user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0.3' \
+#	--header 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+#   	--referer '$URL/Accept.aspx?ReturnUrl=%2f' \
+#    --load-cookies=cookieA.txt \
+#    --save-cookies cookieB.txt --keep-session-cookies \
+#    --header 'Upgrade-Insecure-Requests: 1' \
+#    --post-data="$BODY_DATA" \
+#	"$URL/Accept.aspx?ReturnUrl=%2f" -O index2.html
+#
+## Extract data from index2.html hidden fields to be used in POST
+#VS_VALUE=$(grep -w __VIEWSTATE index2.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
+#EVVAL_VALUE=$(grep -w __EVENTVALIDATION index2.html | awk '{print $5}' | sed 's/value=//g' | sed 's/"//g')
+#
+## urlencode VS_VALUE and EVVAL_VALUE, alternatively use curl with --data-urlencode
+#VS_VALUE=$(urlencode $VS_VALUE)
+#EVVAL_VALUE=$(urlencode $EVVAL_VALUE)
+#
 VS="__VIEWSTATE=$VS_VALUE"
 EVVAL="__EVENTVALIDATION=$EVVAL_VALUE"
 VSG="__VIEWSTATEGENERATOR=CA0B0334"
@@ -294,8 +294,9 @@ if [ $RESULT -ne 0 ] ; then
     file --brief $TARGET
     echo -e "$TARGET is not a zip file"
 else
+    rm -r Typ1
     unzip -o $TARGET -d temp
-    mv temp/Typ1 Typ1
+    mv -f temp/Typ1 Typ1
     rm -r temp
 fi
 fi
