@@ -80,8 +80,18 @@ void parseXML(const std::string &filename)
     printFileStats(filename);
 }
 
-std::vector<_package> getPackagesByZulassungsnummer(std::string num) {
-    return packagesMap.at(num);
+std::vector<_package> getPackagesByZulassungsnummerAndSequenznummer(std::string zulassungsnummer, std::string sequenznummer) {
+    std::vector<_package> packages;
+    try {
+        std::vector<_package> ps = packagesMap.at(zulassungsnummer);
+        for (auto p : ps) {
+            if (p.sequenznummer == sequenznummer) {
+                packages.push_back(p);
+            }
+        }
+    } catch (std::out_of_range e) {
+    }
+    return packages;
 }
 
 static void printFileStats(const std::string &filename)

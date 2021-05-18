@@ -29,7 +29,7 @@ namespace DEK
 
     void parseXML(const std::string &filename);
 
-    std::vector<_package> getPackagesByZulassungsnummer(std::string num);
+    std::vector<_package> getPackagesByZulassungsnummerAndSequenznummer(std::string zulassungsnummer, std::string sequenznummer);
 
     static void printFileStats(const std::string &filename);
 }

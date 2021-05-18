@@ -190,7 +190,7 @@ int main(int argc, char **argv)
     auto packages = SAI::getPackages();
     int total = packages.size();
     std::set<std::string> missingDeklarationen;
-    for (auto package : SAI::getPackages()) {
+    for (auto package : packages) {
         std::cerr << "\r" << 100*i/total << " % ";
         sqlDb.bindText(1, package.approvalNumber);
         sqlDb.bindText(2, package.sequenceNumber);
@@ -235,7 +235,7 @@ int main(int argc, char **argv)
 
         SEQ::_package seqPackage;
         try {
-            seqPackage = SEQ::getPackageByZulassungsnummer(package.approvalNumber);
+            seqPackage = SEQ::getPackagesByZulassungsnummerAndSequenznummer(package.approvalNumber, package.sequenceNumber);
         } catch (std::out_of_range e) {
             std::clog << "Not found Sequenzen: " << package.approvalNumber << std::endl;
         }
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
 
         std::string zusammensetzungString;
         try {
-            std::vector<DEK::_package> dekPackages = DEK::getPackagesByZulassungsnummer(package.approvalNumber);
+            std::vector<DEK::_package> dekPackages = DEK::getPackagesByZulassungsnummerAndSequenznummer(package.approvalNumber, package.sequenceNumber);
             std::sort(dekPackages.begin(), dekPackages.end(),
                 [](DEK::_package const &a, DEK::_package const &b) {
                     int a1 = std::stoi(a.zeilennummer);
