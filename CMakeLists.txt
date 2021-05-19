@@ -90,6 +90,7 @@ add_executable(sai
 	src/sai/sequenzen.hpp src/sai/sequenzen.cpp
 	src/sai/stoffsynonyme.hpp src/sai/stoffsynonyme.cpp
 	src/sai/deklarationen.hpp src/sai/deklarationen.cpp
+	src/sai/adressen.hpp src/sai/adressen.cpp
 	src/sai/sai.hpp src/sai/sai.cpp)
 target_include_directories(sai PUBLIC "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/src/sai")
 target_link_libraries(sai ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})
