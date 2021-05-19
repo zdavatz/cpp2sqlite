@@ -31,6 +31,7 @@
 #include "sequenzen.hpp"
 #include "stoffsynonyme.hpp"
 #include "deklarationen.hpp"
+#include "adressen.hpp"
 
 constexpr std::string_view TABLE_NAME_SAI = "sai_db";
 
@@ -94,11 +95,14 @@ void openDB(const std::string &filename)
         "basis_sequenznummer TEXT, "
 
         // from Typ1-Deklarationen.XML
-        "zusammensetzung TEXT "
+        "zusammensetzung TEXT, "
+
+        "firmenname TEXT, "
+        "gln_refdata TEXT"
     );
     sqlDb.createIndex(TABLE_NAME_SAI, "idx_", {"zulassungsnummer", "sequenznummer", "packungscode"});
     sqlDb.prepareStatement(TABLE_NAME_SAI,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 }
 
 void closeDB()
@@ -182,6 +186,7 @@ int main(int argc, char **argv)
     SEQ::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Sequenzen.XML");
     DEK::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Deklarationen.XML");
     STO::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Stoff-Synonyme.XML");
+    ADR::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Adressen.XML");
 
     std::string dbFilename = opt_workDirectory + "/output/sai.db";
     openDB(dbFilename);
@@ -280,6 +285,15 @@ int main(int argc, char **argv)
             missingDeklarationen.insert(package.approvalNumber);
         }
         sqlDb.bindText(36, zusammensetzungString);
+
+        ADR::_package adrPackage;
+        try {
+            adrPackage = ADR::getPackageByPartnerNr(praPackage.zulassungsinhaberin);
+        } catch (std::out_of_range e) {
+
+        }
+        sqlDb.bindText(37, adrPackage.firmenname);
+        sqlDb.bindText(38, adrPackage.glnRefdata);
 
         sqlDb.runStatement(TABLE_NAME_SAI);
         i++;
