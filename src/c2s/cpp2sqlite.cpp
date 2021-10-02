@@ -325,9 +325,21 @@ void getHtmlFromXml(std::string &xml,
     BEAUTY::cleanupXml(xml, regnrs);  // and escape some children tags
 
     pt::ptree tree;
-    std::stringstream ss;
-    ss << xml;
-    pt::read_xml(ss, tree);
+    try {
+        std::stringstream ss;
+        ss << xml;
+        pt::read_xml(ss, tree);
+    }
+    catch (std::exception &e) {
+        // Sometimes the source html is invalid. e.g.g <div>ABC/div>
+        // https://github.com/zdavatz/cpp2sqlite/issues/191
+        std::regex r1(R"(([^<])/div>)");
+        xml = std::regex_replace(xml, r1, "$1</div>");
+
+        std::stringstream ss;
+        ss << xml;
+        pt::read_xml(ss, tree);
+    }
     int sectionNumber = 0;
     unsigned int statsParCount=0;
     bool section1Done = false;
