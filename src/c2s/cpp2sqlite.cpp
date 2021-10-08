@@ -434,7 +434,9 @@ void getHtmlFromXml(std::string &xml,
         std::string::size_type posBarcodeFrom = xml.find(barcodeFromText);
         std::string::size_type from = posBarcodeFrom + barcodeFromText.length();
         std::string::size_type posBarcodeTo = xml.find("</div>", from);
-        xml.replace(from, posBarcodeTo - from, "\n" + htmlBarcodes);
+        if (posBarcodeFrom != std::string::npos && posBarcodeTo != std::string::npos) {
+            xml.replace(from, posBarcodeTo - from, "\n" + htmlBarcodes);
+        }
 
 #ifdef WORKAROUND_SUB_SUP_BR
         // Restore children
