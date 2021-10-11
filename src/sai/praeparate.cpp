@@ -6,7 +6,7 @@
 //  License GPLv3.0 -- see License File
 //  Created by b123400 on 16 May 2021
 //
-// This files handle Typ1-Praeparate.XML
+// This files handle SAI-Praeparate.XML
 
 #include <iostream>
 #include <set>
@@ -42,7 +42,7 @@ void parseXML(const std::string &filename)
 
     int i=0;
     try {
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ns0:SMC_Praeparat")) {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SAI_PRAEPARATE")) {
             if (v.first == "PRAEPARAT") {
                 _package package;
                 package.verwendung = v.second.get("VERWENDUNG", "");
@@ -64,7 +64,7 @@ void parseXML(const std::string &filename)
                 package.chargenblockadeAktiv = v.second.get("CHARGENBLOCKADE_AKTIV", "");
                 package.chargenfreigabePflicht = v.second.get("CHARGENFREIGABE_PFLICHT", "");
                 package.einzeleinfuhrBewilligPflicht = v.second.get("EINZELEINFUHR_BEWILLIG_PFLICHT", "");
-                package.ocabrStandardCommon_name = v.second.get("OCABR_STANDARD_COMMON_NAME", "");
+                // package.ocabrStandardCommon_name = v.second.get("OCABR_STANDARD_COMMON_NAME", "");
                 packagesMap[package.zulassungsnummer] = package;
             }
         }  // FOREACH

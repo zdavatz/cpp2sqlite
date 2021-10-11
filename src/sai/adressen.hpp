@@ -17,15 +17,11 @@ namespace ADR
         std::string firmenname;
         std::string adresszeile1;
         std::string adresszeile2;
-        std::string adresszeile3;
-        std::string adresszeile4;
         std::string landCode;
         std::string plz;
         std::string ort;
         std::string sprachCode;
         std::string kanton;
-        std::string telefon;
-        std::string altePartnerId;
         std::string glnRefdata;
     };
 

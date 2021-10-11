@@ -32,7 +32,6 @@ namespace PRA
         std::string chargenblockadeAktiv;
         std::string chargenfreigabePflicht;
         std::string einzeleinfuhrBewilligPflicht;
-        std::string ocabrStandardCommon_name;
     };
 
     void parseXML(const std::string &filename);

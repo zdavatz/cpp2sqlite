@@ -181,12 +181,12 @@ int main(int argc, char **argv)
 
     // REP::html_h1("Typ1-Packungen.XML");
 
-    SAI::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Packungen.XML");
-    PRA::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Praeparate.XML");
-    SEQ::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Sequenzen.XML");
-    DEK::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Deklarationen.XML");
-    STO::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Stoff-Synonyme.XML");
-    ADR::parseXML(opt_workDirectory + "/downloads/Typ1/Typ1-Adressen.XML");
+    SAI::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Packungen.XML");
+    PRA::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Praeparate.XML");
+    SEQ::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Sequenzen.XML");
+    DEK::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Deklarationen.XML");
+    STO::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Stoff-Synonyme.XML");
+    ADR::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Adressen.XML");
 
     std::string dbFilename = opt_workDirectory + "/output/sai.db";
     openDB(dbFilename);
@@ -236,7 +236,7 @@ int main(int argc, char **argv)
         sqlDb.bindText(29, praPackage.chargenblockadeAktiv);
         sqlDb.bindText(30, praPackage.chargenfreigabePflicht);
         sqlDb.bindText(31, praPackage.einzeleinfuhrBewilligPflicht);
-        sqlDb.bindText(32, praPackage.ocabrStandardCommon_name);
+        sqlDb.bindText(32, "");
 
         SEQ::_package seqPackage;
         try {
