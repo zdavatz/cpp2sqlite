@@ -18,7 +18,6 @@ namespace STO
         std::string laufendeNr;
         std::string stoffsynonym;
         std::string quelle;
-        std::string sortierNr;
     };
 
     void parseXML(const std::string &filename);

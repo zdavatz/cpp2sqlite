@@ -6,7 +6,7 @@
 //  License GPLv3.0 -- see License File
 //  Created by b123400 on 16 May 2021
 //
-// This files handle Typ1-Sequenzen.XML
+// This files handle SAI-Sequenzen.XML
 
 #include <iostream>
 #include <set>
@@ -42,16 +42,15 @@ void parseXML(const std::string &filename)
 
     int i=0;
     try {
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ns0:SMC_Synonyme")) {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SAI_SYNONYME")) {
             _package package;
 
-            if (v.first == "SYNONYME") {
+            if (v.first == "SYNONYM") {
                 package.stoffId = v.second.get("STOFF_ID", "");
                 package.synonymCode = v.second.get("SYNONYM_CODE", "");
                 package.laufendeNr = v.second.get("LAUFENDE_NR", "");
                 package.stoffsynonym = v.second.get("STOFFSYNONYM", "");
                 package.quelle = v.second.get("QUELLE", "");
-                package.sortierNr = v.second.get("SORTIER_NR", "");
 
                 packagesMap[package.stoffId] = package;
             }

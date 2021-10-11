@@ -6,7 +6,7 @@
 //  License GPLv3.0 -- see License File
 //  Created by b123400 on 16 May 2021
 //
-// This files handle Typ1-Adressen.XML
+// This files handle SAI-Adressen.XML
 
 #include <iostream>
 #include <set>
@@ -42,22 +42,18 @@ void parseXML(const std::string &filename)
 
     int i=0;
     try {
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ns0:SMC_Adressen")) {
-            if (v.first == "ADRESSEN") {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SAI_ADRESSEN")) {
+            if (v.first == "ADRESSE") {
                 _package package;
                 package.partnerNr = v.second.get("PARTNER_NR", "");
                 package.firmenname = v.second.get("FIRMENNAME", "");
                 package.adresszeile1 = v.second.get("ADRESSZEILE_1", "");
                 package.adresszeile2 = v.second.get("ADRESSZEILE_2", "");
-                package.adresszeile3 = v.second.get("ADRESSZEILE_3", "");
-                package.adresszeile4 = v.second.get("ADRESSZEILE_4", "");
                 package.landCode = v.second.get("LAND_CODE", "");
                 package.plz = v.second.get("PLZ", "");
                 package.ort = v.second.get("ORT", "");
                 package.sprachCode = v.second.get("SPRACH_CODE", "");
                 package.kanton = v.second.get("KANTON", "");
-                package.telefon = v.second.get("TELEFON", "");
-                package.altePartnerId = v.second.get("ALTE_PARTNER_ID", "");
                 package.glnRefdata = v.second.get("GLN_REFDATA", "");
 
                 packagesMap[package.partnerNr] = package;

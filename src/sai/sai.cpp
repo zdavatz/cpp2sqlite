@@ -6,7 +6,7 @@
 //  License GPLv3.0 -- see License File
 //  Created by b123400 on 13 May 2021
 //
-// This files handle Typ1-Packungen.XML
+// This files handle SAI-Packungen.XML
 
 #include <iostream>
 #include <set>
@@ -43,7 +43,7 @@ void parseXML(const std::string &filename)
 
     int i=0;
     try {
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ns0:SMC_Packung")) {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("SAI_PACKUNGEN")) {
             _package package;
             if (v.first == "PACKUNG") {
                 package.approvalNumber = v.second.get("ZULASSUNGSNUMMER", "");
