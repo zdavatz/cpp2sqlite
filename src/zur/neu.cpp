@@ -202,10 +202,20 @@ void parseCSV(const std::string &filename, bool dumpHeader)
                 user.neu_map.spirig = 1;
             }
 
-            user.name1 = columnVector[7];   // H        Firma
+            std::vector<std::string> nameVector;
+            boost::algorithm::split(nameVector, columnVector[7], boost::is_any_of(","));
+
+            if (nameVector.size() >= 1) {
+                user.name1 = nameVector[0];
+            }
+            if (nameVector.size() >= 2) {
+                std::string city = nameVector[1];
+                boost::algorithm::trim(city);
+                user.city = city;
+            }
+
             user.street = "";
             user.zip = "";
-            user.city = "";
             user.special_group = "";
             
             if (user_map.find(user.gln_code) != user_map.end())
