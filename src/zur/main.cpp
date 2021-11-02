@@ -92,7 +92,7 @@ void generatePharmaToStockCsv(std::string inDir, std::string outDir)
 void generateKundenNeu(std::string inDir, std::string outDir)
 {
     std::clog << std::endl;
-    NEU::parseCSV(inDir + "/zurrose/Kunden_alle_NEU.csv");
+    NEU::parseCSV(inDir + "/zurrose/kunden_alle_dynamics_ce.csv");
     NEU::parseMedixCSV(inDir + "/zurrose/medix_kunden.csv");
 
     NEU::createConditionsNewJSON(outDir + "/rose_conditions_new.json");
