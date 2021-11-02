@@ -63,15 +63,6 @@ std::vector<int> statsLinesGlnIsOz;
 unsigned int statsGlnIsNotUniqueCount;
 
 static
-int getCellValue(const std::string &cell)
-{
-    if (boost::contains(cell, "Keine"))
-        return 0;
-
-    return 1;
-}
-
-static
 void printFileStats(const std::string &filename)
 {
     REP::html_h2("KUNDEN NEU");
@@ -160,7 +151,7 @@ void parseCSV(const std::string &filename, bool dumpHeader)
             std::vector<std::string> columnVector;
             boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
 
-            if (columnVector.size() != 10) {
+            if (columnVector.size() != 8) {
 #ifdef DEBUG
                 std::clog
                 << "CSV Line " << statsCsvLineCount
@@ -168,13 +159,14 @@ void parseCSV(const std::string &filename, bool dumpHeader)
 #endif
                 statsLinesWrongNumFields.push_back(statsCsvLineCount);
                 
-                // Try to recover as much as possible: assume column A and B are correct
-                roseid_to_gln_map.insert(std::make_pair(columnVector[0], columnVector[1]));
+                // Try to recover as much as possible: assume column D and E are correct
+                roseid_to_gln_map.insert(std::make_pair(columnVector[3], columnVector[4]));
 
                 continue;
             }
 
-            std::string gln_code = columnVector[1];    // B
+            std::string gln_code = columnVector[4];    // E
+            std::string rose_id = columnVector[3];     // D
 
             if (gln_code.length() == 0)
                 statsLinesEmptyGlnVec.push_back(std::to_string(statsCsvLineCount));
@@ -183,35 +175,54 @@ void parseCSV(const std::string &filename, bool dumpHeader)
                 // We can still use it, just report it
                 statsLinesGlnIsOz.push_back(statsCsvLineCount);
             }
-            
+
             User user;
-            user.rose_id = columnVector[0];     // A
+
+            if (user_map.find(rose_id) != user_map.end()) {
+                user = user_map.at(rose_id);
+            } else {
+                user.neu_map = {
+                    0, // helvepharm
+                    0, // mepha
+                    0, // sandoz
+                    0  // spirig
+                };
+            }
+
+            user.rose_id = rose_id;
             user.gln_code = gln_code;
 
-            user.neu_map = {
-                getCellValue(columnVector[5]),      // F
-                getCellValue(columnVector[2]),      // C
-                getCellValue(columnVector[3]),      // D
-                getCellValue(columnVector[4])};     // E
+            if (boost::contains(columnVector[5], "Helvepharm")) { // F
+                user.neu_map.helvepharm = 1;
+            } else if (boost::contains(columnVector[5], "Mepha")) { // F
+                user.neu_map.mepha = 1;
+            } else if (boost::contains(columnVector[5], "Sandoz")) { // F
+                user.neu_map.sandoz = 1;
+            } else if (boost::contains(columnVector[5], "Spirig")) { // F
+                user.neu_map.spirig = 1;
+            }
 
-            user.name1 = columnVector[6];   // G        Company name 1
-            user.street = columnVector[7];  // H
-            user.zip = columnVector[8];     // I
-            user.city = columnVector[9];    // J
+            std::vector<std::string> nameVector;
+            boost::algorithm::split(nameVector, columnVector[7], boost::is_any_of(","));
+
+            if (nameVector.size() >= 1) {
+                user.name1 = nameVector[0];
+            }
+            if (nameVector.size() >= 2) {
+                std::string city = nameVector[1];
+                boost::algorithm::trim(city);
+                user.city = city;
+            }
+
+            user.street = "";
+            user.zip = "";
             user.special_group = "";
-
-#ifdef DEBUG
-            if (user_map.find(user.rose_id) != user_map.end())
-                std::cerr << __LINE__ << " doctor exists " << user.rose_id
-                << ", CSV Line " << statsCsvLineCount
-                << std::endl;
-#endif
             
             if (user_map.find(user.gln_code) != user_map.end())
                 statsGlnIsNotUniqueCount++;
 
-            user_map.insert(std::make_pair(user.rose_id, user));
-            roseid_to_gln_map.insert(std::make_pair(user.rose_id, user.gln_code));
+            user_map[user.rose_id] = user;
+            roseid_to_gln_map[user.rose_id] = user.gln_code;
 
         } // while
 
