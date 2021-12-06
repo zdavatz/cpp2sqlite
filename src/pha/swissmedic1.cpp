@@ -174,6 +174,7 @@ void parseXLXS(const std::string &filename)
         }
 
         std::vector<std::string> aSingleRow;
+        int j = 0;
         for (auto cell : row) {
             if (cell.is_date()) {
                 cell.format(date_format);
@@ -183,6 +184,8 @@ void parseXLXS(const std::string &filename)
             else {
                 aSingleRow.push_back(cell.to_string());
             }
+            j++;
+            if (j >= 25) break;
         }
 
         theWholeSpreadSheet.push_back(aSingleRow);
