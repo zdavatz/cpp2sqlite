@@ -116,6 +116,7 @@ void parseXLXS(const std::string &downloadDir, bool dumpHeader)
         }
 
         std::vector<std::string> aSingleRow;
+        int j = 0;
         for (auto cell : row) {
             if (cell.is_date()) {
                 cell.format(date_format);
@@ -125,6 +126,8 @@ void parseXLXS(const std::string &downloadDir, bool dumpHeader)
             else {
                 aSingleRow.push_back(cell.to_string());
             }
+            j++;
+            if (j >= 25) break;
         }
 
         statsCsvLineCount++;
