@@ -89,9 +89,12 @@ void parseXLXS(const std::string &filename)
             continue;
 
         std::vector<std::string> aSingleRow;
+        int j = 0;
         for (auto cell : row) {
             //std::clog << cell.to_string() << std::endl;
             aSingleRow.push_back(cell.to_string());
+            j++;
+            if (j >= 25) break;
         }
 
         theWholeSpreadSheet.push_back(aSingleRow);
