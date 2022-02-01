@@ -152,52 +152,48 @@ if [ ! -f $WD/passwords ] ; then
 else
 source $WD/passwords
 URL="https://db.swisspeddose.ch"
-POST_DATA="log=${USERNAME}&pwd=${PASSWORD}&a=login"
+POST_DATA="log=${USERNAME}&pwd=${PASSWORD}&a=login&Submit=Log+In"
 
-wget --keep-session-cookies \
-    --save-cookies cookiesB.txt \
-    --delete-after \
-    --post-data=$POST_DATA \
-    "$URL/sign-in" -O signed-in.html
+echo "Logging in"
 
-wget --header "Host: db.swisspeddose.ch" \
-	--user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Gecko/20100101 Firefox/65.0' \
-	--header "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
-	--header "Accept-Language: de,en-US;q=0.7,en;q=0.3" \
-	--referer "$URL/sign-in/" \
-    --cookies=on \
-    --load-cookies=cookiesB.txt \
-	--header "Upgrade-Insecure-Requests: 1" \
-    --keep-session-cookies \
-	"$URL/dashboard" -O dashboard.html
+curl 'https://db.swisspeddose.ch/sign-in/' -X POST \
+    --cookie-jar cookiesB.txt \
+    -o signed-in.html \
+    --data-raw $POST_DATA -v
 
-FILENAME_V1=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication-' dashboard.html | awk -F\" '{print $4}')
-FILENAME_V2=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication_v2-' dashboard.html | awk -F\" '{print $4}')
-FILENAME_V3=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication_v3-' dashboard.html | awk -F\" '{print $4}')
-BASENAME=swisspeddosepublication
+echo "Getting dashboard"
 
-for FILENAME in $FILENAME_V1 $FILENAME_V2 $FILENAME_V3
-do
-wget --header "Host: db.swisspeddose.ch" \
-	--user-agent "Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0" \
-	--header "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
-	--header "Accept-Language: de,en-US;q=0.7,en;q=0.3" \
-	--referer "$URL/dashboard/" \
-    --cookies=on \
-    --load-cookies=cookiesB.txt \
-    --header 'Upgrade-Insecure-Requests: 1' \
-    "${URL}${FILENAME}"
-done
+curl -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Gecko/20100101 Firefox/65.0' \
+    -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
+    -H "Accept-Language: de,en-US;q=0.7,en;q=0.3" \
+    -H "Upgrade-Insecure-Requests: 1" \
+    --referer "$URL/sign-in/" \
+    --cookie cookiesB.txt \
+    "$URL/dashboard/" -o dashboard.html -v
 
-mv $(basename -- $FILENAME_V1)  "${BASENAME}.zip"
-mv $(basename -- $FILENAME_V2)  "${BASENAME}_v2.zip"
-mv $(basename -- $FILENAME_V3)  "${BASENAME}_v3.zip"
+echo "Got dashboard"
 
-unzip "${BASENAME}_v3.zip"
+FILENAME_V3=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication_v3-' dashboard.html | awk -F\" '{print $2}')
 
-rm $BASENAME_v3.zip
+echo "swisspeddosepublication_v3 filename: $FILENAME_V3"
+
+echo "Getting zip"
+curl -H "Host: db.swisspeddose.ch" \
+    -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0" \
+    -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
+    -H "Accept-Language: de,en-US;q=0.7,en;q=0.3" \
+    -H 'Upgrade-Insecure-Requests: 1' \
+    --referer "Referer: $URL/dashboard/" \
+    --cookie cookiesB.txt \
+    -o 'swisspeddosepublication_v3.zip' \
+    "${URL}${FILENAME_V3}"
+echo "Got zip"
+
+unzip "swisspeddosepublication_v3.zip"
+
+rm "swisspeddosepublication_v3.zip"
 rm SwissPedDosePublicationV3.xsd
-mv SwissPedDosePublicationV3.xml "${BASENAME}_v3.xml"
+mv SwissPedDosePublicationV3.xml "swisspeddosepublication_v3.xml"
 
 rm cookies*.txt
 rm dashboard.html
