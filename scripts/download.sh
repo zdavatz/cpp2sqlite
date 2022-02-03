@@ -115,12 +115,12 @@ fi
 
 if [ $STEP_DOWNLOAD_REFDATA ] ; then
 
-URL="http://refdatabase.refdata.ch"  # article and partner
+URL="https://refdatabase.refdata.ch"  # article and partner
 TARGET=refdata_pharma.xml
 
 wget --post-file "$WD/ref.xml" \
     --header "content-type: text/xml;charset=utf-8" \
-    --header "SOAPAction: $URL/Pharma/Download" \
+    --header "SOAPAction: http://refdatabase.refdata.ch/Pharma/Download" \
     "$URL/Service/Article.asmx" -O temp.xml
 
 xmllint --format temp.xml > $TARGET
