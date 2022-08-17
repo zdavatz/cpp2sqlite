@@ -51,14 +51,6 @@
 
 #include "ean13/functii.h"
 
-// Fool boost parser so it doesn't create children for "<sub>" and "<sup>" and "<br />"
-#define WORKAROUND_SUB_SUP_BR
-#define ESCAPED_SUB_L         "[[[[sub]]]]"  // "&lt;sub&gt;" would be altered by boost parser
-#define ESCAPED_SUB_R         "[[[[/sub]]]]"
-#define ESCAPED_SUP_L         "[[[[sup]]]]"
-#define ESCAPED_SUP_R         "[[[[/sup]]]]"
-#define ESCAPED_BR            "[[[[br]]]]"   // Issue #30, rn 66547, section20, French
-
 #define WITH_PROGRESS_BAR
 #define USE_BOOST_FOR_REPLACEMENTS // faster than with std::regex
 //#define DEBUG_SHOW_RAW_XML_IN_DB_FILE
