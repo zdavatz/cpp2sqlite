@@ -1084,7 +1084,7 @@ int main(int argc, char **argv)
     EPHA::parseJSON(opt_workDirectory + "/downloads" + jsonFilename, flagVerbose);
 #endif
 
-    PED::parseXML(opt_workDirectory + "/downloads/swisspeddosepublication_v3.xml",
+    PED::parseXML(opt_workDirectory + "/downloads/swisspeddosepublication_v4.xml",
                   opt_language);
     PED::parseBlacklistTXT(opt_inputDirectory + "/swisspeddose_blacklist.txt");
 #ifdef DEBUG_PED_DOSE
