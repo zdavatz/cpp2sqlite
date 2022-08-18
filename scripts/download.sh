@@ -159,7 +159,7 @@ echo "Logging in"
 curl 'https://db.swisspeddose.ch/sign-in/' -X POST \
     --cookie-jar cookiesB.txt \
     -o signed-in.html \
-    --data-raw $POST_DATA -v
+    --data-raw $POST_DATA
 
 echo "Getting dashboard"
 
@@ -169,11 +169,11 @@ curl -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Geck
     -H "Upgrade-Insecure-Requests: 1" \
     --referer "$URL/sign-in/" \
     --cookie cookiesB.txt \
-    "$URL/dashboard/" -o dashboard.html -v
+    "$URL/dashboard/" -o dashboard.html
 
 echo "Got dashboard"
 
-FILENAME_V3=$(grep 'a href="/app/uploads/xml_publication/swisspeddosepublication_v3-' dashboard.html | awk -F\" '{print $2}')
+FILENAME_V3=$(grep -o -E 'a href="/app/uploads/xml_publication/swisspeddosepublication_v3-[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}.zip' dashboard.html | awk -F\" '{print $2}')
 
 echo "swisspeddosepublication_v3 filename: $FILENAME_V3"
 
