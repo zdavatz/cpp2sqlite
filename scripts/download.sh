@@ -173,28 +173,6 @@ curl -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Geck
 
 echo "Got dashboard"
 
-FILENAME_V3=$(grep -o -E 'a href="/app/uploads/xml_publication/swisspeddosepublication_v3-[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}.zip' dashboard.html | awk -F\" '{print $2}')
-
-echo "swisspeddosepublication_v3 filename: $FILENAME_V3"
-
-echo "Getting zip v3"
-curl -H "Host: db.swisspeddose.ch" \
-    -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0" \
-    -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
-    -H "Accept-Language: de,en-US;q=0.7,en;q=0.3" \
-    -H 'Upgrade-Insecure-Requests: 1' \
-    --referer "Referer: $URL/dashboard/" \
-    --cookie cookiesB.txt \
-    -o 'swisspeddosepublication_v3.zip' \
-    "${URL}${FILENAME_V3}"
-echo "Got zip"
-
-unzip "swisspeddosepublication_v3.zip"
-
-rm "swisspeddosepublication_v3.zip"
-rm SwissPedDosePublicationV3.xsd
-mv SwissPedDosePublicationV3.xml "swisspeddosepublication_v3.xml"
-
 FILENAME_V4=$(grep -o -E 'a href="/app/uploads/[0-9]{4}/[0-9]{1,2}/swisspeddosepublication_v4-[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}.zip' dashboard.html | awk -F\" '{print $2}')
 
 echo "swisspeddosepublication_v4 filename: $FILENAME_V4"
