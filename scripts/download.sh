@@ -278,7 +278,7 @@ fi
 fi
 
 if [ $STEP_DOWNLOAD_SAI ] ; then
-FILE_PATH=$(curl https://sai.refdata.ch/download | grep -Eo '/download/zip/[^"]+' | head -n 1)
+FILE_PATH=$(curl https://sai.refdata.ch/download | grep -Eo '/download/structuredexportzip/[^"]+' | head -n 1)
 URL="https://sai.refdata.ch$FILE_PATH"
 TARGET="sai.zip"
 
@@ -290,9 +290,10 @@ if [ $RESULT -ne 0 ] ; then
     file --brief $TARGET
     echo -e "$TARGET is not a zip file"
 else
-    rm -r Typ1
+    ls -lah
+    rm -r SAI
     unzip -o $TARGET -d temp
-    mv -f temp/Typ1 Typ1
+    mv -f temp/SAI SAI
     rm -r temp
 fi
 fi
