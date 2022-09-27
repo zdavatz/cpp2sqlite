@@ -69,7 +69,7 @@ void openDB(const std::string &filename)
         "beschreibung_de_refdata TEXT, "
         "beschreibung_fr_refdata TEXT, "
 
-        // from Typ1-Praeparate.XML
+        // from SAI-Praeparate.XML
         "verwendung TEXT,"
         "praeparatename TEXT,"
         "arzneiform TEXT,"
@@ -89,12 +89,12 @@ void openDB(const std::string &filename)
         "einzeleinfuhr_bewillig_pflicht TEXT,"
         "ocabr_standard_common_name TEXT, "
 
-        // from Typ1-Sequenzen.XML
+        // from SAI-Sequenzen.XML
         "sequenzname TEXT, "
         "zulassungsart TEXT, "
         "basis_sequenznummer TEXT, "
 
-        // from Typ1-Deklarationen.XML
+        // from SAI-Deklarationen.XML
         "zusammensetzung TEXT, "
 
         "firmenname TEXT, "
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
     
     REP::html_end_ul();
 
-    // REP::html_h1("Typ1-Packungen.XML");
+    // REP::html_h1("SAI-Packungen.XML");
 
     SAI::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Packungen.XML");
     PRA::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Praeparate.XML");
