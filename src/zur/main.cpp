@@ -84,7 +84,9 @@ void generatePharmaToStockCsv(std::string inDir, std::string outDir)
 {
     std::clog << std::endl;
     STAMM::parseCSV(inDir + "/zurrose/artikel_stamm_zurrose.csv");
+    STAMM::parseFullCSV(inDir + "/zurrose/artikel_vollstamm_zurrose.csv");
     STAMM::parseVoigtCSV(inDir + "/zurrose/artikel_stamm_voigt.csv");
+    STAMM::parse19erPharmaCodesCSV(inDir + "/zurrose/19er_pharmaCodes.csv");
     
     STAMM::createStockCSV(outDir + "/rose_stock.csv");
 }

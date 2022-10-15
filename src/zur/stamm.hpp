@@ -13,12 +13,15 @@
 struct stockStruct {
     int zurrose {0};
     int voigt {0};
+    bool overrideZeroVoigt;
 };
 
 namespace STAMM
 {
 void parseCSV(const std::string &filename, bool dumpHeader = false);
+void parseFullCSV(const std::string &filename, bool dumpHeader = false);
 void parseVoigtCSV(const std::string &filename, bool dumpHeader = false);
+void parse19erPharmaCodesCSV(const std::string &filename, bool dumpHeader = false);
 
 void createStockCSV(const std::string &filename);
 }
