@@ -11,6 +11,7 @@
 #include <fstream>
 #include <map>
 #include <vector>
+#include <set>
 #include <string>
 
 #include <boost/algorithm/string.hpp>
@@ -32,6 +33,7 @@ unsigned int statsVoigtMapAdditions = 0;
 unsigned int statsVoigtMapUpdates = 0;
 
 std::map<std::string, stockStruct> pharmaStockMap;
+std::set<std::string> zeroVoigtStockOverridePharmaCodes;
 
 void parseCSV(const std::string &filename, bool dumpHeader)
 {
@@ -182,6 +184,66 @@ void parseVoigtCSV(const std::string &filename, bool dumpHeader)
 #endif
 }
 
+void parse19erPharmaCodesCSV(const std::string &filename, bool dumpHeader)
+{
+    std::clog << std::endl << "Reading " << filename << std::endl;
+
+    try {
+        std::ifstream file(filename);
+        
+        std::string str;
+        bool header = true;
+        while (std::getline(file, str))
+        {
+            // Trim the line, otherwise when it's split in cells the B
+            // column instead of being an empty cell it contains '\r'
+            boost::algorithm::trim_right_if(str, boost::is_any_of("\n\r"));
+
+            if (header) {
+                header = false;
+
+                if (dumpHeader) {
+                    std::ofstream outHeader(filename + ".header.txt");
+                    std::vector<std::string> headerTitles;
+                    boost::algorithm::split(headerTitles, str, boost::is_any_of(CSV_SEPARATOR2));
+                    outHeader << "Number of columns: " << headerTitles.size() << std::endl;
+                    auto colLetter = 'A';
+                    for (auto t : headerTitles)
+                        outHeader << colLetter++ << "\t" << t << std::endl;
+
+                    outHeader.close();
+                }
+
+                continue;
+            }
+            
+            std::vector<std::string> columnVector;
+            boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR2));
+            
+            if (columnVector.size() != 1) {
+                std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            zeroVoigtStockOverridePharmaCodes.insert(columnVector[0]);
+        } // while
+        
+        file.close();
+    }
+    catch (std::exception &e) {
+        std::cerr
+        << basename((char *)__FILE__) << ":" << __LINE__
+        << " Error " << e.what()
+        << std::endl;
+    }
+    
+#ifdef DEBUG
+    std::clog
+    << "Parsed " << zeroVoigtStockOverridePharmaCodes.size() << " valid pharma codes"
+    << std::endl;
+#endif
+}
+
 void createStockCSV(const std::string &filename)
 {
         std::ofstream ofs;
@@ -191,10 +253,13 @@ void createStockCSV(const std::string &filename)
         std::clog << std::endl << "Creating CSV" << std::endl;
         
         for (auto item : pharmaStockMap) {
+
+            bool shouldOverrideVoigtWithZero = zeroVoigtStockOverridePharmaCodes.find(item.first) != zeroVoigtStockOverridePharmaCodes.end();
+
             ofs
             << item.first << OUTPUT_FILE_SEPARATOR          // A
             << item.second.zurrose << OUTPUT_FILE_SEPARATOR // B
-            << item.second.voigt << std::endl;              // C
+            << (shouldOverrideVoigtWithZero ? 0 : item.second.voigt) << std::endl;              // C
         }
         
         ofs.close();

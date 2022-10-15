@@ -19,6 +19,7 @@ namespace STAMM
 {
 void parseCSV(const std::string &filename, bool dumpHeader = false);
 void parseVoigtCSV(const std::string &filename, bool dumpHeader = false);
+void parse19erPharmaCodesCSV(const std::string &filename, bool dumpHeader = false);
 
 void createStockCSV(const std::string &filename);
 }

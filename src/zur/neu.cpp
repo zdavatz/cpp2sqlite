@@ -280,9 +280,11 @@ void parseMedixCSV(const std::string &filename)
             std::string rose_id = columnVector[0];    // B
 
             try {
-                User user = user_map.at(rose_id);
-                user.special_group = "medix";
-                user_map.at(rose_id) = user;
+                if (user_map.find(rose_id) != user_map.end()) {
+                    User user = user_map.at(rose_id);
+                    user.special_group = "medix";
+                    user_map.at(rose_id) = user;
+                }
             } catch (std::exception &e) {
                 std::cerr
                 << basename((char *)__FILE__) << ":" << __LINE__
