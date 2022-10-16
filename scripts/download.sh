@@ -137,7 +137,7 @@ fi
 #-------------------------------------------------------------------------------
 
 if [ $STEP_DOWNLOAD_BAG ] ; then
-wget http://www.xn--spezialittenliste-yqb.ch/File.axd?file=XMLPublications.zip -O XMLPublications.zip
+wget https://www.xn--spezialittenliste-yqb.ch/File.axd?file=XMLPublications.zip -O XMLPublications.zip
 unzip XMLPublications.zip Preparations.xml
 mv -f Preparations.xml bag_preparations.xml
 rm XMLPublications.zip
