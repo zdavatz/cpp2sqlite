@@ -75,7 +75,7 @@ void parseCSV(const std::string &filename, bool dumpHeader)
             if (pharma.length() > 0) {
                 stockStruct stock;
                 stock.zurrose = std::stoi(columnVector[8]); // I
-                stock.overrideZeroVoigt = columnVector[14] == "ja";
+                stock.overrideZeroVoigt = columnVector[15] /* P */ == "ja";
                 pharmaStockMap.insert(std::make_pair(pharma, stock));
             }
         } // while
@@ -132,7 +132,7 @@ void parseFullCSV(const std::string &filename, bool dumpHeader)
             }
             
             std::string pharma = columnVector[0]; // A
-            if (pharma.length() > 0 && columnVector[14] == "ja") {
+            if (pharma.length() > 0 && columnVector[15] == "ja") {
                 auto search = pharmaStockMap.find(pharma);
                 if (search != pharmaStockMap.end()) {
                     search->second.overrideZeroVoigt = true; // Update saved stock
@@ -321,7 +321,6 @@ void createStockCSV(const std::string &filename)
         for (auto item : pharmaStockMap) {
 
             bool shouldOverrideVoigtWithZero = item.second.overrideZeroVoigt;
-                // (zeroVoigtStockOverridePharmaCodes.find(item.first) != zeroVoigtStockOverridePharmaCodes.end());
 
             if (shouldOverrideVoigtWithZero) {
                 std::clog << "overriding to zero " << item.first << std::endl;
