@@ -173,7 +173,7 @@ curl -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Geck
 
 echo "Got dashboard"
 
-FILENAME_V4=$(grep -o -E 'a href="/app/uploads/[0-9]{4}/[0-9]{1,2}/swisspeddosepublication_v4-[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}.zip' dashboard.html | awk -F\" '{print $2}')
+FILENAME_V4=$(grep -o -E 'a href="/app/uploads/xml_publication/swisspeddosepublicationv4-[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}.zip' dashboard.html | awk -F\" '{print $2}')
 
 echo "swisspeddosepublication_v4 filename: $FILENAME_V4"
 
