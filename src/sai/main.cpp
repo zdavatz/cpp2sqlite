@@ -32,6 +32,7 @@
 #include "stoffsynonyme.hpp"
 #include "deklarationen.hpp"
 #include "adressen.hpp"
+#include "bag.hpp"
 
 constexpr std::string_view TABLE_NAME_SAI = "sai_db";
 
@@ -98,11 +99,20 @@ void openDB(const std::string &filename)
         "zusammensetzung TEXT, "
 
         "firmenname TEXT, "
-        "gln_refdata TEXT"
+        "gln_refdata TEXT, "
+
+        // From bag_preparations.xml
+        // https://github.com/zdavatz/cpp2sqlite/issues/223
+        "public_price TEXT, "
+        "public_price_valid_from_date TEXT, "
+        "ex_factory_price TEXT, "
+        "ex_factory_price_valid_from_date TEXT, "
+        "sl_entry TEXT, "
+        "ggsl TEXT"
     );
     sqlDb.createIndex(TABLE_NAME_SAI, "idx_", {"zulassungsnummer", "sequenznummer", "packungscode"});
     sqlDb.prepareStatement(TABLE_NAME_SAI,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 }
 
 void closeDB()
@@ -187,6 +197,7 @@ int main(int argc, char **argv)
     DEK::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Deklarationen.XML");
     STO::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Stoff-Synonyme.XML");
     ADR::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Adressen.XML");
+    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", true);
 
     std::string dbFilename = opt_workDirectory + "/output/sai.db";
     openDB(dbFilename);
@@ -294,6 +305,32 @@ int main(int argc, char **argv)
         }
         sqlDb.bindText(37, adrPackage.firmenname);
         sqlDb.bindText(38, adrPackage.glnRefdata);
+
+
+        sqlDb.bindText(39, "");
+        sqlDb.bindText(40, "");
+        sqlDb.bindText(41, "");
+        sqlDb.bindText(42, "");
+        sqlDb.bindText(43, "no");
+        sqlDb.bindText(44, "");
+
+        if (package.gtinIndustry != "") {
+            try {
+                auto pack = BAG::getPackageFieldsByGtin(package.gtinIndustry);
+                sqlDb.bindText(39, pack.publicPrice);
+                sqlDb.bindText(40, pack.publicPriceValidFrom);
+                sqlDb.bindText(41, pack.exFactoryPrice);
+                sqlDb.bindText(42, pack.exFactoryPriceValidFrom);
+                sqlDb.bindText(43, "yes"); // It's a SL Entry if it exists
+                sqlDb.bindText(44, pack.ggsl == "N" ? "no" : "yes");
+            } catch (std::out_of_range e) {
+                // It isn't a SL Entry if it doesn't exists in BAG xml
+                sqlDb.bindText(43, "no");
+                std::clog << "Not found GTIN: " << package.gtinIndustry;
+            }
+        } else {
+            sqlDb.bindText(43, "no");
+        }
 
         sqlDb.runStatement(TABLE_NAME_SAI);
         i++;
