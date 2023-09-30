@@ -156,4 +156,13 @@ target_link_libraries(zurrose PUBLIC ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${X
 
 #-------------------------------------------------------------------------------
 
+add_executable(nonpharma
+	src/nonpharma/main.cpp
+	src/sqlDatabase.hpp src/sqlDatabase.cpp
+	src/report.hpp src/report.cpp)
+target_include_directories(nonpharma PUBLIC "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/src/nonpharma")
+target_link_libraries(nonpharma ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${XLNT_LIBRARIES})
+
+#-------------------------------------------------------------------------------
+
 install(TARGETS cpp2sqlite interaction sappinfo pharma RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
