@@ -27,6 +27,7 @@ namespace SAI
         std::string outOfTradeDateIndustry;
         std::string descriptionEnRefdata;
         std::string descriptionFrRefdata;
+        std::string atcCode;
     };
 
     void parseXML(const std::string &filename);
