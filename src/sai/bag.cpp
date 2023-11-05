@@ -78,6 +78,13 @@ void parseXML(const std::string &filename,
                         pack.publicPrice = formatPriceAsMoney(p.second.get("Prices.PublicPrice.Price", ""));
                         pack.publicPriceValidFrom = p.second.get("Prices.PublicPrice.ValidFromDate", "");
                         pack.ggsl = p.second.get("FlagGGSL", "");
+                        pack.atcCode = v.second.get("AtcCode", "");
+                        pack.nameDe = v.second.get("NameDe", "");
+                        pack.nameFr = v.second.get("NameFr", "");
+                        pack.descriptionDe = v.second.get("DescriptionDe", "");
+                        pack.descriptionFr = v.second.get("DescriptionFr", "");
+                        pack.packDescriptionDe = p.second.get("DescriptionDe", "");
+                        pack.packDescriptionFr = p.second.get("DescriptionFr", "");
                         packMap[pack.gtin] = pack;
                     }
                 }
@@ -104,6 +111,18 @@ std::string formatPriceAsMoney(const std::string &price)
 Pack getPackageFieldsByGtin(const std::string &gtin)
 {
     return packMap.at(gtin);
+}
+
+std::vector<std::string> gtinWhichDoesntStartWith7680()
+{
+    std::vector<std::string> result;
+    for (const auto &pair : packMap) {
+        std::string key = pair.first;
+        if (key.substr(0,4) != "7680") {
+            result.push_back(key);
+        }
+    }
+    return result;
 }
 
 }

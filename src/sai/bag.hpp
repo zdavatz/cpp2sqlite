@@ -25,6 +25,13 @@ namespace BAG
         std::string publicPrice;
         std::string publicPriceValidFrom;
         std::string ggsl;
+        std::string atcCode;
+        std::string nameDe;
+        std::string nameFr;
+        std::string descriptionDe;
+        std::string descriptionFr;
+        std::string packDescriptionDe;
+        std::string packDescriptionFr;
     };
     
     // typedef std::vector<Preparation> PreparationList;
@@ -36,6 +43,8 @@ namespace BAG
     std::string formatPriceAsMoney(const std::string &price);
 
     Pack getPackageFieldsByGtin(const std::string &gtin);
+
+    std::vector<std::string> gtinWhichDoesntStartWith7680();
 }
 
 #endif /* bag_hpp */
