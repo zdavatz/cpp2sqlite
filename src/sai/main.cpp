@@ -121,6 +121,28 @@ void closeDB()
     sqlDb.closeDB();
 }
 
+SAI::_package bagToSaiPackage(BAG::Pack pack)
+{
+    SAI::_package package;
+    package.gtinIndustry = pack.gtin;
+    package.descriptionEnRefdata = pack.nameDe + ", " + pack.descriptionDe + ", " + pack.packDescriptionDe;
+    package.descriptionFrRefdata = pack.nameFr + ", " + pack.descriptionFr + ", " + pack.packDescriptionFr;
+    package.descriptionFrRefdata = "";
+    package.atcCode = pack.atcCode;
+    package.approvalNumber = "";
+    package.sequenceNumber = "";
+    package.packageCode = "";
+    package.approvalStatus = "";
+    package.noteFreeText = "";
+    package.packageSize = "";
+    package.packageUnit = "";
+    package.revocationWaiverDate = "";
+    package.btmCode = "";
+    package.inTradeDateIndustry = "";
+    package.outOfTradeDateIndustry = "";
+    return package;
+}
+
 int main(int argc, char **argv)
 {
     appName = boost::filesystem::basename(argv[0]);
@@ -204,6 +226,11 @@ int main(int argc, char **argv)
 
     int i = 0;
     auto packages = SAI::getPackages();
+    for (auto gtin : BAG::gtinWhichDoesntStartWith7680()) {
+        BAG::Pack bagPack = BAG::getPackageFieldsByGtin(gtin);
+        auto saiPackage = bagToSaiPackage(bagPack);
+        packages.push_back(saiPackage);
+    }
     int total = packages.size();
     std::set<std::string> missingDeklarationen;
     for (auto package : packages) {
@@ -225,7 +252,9 @@ int main(int argc, char **argv)
 
         PRA::_package praPackage;
         try {
-            praPackage = PRA::getPackageByZulassungsnummer(package.approvalNumber);
+            if (!package.approvalNumber.empty()) {
+                praPackage = PRA::getPackageByZulassungsnummer(package.approvalNumber);
+            }
         } catch (std::out_of_range e) {
             std::clog << "Not found praeparate: " << package.approvalNumber << std::endl;
         }
@@ -233,7 +262,7 @@ int main(int argc, char **argv)
         sqlDb.bindText(15, praPackage.verwendung);
         sqlDb.bindText(16, praPackage.praeparatename);
         sqlDb.bindText(17, praPackage.arzneiform);
-        sqlDb.bindText(18, praPackage.atcCode);
+        sqlDb.bindText(18, package.atcCode.empty()? praPackage.atcCode : package.atcCode);
         sqlDb.bindText(19, praPackage.heilmittelCode);
         sqlDb.bindText(20, praPackage.zulassungskategorie);
         sqlDb.bindText(21, praPackage.zulassungsinhaberin);
@@ -251,7 +280,9 @@ int main(int argc, char **argv)
 
         SEQ::_package seqPackage;
         try {
-            seqPackage = SEQ::getPackagesByZulassungsnummerAndSequenznummer(package.approvalNumber, package.sequenceNumber);
+            if (!package.approvalNumber.empty()) {
+                seqPackage = SEQ::getPackagesByZulassungsnummerAndSequenznummer(package.approvalNumber, package.sequenceNumber);
+            }
         } catch (std::out_of_range e) {
             std::clog << "Not found Sequenzen: " << package.approvalNumber << std::endl;
         }
