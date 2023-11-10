@@ -183,8 +183,6 @@ int main(int argc, char **argv)
     
     // ////////////////////////////////////////////////////////////////////////////
 
-    TRANSFER::parseDAT(opt_inputDirectory + "/zurrose/transfer/transfer.dat");
-
     std::string reportFilename("nonpharma_report.html");
     std::string reportTitle("NONPHARMA Report");
     REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, false);
@@ -196,10 +194,12 @@ int main(int argc, char **argv)
     REP::html_end_ul();
 
     parseXLXS(opt_workDirectory + "/downloads/nonpharma.xlsx", false);
+    TRANSFER::parseDAT(opt_inputDirectory + "/zurrose/transfer/transfer.dat");
 
     std::string dbFilename = opt_workDirectory + "/output/nonpharma.db";
     openDB(dbFilename);
 
+    int transferDatHitCount = 0;
     int i = 0;
     int total = xlsxRows.size();
     for (auto row : xlsxRows) {
@@ -211,6 +211,7 @@ int main(int argc, char **argv)
         }
         TRANSFER::Entry entry = TRANSFER::getEntryWithGtin(row[COLUMN_A]);
         if (!entry.ean13.empty()) {
+            transferDatHitCount++;
             std::stringstream stream1;
             stream1 << std::fixed << std::setprecision(2) << entry.price;
             sqlDb.bindText(cellIndex++, stream1.str());
@@ -233,6 +234,7 @@ int main(int argc, char **argv)
     REP::html_h2("Stats: ");
     REP::html_start_ul();
     REP::html_li("Row count: " + std::to_string(total));
+    REP::html_li("Prices via transfer.dat count: " + std::to_string(transferDatHitCount));
     REP::html_end_ul();
 
     return EXIT_SUCCESS;

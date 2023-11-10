@@ -47,8 +47,6 @@ void parseDAT(const std::string &filename) {
         double ppub_f = std::stod(ppub);
         entry.price = pexf_f / 100.0f;
         entry.pub_price = pexf_f / 100.0f;
-
-        std::cout << "entry.pharma_code: " << entry.pharma_code << " ean: " << entry.ean13 << " price: " << entry.price << std::endl;
         entries.insert(std::make_pair(ean13, entry));
     }
 }
