@@ -158,6 +158,7 @@ target_link_libraries(zurrose PUBLIC ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES} ${X
 
 add_executable(nonpharma
 	src/nonpharma/main.cpp
+	src/nonpharma/transfer.hpp src/nonpharma/transfer.cpp
 	src/sqlDatabase.hpp src/sqlDatabase.cpp
 	src/report.hpp src/report.cpp)
 target_include_directories(nonpharma PUBLIC "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/src/nonpharma")
