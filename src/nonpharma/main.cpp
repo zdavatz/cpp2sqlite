@@ -13,8 +13,12 @@
 
 #include <xlnt/xlnt.hpp>
 #include <sqlite3.h>
+#include <iomanip>
+#include <sstream>
 #include "sqlDatabase.hpp"
 #include "report.hpp"
+
+#include "transfer.hpp"
 
 #include "config.h"
 
@@ -107,10 +111,12 @@ void openDB(const std::string &filename)
         "gross_weight TEXT, "
         "netWeight TEXT, "
         "referenced_collection_list_uniform_resource_identifier TEXT, "
-        "packages_contained_amount TEXT "
+        "packages_contained_amount TEXT, "
+        "price TEXT, "
+        "pub_price TEXT "
     );
     sqlDb.prepareStatement(TABLE_NAME_NONPHARMA,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 }
 
 void closeDB()
@@ -177,6 +183,8 @@ int main(int argc, char **argv)
     
     // ////////////////////////////////////////////////////////////////////////////
 
+    TRANSFER::parseDAT(opt_inputDirectory + "/zurrose/transfer/transfer.dat");
+
     std::string reportFilename("nonpharma_report.html");
     std::string reportTitle("NONPHARMA Report");
     REP::init(opt_workDirectory + "/output/", reportFilename, reportTitle, false);
@@ -200,6 +208,19 @@ int main(int argc, char **argv)
         for (auto cell : row) {
             sqlDb.bindText(cellIndex, cell);
             cellIndex++;
+        }
+        TRANSFER::Entry entry = TRANSFER::getEntryWithGtin(row[COLUMN_A]);
+        if (!entry.ean13.empty()) {
+            std::stringstream stream1;
+            stream1 << std::fixed << std::setprecision(2) << entry.price;
+            sqlDb.bindText(cellIndex++, stream1.str());
+
+            std::stringstream stream2;
+            stream2 << std::fixed << std::setprecision(2) << entry.pub_price;
+            sqlDb.bindText(cellIndex++, stream2.str());
+        } else {
+            sqlDb.bindText(cellIndex++, "");
+            sqlDb.bindText(cellIndex++, "");
         }
         sqlDb.runStatement(TABLE_NAME_NONPHARMA);
         i++;
