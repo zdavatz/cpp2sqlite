@@ -13,8 +13,12 @@
 
 #include <xlnt/xlnt.hpp>
 #include <sqlite3.h>
+#include <iomanip>
+#include <sstream>
 #include "sqlDatabase.hpp"
 #include "report.hpp"
+
+#include "transfer.hpp"
 
 #include "config.h"
 
@@ -107,10 +111,12 @@ void openDB(const std::string &filename)
         "gross_weight TEXT, "
         "netWeight TEXT, "
         "referenced_collection_list_uniform_resource_identifier TEXT, "
-        "packages_contained_amount TEXT "
+        "packages_contained_amount TEXT, "
+        "price TEXT, "
+        "pub_price TEXT "
     );
     sqlDb.prepareStatement(TABLE_NAME_NONPHARMA,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 }
 
 void closeDB()
@@ -188,10 +194,12 @@ int main(int argc, char **argv)
     REP::html_end_ul();
 
     parseXLXS(opt_workDirectory + "/downloads/nonpharma.xlsx", false);
+    TRANSFER::parseDAT(opt_inputDirectory + "/zurrose/transfer/transfer.dat");
 
     std::string dbFilename = opt_workDirectory + "/output/nonpharma.db";
     openDB(dbFilename);
 
+    int transferDatHitCount = 0;
     int i = 0;
     int total = xlsxRows.size();
     for (auto row : xlsxRows) {
@@ -200,6 +208,20 @@ int main(int argc, char **argv)
         for (auto cell : row) {
             sqlDb.bindText(cellIndex, cell);
             cellIndex++;
+        }
+        TRANSFER::Entry entry = TRANSFER::getEntryWithGtin(row[COLUMN_A]);
+        if (!entry.ean13.empty()) {
+            transferDatHitCount++;
+            std::stringstream stream1;
+            stream1 << std::fixed << std::setprecision(2) << entry.price;
+            sqlDb.bindText(cellIndex++, stream1.str());
+
+            std::stringstream stream2;
+            stream2 << std::fixed << std::setprecision(2) << entry.pub_price;
+            sqlDb.bindText(cellIndex++, stream2.str());
+        } else {
+            sqlDb.bindText(cellIndex++, "");
+            sqlDb.bindText(cellIndex++, "");
         }
         sqlDb.runStatement(TABLE_NAME_NONPHARMA);
         i++;
@@ -212,6 +234,7 @@ int main(int argc, char **argv)
     REP::html_h2("Stats: ");
     REP::html_start_ul();
     REP::html_li("Row count: " + std::to_string(total));
+    REP::html_li("Prices via transfer.dat count: " + std::to_string(transferDatHitCount));
     REP::html_end_ul();
 
     return EXIT_SUCCESS;

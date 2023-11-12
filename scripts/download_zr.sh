@@ -55,6 +55,10 @@ curl -o Grippeimpfstoff.csv -O "${URL}"/Grippeimpfstoff.csv --user "${USERNAME_Z
 
 curl -o 19er_pharmaCodes.csv -O "${URL}/19er_pharmaCodes.csv" --user "${USERNAME_ZUR}:${PASSWORD_ZUR}"
 
+curl -o "transfer.zip" "http://pillbox.oddb.org/TRANSFER.ZIP" 
+
+unzip "transfer.zip" -d transfer
+
 popd
 
 
