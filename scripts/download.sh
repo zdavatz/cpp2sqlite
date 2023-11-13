@@ -301,3 +301,10 @@ fi
 if [ $STEP_DOWNLOAD_NONPHARMA ] ; then
     wget https://www.firstbase.ch/sites/default/files/2023-11/firstbase_healthcare_public_data-dump%2C%2020231109.xlsx -O nonpharma.xlsx
 fi
+
+if [ $STEP_DOWNLOAD_TRANSFER_ZIP ] ; then
+  curl -o "transfer.zip" "http://pillbox.oddb.org/TRANSFER.ZIP"
+  unzip "transfer.zip" -d transfer
+  rm transfer.zip
+fi
+

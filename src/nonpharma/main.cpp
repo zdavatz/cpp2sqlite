@@ -194,7 +194,7 @@ int main(int argc, char **argv)
     REP::html_end_ul();
 
     parseXLXS(opt_workDirectory + "/downloads/nonpharma.xlsx", false);
-    TRANSFER::parseDAT(opt_inputDirectory + "/zurrose/transfer/transfer.dat");
+    TRANSFER::parseDAT(opt_workDirectory + "/downloads/transfer/transfer.dat");
 
     std::string dbFilename = opt_workDirectory + "/output/nonpharma.db";
     openDB(dbFilename);
