@@ -299,7 +299,7 @@ fi
 fi
 
 if [ $STEP_DOWNLOAD_NONPHARMA ] ; then
-    wget https://www.firstbase.ch/sites/default/files/2023-11/firstbase_healthcare_public_data-dump%2C%2020231109.xlsx -O nonpharma.xlsx
+    wget https://www.firstbase.ch/sites/default/files/2023-12/firstbase_healthcare_public_data-dump.xlsx -O nonpharma.xlsx
 fi
 
 if [ $STEP_DOWNLOAD_TRANSFER_ZIP ] ; then
