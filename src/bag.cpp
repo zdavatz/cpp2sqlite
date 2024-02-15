@@ -317,7 +317,7 @@ std::string getPricesAndFlags(const std::string &gtin,
                 if (pre.sb == "Y")
                     flagsVector.push_back("SB 40%");
                 else if (pre.sb20 == "Y")
-                    flagsVector.push_back("SB 20%");
+                    flagsVector.push_back("SB 40%");
                 else if (pre.sb20 == "N" || pre.sb == "N")
                     flagsVector.push_back("SB 10%");
 
