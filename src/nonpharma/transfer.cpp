@@ -41,6 +41,10 @@ void parseDAT(const std::string &filename) {
         boost::algorithm::trim_left_if(ean13, boost::is_any_of("0"));
         entry.ean13 = ean13;
 
+        std::string description = str.substr(10, 50);
+        boost::algorithm::trim_right_if(description, boost::is_any_of(" "));
+        entry.description = description;
+
         std::string pexf = str.substr(60, 6);
         std::string ppub = str.substr(66, 6);
         double pexf_f = std::stod(pexf);
@@ -57,4 +61,10 @@ TRANSFER::Entry getEntryWithGtin(const std::string &gtin)
     boost::algorithm::trim_left_if(str, boost::is_any_of("0"));
     return entries[str];
 }
+
+std::map<std::string, TRANSFER::Entry> getEntries() {
+    return entries;
+}
+
+
 }

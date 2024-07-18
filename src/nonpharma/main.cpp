@@ -8,6 +8,7 @@
 
 #include <iostream>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
@@ -46,6 +47,7 @@ static std::string appName;
 static DB::Sql sqlDb;
 
 std::vector<std::vector<std::string>> xlsxRows;
+std::set<std::string> xlsxGtins;
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -209,7 +211,8 @@ int main(int argc, char **argv)
             sqlDb.bindText(cellIndex, cell);
             cellIndex++;
         }
-        TRANSFER::Entry entry = TRANSFER::getEntryWithGtin(row[COLUMN_A]);
+        std::string gtin = row[COLUMN_A];
+        TRANSFER::Entry entry = TRANSFER::getEntryWithGtin(gtin);
         if (!entry.ean13.empty()) {
             transferDatHitCount++;
             std::stringstream stream1;
@@ -224,6 +227,42 @@ int main(int argc, char **argv)
             sqlDb.bindText(cellIndex++, "");
         }
         sqlDb.runStatement(TABLE_NAME_NONPHARMA);
+        xlsxGtins.insert(gtin);
+        i++;
+    }
+
+    i = 0;
+    total = TRANSFER::getEntries().size();
+    for (auto pair : TRANSFER::getEntries()) {
+        auto entry = pair.second;
+        // #240 add Products from transfer.dat to nonpharma.db
+        if (!boost::starts_with(entry.ean13, "7680") && xlsxGtins.find(entry.ean13) == xlsxGtins.end()) {
+            sqlDb.bindText(1, entry.ean13); // "gtin TEXT, "
+            sqlDb.bindText(2, ""); // "gln TEXT, "
+            sqlDb.bindText(3, ""); // "target_market TEXT, "
+            sqlDb.bindText(4, ""); // "gpc TEXT, "
+            sqlDb.bindText(5, entry.description); // "trade_item_description_de TEXT, "
+            sqlDb.bindText(6, ""); // "trade_item_description_en TEXT, "
+            sqlDb.bindText(7, ""); // "trade_item_description_fr TEXT, "
+            sqlDb.bindText(8, ""); // "trade_item_description_it TEXT, "
+            sqlDb.bindText(9, ""); // "manufacturer_name TEXT, "
+            sqlDb.bindText(10, ""); // "start_availability_date TEXT, "
+            sqlDb.bindText(11, ""); // "gross_weight TEXT, "
+            sqlDb.bindText(12, ""); // "netWeight TEXT, "
+            sqlDb.bindText(13, ""); // "referenced_collection_list_uniform_resource_identifier TEXT, "
+            sqlDb.bindText(14, ""); // "packages_contained_amount TEXT, "
+
+            std::stringstream stream1;
+            stream1 << std::fixed << std::setprecision(2) << entry.price;
+            sqlDb.bindText(15, stream1.str()); // "price TEXT, "
+
+            std::stringstream stream2;
+            stream2 << std::fixed << std::setprecision(2) << entry.pub_price;
+            sqlDb.bindText(16, stream2.str()); // "pub_price TEXT "
+            sqlDb.runStatement(TABLE_NAME_NONPHARMA);
+        }
+
+        std::cerr << "\rAdding from transfer.dat " << 100*i/total << " % ";
         i++;
     }
 
