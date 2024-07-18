@@ -18,9 +18,12 @@ struct Entry
 public:
     std::string pharma_code;
     std::string ean13;
+    std::string description;
     double price;
     double pub_price;
 };
+
+std::map<std::string, TRANSFER::Entry> getEntries();
 
 void parseDAT(const std::string &filename);
 Entry getEntryWithGtin(const std::string &gtin);
