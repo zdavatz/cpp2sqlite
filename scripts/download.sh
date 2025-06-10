@@ -76,7 +76,7 @@ if validate_url $URL && validate_url $FILE1 ; then
     if [ -f $TEMP_FILE ] ; then
         rm $TEMP_FILE
     fi
-    
+
     # By now we know that $FILE1 is available. Try to download it with a different filename, before it can be validated
     wget -N $FILE1 -O $TEMP_FILE
 
@@ -94,7 +94,7 @@ if validate_url $URL && validate_url $FILE1 ; then
     else
         # Download and validation successful. Give it the intended name, possibly overwriting previous download
         mv -f $TEMP_FILE swissmedic_packages.xlsx
-    fi    
+    fi
 else
     echo "Swissmedic currently not available"
 fi
@@ -115,22 +115,18 @@ fi
 
 if [ $STEP_DOWNLOAD_REFDATA ] ; then
 
-URL="https://refdatabase.refdata.ch"  # article and partner
 TARGET=refdata_pharma.xml
 
-wget --post-file "$WD/ref.xml" \
-    --header "content-type: text/xml;charset=utf-8" \
-    --header "SOAPAction: http://refdatabase.refdata.ch/Pharma/Download" \
-    "$URL/Service/Article.asmx" -O temp.xml
+wget https://files.refdata.ch/simis-public-prod/Articles/1.0/Refdata.Articles.zip -O temp.zip
+unzip temp.zip Refdata.Articles.xml
 
-xmllint --format temp.xml > $TARGET
+xmllint --format Refdata.Articles.xml > $TARGET
 
-# Clean up soap tags, and xmlns
-sed -i -e '/<soap:/d' $TARGET
-sed -i -e '/<\/soap:/d' $TARGET
-sed -i -e 's/xmlns="[^"]*"//' $TARGET
+# Clean up xmlns
+sed -i -e 's/xmlns.*="[^"]*"//' $TARGET
+sed -i -e 's/xsi:.*="[^"]*"//' $TARGET
 
-rm temp.xml
+rm Refdata.Articles.xml
 rm $TARGET-e
 fi
 
