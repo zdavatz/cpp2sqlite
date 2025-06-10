@@ -26,7 +26,7 @@ namespace pt = boost::property_tree;
 namespace REFDATA
 {
     ArticleList artList;
-    
+
     unsigned int statsArticleChildCount = 0;
     unsigned int statsItemCount = 0;
 
@@ -38,7 +38,7 @@ void printFileStats(const std::string &filename)
     REP::html_h2("RefData");
     //REP::html_p(std::string(basename((char *)filename.c_str())));
     REP::html_p(filename);
-    
+
     REP::html_start_ul();
     REP::html_li("PHARMA items: " + std::to_string(statsItemCount));
     REP::html_li("PHARMA items with GTIN starting with \"7680\": " + std::to_string(artList.size()));
@@ -49,7 +49,7 @@ void printFileStats(const std::string &filename)
 void printUsageStats()
 {
     REP::html_h2("RefData");
-    
+
     REP::html_start_ul();
     REP::html_li("GTINs used: " + std::to_string(statsTotalGtinCount));
     REP::html_end_ul();
@@ -68,42 +68,44 @@ void parseXML(const std::string &filename,
     catch (std::exception &e) {
         std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
     }
-    
+
     std::clog << "Analyzing refdata" << std::endl;
 
     try {
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("ARTICLE")) {
+        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("Articles")) {
             statsArticleChildCount++;
-            if (v.first == "ITEM")
+            if (v.first == "Article")
             {
                 statsItemCount++;
 
-                std::string atype = v.second.get("ATYPE", "");
+                pt::ptree &medicinalProduct = v.second.get_child("MedicinalProduct");
+                pt::ptree &productClassification = medicinalProduct.get_child("ProductClassification");
+                std::string atype = productClassification.get<std::string>("ProductClass", "");
+
                 if (atype != "PHARMA")
                     continue;
 
-                std::string gtin = v.second.get<std::string>("GTIN", "");
+                pt::ptree &packagedProduct = v.second.get_child("PackagedProduct");
+                std::string gtin = packagedProduct.get<std::string>("DataCarrierIdentifier");
+
+                pt::ptree &nameElement = packagedProduct.get_child("Name");
 
                 // Check that GTIN starts with 7680
                 std::string gtinPrefix = gtin.substr(0,4); // pos, len
                 if (gtinPrefix != "7680") // 76=med, 80=Switzerland
                     continue;
-                
+
                 GTIN::verifyGtin13Checksum(gtin);
 
                 Article article;
                 article.gtin_13 = gtin;
                 article.gtin_5 = gtin.substr(4,5); // pos, len
-                article.phar = v.second.get<std::string>("PHAR", "");
-                article.name = v.second.get<std::string>(nameTag, "");
+                article.phar = ""; // No pharma code
+                article.name = nameElement.get<std::string>("FullName");
                 BEAUTY::beautifyName(article.name);
 
                 artList.push_back(article);
             }
-//            else {
-//                // one "<xmlattr>" and one "RESULT"
-//                std::cout << " v.first: " << v.first << std::endl;
-//            }
         }
 
         printFileStats(filename);
@@ -127,7 +129,7 @@ int getNames(const std::string &rn,
         if (art.gtin_5 == rn) {
             countAdded++;
             statsTotalGtinCount++;
-            
+
             std::string onePackageInfo;
 #ifdef DEBUG_IDENTIFY_NAMES
             onePackageInfo += "ref+";
@@ -144,10 +146,10 @@ int getNames(const std::string &rn,
             packages.name.push_back(onePackageInfo);
         }
     }
-    
+
     return countAdded;
 }
-    
+
 bool findGtin(const std::string &gtin)
 {
     for (Article art : artList)
@@ -166,7 +168,7 @@ std::string getPharByGtin(const std::string &gtin)
             phar = art.phar;
             break;
         }
-    
+
     return phar;
 }
 
