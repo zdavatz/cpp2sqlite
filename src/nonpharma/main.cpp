@@ -27,16 +27,18 @@
 #define COLUMN_B        1   // GLN
 #define COLUMN_C        2   // Zielmarkt
 #define COLUMN_D        3   // GPC Brick
-#define COLUMN_E        4   // Artikelbeschreibung / Sprache - de
-#define COLUMN_F        5   // Artikelbeschreibung / Sprache - en
-#define COLUMN_G        6   // Artikelbeschreibung / Sprache - fr
-#define COLUMN_H        7   // Artikelbeschreibung / Sprache - it
-#define COLUMN_I        8   // Hersteller: Name
-#define COLUMN_J        9   // Verfügbarkeit: Startdatum
-#define COLUMN_K        10  // Bruttogewicht
-#define COLUMN_L        11  // Nettogewicht
-#define COLUMN_M        12  // Verknüpfungsangaben zu externen Dateien - 1 - URI
-#define COLUMN_N        13  // Verpackung - 0 - Enthaltene Menge
+#define COLUMN_E        4   // Artikelbeschreibung / Sprache - da
+#define COLUMN_F        5   // Artikelbeschreibung / Sprache - de
+#define COLUMN_G        6   // Artikelbeschreibung / Sprache - en
+#define COLUMN_H        7   // Artikelbeschreibung / Sprache - fr
+#define COLUMN_I        8   // Artikelbeschreibung / Sprache - it
+#define COLUMN_J        9   // Hersteller: Name
+#define COLUMN_K        10  // Verfügbarkeit: Startdatum
+#define COLUMN_L        11  // Bruttogewicht
+#define COLUMN_M        12  // Nettogewicht
+#define COLUMN_N        13  // Verknüpfungsangaben zu externen Dateien - 0 - URI
+#define COLUMN_O        14  // Verknüpfungsangaben zu externen Dateien - 1 - URI
+#define COLUMN_P        15  // Verpackung - 0 - Enthaltene Menge
 
 #define FIRST_DATA_ROW_INDEX    2
 
@@ -104,6 +106,7 @@ void openDB(const std::string &filename)
         "gln TEXT, "
         "target_market TEXT, "
         "gpc TEXT, "
+        "trade_item_description_da TEXT, "
         "trade_item_description_de TEXT, "
         "trade_item_description_en TEXT, "
         "trade_item_description_fr TEXT, "
@@ -118,7 +121,7 @@ void openDB(const std::string &filename)
         "pub_price TEXT "
     );
     sqlDb.prepareStatement(TABLE_NAME_NONPHARMA,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 }
 
 void closeDB()
@@ -207,8 +210,12 @@ int main(int argc, char **argv)
     for (auto row : xlsxRows) {
         std::cerr << "\r" << 100*i/total << " % ";
         int cellIndex = 1;
+        int sqlIndex = 1;
         for (auto cell : row) {
-            sqlDb.bindText(cellIndex, cell);
+            if (cellIndex != 15) {
+                sqlDb.bindText(sqlIndex, cell);
+                sqlIndex++;
+            }
             cellIndex++;
         }
         std::string gtin = row[COLUMN_A];
@@ -217,14 +224,14 @@ int main(int argc, char **argv)
             transferDatHitCount++;
             std::stringstream stream1;
             stream1 << std::fixed << std::setprecision(2) << entry.price;
-            sqlDb.bindText(cellIndex++, stream1.str());
+            sqlDb.bindText(sqlIndex++, stream1.str());
 
             std::stringstream stream2;
             stream2 << std::fixed << std::setprecision(2) << entry.pub_price;
-            sqlDb.bindText(cellIndex++, stream2.str());
+            sqlDb.bindText(sqlIndex++, stream2.str());
         } else {
-            sqlDb.bindText(cellIndex++, "");
-            sqlDb.bindText(cellIndex++, "");
+            sqlDb.bindText(sqlIndex++, "");
+            sqlDb.bindText(sqlIndex++, "");
         }
         sqlDb.runStatement(TABLE_NAME_NONPHARMA);
         xlsxGtins.insert(gtin);
@@ -241,24 +248,25 @@ int main(int argc, char **argv)
             sqlDb.bindText(2, ""); // "gln TEXT, "
             sqlDb.bindText(3, ""); // "target_market TEXT, "
             sqlDb.bindText(4, ""); // "gpc TEXT, "
-            sqlDb.bindText(5, entry.description); // "trade_item_description_de TEXT, "
-            sqlDb.bindText(6, ""); // "trade_item_description_en TEXT, "
-            sqlDb.bindText(7, ""); // "trade_item_description_fr TEXT, "
-            sqlDb.bindText(8, ""); // "trade_item_description_it TEXT, "
-            sqlDb.bindText(9, ""); // "manufacturer_name TEXT, "
-            sqlDb.bindText(10, ""); // "start_availability_date TEXT, "
-            sqlDb.bindText(11, ""); // "gross_weight TEXT, "
-            sqlDb.bindText(12, ""); // "netWeight TEXT, "
-            sqlDb.bindText(13, ""); // "referenced_collection_list_uniform_resource_identifier TEXT, "
-            sqlDb.bindText(14, ""); // "packages_contained_amount TEXT, "
+            sqlDb.bindText(5, entry.description); // "trade_item_description_da TEXT, "
+            sqlDb.bindText(6, entry.description); // "trade_item_description_de TEXT, "
+            sqlDb.bindText(7, ""); // "trade_item_description_en TEXT, "
+            sqlDb.bindText(8, ""); // "trade_item_description_fr TEXT, "
+            sqlDb.bindText(9, ""); // "trade_item_description_it TEXT, "
+            sqlDb.bindText(10, ""); // "manufacturer_name TEXT, "
+            sqlDb.bindText(11, ""); // "start_availability_date TEXT, "
+            sqlDb.bindText(12, ""); // "gross_weight TEXT, "
+            sqlDb.bindText(13, ""); // "netWeight TEXT, "
+            sqlDb.bindText(14, ""); // "referenced_collection_list_uniform_resource_identifier TEXT, "
+            sqlDb.bindText(15, ""); // "packages_contained_amount TEXT, "
 
             std::stringstream stream1;
             stream1 << std::fixed << std::setprecision(2) << entry.price;
-            sqlDb.bindText(15, stream1.str()); // "price TEXT, "
+            sqlDb.bindText(16, stream1.str()); // "price TEXT, "
 
             std::stringstream stream2;
             stream2 << std::fixed << std::setprecision(2) << entry.pub_price;
-            sqlDb.bindText(16, stream2.str()); // "pub_price TEXT "
+            sqlDb.bindText(17, stream2.str()); // "pub_price TEXT "
             sqlDb.runStatement(TABLE_NAME_NONPHARMA);
         }
 
