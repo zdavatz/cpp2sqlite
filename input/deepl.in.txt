@@ -87,6 +87,7 @@ Amiodaron hemmt CYP3A4 und CYP2C9 und damit auch den Metabolismus von Phenprocou
 Amiodaron hemmt CYP3A4 und P-Glykoprotein und damit auch den Abbau bzw. Transport von Rivaroxaban.
 Amiodaron hemmt CYP3A4 und damit auch den Metabolismus von Atorvastatin.
 Amiodaron hemmt CYP3A4 und damit auch den Metabolismus von Simvastatin.
+Amiodaron hemmt CYP3A4, was zu einer verminderten Metabolisierung von Budesonid führen kann.
 Amiodaron hemmt den Abbau von Ciclosporin via CYP3A4. 
 Amiodaron hemmt u.a. CYP2C9 und dadurch auch den Metabolismus von Phenytoin.
 Amiodaron steigert den Plasmaspiegel von CYP2C9-Substraten wie Losartan durch die Hemmung des Cytochroms P450 2C9. Dies kann zu erhöhten Plasmaspiegeln von Losartan (Prodrug) und einem verringerten Plasmaspiegel des aktiven Metaboliten führen.
@@ -185,6 +186,7 @@ Azithromycin hemmt CYP3A4 sehr gering. Damit ist auch nur ein sehr geringer Einf
 Azithromycin interagiert nicht wesentlich mit dem hepatischen Cytochrom P450-System. Eine starke Inhibition des CYP3A4-vermittelten Metabolismus von Dihydroergotamin wie z.B. bei Clarithromycin ist daher nicht zu erwarten.
 Azithromycin ist Substrat von CYP3A4, beeinflusst CYP3A4 jedoch nicht relevant. Carbamazepin ist u.a. Substrat und Induktor von CYP3A4. 
 Azol-Antimykotika wie Itraconazol, Ketoconazol, Voriconazol und Posaconazol hemmen CYP3A4 und damit auch den Abbau von Quetiapin. 
+Ballaststoffe wie Psyllium können die Resorption von Phenprocoumon vermindern.
 Bei Beginn der Terbinafintherapie sollten die Desipramindosis reduziert werden. Desipraminspiegel monitorisieren. Alternative zu Terbinafin wäre beispielsweise Itraconazol.
 Bei COPD können kardioselektive Beta-Blocker in möglichst niedriger Dosis eingesetzt werden, wenn der zu erwartende Nutzen die Risiken überwiegt. EKG- und Blutdruckkontrollen sollten regelmässig durchgeführt werden und sorgfältig auf Anzeichen einer unzureichenden Bronchodilatation/Entzündungshemmung geachtet werden. Sollte der Einsatz nicht zwingend indiziert sein, ist auf die Kombination zu verzichten.
 Bei Diabetikern ist vor allem zu Beginn einer Behandlung mit Schilddrüsenhormonen der Blutzuckerspiegel regelmässig zu kontrollieren und ggf. die Dosierung der Antidiabetika anzupassen.
@@ -383,6 +385,7 @@ Bosentan ist ein Induktor von CYP3A4  und beschleunigt darüber den Abbau von Ta
 Brivudin hemmt durch seinen Hauptmetaboliten Bromovinyluracil (BVU) die Dihydropyrimidindehydrogenase (DPD) irreversibel. Das Enzym DPD reguliert den Abbau u.a. von 5-Fluorouracil (5-FU). Capecitabin ist ein Prodrug von 5-FU. Die Hemmung von DPD führt zu einer Akkumulation und verstärkten Toxizität von 5-FU und anderen Fluoropyrimidinen.
 Brivudin hemmt durch seinen Hauptmetaboliten Bromovinyluracil (BVU) die Dihydropyrimidindehydrogenase (DPD) irreversibel. Das Enzym DPD reguliert den Abbau u.a. von 5-Fluorouracil (5-FU). Die Hemmung von DPD führt zu einer Akkumulation und verstärkten Toxizität von 5-FU und anderen Fluoropyrimidinen.
 Brivudin hemmt durch seinen Hauptmetaboliten Bromovinyluracil (BVU) die Dihydropyrimidindehydrogenase (DPD) irreversibel. Das Enzym DPD reguliert den Abbau von Fluoropyrimidinen wie Flucytosin. Die Hemmung von DPD führt zu einer Akkumulation und verstärkten Toxizität von Flucytosin und anderen Fluoropyrimidinen.
+Budesonid kann durch CYP3A4-Inhibition von Amiodaron in seiner systemischen Konzentration erhöht werden.
 Buprenorphin hat eine langanhaltende, partiell agonistische Wirkung auf µ-Rezeptoren und ist ein κ-Rezeptor-Antagonist. Codein hingegen ist ein reiner µ-Opioid-Agonist. Aufgrund dieser unterschiedlichen Wirkung an den Opioidrezeptoren sind bei der Kombination sowohl additive Effekte (ZNS-Depression) als auch sich gegenseitig antagonisierende Effekte (Entzugssymptome) möglich.
 Buprenorphin hat eine langanhaltende, partiell agonistische Wirkung auf µ-Rezeptoren und ist ein κ-Rezeptor-Antagonist. Methadon hingegen ist ein reiner µ-Opioid-Agonist. Aufgrund dieser unterschiedlichen Wirkung an den Opioidrezeptoren sind bei der Kombination sowohl additive Effekte (ZNS-Depression) als auch sich gegenseitig antagonisierende Effekte (Entzugssymptome) möglich.
 Buprenorphin hat eine langanhaltende, partielle Agonist/Antagonist-Wirkung auf µ-Rezeptoren. Morphin ist ein reiner Opiat-Agonist und wirkt ebenfalls an den µ-Rezeptoren. Additive Wirkverstärkungen sind möglich.
@@ -1136,6 +1139,7 @@ Eine zusätzliche Kontrazeption mit Barrieremethoden ist zu empfehlen und die Ko
 Eine zusätzliche Kontrazeption mit Barrieremethoden ist zu empfehlen. Die Monatsblutung sollte beobachtet und jede Veränderung dem Arzt berichtet werden.
 Eine Überwachung des EKGs und des Blutdrucks ist notwendig, wenn die Kombination eingesetzt werden soll. Gemäss Schweizer Fachinformation sollten Calciumantagonisten während einer Behandlung mit Carvedilol nicht intravenös verabreicht werden.
 Einige Statine wie zum Beispiel Simvastatin und Atorvastatin hemmen das P-Glykoprotein und damit auch den Metabolismus von Aliskiren.
+Einnahme von Psyllium und Marcoumar zeitlich versetzt (mindestens 2 Stunden).
 Emtricitabin und Tenofovir werden nur zu einem geringen Teil metabolisiert und haben kaum Einfluss auf Enzyme des CYP450-Systems (kein Einfluss auf CYP3A4 und CYP2C9, über welche Sildenafil metabolisiert wird).
 Emtricitabin und Tenofovir werden nur zu einem geringen Teil metabolisiert und haben kaum Einfluss auf Enzyme des CYP450-Systems (kein Einfluss auf CYP3A4 und CYP2C9, über welche Vardenafil metabolisiert wird).
 Emtricitabin und Tenofovir werden nur zu einem geringen Teil metabolisiert und haben kaum Einfluss auf Enzyme des CYP450-Systems (kein Einfluss auf CYP3A4, über welches Tadalafil grossteils metabolisiert wird).
@@ -1881,6 +1885,7 @@ Klinische Wirksamkeit der Hormonersatztherapie unter Johanniskraut sorgfältig m
 Klinische Wirksamkeit der Hormonersatztherapie unter Rifabutin sorgfältig monitorisieren. 
 Klinische Wirksamkeit der Hormonersatztherapie unter Rifampicin sorgfältig monitorisieren. 
 Klinische Wirksamkeit der Hormonersatztherapie unter enzyminduzierenden Antiepileptika sorgfältig monitorisieren. 
+Klinische Überwachung auf systemische Kortikosteroidwirkungen, insbesondere bei Langzeitanwendung.
 Klinisches Monitoring auf Zeichen einer Neurotoxizität (siehe Effekt im Detail). 
 Klinisches Monitoring auf Zeichen einer Neurotoxizität wie beschrieben, EKG-Kontrolle (QT-Zeit-Verlängerung / Arrhythmien).
 Klinisches Monitoring auf Zeichen einer Rhabdomyolyse.
@@ -2182,6 +2187,7 @@ Protonenpumpenhemmer erhöhen den pH im Magen und dadurch ist die Resorption von
 Präparate, die mehrwertige Kationen enthalten (wie Calcium, Magnesium, Aluminium, Eisen, Multivitamintabletten) sollten frühestens 30 Minuten nach Risedronat eingenommen werden. 
 Präparate, die mehrwertige Kationen enthalten (wie Calcium, Magnesium, Aluminium, Eisen, Multivitamintabletten) sollten frühestens 30-60 Minuten nach oral verabreichtem Ibandronat eingenommen werden. 
 Präparate, die mehrwertige Kationen enthalten (wie Magnesium, Calcium, Aluminium, Multivitamintabletten) sollten frühestens eine halbe Stunde nach Alendronat eingenommen werden. 
+Psyllium bildet ein Gel im Darm, das die Aufnahme fettlöslicher oder proteingebundener Substanzen wie Phenprocoumon verringern kann.
 Pyrazinamid kann zu schweren Leberfunktionsstörungen und -entzündungen führen. Bei der Metabolisierung von Paracetamol werden toxische Metaboliten (NAPQI) von Paracetamol gebildet. Das Risiko für Hepatotoxizität erhöht sich daher.
 QT-Zeit-Verlängerung
 Quetiapin und Clozapin können jeweils das QTc-Intervall im EKG verlängern. 
