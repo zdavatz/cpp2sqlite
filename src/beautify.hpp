@@ -11,6 +11,7 @@
 #define beautify_hpp
 
 #include <iostream>
+#include <boost/property_tree/ptree.hpp>
 #include "gtin.hpp"
 
 // Fool boost parser so it doesn't create children for "<sub>" and "<sup>" and "<br />"
@@ -23,13 +24,17 @@
 
 namespace BEAUTY
 {
+    namespace pt = boost::property_tree;
     void beautifyName(std::string &name);
     //void sort(std::string &packInfo, std::set<std::string> &gtinUsed);
     void sort(GTIN::oneFachinfoPackages &packages);
-    
+
     void cleanupForNonHtmlUsage(std::string &xml);
     void cleanupXml(std::string &xml,
                     const std::string regnrs);
+    std::string escapeHtml(std::string str);
+    void cleanUpSpan(pt::ptree &tree);
+    std::string getFlatPTreeContent(pt::ptree tree);
 }
 
 #endif /* beautify_hpp */
