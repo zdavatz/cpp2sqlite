@@ -161,6 +161,10 @@ MedicineList & parseXML(const std::string &filename,
                 continue;
             }
 
+            if (v.second.get("Domain", "") != "Human") {
+                continue;
+            }
+
             std::string typ;
             // Mapping: https://github.com/zdavatz/cpp2sqlite/issues/252
             if (v.second.get("Type", "") == "SmPC") {
