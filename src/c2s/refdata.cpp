@@ -172,4 +172,26 @@ std::string getPharByGtin(const std::string &gtin)
     return phar;
 }
 
+std::regex sectionIdRegex(R"(^section\d+$)");
+void findSectionIdsAndTitle(
+    pt::ptree tree,
+    std::vector<std::string> &sectionIds,
+    std::vector<std::string> &sectionTitles
+) {
+    BOOST_FOREACH(pt::ptree::value_type &v, tree) {
+        std::string idAttr = v.second.get<std::string>("<xmlattr>.id", "");
+
+        std::smatch match;
+        if (std::regex_search(idAttr, match, sectionIdRegex)) {
+            std::string sectionId = match[0];
+            std::string sectionTitle = BEAUTY::getFlatPTreeContent(v.second);
+            BEAUTY::cleanupForNonHtmlUsage(sectionTitle);
+            sectionIds.push_back(sectionId);
+            sectionTitles.push_back(sectionTitle);
+        } else {
+            findSectionIdsAndTitle(v.second, sectionIds, sectionTitles);
+        }
+    }
+}
+
 }

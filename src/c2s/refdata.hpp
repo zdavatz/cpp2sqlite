@@ -39,6 +39,11 @@ namespace REFDATA
     std::string getPharByGtin(const std::string &gtin);
 
     void printUsageStats();
+    void findSectionIdsAndTitle(
+        pt::ptree tree,
+        std::vector<std::string> &sectionIds,
+        std::vector<std::string> &sectionTitles
+    );
 }
 
 #endif /* refdata_hpp */
