@@ -13,6 +13,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
+#include <regex>
 
 #include "refdata.hpp"
 #include "gtin.hpp"
@@ -81,6 +82,8 @@ void parseXML(const std::string &filename,
                 pt::ptree &medicinalProduct = v.second.get_child("MedicinalProduct");
                 pt::ptree &productClassification = medicinalProduct.get_child("ProductClassification");
                 std::string atype = productClassification.get<std::string>("ProductClass", "");
+                std::string atc = productClassification.get<std::string>("Atc", "");
+                std::string authorisationIdentifier = medicinalProduct.get<std::string>("RegulatedAuthorisationIdentifier", "");
 
                 if (atype != "PHARMA")
                     continue;
@@ -102,6 +105,8 @@ void parseXML(const std::string &filename,
                 article.gtin_5 = gtin.substr(4,5); // pos, len
                 article.phar = ""; // No pharma code
                 article.name = nameElement.get<std::string>("FullName");
+                article.atc = atc;
+                article.authorisation_identifier = authorisationIdentifier;
                 BEAUTY::beautifyName(article.name);
 
                 artList.push_back(article);
@@ -157,6 +162,17 @@ bool findGtin(const std::string &gtin)
             return true;
 
     return false;
+}
+
+std::string findAtc(const std::string &regnrs) {
+    for (Article art : artList) {
+        // std::clog << "authorisation_identifier: " << art.authorisation_identifier << " size: " << std::to_string(art.authorisation_identifier.size()) << std::endl;
+        // std::clog << "finding " << (art.authorisation_identifier.size() >= 5 ? art.authorisation_identifier.substr(0, 5) : "xx") << " with " << regnrs << std::endl;
+        if (art.authorisation_identifier.size() >= 5 && art.authorisation_identifier.substr(0, 5) == regnrs) {
+            return art.atc;
+        }
+    }
+    return "";
 }
 
 std::string getPharByGtin(const std::string &gtin)
