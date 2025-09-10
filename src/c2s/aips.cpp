@@ -18,7 +18,6 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/string_file.hpp>
 
 #include "aips.hpp"
 #include "atc.hpp"
@@ -234,21 +233,21 @@ MedicineList & parseXML(const std::string &filename,
                     std::string htmlFilename = std::filesystem::path(url).filename();
                     std::string downloadFolderPath = std::filesystem::path(filename).parent_path();
                     std::string htmlPath = downloadFolderPath + "/Refdata-AllHtml/" + htmlFilename;
-                    std::ifstream in(htmlPath, std::ios::in | std::ios::binary);
-                    if (in)
+                    if (std::filesystem::exists(htmlPath))
                     {
-                        Med.content = (std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>()));
+                        Med.contentHTMLPath = htmlPath;
                     } else {
-                        statsMissingContentHtml.push_back(htmlFilename);
-                        std::clog << "File not found: " << htmlPath << std::endl;
+                        statsMissingContentHtml.push_back("Regnrs: " + Med.regnrs + " html: " + htmlFilename);
                     }
                     break;
                 }
 
                 //std::cerr << "title: " << Med.title << ", atc: " << Med.atc << ", subst: " << Med.subst << std::endl;
 
+                if (!Med.contentHTMLPath.empty()) {
                 medList.push_back(Med);
             }
+        }
         }
 
         printFileStats(filename, language, type);
