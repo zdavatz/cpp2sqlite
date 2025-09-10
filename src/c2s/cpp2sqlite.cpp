@@ -24,6 +24,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -79,6 +80,8 @@ constexpr std::string_view TABLE_NAME_ANDROID = "android_metadata";
 
 static std::string appName;
 std::map<std::string, std::string> statsTitleStrSeparatorMap;
+std::vector<std::string> statsInvalidContentHTML;
+std::vector<std::string> statsATCNotFound;
 static DB::Sql sqlDb;
 
 void on_version()
@@ -293,8 +296,8 @@ void getHtmlFromXml(std::string &xml,
                     std::string regnrs,
                     std::string ownerCompany,
                     const GTIN::oneFachinfoPackages &packages, // for barcodes
-                    std::vector<std::string> &sectionId,
-                    std::vector<std::string> &sectionTitle,
+                    std::vector<std::string> &sectionIds,
+                    std::vector<std::string> &sectionTitles,
                     const std::string atc,
                     const std::string language,
                     bool verbose,
@@ -305,6 +308,11 @@ void getHtmlFromXml(std::string &xml,
     return;
 #endif
 
+    if (xml.empty()) {
+        html = xml;
+        return;
+    }
+
 #ifdef DEBUG
     if (atc.empty())
         std::clog << basename((char *)__FILE__) << ":" << __LINE__
@@ -312,427 +320,88 @@ void getHtmlFromXml(std::string &xml,
         << std::endl;
 #endif
 
-    //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << regnrs << std::endl;
+    // Fix broken HTML
+    {
+        BEAUTY::cleanupForNonHtmlUsage(xml);
+        boost::replace_all(xml, "\ufeff", "");
 
-    BEAUTY::cleanupXml(xml, regnrs);  // and escape some children tags
+        // Somehow the html files are so broken they has 2 xml declaration,
+        // remove them all and add one back at last
+        boost::replace_all(xml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
+
+        // Somehow the html files are so broken, it starts with <div> instead of <html>
+        // but interestingly with </html>
+        std::regex r1("^\\s*<div ");
+        xml = std::regex_replace(xml, r1, "<html ");
+
+        xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + xml;
+    }
 
     pt::ptree tree;
     try {
         std::stringstream ss;
         ss << xml;
         pt::read_xml(ss, tree);
-    }
-    catch (std::exception &e) {
-        // Sometimes the source html is invalid. e.g.g <div>ABC/div>
-        // https://github.com/zdavatz/cpp2sqlite/issues/191
-        std::regex r1(R"(([^<])/div>)");
-        xml = std::regex_replace(xml, r1, "$1</div>");
-
-        std::stringstream ss;
-        ss << xml;
-        pt::read_xml(ss, tree);
-    }
-    int sectionNumber = 0;
-    unsigned int statsParCount=0;
-    bool section1Done = false;
-    bool section18Done = false;
-
-    html = "<html>\n";
-    html += " <head></head>\n";
-    html += " <body>\n";
-
-    bool hasXmlHeader = boost::starts_with(xml, "<?xml version");
-    if (!hasXmlHeader) {
-
-#ifdef DEBUG
-        //std::clog << "XML TYPE 2, regnrs " << regnrs << std::endl;
-#endif
-
-        // Title
-        // All we have to do for XML "type 2" is add an attribute
-        // id="section1" end clean up the "<br />"
-
-        // Extract the title
-        std::regex rgx(R"(<div class=\"MonTitle\">(.*)</div>)");    // tested at https://regex101.com
-        std::smatch match;
-        if (std::regex_search(xml, match, rgx)) {
-            std::string title = match[match.size() - 1];
-
-            // Note: the title from "MonTitle" is used in two places in AmiKo,
-            // in the middle pane (HTML), and on the right pane (chapter name)
-
-            // Restore children tags
-            boost::replace_all(title, ESCAPED_SUB_L, "<sub>");
-            boost::replace_all(title, ESCAPED_SUB_R, "</sub>");
-            boost::replace_all(title, ESCAPED_SUP_L, "<sup>");
-            boost::replace_all(title, ESCAPED_SUP_R, "</sup>");
-            boost::replace_all(title, ESCAPED_BR,    "<br />");
-
-            // HTML
-            std::string titleDiv = "   <div class=\"MonTitle\" id=\"section1\">\n";
-            titleDiv += title + "\n";
-            titleDiv += "   </div>\n";
-            xml = std::regex_replace(xml, rgx, titleDiv);
-
-            // Note: "ownerCompany" is a separate "<div>" between section 1 and section 2
-            // It's already there for XML type 2
-
-            // Chapter name
-            sectionId.push_back("Section1");
-            cleanupSection_1_Title(title);
-            // Some titles have another "<br />" in the middle
-            // Leave it there for the HTML above
-            // Remove it for the section 1 chapter name
-            // For other section numbers see 'cleanupSection_not1_Title()'
-            boost::replace_first(title, "<br />", " ");
-            sectionTitle.push_back(title);
-        } // if MonTitle
-
-        // Extract chapter list
-        const std::string sectIdText("id=\"Section");
-        const std::string sectTitleText("<div class=\"absTitle\">");
-        const std::string divFromText("<div class=\"paragraph\" id=\"Section");
-
-        std::string::size_type posDivFrom = xml.find(divFromText);
-        while (posDivFrom != std::string::npos) {
-
-            // Append 'section#' to a vector to be used in column "ids_str"
-            std::string::size_type posIdFrom = xml.find("Section", posDivFrom);
-            std::string::size_type posIdTo   = xml.find("\">", posIdFrom);
-            std::string sId = xml.substr(posIdFrom, posIdTo - posIdFrom);
-            sectionNumber = std::stoi(sId.substr(7)); // "Section"
-            sectionId.push_back(sId);
-
-            // Append the section name to a vector to be used in column "titles_str"
-            std::string::size_type posTitleFrom = xml.find(sectTitleText, posDivFrom + divFromText.length());
-            std::string::size_type posTitleTo   = xml.find("</div>", posTitleFrom);
-            std::string::size_type from = posTitleFrom + sectTitleText.length();
-            std::string sTitle = xml.substr(from, posTitleTo - from);
-            sectionTitle.push_back(sTitle);
-
-#ifdef DEBUG
-            //std::clog << sId << ", " << sTitle << ", " << sectionNumber << std::endl;
-#endif
-
-            // Next
-            posDivFrom = xml.find(divFromText, posDivFrom + divFromText.length());
-        }
-
-        // Insert barcodes
-        std::string htmlBarcodes = getBarcodesFromGtins(packages, language, sectionId, sectionTitle);
-        std::string barcodeFromText("<div class=\"absTitle\">Packungen</div>");
-        if (language == "fr")
-            barcodeFromText = "<div class=\"absTitle\">Présentation</div>";
-        std::string::size_type posBarcodeFrom = xml.find(barcodeFromText);
-        std::string::size_type from = posBarcodeFrom + barcodeFromText.length();
-        std::string::size_type posBarcodeTo = xml.find("</div>", from);
-        if (posBarcodeFrom != std::string::npos && posBarcodeTo != std::string::npos) {
-            xml.replace(from, posBarcodeTo - from, "\n" + htmlBarcodes);
-        }
-
-#ifdef WORKAROUND_SUB_SUP_BR
-        // Restore children
-        boost::replace_all(xml, ESCAPED_SUP_L, "<sup>");
-        boost::replace_all(xml, ESCAPED_SUP_R, "</sup>");
-        boost::replace_all(xml, ESCAPED_SUB_L, "<sub>");
-        boost::replace_all(xml, ESCAPED_SUB_R, "</sub>");
-        boost::replace_all(xml, ESCAPED_BR,    "<br />");
-#endif
-
-        // Remove the closing "</div>".
-        // We'll put it back later after adding the last two extra sections: "peddose" and "auto-generated"
-        size_t lastindex = xml.rfind("</div>"); // find_last_of() would return the pos at the end of the suffix
-        xml = xml.substr(0, lastindex);
-
-        // This type of XML requires very little processing
-        html += xml;
-
-        goto doExtraSections;
-    }
-
-    html += "  <div id=\"monographie\" name=\"" + regnrs + "\">\n\n";
-
-    try {
-        BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("div")) {
-
-            // The following call changes "&lt;" into "<"
-            // "&amp;" into "&"
-            std::string tagContent = v.second.data();
-
-            // Don't skip XML tags with empty content because all tables are like that
-//            if (tagContent.empty()) {
-//                std::clog << basename((char *)__FILE__) << ":" << __LINE__ << std::endl;
-//                continue;
-//            }
-
-#ifdef DEBUG_SUB_SUP_TRACE
-            std::string::size_type pos = tagContent.find(ESCAPED_SUP_L);
-            if (pos != std::string::npos) {
-                std::clog
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << ", found \"" << tagContent.substr(pos,28) << "\""
-                << ", pos:" << pos
-                << std::endl;
-            }
-
-            pos = tagContent.find("<sup>");
-            if (pos != std::string::npos) {
-                std::clog
-                << basename((char *)__FILE__) << ":" << __LINE__
-                << ", found \"" << tagContent.substr(pos,28) << "\""
-                << ", pos:" << pos
-                << std::endl;
-            }
-#endif
-
-            // Undo then undesired replacements done by boost xml_parser
-#ifdef USE_BOOST_FOR_REPLACEMENTS
-            // Modify the content, not the HTML tags
-            if (!tagContent.empty()) {
-                boost::replace_all(tagContent, "<", "&lt;");
-                boost::replace_all(tagContent, ">", "&gt;");
-                boost::replace_all(tagContent, "'", "&apos;");
-                boost::replace_all(tagContent, " & ", " &amp; "); // rn 66547, section 20, French
-            }
-
-#ifdef WORKAROUND_SUB_SUP_BR
-            // Restore children
-            boost::replace_all(tagContent, ESCAPED_SUP_L, "<sup>");
-            boost::replace_all(tagContent, ESCAPED_SUP_R, "</sup>");
-            boost::replace_all(tagContent, ESCAPED_SUB_L, "<sub>");
-            boost::replace_all(tagContent, ESCAPED_SUB_R, "</sub>");
-            boost::replace_all(tagContent, ESCAPED_BR,    "<br />");
-#endif
-#else
-            std::regex r1("<");
-            tagContent = std::regex_replace(tagContent, r1, "&lt;");
-
-            std::regex r2(">");
-            tagContent = std::regex_replace(tagContent, r2, "&gt;");
-
-            //std::regex r3("'");
-            //tagContent = std::regex_replace(tagContent, r3, "&apos;");
-#endif
-
-            if (v.first == "p")
-            {
-                ++statsParCount;
-
-                bool isSection = true;
-                std::string section;
-                try {
-                    section = v.second.get<std::string>("<xmlattr>.id");
-
-#if 0
-                    if (section.substr(1,6) != "ection") // section or Section
-                        std::cout
-                        << basename((char *)__FILE__) << ":" << __LINE__
-                        << ", Warning - rn " << regnrs
-                        << ", unexpected attribute id=\"" << section << "\""
-                        << std::endl;
-#endif
-
-                    sectionNumber = std::stoi(section.substr(7));  // from position 7 to end
-
-                    // Append the section name to a vector to be used in column "titles_str"
-                    // Make sure it doesn't already contain the separator ";"
-                    boost::replace_all(tagContent, "Ò", "®"); // see HtmlUtils.java:636
-                    if (language == "de")
-                        boost::replace_all(tagContent, "â", "®");
-
-                    boost::replace_all(tagContent, "&apos;", "'");
-
-                    std::string chapterName = tagContent;
-                    cleanupSection_not1_Title(chapterName, regnrs);
-
-                    sectionTitle.push_back(chapterName);
-                    // Append 'section#' to a vector to be used in column "ids_str"
-                    sectionId.push_back(section);
-
-                    std::string divClass;
-                    if (sectionNumber == 1) {
-                        divClass = "MonTitle";
-                    }
-                    else {
-                        divClass = "paragraph";
-                        tagContent = " <div class=\"absTitle\">\n " + tagContent + "\n </div>\n";
-                    }
-
-                    if (sectionNumber > 1)
-                        html += "   </div>\n"; // terminate previous section before starting a new one
-
-                    html += "   <div class=\"" + divClass + "\" id=\"" + section + "\">\n";
-                    html += tagContent + "\n";
-                    //html += "   </div>\n";  // don't terminate the div as yet
-#if 0
-                    std::clog
-                    << basename((char *)__FILE__) << ":" << __LINE__
-                    << ", p count " << statsParCount
-                    << ", attr id: <" << section << ">"
-                    << ", nr: <" << sectionNumber << ">"
-                    << std::endl;
-#endif
-                    if (sectionNumber == 1) {
-                        // ownerCompany is a separate div between section 1 and section 2
-                        html += "   </div>\n";  // terminate previous section
-                        html += "   <div class=\"ownerCompany\">\n";
-                        html += "    <div style=\"text-align: right;\">\n   ";
-                        html += ownerCompany + "\n";
-                        html += "    </div>\n";
-                        //html += "   </div>\n";    // don't terminate the div as yet
-                        section1Done = true;
-                    }
-
-                    // see RealExpertInfo.java:1562
-                    // see BarCode.java:77
-                    if (sectionNumber == 18) {
-                        html += getBarcodesFromGtins(packages, language, sectionId, sectionTitle);
-                        section18Done = true;
-                    }
-
-                    continue;
-                }
-                catch (std::exception &e) {
-                    isSection = false;
-                    //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
-                }  // try section
-
-                // Skip before section 1
-                if (!section1Done)
-                    continue;
-
-                // Skip all the remaining before section 2
-                if ((sectionNumber < 2) && (section1Done))
-                    continue;
-
-                //if (sectionNumber == 13) images can be anywhere
-                {
-                    bool imgFound = false;
-                    BOOST_FOREACH(pt::ptree::value_type &v2, v.second) {
-                        if (v2.first == "img") {
-                            imgFound = true;
-
-                            std::string img = "<img";
-
-                            std::string src = v2.second.get<std::string>("<xmlattr>.src");
-                            img += " Src=\"" + src + "\"";
-
-                            std::string style = v2.second.get<std::string>("<xmlattr>.style");
-                            if (!style.empty())
-                                img += " Style=\"" + style + "\"";
-
-                            std::string alt;
-                            try {
-                                alt = v2.second.get<std::string>("<xmlattr>.alt");
-                                if (!alt.empty())
-                                    img += " Alt=\"" + alt + "\"";
-                            }
-                            catch (std::exception &e) {
-                                AIPS::addStatsMissingAlt(regnrs,sectionNumber);
-                            }
-
-                            img += " />";
-
-                            html += "  <p class=\"spacing1\">" + img + "</p>\n";
-                        }
-                    } // BOOST
-
-                    if (imgFound)
-                        continue;  // already added this <p> to html
-                }
-
-                // Skip all the remaining in section 18
-                if ((sectionNumber == 18) && (section18Done))
-                    continue;
-
-                // See HtmlUtils.java:472
-                bool needItalicSpan = true;
-                boost::algorithm::trim(tagContent); // sometimes it ends with ". "
-
-                if (tagContent.empty()) // for example in rn 51704
-                    continue; // TBC
-
-                if (boost::ends_with(tagContent, ".") ||
-                    boost::ends_with(tagContent, ",") ||
-                    boost::ends_with(tagContent, ":") ||
-                    boost::contains(tagContent, "ATC-Code") ||
-                    boost::contains(tagContent, "Code ATC"))
-                {
-                    needItalicSpan = false;
-                }
-
-                // See HtmlUtils.java:602
-#if 0
-                std::regex r("^[–|·|-|•]");
-                tagContent = std::regex_replace(tagContent, r, "– "); // FIXME: it becomes "– \200\223 "
-#else
-                if (boost::starts_with(tagContent, "–")) {      // en dash
-                    boost::replace_first(tagContent, "–", "– ");
-                    needItalicSpan = false;
-                }
-                else if (boost::starts_with(tagContent, "·")) {
-                    boost::replace_first(tagContent, "·", "– ");
-                    needItalicSpan = false;
-                }
-                else if (boost::starts_with(tagContent, "-")) { // hyphen
-                    boost::replace_first(tagContent, "-", "– ");
-                    needItalicSpan = false;
-                }
-                else if (boost::starts_with(tagContent, "•")) {
-                    boost::replace_first(tagContent, "•", "– ");
-                    needItalicSpan = false;
-                }
-//                else if (boost::starts_with(tagContent, "*")) {  // TBC see table footnote for rn 51704
-//                    needItalicSpan = false;
-//                }
-#endif
-
-                if (needItalicSpan)
-                    tagContent = "<span style=\"font-style:italic;\">" + tagContent + "</span>";
-
-                html += "  <p class=\"spacing1\">" + tagContent + "</p>\n";
-
-            } // if p
-            else if (v.first == "table") {
-                // Normalize column widths to a percentage value
-                pt::ptree &colgroup = v.second.get_child("colgroup");
-                modifyColgroup(colgroup);
-
-                // Purpose: add the table to the html "as is"
-                // Method: create a new property tree, string based, not file based
-                //         and add the whole table object as the only child
-                pt::ptree tree;
-                std::stringstream ss;
-                tree.add_child("table", v.second);
-                pt::write_xml(ss, tree);
-
-                std::string table = ss.str();
-
-                // Clean up the "serialized" string
-                boost::replace_all(table, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
-#ifdef WORKAROUND_SUB_SUP_BR
-                // Restore children
-                boost::replace_all(table, ESCAPED_SUB_L, "<sub>");
-                boost::replace_all(table, ESCAPED_SUB_R, "</sub>");
-                boost::replace_all(table, ESCAPED_SUP_L, "<sup>");
-                boost::replace_all(table, ESCAPED_SUP_R, "</sup>");
-                boost::replace_all(table, ESCAPED_BR,    "<br />");
-#endif
-                html += table + "\n";
-            } // if table
-        } // BOOST div
-    }
-    catch (std::exception &e) {
+    } catch (std::exception &e) {
+        statsInvalidContentHTML.push_back(regnrs);
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
+        return;
+            }
+
+    REFDATA::findSectionIdsAndTitle(tree, sectionIds, sectionTitles);
+    if (sectionIds.empty() || sectionTitles.empty() || sectionIds[0].empty() || sectionTitles[0].empty()) {
+        statsInvalidContentHTML.push_back(regnrs);
+        // Use raw html if xml is in unrecognised format
+        html = xml;
+        return;
+            }
+
+    BEAUTY::cleanUpSpan(tree);
+
+    std::string htmlBarcodes = getBarcodesFromGtins(packages, language, sectionIds, sectionTitles);
+
+            {
+        std::stringstream barcodeSS;
+        barcodeSS << htmlBarcodes;
+        pt::ptree barcodeTree;
+        pt::read_xml(barcodeSS, barcodeTree);
+
+        pt::ptree body = tree.get_child("html.body");
+
+        pt::ptree newBody;
+
+        bool shouldSkip = false;
+        BOOST_FOREACH(pt::ptree::value_type &v, body) {
+            std::string idAttr = v.second.get<std::string>("<xmlattr>.id", "");
+
+            std::smatch match;
+            std::regex sectionIdRegex(R"(^section\d+$)");
+            if (std::regex_search(idAttr, match, sectionIdRegex)) {
+                std::string sectionId = match[0];
+                std::string sectionTitle = BEAUTY::getFlatPTreeContent(v.second);
+
+                std::string expectingTitle("Packungen");
+                if (language == "fr") {
+                    expectingTitle = "Présentation";
+                            }
+                if (sectionTitle == expectingTitle) {
+                    // We found the package section, start removing everything after this
+                    shouldSkip = true;
+                    newBody.push_back(v);
+                    BOOST_FOREACH(pt::ptree::value_type &barcodeV, barcodeTree) {
+                        newBody.push_back(barcodeV);
+                            }
+                } else if (shouldSkip) {
+                    // We are skipping, but we see a new section, so stop skipping
+                    shouldSkip = false;
+                        }
+                }
+            if (!shouldSkip) {
+                newBody.push_back(v);
+                }
     }
-
-#pragma mark - extra sections
-
-doExtraSections:
-    // Add a section that was not in the XML contents
-    // PedDose
-    if (hasXmlHeader)
-        html += "\n  </div>"; // terminate previous section before starting a new one
+        tree.put_child("html.body", newBody);
+    }
 
     if (!atc.empty() && !PED::isRegnrsInBlacklist(regnrs))
     {
@@ -741,14 +410,27 @@ doExtraSections:
             std::string sectionPedDose("Section" + std::to_string(SECTION_NUMBER_PEDDOSE));
             std::string sectionPedDoseName("Swisspeddose");
 
-            html += "   <div class=\"paragraph\" id=\"" + sectionPedDose + "\">\n";
-            html += "<div class=\"absTitle\">" + sectionPedDoseName + "</div>";
-            html += pedHtml;
-            html += "   </div>\n";
+            std::string extraHtml;
+            extraHtml += "   <div class=\"paragraph\" id=\"" + sectionPedDose + "\">\n";
+            extraHtml += "<div class=\"absTitle\">" + sectionPedDoseName + "</div>";
+            extraHtml += pedHtml;
+            extraHtml += "   </div>\n";
+
+            try {
+                std::stringstream pedSS;
+                pedSS << extraHtml;
+                pt::ptree extraHtmlTree;
+                pt::read_xml(pedSS, extraHtmlTree);
 
             // Append 'section#' to a vector to be used in column "ids_str"
-            sectionId.push_back(sectionPedDose);
-            sectionTitle.push_back(sectionPedDoseName);
+                sectionIds.push_back(sectionPedDose);
+                sectionTitles.push_back(sectionPedDoseName);
+
+                tree.add_child("html.body", extraHtmlTree);
+            } catch (std::exception &e) {
+                std::clog << "Error adding ped xml: " << extraHtml << std::endl;
+                throw e;
+            }
         }
     }
 
@@ -759,6 +441,7 @@ doExtraSections:
         std::string htmlPregnancy;
         std::string htmlBreastfeed;
         SAPP::getHtmlByAtc(atc, htmlPregnancy, htmlBreastfeed);
+        std::string extraHtml;
 
         if (!htmlPregnancy.empty()) {
             const std::string sectionSappInfo1("Section" + std::to_string(SECTION_NUMBER_SAPPINFO_P));
@@ -766,14 +449,14 @@ doExtraSections:
             if (language == "fr")
                 sectionSappInfoName1 = "ASPP: F. enceintes";
 
-            html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo1 + "\">\n";
-            html += "<div class=\"absTitle\">" + sectionSappInfoName1 + "</div>";
-            html += htmlPregnancy;
-            html += "   </div>\n";
+            extraHtml += "   <div class=\"paragraph\" id=\"" + sectionSappInfo1 + "\">\n";
+            extraHtml += "<div class=\"absTitle\">" + sectionSappInfoName1 + "</div>";
+            extraHtml += htmlPregnancy;
+            extraHtml += "   </div>\n";
 
             // Append 'section#' to a vector to be used in column "ids_str"
-            sectionId.push_back(sectionSappInfo1);
-            sectionTitle.push_back(sectionSappInfoName1);
+            sectionIds.push_back(sectionSappInfo1);
+            sectionTitles.push_back(sectionSappInfoName1);
         }
 
         if (!htmlBreastfeed.empty()) {
@@ -782,18 +465,32 @@ doExtraSections:
             if (language == "fr")
                 sectionSappInfoName2 = "ASPP: F. allaitantes";
 
-            html += "   <div class=\"paragraph\" id=\"" + sectionSappInfo2 + "\">\n";
-            html += "<div class=\"absTitle\">" + sectionSappInfoName2 + "</div>";
-            html += htmlBreastfeed;
-            html += "   </div>\n";
+            extraHtml += "   <div class=\"paragraph\" id=\"" + sectionSappInfo2 + "\">\n";
+            extraHtml += "<div class=\"absTitle\">" + sectionSappInfoName2 + "</div>";
+            extraHtml += htmlBreastfeed;
+            extraHtml += "   </div>\n";
 
             // Append 'section#' to a vector to be used in column "ids_str"
-            sectionId.push_back(sectionSappInfo2);
-            sectionTitle.push_back(sectionSappInfoName2);
+            sectionIds.push_back(sectionSappInfo2);
+            sectionTitles.push_back(sectionSappInfoName2);
+        }
+        if (!extraHtml.empty()) {
+            try {
+                std::stringstream ss;
+                ss << extraHtml;
+                pt::ptree extraHtmlTree;
+                pt::read_xml(ss, extraHtmlTree);
+
+                tree.add_child("html.body", extraHtmlTree);
+            } catch (std::exception &e) {
+                std::clog << "Error adding SAPPINFO xml: " << extraHtml << std::endl;
+                throw e;
+            }
         }
     }
 
     {
+        std::string extraHtml;
         std::vector<std::string> regnrsList;
         boost::algorithm::split(regnrsList, regnrs, boost::is_any_of(", "), boost::token_compress_on);
         bool addedSectionTitle = false;
@@ -806,53 +503,72 @@ doExtraSections:
                     if (language == "fr") {
                         sectionBatchRecallName = "Retraits de lots";
                     }
-                    html += "   <div class=\"paragraph\" id=\"" + sectionBatchRecall + "\">\n";
-                    html += "<div class=\"absTitle\">" + sectionBatchRecallName + "</div>";
+                    extraHtml += "   <div class=\"paragraph\" id=\"" + sectionBatchRecall + "\">\n";
+                    extraHtml += "<div class=\"absTitle\">" + sectionBatchRecallName + "</div>";
                     addedSectionTitle = true;
-                    sectionId.push_back(sectionBatchRecall);
-                    sectionTitle.push_back(sectionBatchRecallName);
+                    sectionIds.push_back(sectionBatchRecall);
+                    sectionTitles.push_back(sectionBatchRecallName);
                 }
-                html += "<p class=\"spacing1\">";
+                extraHtml += "<p class=\"spacing1\">";
                 if (recall.title.length()) {
                     if (language == "fr") {
-                        html += "Titre: "+ recall.title + "<br/>\n";
+                        extraHtml += "Titre: "+ recall.title + "<br/>\n";
                     } else {
-                        html += "Titel: "+ recall.title + "<br/>\n";
+                        extraHtml += "Titel: "+ recall.title + "<br/>\n";
                     }
                 }
                 if (recall.date.length()) {
                     if (language == "fr") {
-                        html += "Date: "+ recall.date + "<br/>\n";
+                        extraHtml += "Date: "+ recall.date + "<br/>\n";
                     } else {
-                        html += "Datum: "+ recall.date + "<br/>\n";
+                        extraHtml += "Datum: "+ recall.date + "<br/>\n";
                     }
                 }
                 if (recall.regnrs.length()) {
                     if (language == "fr") {
-                        html += "No d'autorisation: " + recall.regnrs + "<br/>\n";
+                        extraHtml += "No d'autorisation: " + recall.regnrs + "<br/>\n";
                     } else {
-                        html += "Zulassungsnummer: "+ recall.regnrs + "<br/>\n";
+                        extraHtml += "Zulassungsnummer: "+ recall.regnrs + "<br/>\n";
                     }
                 }
                 if (recall.description.length()) {
                     if (language == "fr") {
-                        html += "Texte: "+ recall.description + "<br/>\n";
+                        extraHtml += "Texte: "+ recall.description + "<br/>\n";
                     } else {
-                        html += "Text: "+ recall.description + "<br/>\n";
+                        extraHtml += "Text: "+ recall.description + "<br/>\n";
                     }
                 }
                 for (auto extra : recall.extras) {
-                    html += extra.first + ": "+ extra.second + "<br/>\n";
+                    extraHtml += extra.first + ": "+ extra.second + "<br/>\n";
                 }
                 if (recall.pdfLink.length()) {
-                    html += "<a href='" + recall.pdfLink + "'>PDF Link</a>\n";
+                    std::string link = recall.pdfLink;
+                    boost::replace_all(link, "'", "&apos;");
+                    extraHtml += "<a href='" + link + "'>PDF Link</a>\n";
                 }
-                html += "</p>";
+                extraHtml += "</p>";
+            }
+            if (addedSectionTitle) {
+                extraHtml += "</div>";
+            }
+        }
+        if (!extraHtml.empty()) {
+            try {
+                std::stringstream ss;
+                ss << extraHtml;
+                pt::ptree extraHtmlTree;
+                pt::read_xml(ss, extraHtmlTree);
+
+                tree.add_child("html.body", extraHtmlTree);
+            } catch (std::exception &e) {
+                std::clog << "xml1: " << extraHtml;
+                throw e;
             }
         }
     }
 
     {
+        std::string extraHtml;
         std::vector<std::string> regnrsList;
         boost::algorithm::split(regnrsList, regnrs, boost::is_any_of(", "), boost::token_compress_on);
         bool addedSectionTitle = false;
@@ -862,48 +578,66 @@ doExtraSections:
                 if (!addedSectionTitle) {
                     const std::string sectionDHPCHPC("Section" + std::to_string(SECTION_NUMBER_DHPC_HPC));
                     std::string sectionDHPCHPCName("DHPC/HPC");
-                    html += "   <div class=\"paragraph\" id=\"" + sectionDHPCHPC + "\">\n";
-                    html += "<div class=\"absTitle\">" + sectionDHPCHPCName + "</div>";
+                    extraHtml += "   <div class=\"paragraph\" id=\"" + sectionDHPCHPC + "\">\n";
+                    extraHtml += "<div class=\"absTitle\">" + sectionDHPCHPCName + "</div>";
                     addedSectionTitle = true;
-                    sectionId.push_back(sectionDHPCHPC);
-                    sectionTitle.push_back(sectionDHPCHPCName);
+                    sectionIds.push_back(sectionDHPCHPC);
+                    sectionTitles.push_back(sectionDHPCHPCName);
                 }
-                html += "<p class=\"spacing1\">";
+                extraHtml += "<p class=\"spacing1\">";
                 if (news.title.length()) {
                     if (language == "fr") {
-                        html += "Titre: "+ news.title + "<br/>\n";
+                        extraHtml += "Titre: "+ news.title + "<br/>\n";
                     } else {
-                        html += "Titel: "+ news.title + "<br/>\n";
+                        extraHtml += "Titel: "+ news.title + "<br/>\n";
                     }
                 }
                 if (news.date.length()) {
                     if (language == "fr") {
-                        html += "Date: "+ news.date + "<br/>\n";
+                        extraHtml += "Date: "+ news.date + "<br/>\n";
                     } else {
-                        html += "Datum: "+ news.date + "<br/>\n";
+                        extraHtml += "Datum: "+ news.date + "<br/>\n";
                     }
                 }
                 if (news.description.length()) {
+                    std::string description = news.description;
+                    boost::replace_all(description, "<", "&lt;");
                     if (language == "fr") {
-                        html += "Texte: "+ news.description + "<br/>\n";
+                        extraHtml += "Texte: "+ description + "<br/>\n";
                     } else {
-                        html += "Text: "+ news.description + "<br/>\n";
+                        extraHtml += "Text: "+ description + "<br/>\n";
                     }
                 }
                 if (news.regnrs.length()) {
                     if (language == "fr") {
-                        html += "No d'autorisation: " + news.regnrs + "<br/>\n";
+                        extraHtml += "No d'autorisation: " + news.regnrs + "<br/>\n";
                     } else {
-                        html += "Zulassungsnummer: "+ news.regnrs + "<br/>\n";
+                        extraHtml += "Zulassungsnummer: "+ news.regnrs + "<br/>\n";
                     }
                 }
                 for (auto extra : news.extras) {
-                    html += extra.first + ": " + extra.second + "<br/>\n";
+                    extraHtml += extra.first + ": " + extra.second + "<br/>\n";
                 }
                 if (news.pdfLink.length()) {
-                    html += "<a href='" + news.pdfLink + "'>PDF Link</a>\n";
+                    extraHtml += "<a href='" + news.pdfLink + "'>PDF Link</a>\n";
                 }
-                html += "</p>";
+                extraHtml += "</p>";
+            }
+            if (addedSectionTitle) {
+                extraHtml += "</div>";
+            }
+        }
+        if (!extraHtml.empty()) {
+            try {
+                std::stringstream ss;
+                ss << extraHtml;
+                pt::ptree extraHtmlTree;
+                pt::read_xml(ss, extraHtmlTree);
+
+                tree.add_child("html.body", extraHtmlTree);
+            } catch (std::exception &e) {
+                std::clog << "xml2: " << extraHtml;
+                throw e;
             }
         }
     }
@@ -912,18 +646,33 @@ doExtraSections:
     // Note that this section id and name don't get added to the chapter name list
     // Footer
     {
-        html += "   <div class=\"paragraph\" id=\"Section" + std::to_string(SECTION_NUMBER_FOOTER) + "\"></div>\n";
+        std::string extraHtml;
+        extraHtml += "   <div class=\"paragraph\" id=\"Section" + std::to_string(SECTION_NUMBER_FOOTER) + "\"></div>\n";
 
         std::time_t seconds = std::time(nullptr);
         std::string curtime = std::asctime(std::localtime( &seconds )); // TODO: avoid trailing \n
         std::string url("https://github.com/zdavatz/");
         url += appName;
-        html += "<p class=\"footer\">Auto-generated by <a href=\"" + url + "\">" + appName + "</a> on " + curtime + "</p>";
+        extraHtml += "<p class=\"footer\">Auto-generated by <a href=\"" + url + "\">" + appName + "</a> on " + curtime + "</p>";
+        std::stringstream ss;
+        ss << extraHtml;
+        pt::ptree extraHtmlTree;
+        pt::read_xml(ss, extraHtmlTree);
+
+        tree.add_child("html.body", extraHtmlTree);
     }
 
-    html += "\n  </div>";
-    html += "\n </body>";
-    html += "\n</html>";
+    {
+        // tree.get_child("html.head").erase("style");
+        tree.put("html.head.meta.<xmlattr>.content", "text/html; charset=UTF-8");
+
+        std::stringstream ss;
+        pt::write_xml(ss, tree);
+        xml = ss.str();
+        boost::replace_all(xml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\\s*", "");
+    }
+
+    html = xml;
 }
 
 // See SqlDatabase.java:65
@@ -1131,6 +880,21 @@ int main(int argc, char **argv)
         REP::html_end_ul();
     }
 
+    for (AIPS::Medicine& m : list) {
+        std::string swissAtc = SWISSMEDIC::getAtcFromFirstRn(m.regnrs);
+        std::string refdataAtc = REFDATA::findAtc(m.regnrs);
+        if (swissAtc.size() > refdataAtc.size()) {
+            m.atc = swissAtc;
+        } else if (swissAtc.size() < refdataAtc.size()) {
+            m.atc = refdataAtc;
+        } else {
+            m.atc = swissAtc;
+        }
+        if (m.atc.empty()) {
+            statsATCNotFound.push_back(m.regnrs);
+        }
+    }
+
     if (!flagNoSappinfo)
         SAPP::parseXLXS(opt_inputDirectory, "/sappinfo.xlsx", opt_language);
 
@@ -1268,7 +1032,10 @@ int main(int argc, char **argv)
             std::vector<std::string> sectionTitle; // HTML section titles
             {
                 std::string html;
-                getHtmlFromXml(m.content, html, m.regnrs, m.auth,
+                std::ifstream inStream(m.contentHTMLPath, std::ios::in | std::ios::binary);
+                std::string xhtml = std::string((std::istreambuf_iterator<char>(inStream)), std::istreambuf_iterator<char>());
+
+                getHtmlFromXml(xhtml, html, m.regnrs, m.auth,
                                packages,        // for barcodes
                                sectionId,       // for ids_str
                                sectionTitle,    // for titles_str
@@ -1374,6 +1141,10 @@ int main(int argc, char **argv)
         REP::html_end_ul();
         if (statsRegnrsNotFound.size() > 0)
             REP::html_div(boost::algorithm::join(statsRegnrsNotFound, ", "));
+        REP::html_li("ATC not found: " + std::to_string(statsATCNotFound.size()));
+        REP::html_end_ul();
+        if (statsATCNotFound.size() > 0)
+            REP::html_div(boost::algorithm::join(statsATCNotFound, ", "));
 
         if (statsTitleStrSeparatorMap.size() > 0) {
             REP::html_h3("XML");

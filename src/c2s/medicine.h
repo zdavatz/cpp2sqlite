@@ -14,7 +14,7 @@
 
 namespace AIPS
 {
-    
+
 struct Medicine {
     std::string title;
     std::string auth;   // authHolder
@@ -24,7 +24,7 @@ struct Medicine {
     // atc_class ?
 
     std::string style;
-    std::string content; // XML to be changed to HTML
+    std::string contentHTMLPath; // Path to the XHTML file
     std::string sections;
 };
 

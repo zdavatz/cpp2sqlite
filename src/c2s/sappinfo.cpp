@@ -20,6 +20,7 @@
 #include "sappinfo.hpp"
 #include "report.hpp"
 #include "html_tags.h"
+#include "beautify.hpp"
 
 #define COLUMN_B        1   // Hauptindikation
 #define COLUMN_C        2   // Indikation
@@ -70,12 +71,12 @@ namespace SAPP
 
     std::vector< std::vector<std::string> > sheetBreastFeeding;
     std::vector< std::vector<std::string> > sheetPregnancy;
-    
+
     std::vector<_breastfeed> breastFeedVec;
     std::vector<_pregnancy> pregnancyVec;
-    
+
     const std::unordered_set<int> acceptedFiltersSet = { 1, 5, 6, 9 };
-    
+
     ////////////////////////////////////////////////////////////////////////////
     // LOCALIZATION
 
@@ -104,14 +105,14 @@ namespace SAPP
 
     const std::vector<std::string> loc_string_key = {
         LOC_KEY_TH_TYPE, LOC_KEY_TH_COMMENT,
-        
+
         // Sheet 1
         LOC_KEY_TH_MAX_DAILY, LOC_KEY_TH_APPROVAL,
-        
+
         // Sheet 2
         LOC_KEY_TH_MAX1, LOC_KEY_TH_MAX2, LOC_KEY_TH_MAX3,
         LOC_KEY_TH_PERIDOSE, LOC_KEY_TH_PERIDOSE_COMMENT,
-        
+
         // Other strings
         //LOC_KEY_TYPE,
         LOC_KEY_ACT_SUBST, LOC_KEY_MAIN_INDIC, LOC_KEY_INDICATION
@@ -119,14 +120,14 @@ namespace SAPP
     };
     std::vector<std::string> loc_string_de = {
         "Applikationsart", "Bemerkungen",
-        
+
         // Sheet 1
         "TMD", "Zulassungsnummer",
-        
+
         // For German: Sheet 2
         "TMD Trim 1", "TMD Trim 2", "TMD Trim 3",
         "Peripartale Dosierung", "Bemerkungen",
-        
+
         // Other strings
         //"Anwendungszeitraum",
         "Wirkstoff", "Hauptindikation", "Indikation"
@@ -134,14 +135,14 @@ namespace SAPP
     };
     std::vector<std::string> loc_string_fr = { // TODO: verify translations
         "Type d’application", "Commentaires",
-        
+
         // Sheet 1
         "DJM", "Approbation",
-        
+
         // For French: Sheet 2
         "DJM Trim 1", "DJM Trim 2", "DJM Trim 3",
         "Posologie péripartale", "Commentaires",
-        
+
         // Other strings
         //"Période d'application",
         "Substance active", "Indication principale", "Indication"
@@ -149,14 +150,14 @@ namespace SAPP
     };
     std::vector<std::string> loc_string_en = {
         "Type of application", "Comments on dosage",
-        
+
         // Sheet 1
         "max daily dose", "Approval",
 
         // Sheet 2
         "max TD Tr 1", "max TD Tr 2", "max TD Tr 3",
         "Dose adjustment", "Peripartum dosage", "Comments on peripartum dosage",
-        
+
         // Other strings
         //"Type of use",
         "Active Substance", "Main Indication", "Indication"
@@ -190,7 +191,7 @@ namespace SAPP
         {LOC_KEY_TH_PERIDOSE, false},
         {LOC_KEY_TH_PERIDOSE_COMMENT, false}
     };
-    
+
     static void getBreastFeedByAtc(const std::string &atc, std::vector<_breastfeed> &bfv);
     static void getPregnancyByAtc(const std::string &atc, std::vector<_pregnancy> &pv);
     static void printFileStats(const std::string &filename);
@@ -206,7 +207,7 @@ static void printFileStats(const std::string &filename)
     REP::html_li("rows Pregnancy: " + std::to_string(sheetPregnancy.size())); // TODO: localize
     REP::html_end_ul();
 }
-    
+
 void printUsageStats()
 {
     REP::html_h2("Sappinfo");
@@ -241,7 +242,7 @@ void printUsageStats()
                  std::to_string(statsTablesCount[1]) + " pregnancy");
     REP::html_end_ul();
 #endif
-    
+
 #ifdef SAPPINFO_OLD_STATS
     REP::html_p("Issue #70");
     REP::html_start_ul();
@@ -257,18 +258,18 @@ std::string getLocalized(const std::string &language,
 {
     if (language == "de")
         return s;
-    
+
     if (s.empty())
         return s;
 
     // No localization if it starts with a number
     if (std::isdigit(s[0]))
         return s;
-    
+
     // No localization if it starts with a number, but after a space: " 80mg"
     if (std::isspace(s[0]) && std::isdigit(s[1]))
         return s;
-    
+
     // Treat this as an empty cell
     if (s == "-")
         return {};
@@ -294,13 +295,13 @@ void getDeeplTranslationMap(const std::string &dir,
         std::string dotJob;
         if (!job.empty())
             dotJob = "." + job;
-        
+
         std::ifstream ifsKey(dir + "/deepl" + dotJob + ".in.txt");
         std::ifstream ifsValue(dir + "/deepl" + dotJob + ".out." + language + ".txt");   // translated by deepl.sh
 #ifdef WITH_DEEPL_MANUALLY_TRANSLATED
         std::ifstream ifsValue2(dir + "/deepl" + dotJob + ".out2." + language + ".txt"); // translated manually
 #endif
-        
+
         std::string key, val;
         while (std::getline(ifsKey, key))
         {
@@ -315,7 +316,7 @@ void getDeeplTranslationMap(const std::string &dir,
 
             map.insert(std::make_pair(key, val));
         } // while
-        
+
         ifsKey.close();
         ifsValue.close();
 #ifdef WITH_DEEPL_MANUALLY_TRANSLATED
@@ -329,7 +330,7 @@ void getDeeplTranslationMap(const std::string &dir,
         << std::endl;
     }
 }
-    
+
 // TODO: use a set of ATCs to speed up the lookup
 void parseXLXS(const std::string &inDir,
                const std::string &inFile,
@@ -375,7 +376,7 @@ void parseXLXS(const std::string &inDir,
 
         int skipHeaderCount = 0;
         for (auto row : ws.rows(false)) {
-            
+
             if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
 #ifdef DEBUG_SAPPINFO
                 int i=0;
@@ -388,10 +389,10 @@ void parseXLXS(const std::string &inDir,
 #endif
                 continue;
             }
-            
+
             if (row[COLUMN_U].to_string().empty())
                 continue;            // Issue #85
-            
+
             int filter = std::stoi(row[COLUMN_U].to_string());
             if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
                 continue;            // Not found in set
@@ -401,9 +402,9 @@ void parseXLXS(const std::string &inDir,
                 //std::clog << cell.to_string() << std::endl;
                 aSingleRow.push_back(cell.to_string());
             }
-            
+
             sheetBreastFeeding.push_back(aSingleRow);
-            
+
             _breastfeed bf;
             bf.c.atcCodes = aSingleRow[COLUMN_R];
 #if 1 // issue 53
@@ -440,13 +441,13 @@ void parseXLXS(const std::string &inDir,
 #endif
         }
     }
-    
+
     //--- Pregnancy sheet ------------------------------------------------------
     const std::string title2("Schwangerschaft");
     if (wb.contains(title2)) {
         auto ws = wb.sheet_by_title(title2);
         std::clog << "\tSheet: " << ws.title() << std::endl;
-        
+
         int skipHeaderCount = 0;
         for (auto row : ws.rows(false)) {
             if (++skipHeaderCount <= FIRST_DATA_ROW_INDEX) {
@@ -461,7 +462,7 @@ void parseXLXS(const std::string &inDir,
 #endif
                 continue;
             }
-            
+
             if (row[COLUMN_2_AC].to_string().empty()) {
                 // Issue #64
                 // The last line of the second sheet contains just one subtotal for G
@@ -472,21 +473,21 @@ void parseXLXS(const std::string &inDir,
             int filter = std::stoi(row[COLUMN_2_AC].to_string());
             if (acceptedFiltersSet.find(filter) == acceptedFiltersSet.end())
                 continue;            // Not found in set
-            
+
             std::vector<std::string> aSingleRow;
             for (auto cell : row) {
                 //std::clog << cell.to_string() << std::endl;
                 aSingleRow.push_back(cell.to_string());
             }
-            
+
             sheetPregnancy.push_back(aSingleRow);
-            
+
             _pregnancy pr;
             pr.c.atcCodes = aSingleRow[COLUMN_2_Z];
 #if 1 // issue 53
             // Also break it down into single ATCs
             boost::algorithm::split(pr.c.atcCodeVec, pr.c.atcCodes, boost::is_any_of(ATC_LIST_SEPARATOR), boost::token_compress_on);
-            
+
             for (auto a : pr.c.atcCodeVec)
                 statsUniqueAtcSet.insert(a);
 #endif
@@ -538,7 +539,7 @@ void getByAtc(const std::string &atc,
         for (auto a : item.c.atcCodeVec)
             if (a == atc) {
                 outVec.push_back(item);
-                
+
                 // Break out of the inner loop, to move onto the next item
                 // Not a big speed gain for only two items, but logically it makes sense
                 break;
@@ -549,17 +550,17 @@ static void getBreastFeedByAtc(const std::string &atc, std::vector<_breastfeed> 
 {
     getByAtc<_breastfeed>(atc, breastFeedVec, bfv);
 }
-    
+
 static void getPregnancyByAtc(const std::string &atc, std::vector<_pregnancy> &pv)
 {
     getByAtc<_pregnancy>(atc, pregnancyVec, pv);
 }
-    
+
 void getHtmlBreastfeed(const std::string atc, std::string &html)
 {
     std::vector<_breastfeed> bfv;
     getBreastFeedByAtc(atc, bfv);
-    
+
     if (bfv.empty()) {
         statsBfByAtcNotFoundCount++;
     }
@@ -569,27 +570,27 @@ void getHtmlBreastfeed(const std::string atc, std::string &html)
         statsUniqueAtcSheet1Set.insert(atc);
 #endif
     }
-    
+
     for (auto b : bfv) {
         // Check for optional columns
         int numColumns = requiredColumnVec.size();
         for (auto &m : optionalColumnMap)  // reset options
             m.second = false;
-        
+
         if (!optionalColumnMap[LOC_KEY_TH_COMMENT] &&
             !b.c.comments.empty())
         {
             optionalColumnMap[LOC_KEY_TH_COMMENT] = true;
             numColumns++;
         }
-        
+
         if (!optionalColumnMap[LOC_KEY_TH_APPROVAL] &&
             !b.approval.empty())
         {
             optionalColumnMap[LOC_KEY_TH_APPROVAL] = true;
             numColumns++;
         }
-        
+
         // Start defining the HTML code
         std::string textBeforeTable;
         {
@@ -598,34 +599,34 @@ void getHtmlBreastfeed(const std::string atc, std::string &html)
             textBeforeTable += localizedResourcesMap[LOC_KEY_ACT_SUBST] + ": " + b.c.activeSubstance + "<br />\n";
             if (!b.c.mainIndication.empty())
                 textBeforeTable += localizedResourcesMap[LOC_KEY_MAIN_INDIC] + ": " + b.c.mainIndication + "<br />\n";
-            
+
             if (!b.c.indication.empty())
                 textBeforeTable += localizedResourcesMap[LOC_KEY_INDICATION] + ": " + b.c.indication + "<br />\n";
-            
+
             if (!b.c.link.empty())
                 textBeforeTable += "<a href=\"" + b.c.link + "\">sappinfo Monographie</a>" + "<br />\n"; // TODO: localize
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
-        
+
         std::string tableColGroup(COL_SPAN_L + std::to_string(numColumns) + COL_SPAN_R);
         tableColGroup = "<colgroup>" + tableColGroup + "</colgroup>";
-        
+
         std::string tableHeader;
         tableHeader.clear();
-        
+
         std::string tableBody;
         tableBody.clear();
-        
+
         {
             tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_TYPE] + TAG_TH_R;        // col H
             tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX_DAILY] + TAG_TH_R;   // col I
-            
+
             if (optionalColumnMap[LOC_KEY_TH_COMMENT])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_COMMENT] + TAG_TH_R;  // col J
-            
+
             if (optionalColumnMap[LOC_KEY_TH_APPROVAL])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_APPROVAL] + TAG_TH_R; // col Q
-            
+
             tableHeader += "\n"; // for readability
             tableHeader = "<tr>" + tableHeader + "</tr>";
 #ifdef WITH_SEPARATE_TABLE_HEADER
@@ -634,26 +635,26 @@ void getHtmlBreastfeed(const std::string atc, std::string &html)
             tableBody += tableHeader;
 #endif
         }
-        
+
         {
             std::string tableRow;
-            
+
             tableRow += TAG_TD_L + b.c.typeOfApplication + TAG_TD_R;
             tableRow += TAG_TD_L + b.maxDailyDose + TAG_TD_R;
-            
+
             if (optionalColumnMap[LOC_KEY_TH_COMMENT])
                 tableRow += TAG_TD_L + b.c.comments + TAG_TD_R;
-            
+
             if (optionalColumnMap[LOC_KEY_TH_APPROVAL])
                 tableRow += TAG_TD_L + b.approval + TAG_TD_R;
-            
+
             tableRow += "\n";  // for readability
             tableRow = "<tr>" + tableRow + "</tr>";
             tableBody += tableRow;
         }
-        
+
         tableBody = "<tbody>" + tableBody + "</tbody>";
-        
+
         std::string table = tableColGroup;
 #ifdef WITH_SEPARATE_TABLE_HEADER
         table += tableHeader + tableBody;
@@ -662,7 +663,7 @@ void getHtmlBreastfeed(const std::string atc, std::string &html)
 #endif
         table = TAG_TABLE_L + table + TAG_TABLE_R;
         html += table;
-        
+
         statsTablesCount[0]++;
     }  // for bfv
 }
@@ -671,7 +672,7 @@ void getHtmlPregnancy(const std::string atc, std::string &html)
 {
     std::vector<_pregnancy> pregnv;
     getPregnancyByAtc(atc, pregnv);
-    
+
     if (pregnv.empty()) {
         statsPregnByAtcNotFoundCount++;
     }
@@ -681,55 +682,55 @@ void getHtmlPregnancy(const std::string atc, std::string &html)
         statsUniqueAtcSheet2Set.insert(atc);
 #endif
     }
-    
+
     for (auto p : pregnv) {
         // Check for optional columns
         int numColumns = requiredColumnVec_2.size();
         for (auto &m : optionalColumnMap_2)  // reset options
             m.second = false;
-        
+
         if (!optionalColumnMap_2[LOC_KEY_TH_MAX1] &&
             !p.max1.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_MAX1] = true;
             numColumns++;
         }
-        
+
         if (!optionalColumnMap_2[LOC_KEY_TH_MAX2] &&
             !p.max2.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_MAX2] = true;
             numColumns++;
         }
-        
+
         if (!optionalColumnMap_2[LOC_KEY_TH_MAX3] &&
             !p.max3.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_MAX3] = true;
             numColumns++;
         }
-        
+
         if (!optionalColumnMap_2[LOC_KEY_TH_COMMENT] &&
             !p.c.comments.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_COMMENT] = true;
             numColumns++;
         }
-        
+
         if (!optionalColumnMap_2[LOC_KEY_TH_PERIDOSE] &&
             !p.periDosi.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_PERIDOSE] = true;
             numColumns++;
         }
-        
+
         if (!optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT] &&
             !p.periBeme.empty())
         {
             optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT] = true;
             numColumns++;
         }
-        
+
         // Define the HTML code
         std::string textBeforeTable;
         {
@@ -738,45 +739,45 @@ void getHtmlPregnancy(const std::string atc, std::string &html)
             textBeforeTable += localizedResourcesMap[LOC_KEY_ACT_SUBST] + ": " + p.c.activeSubstance + "<br />\n";
             if (!p.c.mainIndication.empty())
                 textBeforeTable += localizedResourcesMap[LOC_KEY_MAIN_INDIC] + ": " + p.c.mainIndication + "<br />\n";
-            
+
             if (!p.c.indication.empty())
                 textBeforeTable += localizedResourcesMap[LOC_KEY_INDICATION] + ": " + p.c.indication + "<br />\n";
-            
+
             if (!p.c.link.empty())
                 textBeforeTable += "<a href=\"" + p.c.link + "\">sappinfo Monographie</a>" + "<br />\n"; // TODO: localize
         }
         html += "\n<p class=\"spacing1\">" + textBeforeTable + "</p>\n";
-        
+
         std::string tableColGroup(COL_SPAN_L + std::to_string(numColumns) + COL_SPAN_R);
         tableColGroup = "<colgroup>" + tableColGroup + "</colgroup>";
-        
+
         std::string tableHeader;
         tableHeader.clear();
-        
+
         std::string tableBody;
         tableBody.clear();
-        
+
         {
             tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_TYPE] + TAG_TH_R;
-            
+
             if (optionalColumnMap_2[LOC_KEY_TH_MAX1])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX1] + TAG_TH_R;
-            
+
             if (optionalColumnMap_2[LOC_KEY_TH_MAX2])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX2] + TAG_TH_R;
-            
+
             if (optionalColumnMap_2[LOC_KEY_TH_MAX3])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_MAX3] + TAG_TH_R;
-            
+
             if (optionalColumnMap_2[LOC_KEY_TH_COMMENT])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_COMMENT] + TAG_TH_R;
-            
+
             if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_PERIDOSE] + TAG_TH_R;
-            
+
             if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT])
                 tableHeader += TAG_TH_L + localizedResourcesMap[LOC_KEY_TH_PERIDOSE_COMMENT] + TAG_TH_R;
-            
+
             tableHeader += "\n"; // for readability
             tableHeader = "<tr>" + tableHeader + "</tr>";
 #ifdef WITH_SEPARATE_TABLE_HEADER
@@ -785,37 +786,43 @@ void getHtmlPregnancy(const std::string atc, std::string &html)
             tableBody += tableHeader;
 #endif
         }
-        
+
         {
             std::string tableRow;
-            
+
             tableRow += TAG_TD_L + p.c.typeOfApplication + TAG_TD_R;
-            
-            if (optionalColumnMap_2[LOC_KEY_TH_MAX1])
-                tableRow += TAG_TD_L + p.max1 + TAG_TD_R;
-            
-            if (optionalColumnMap_2[LOC_KEY_TH_MAX2])
-                tableRow += TAG_TD_L + p.max2 + TAG_TD_R;
-            
-            if (optionalColumnMap_2[LOC_KEY_TH_MAX3])
-                tableRow += TAG_TD_L + p.max3 + TAG_TD_R;
-            
-            if (optionalColumnMap_2[LOC_KEY_TH_COMMENT])
-                tableRow += TAG_TD_L + p.c.comments + TAG_TD_R;
-            
-            if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE])
-                tableRow += TAG_TD_L + p.periDosi + TAG_TD_R;
-            
-            if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT])
-                tableRow += TAG_TD_L + p.periBeme + TAG_TD_R;
-            
+
+            if (optionalColumnMap_2[LOC_KEY_TH_MAX1]) {
+                tableRow += TAG_TD_L + BEAUTY::escapeHtml(p.max1) + TAG_TD_R;
+            }
+
+            if (optionalColumnMap_2[LOC_KEY_TH_MAX2]) {
+                tableRow += TAG_TD_L + BEAUTY::escapeHtml(p.max2) + TAG_TD_R;
+            }
+
+            if (optionalColumnMap_2[LOC_KEY_TH_MAX3]) {
+                tableRow += TAG_TD_L + BEAUTY::escapeHtml(p.max3) + TAG_TD_R;
+            }
+
+            if (optionalColumnMap_2[LOC_KEY_TH_COMMENT]) {
+                tableRow += TAG_TD_L + BEAUTY::escapeHtml(p.c.comments) + TAG_TD_R;
+            }
+
+            if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE]) {
+                tableRow += TAG_TD_L + BEAUTY::escapeHtml(p.periDosi) + TAG_TD_R;
+            }
+
+            if (optionalColumnMap_2[LOC_KEY_TH_PERIDOSE_COMMENT]) {
+                tableRow += TAG_TD_L + BEAUTY::escapeHtml(p.periBeme) + TAG_TD_R;
+            }
+
             tableRow += "\n";  // for readability
             tableRow = "<tr>" + tableRow + "</tr>";
             tableBody += tableRow;
         }
-        
+
         tableBody = "<tbody>" + tableBody + "</tbody>";
-        
+
         std::string table = tableColGroup;
 #ifdef WITH_SEPARATE_TABLE_HEADER
         table += tableHeader + tableBody;
@@ -824,24 +831,24 @@ void getHtmlPregnancy(const std::string atc, std::string &html)
 #endif
         table = TAG_TABLE_L + table + TAG_TABLE_R;
         html += table;
-        
+
         statsTablesCount[1]++;
     } // for pregnv
 }
-    
+
 void getHtmlByAtc(const std::string atc,
                   std::string &htmlPregnancy,
                   std::string &htmlBreastfeed)
 {
     //std::clog << basename((char *)__FILE__) << ":" << __LINE__ << " " << atc << std::endl;
-    
+
     if (atc.empty())
         return;
 
     // First check ordered set, quicker than going through the whole vector
     if (statsUniqueAtcSet.find(atc) == statsUniqueAtcSet.end())
         return;
-    
+
     // Issue #70
     if (statsUniqueUsedAtcSet.find(atc) == statsUniqueAtcSet.end())
         statsUniqueUsedAtcSet.insert(atc);

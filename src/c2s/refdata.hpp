@@ -12,21 +12,25 @@
 
 #include <iostream>
 #include <vector>
+#include <boost/property_tree/ptree.hpp>
 
 #include "medicine.h"
 #include "gtin.hpp"
 
 namespace REFDATA
 {
+    namespace pt = boost::property_tree;
     struct Article {
         std::string gtin_13;
         std::string gtin_5;
         std::string phar;
         std::string name;
+        std::string atc;
+        std::string authorisation_identifier;
     };
-    
+
     typedef std::vector<Article> ArticleList;
-    
+
     void parseXML(const std::string &filename,
                   const std::string &language);
 
@@ -39,6 +43,14 @@ namespace REFDATA
     std::string getPharByGtin(const std::string &gtin);
 
     void printUsageStats();
+
+    std::string findAtc(const std::string &regnrs);
+
+    void findSectionIdsAndTitle(
+        pt::ptree tree,
+        std::vector<std::string> &sectionIds,
+        std::vector<std::string> &sectionTitles
+    );
 }
 
 #endif /* refdata_hpp */

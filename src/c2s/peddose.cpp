@@ -19,6 +19,7 @@
 #include "peddose.hpp"
 #include "atc.hpp"
 #include "report.hpp"
+#include "beautify.hpp"
 
 #include "html_tags.h"
 
@@ -443,6 +444,8 @@ bool isRegnrsInBlacklist(const std::string regnrs)
     return std::find(blacklist.begin(), blacklist.end(), regnrs) != blacklist.end();
 }
 
+
+
 // Each "case" generates one table
 // One ATC can have mnay cases and therefore multiple tables
 //
@@ -587,67 +590,67 @@ std::string getHtmlByAtc(const std::string atc)
         for (auto dosage : dosages) {
             std::string tableRow;
             tableRow += TAG_TD_L;
-            tableRow += dosage.ageFrom;
-            tableRow += " " + codeZeitMap[dosage.ageFromUnit].description;
-            tableRow += " - " + dosage.ageTo;
-            tableRow += " " + codeZeitMap[dosage.ageToUnit].description;
+            tableRow += BEAUTY::escapeHtml(dosage.ageFrom);
+            tableRow += BEAUTY::escapeHtml(" " + codeZeitMap[dosage.ageFromUnit].description);
+            tableRow += BEAUTY::escapeHtml(" - " + dosage.ageTo);
+            tableRow += BEAUTY::escapeHtml(" " + codeZeitMap[dosage.ageToUnit].description);
             if (!dosage.ageWeightRelation.empty())
-                tableRow += " " + codeAlterMap[dosage.ageWeightRelation].description;
+                tableRow += BEAUTY::escapeHtml(" " + codeAlterMap[dosage.ageWeightRelation].description);
             tableRow += TAG_TD_R;
 
             if (optionalColumnMap[TH_KEY_WEIGHT]) {
                 tableRow += TAG_TD_L;
-                tableRow += dosage.weightFrom;
+                tableRow += BEAUTY::escapeHtml(dosage.weightFrom);
                 if (dosage.weightFrom != dosage.weightTo)
-                    tableRow += " - " + dosage.weightTo;
-                tableRow += " kg";
+                    tableRow += BEAUTY::escapeHtml(" - " + dosage.weightTo);
+                tableRow += BEAUTY::escapeHtml(" kg");
                 tableRow += TAG_TD_R;
             }
 
             if (optionalColumnMap[TH_KEY_TYPE]) {
                 tableRow += TAG_TD_L;
-                tableRow += dosage.type;
+                tableRow += BEAUTY::escapeHtml(dosage.type);
                 tableRow += TAG_TD_R;
             }
 
             tableRow += TAG_TD_L;
-            tableRow += dosage.doseLow;
+            tableRow += BEAUTY::escapeHtml(dosage.doseLow);
             if (dosage.doseLow != dosage.doseHigh)
-                tableRow += " - " + dosage.doseHigh;
-            tableRow += " " + getAbbreviation(dosage.doseUnit);
+                tableRow += BEAUTY::escapeHtml(" - " + dosage.doseHigh);
+            tableRow += BEAUTY::escapeHtml(" " + getAbbreviation(dosage.doseUnit));
             if (!dosage.doseUnitRef1.empty())
-                tableRow += "/" + getAbbreviation(dosage.doseUnitRef1);
+                tableRow += BEAUTY::escapeHtml("/" + getAbbreviation(dosage.doseUnitRef1));
             if (!dosage.doseUnitRef2.empty())
-                tableRow += "/" + getAbbreviation(dosage.doseUnitRef2);
+                tableRow += BEAUTY::escapeHtml("/" + getAbbreviation(dosage.doseUnitRef2));
             tableRow += TAG_TD_R;
 
             if (optionalColumnMap[TH_KEY_REPEAT]) {
                 tableRow += TAG_TD_L;
-                tableRow += dosage.dailyRepetitionsLow;
+                tableRow += BEAUTY::escapeHtml(dosage.dailyRepetitionsLow);
                 if (dosage.dailyRepetitionsLow != dosage.dailyRepetitionsHigh)
-                    tableRow += " - " + dosage.dailyRepetitionsHigh;
+                    tableRow += BEAUTY::escapeHtml(" - " + dosage.dailyRepetitionsHigh);
                 tableRow += TAG_TD_R;
             }
 
             if (optionalColumnMap[TH_KEY_ROA]) {
                 tableRow += TAG_TD_L;
-                tableRow += dosage.roaCode;
+                tableRow += BEAUTY::escapeHtml(dosage.roaCode);
                 tableRow += TAG_TD_R;
             }
 
             if (optionalColumnMap[TH_KEY_MAX]) {
                 tableRow += TAG_TD_L;
-                tableRow += dosage.maxDailyDose + " " + getAbbreviation(dosage.maxDailyDoseUnit);
+                tableRow += BEAUTY::escapeHtml(dosage.maxDailyDose + " " + getAbbreviation(dosage.maxDailyDoseUnit));
                 if (!dosage.maxDailyDoseUnitRef1.empty())
-                    tableRow += "/" + getAbbreviation(dosage.maxDailyDoseUnitRef1);
+                    tableRow += BEAUTY::escapeHtml("/" + getAbbreviation(dosage.maxDailyDoseUnitRef1));
                 if (!dosage.maxDailyDoseUnitRef2.empty())
-                    tableRow += "/" + getAbbreviation(dosage.maxDailyDoseUnitRef2);
+                    tableRow += BEAUTY::escapeHtml("/" + getAbbreviation(dosage.maxDailyDoseUnitRef2));
                 tableRow += TAG_TD_R;
             }
 
             if (optionalColumnMap[TH_KEY_REM]) {
                 tableRow += TAG_TD_L;
-                tableRow += dosage.remarks;
+                tableRow += BEAUTY::escapeHtml(dosage.remarks);
                 tableRow += TAG_TD_R;
             }
 

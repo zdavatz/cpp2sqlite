@@ -128,6 +128,14 @@ sed -i -e 's/xsi:.*="[^"]*"//' $TARGET
 
 rm Refdata.Articles.xml
 rm $TARGET-e
+
+rm -rf Refdata-AllHtml
+
+wget https://files.refdata.ch/simis-public-prod/MedicinalDocuments/AllHtml.zip -O Refdata-AllHtml.zip
+
+unzip Refdata-AllHtml.zip -d Refdata-AllHtml
+rm Refdata-AllHtml.zip
+
 fi
 
 #-------------------------------------------------------------------------------
