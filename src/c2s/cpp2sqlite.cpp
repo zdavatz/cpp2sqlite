@@ -161,16 +161,16 @@ static std::string getBarcodesFromGtins(
                 html += "<p class=\"spacing1\" style=\"margin-bottom:1em\">";
                 if (drugShortage.status != "") {
                     if (language == "fr") {
-                        html += "Statut: " + drugShortage.status + "<br>\n";
+                        html += "Statut: " + drugShortage.status + "<br/>\n";
                     } else {
-                        html += "Status: " + drugShortage.status + "<br>\n";
+                        html += "Status: " + drugShortage.status + "<br/>\n";
                     }
                 }
                 if (drugShortage.estimatedDateOfDelivery != "") {
                     if (language == "fr") {
-                        html += "Date prévue d'accouchement: " + drugShortage.estimatedDateOfDelivery + "<br>\n";
+                        html += "Date prévue d'accouchement: " + drugShortage.estimatedDateOfDelivery + "<br/>\n";
                     } else {
-                        html += "Geschaetztes Datum Lieferfaehigkeit: " + drugShortage.estimatedDateOfDelivery + "<br>\n";
+                        html += "Geschaetztes Datum Lieferfaehigkeit: " + drugShortage.estimatedDateOfDelivery + "<br/>\n";
                     }
                 }
                 if (drugShortage.dateLastMutation != "") {
