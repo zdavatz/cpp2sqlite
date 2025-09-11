@@ -130,7 +130,7 @@ int countBagGtinInRefdata(std::vector<std::string> &list)
 }
 
 static std::string getBarcodesFromGtins(
-    const GTIN::oneFachinfoPackages &packages, 
+    const GTIN::oneFachinfoPackages &packages,
     const std::string language,
     std::vector<std::string> &sectionId,
     std::vector<std::string> &sectionTitle
@@ -161,21 +161,21 @@ static std::string getBarcodesFromGtins(
                 html += "<p class=\"spacing1\" style=\"margin-bottom:1em\">";
                 if (drugShortage.status != "") {
                     if (language == "fr") {
-                        html += "Statut: " + drugShortage.status + "<br>\n"; 
+                        html += "Statut: " + drugShortage.status + "<br>\n";
                     } else {
                         html += "Status: " + drugShortage.status + "<br>\n";
                     }
                 }
                 if (drugShortage.estimatedDateOfDelivery != "") {
                     if (language == "fr") {
-                        html += "Date prévue d'accouchement: " + drugShortage.estimatedDateOfDelivery + "<br>\n"; 
+                        html += "Date prévue d'accouchement: " + drugShortage.estimatedDateOfDelivery + "<br>\n";
                     } else {
                         html += "Geschaetztes Datum Lieferfaehigkeit: " + drugShortage.estimatedDateOfDelivery + "<br>\n";
                     }
                 }
                 if (drugShortage.dateLastMutation != "") {
                     if (language == "fr") {
-                        html += "Date du dernier changement: " + drugShortage.dateLastMutation + "\n"; 
+                        html += "Date du dernier changement: " + drugShortage.dateLastMutation + "\n";
                     } else {
                         html += "Datum Letzte Mutation: " + drugShortage.dateLastMutation + "\n";
                     }
@@ -346,7 +346,7 @@ void getHtmlFromXml(std::string &xml,
         statsInvalidContentHTML.push_back(regnrs);
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
         return;
-            }
+    }
 
     REFDATA::findSectionIdsAndTitle(tree, sectionIds, sectionTitles);
     if (sectionIds.empty() || sectionTitles.empty() || sectionIds[0].empty() || sectionTitles[0].empty()) {
@@ -354,17 +354,22 @@ void getHtmlFromXml(std::string &xml,
         // Use raw html if xml is in unrecognised format
         html = xml;
         return;
-            }
+    }
 
     BEAUTY::cleanUpSpan(tree);
 
     std::string htmlBarcodes = getBarcodesFromGtins(packages, language, sectionIds, sectionTitles);
 
-            {
+    {
         std::stringstream barcodeSS;
         barcodeSS << htmlBarcodes;
         pt::ptree barcodeTree;
-        pt::read_xml(barcodeSS, barcodeTree);
+        try {
+            pt::read_xml(barcodeSS, barcodeTree);
+        } catch (std::exception &e) {
+            std::cerr << "Error reading barcode html: " << htmlBarcodes << std::endl;
+            std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
+        }
 
         pt::ptree body = tree.get_child("html.body");
 
@@ -383,23 +388,23 @@ void getHtmlFromXml(std::string &xml,
                 std::string expectingTitle("Packungen");
                 if (language == "fr") {
                     expectingTitle = "Présentation";
-                            }
+                }
                 if (sectionTitle == expectingTitle) {
                     // We found the package section, start removing everything after this
                     shouldSkip = true;
                     newBody.push_back(v);
                     BOOST_FOREACH(pt::ptree::value_type &barcodeV, barcodeTree) {
                         newBody.push_back(barcodeV);
-                            }
+                    }
                 } else if (shouldSkip) {
                     // We are skipping, but we see a new section, so stop skipping
                     shouldSkip = false;
-                        }
                 }
+            }
             if (!shouldSkip) {
                 newBody.push_back(v);
-                }
-    }
+            }
+        }
         tree.put_child("html.body", newBody);
     }
 
@@ -422,7 +427,7 @@ void getHtmlFromXml(std::string &xml,
                 pt::ptree extraHtmlTree;
                 pt::read_xml(pedSS, extraHtmlTree);
 
-            // Append 'section#' to a vector to be used in column "ids_str"
+                // Append 'section#' to a vector to be used in column "ids_str"
                 sectionIds.push_back(sectionPedDose);
                 sectionTitles.push_back(sectionPedDoseName);
 
@@ -657,7 +662,12 @@ void getHtmlFromXml(std::string &xml,
         std::stringstream ss;
         ss << extraHtml;
         pt::ptree extraHtmlTree;
-        pt::read_xml(ss, extraHtmlTree);
+        try {
+            pt::read_xml(ss, extraHtmlTree);
+        } catch (std::exception &e) {
+            std::cerr << "Error reading footer html: " << extraHtml << std::endl;
+            std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
+        }
 
         tree.add_child("html.body", extraHtmlTree);
     }
@@ -669,7 +679,7 @@ void getHtmlFromXml(std::string &xml,
         std::stringstream ss;
         pt::write_xml(ss, tree);
         xml = ss.str();
-        boost::replace_all(xml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\\s*", "");
+        boost::replace_all(xml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
     }
 
     html = xml;
@@ -708,7 +718,7 @@ int main(int argc, char **argv)
 {
     //std::setlocale(LC_ALL, "en_US.utf8");
 
-    appName = boost::filesystem::basename(argv[0]);
+    appName = basename(argv[0]);
 
     std::string opt_inputDirectory;
     std::string opt_workDirectory;  // for downloads subdirectory
