@@ -39,7 +39,12 @@ static std::string getSections(const std::string &xml)
     pt::ptree tree;
     std::stringstream ss;
     ss << xml;
-    pt::read_xml(ss, tree);
+    try {
+        pt::read_xml(ss, tree);
+    } catch (std::exception &e) {
+        std::cerr << "Error reading xml in aips.getSections: " << xml << std::endl;
+        std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
+    }
 
     int sm = SM_BEFORE;
     std::string storageText;
