@@ -324,17 +324,6 @@ void getHtmlFromXml(std::string &xml,
     {
         BEAUTY::cleanupForNonHtmlUsage(xml);
         boost::replace_all(xml, "\ufeff", "");
-
-        // Somehow the html files are so broken they has 2 xml declaration,
-        // remove them all and add one back at last
-        boost::replace_all(xml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
-
-        // Somehow the html files are so broken, it starts with <div> instead of <html>
-        // but interestingly with </html>
-        std::regex r1("^\\s*<div ");
-        xml = std::regex_replace(xml, r1, "<html ");
-
-        xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + xml;
     }
 
     pt::ptree tree;
