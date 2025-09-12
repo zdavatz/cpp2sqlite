@@ -553,9 +553,9 @@ void getHtmlFromXml(std::string &xml,
                 }
                 extraHtml += "</p>";
             }
-            if (addedSectionTitle) {
-                extraHtml += "</div>";
-            }
+        }
+        if (addedSectionTitle) {
+            extraHtml += "</div>";
         }
         if (!extraHtml.empty()) {
             try {
@@ -566,7 +566,7 @@ void getHtmlFromXml(std::string &xml,
 
                 tree.add_child("html.body", extraHtmlTree);
             } catch (std::exception &e) {
-                std::clog << "xml1: " << extraHtml;
+                std::clog << "Error in Chargenrückrufe, xml: " << extraHtml;
                 throw e;
             }
         }
@@ -628,9 +628,9 @@ void getHtmlFromXml(std::string &xml,
                 }
                 extraHtml += "</p>";
             }
-            if (addedSectionTitle) {
-                extraHtml += "</div>";
-            }
+        }
+        if (addedSectionTitle) {
+            extraHtml += "</div>";
         }
         if (!extraHtml.empty()) {
             try {
@@ -891,14 +891,21 @@ int main(int argc, char **argv)
     }
 
     for (AIPS::Medicine& m : list) {
-        std::string swissAtc = SWISSMEDIC::getAtcFromFirstRn(m.regnrs);
-        std::string refdataAtc = REFDATA::findAtc(m.regnrs);
-        if (swissAtc.size() > refdataAtc.size()) {
-            m.atc = swissAtc;
-        } else if (swissAtc.size() < refdataAtc.size()) {
-            m.atc = refdataAtc;
-        } else {
-            m.atc = swissAtc;
+        std::vector<std::string> regnrs;
+        boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+        for (std::string regnr : regnrs) {
+            std::string swissAtc = SWISSMEDIC::getAtcFromFirstRn(regnr);
+            std::string refdataAtc = REFDATA::findAtc(regnr);
+            if (swissAtc.size() > refdataAtc.size()) {
+                m.atc = swissAtc;
+            } else if (swissAtc.size() < refdataAtc.size()) {
+                m.atc = refdataAtc;
+            } else {
+                m.atc = swissAtc;
+            }
+            if (!m.atc.empty()) {
+                break;
+            }
         }
         if (m.atc.empty()) {
             statsATCNotFound.push_back(m.regnrs);

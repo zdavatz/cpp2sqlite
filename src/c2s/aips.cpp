@@ -195,8 +195,13 @@ MedicineList & parseXML(const std::string &filename,
 
                 std::vector<std::string> rnVector;
                 {
-                    Med.regnrs = v.second.get("RegulatedAuthorization.Identifier", "");
-                    boost::algorithm::split(rnVector, Med.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+                    BOOST_FOREACH(pt::ptree::value_type &regulatedAuthorization, v.second.get_child("RegulatedAuthorization")) {
+                        if (regulatedAuthorization.first == "Identifier") {
+                            std::string regnr = regulatedAuthorization.second.data();
+                            rnVector.push_back(regnr);
+                        }
+                    }
+                    Med.regnrs = boost::algorithm::join(rnVector, ", ");
 
                     if (rnVector[0] == "00000")
                         statsTitlesWithRnZeroVec.push_back(Med.title);
