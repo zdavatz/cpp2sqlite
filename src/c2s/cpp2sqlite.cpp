@@ -341,7 +341,7 @@ void getHtmlFromXml(std::string &xml,
     try {
         std::stringstream ss;
         ss << xml;
-        pt::read_xml(ss, tree);
+        pt::read_xml(ss, tree, pt::xml_parser::no_concat_text);
     } catch (std::exception &e) {
         statsInvalidContentHTML.push_back(regnrs);
         std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
@@ -365,7 +365,7 @@ void getHtmlFromXml(std::string &xml,
         barcodeSS << htmlBarcodes;
         pt::ptree barcodeTree;
         try {
-            pt::read_xml(barcodeSS, barcodeTree);
+            pt::read_xml(barcodeSS, barcodeTree, pt::xml_parser::no_concat_text);
         } catch (std::exception &e) {
             std::cerr << "Error reading barcode html: " << htmlBarcodes << std::endl;
             std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
@@ -425,7 +425,7 @@ void getHtmlFromXml(std::string &xml,
                 std::stringstream pedSS;
                 pedSS << extraHtml;
                 pt::ptree extraHtmlTree;
-                pt::read_xml(pedSS, extraHtmlTree);
+                pt::read_xml(pedSS, extraHtmlTree, pt::xml_parser::no_concat_text);
 
                 // Append 'section#' to a vector to be used in column "ids_str"
                 sectionIds.push_back(sectionPedDose);
@@ -484,7 +484,7 @@ void getHtmlFromXml(std::string &xml,
                 std::stringstream ss;
                 ss << extraHtml;
                 pt::ptree extraHtmlTree;
-                pt::read_xml(ss, extraHtmlTree);
+                pt::read_xml(ss, extraHtmlTree, pt::xml_parser::no_concat_text);
 
                 tree.add_child("html.body", extraHtmlTree);
             } catch (std::exception &e) {
@@ -562,7 +562,7 @@ void getHtmlFromXml(std::string &xml,
                 std::stringstream ss;
                 ss << extraHtml;
                 pt::ptree extraHtmlTree;
-                pt::read_xml(ss, extraHtmlTree);
+                pt::read_xml(ss, extraHtmlTree, pt::xml_parser::no_concat_text);
 
                 tree.add_child("html.body", extraHtmlTree);
             } catch (std::exception &e) {
@@ -637,7 +637,7 @@ void getHtmlFromXml(std::string &xml,
                 std::stringstream ss;
                 ss << extraHtml;
                 pt::ptree extraHtmlTree;
-                pt::read_xml(ss, extraHtmlTree);
+                pt::read_xml(ss, extraHtmlTree, pt::xml_parser::no_concat_text);
 
                 tree.add_child("html.body", extraHtmlTree);
             } catch (std::exception &e) {
@@ -663,7 +663,7 @@ void getHtmlFromXml(std::string &xml,
         ss << extraHtml;
         pt::ptree extraHtmlTree;
         try {
-            pt::read_xml(ss, extraHtmlTree);
+            pt::read_xml(ss, extraHtmlTree, pt::xml_parser::no_concat_text);
         } catch (std::exception &e) {
             std::cerr << "Error reading footer html: " << extraHtml << std::endl;
             std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
