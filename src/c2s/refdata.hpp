@@ -29,6 +29,22 @@ namespace REFDATA
         std::string authorisation_identifier;
     };
 
+    struct ArticleSectionParagraph {
+        std::string content;
+        pt::ptree tree;
+        bool is_italic;
+    };
+
+    struct ArticleSection {
+        std::string title;
+        std::string id;
+        std::vector<ArticleSectionParagraph> paragraphs;
+    };
+
+    struct ArticleDocument {
+        std::vector<ArticleSection> sections;
+    };
+
     typedef std::vector<Article> ArticleList;
 
     void parseXML(const std::string &filename,
@@ -51,6 +67,8 @@ namespace REFDATA
         std::vector<std::string> &sectionIds,
         std::vector<std::string> &sectionTitles
     );
+
+    ArticleDocument getArticleDocument(std::string path);
 }
 
 #endif /* refdata_hpp */

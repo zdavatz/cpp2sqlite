@@ -161,16 +161,16 @@ static std::string getBarcodesFromGtins(
                 html += "<p class=\"spacing1\" style=\"margin-bottom:1em\">";
                 if (drugShortage.status != "") {
                     if (language == "fr") {
-                        html += "Statut: " + drugShortage.status + "<br>\n";
+                        html += "Statut: " + drugShortage.status + "<br/>\n";
                     } else {
-                        html += "Status: " + drugShortage.status + "<br>\n";
+                        html += "Status: " + drugShortage.status + "<br/>\n";
                     }
                 }
                 if (drugShortage.estimatedDateOfDelivery != "") {
                     if (language == "fr") {
-                        html += "Date prévue d'accouchement: " + drugShortage.estimatedDateOfDelivery + "<br>\n";
+                        html += "Date prévue d'accouchement: " + drugShortage.estimatedDateOfDelivery + "<br/>\n";
                     } else {
-                        html += "Geschaetztes Datum Lieferfaehigkeit: " + drugShortage.estimatedDateOfDelivery + "<br>\n";
+                        html += "Geschaetztes Datum Lieferfaehigkeit: " + drugShortage.estimatedDateOfDelivery + "<br/>\n";
                     }
                 }
                 if (drugShortage.dateLastMutation != "") {
@@ -291,7 +291,7 @@ static void cleanupSection_not1_Title(std::string &title,
 }
 
 // see RealExpertInfo.java:1065
-void getHtmlFromXml(std::string &xml,
+void getHtmlFromXml(std::string &path,
                     std::string &html,
                     std::string regnrs,
                     std::string ownerCompany,
@@ -303,15 +303,6 @@ void getHtmlFromXml(std::string &xml,
                     bool verbose,
                     bool skipSappinfo)
 {
-#ifdef DEBUG_SHOW_RAW_XML_IN_DB_FILE
-    html = xml;
-    return;
-#endif
-
-    if (xml.empty()) {
-        html = xml;
-        return;
-    }
 
 #ifdef DEBUG
     if (atc.empty())
@@ -320,92 +311,70 @@ void getHtmlFromXml(std::string &xml,
         << std::endl;
 #endif
 
-    // Fix broken HTML
-    {
-        BEAUTY::cleanupForNonHtmlUsage(xml);
-        boost::replace_all(xml, "\ufeff", "");
+    std::string xml;
 
-        // Somehow the html files are so broken they has 2 xml declaration,
-        // remove them all and add one back at last
-        boost::replace_all(xml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
+    REFDATA::ArticleDocument document = REFDATA::getArticleDocument(path);
 
-        // Somehow the html files are so broken, it starts with <div> instead of <html>
-        // but interestingly with </html>
-        std::regex r1("^\\s*<div ");
-        xml = std::regex_replace(xml, r1, "<html ");
-
-        xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + xml;
+    for (REFDATA::ArticleSection section : document.sections) {
+        sectionIds.push_back(section.id);
+        sectionTitles.push_back(section.title);
     }
 
     pt::ptree tree;
-    try {
-        std::stringstream ss;
-        ss << xml;
-        pt::read_xml(ss, tree);
-    } catch (std::exception &e) {
-        statsInvalidContentHTML.push_back(regnrs);
-        std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
-        return;
-    }
+    tree.put("html.body.div.<xmlattr>.id", "monographie");
+    tree.put("html.body.div.<xmlattr>.name", regnrs);
+    for (REFDATA::ArticleSection section : document.sections) {
+        if (section.id == "section1") {
+            pt::ptree titleDiv = pt::ptree(section.title);
+            titleDiv.put("<xmlattr>.class", "MonTitle");
+            titleDiv.put("<xmlattr>.id", section.id);
+            tree.add_child("html.body.div.div", titleDiv);
 
-    REFDATA::findSectionIdsAndTitle(tree, sectionIds, sectionTitles);
-    if (sectionIds.empty() || sectionTitles.empty() || sectionIds[0].empty() || sectionTitles[0].empty()) {
-        statsInvalidContentHTML.push_back(regnrs);
-        // Use raw html if xml is in unrecognised format
-        html = xml;
-        return;
-    }
-
-    BEAUTY::cleanUpSpan(tree);
-
-    std::string htmlBarcodes = getBarcodesFromGtins(packages, language, sectionIds, sectionTitles);
-
-    {
-        std::stringstream barcodeSS;
-        barcodeSS << htmlBarcodes;
-        pt::ptree barcodeTree;
-        try {
-            pt::read_xml(barcodeSS, barcodeTree);
-        } catch (std::exception &e) {
-            std::cerr << "Error reading barcode html: " << htmlBarcodes << std::endl;
-            std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
+            pt::ptree ownerCompanyDiv;
+            ownerCompanyDiv.put("<xmlattr>.class", "ownerCompany");
+            ownerCompanyDiv.put("div.<xmlattr>.style", "text-align: right");
+            ownerCompanyDiv.put("div.<xmltext>", ownerCompany);
+            tree.add_child("html.body.div.div", ownerCompanyDiv);
+            continue;
         }
 
-        pt::ptree body = tree.get_child("html.body");
+        pt::ptree thisDiv;
+        thisDiv.put("<xmlattr>.class", "paragraph");
+        thisDiv.put("<xmlattr>.id", section.id);
+        thisDiv.put("div.<xmlattr>.class", "absTitle");
+        thisDiv.put("div.<xmltext>", section.title);
 
-        pt::ptree newBody;
-
-        bool shouldSkip = false;
-        BOOST_FOREACH(pt::ptree::value_type &v, body) {
-            std::string idAttr = v.second.get<std::string>("<xmlattr>.id", "");
-
-            std::smatch match;
-            std::regex sectionIdRegex(R"(^section\d+$)");
-            if (std::regex_search(idAttr, match, sectionIdRegex)) {
-                std::string sectionId = match[0];
-                std::string sectionTitle = BEAUTY::getFlatPTreeContent(v.second);
-
-                std::string expectingTitle("Packungen");
-                if (language == "fr") {
-                    expectingTitle = "Présentation";
-                }
-                if (sectionTitle == expectingTitle) {
-                    // We found the package section, start removing everything after this
-                    shouldSkip = true;
-                    newBody.push_back(v);
-                    BOOST_FOREACH(pt::ptree::value_type &barcodeV, barcodeTree) {
-                        newBody.push_back(barcodeV);
+        if (section.title == "Packungen" || (language == "fr" && section.title == "Présentation")) {
+            std::string htmlBarcodes = getBarcodesFromGtins(packages, language, sectionIds, sectionTitles);
+            std::stringstream barcodeSS;
+            barcodeSS << htmlBarcodes;
+            pt::ptree barcodeTree;
+            try {
+                pt::read_xml(barcodeSS, barcodeTree, pt::xml_parser::no_concat_text);
+            } catch (std::exception &e) {
+                std::cerr << "Error reading barcode html: " << htmlBarcodes << std::endl;
+                std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
+            }
+            BOOST_FOREACH(pt::ptree::value_type &v, barcodeTree) {
+                thisDiv.push_back(pt::ptree::value_type(v.first, v.second));
+            }
+        } else {
+            for (REFDATA::ArticleSectionParagraph paragraph : section.paragraphs) {
+                if (!paragraph.content.empty()) {
+                    pt::ptree paragraphP = pt::ptree(paragraph.content);
+                    paragraphP.put("<xmlattr>.class", "spacing1");
+                    if (paragraph.is_italic) {
+                        paragraphP.put("<xmlattr>.style", "font-style: italic");
                     }
-                } else if (shouldSkip) {
-                    // We are skipping, but we see a new section, so stop skipping
-                    shouldSkip = false;
+                    thisDiv.push_back(pt::ptree::value_type("p", paragraphP));
+                } else {
+                    BOOST_FOREACH(pt::ptree::value_type &pv, paragraph.tree) {
+                        thisDiv.push_back(pt::ptree::value_type(pv.first, pv.second));
+                    }
                 }
             }
-            if (!shouldSkip) {
-                newBody.push_back(v);
-            }
         }
-        tree.put_child("html.body", newBody);
+        tree.get_child("html.body.div").push_back(pt::ptree::value_type("div", thisDiv));
     }
 
     if (!atc.empty() && !PED::isRegnrsInBlacklist(regnrs))
@@ -425,13 +394,13 @@ void getHtmlFromXml(std::string &xml,
                 std::stringstream pedSS;
                 pedSS << extraHtml;
                 pt::ptree extraHtmlTree;
-                pt::read_xml(pedSS, extraHtmlTree);
+                pt::read_xml(pedSS, extraHtmlTree, pt::xml_parser::no_concat_text);
 
                 // Append 'section#' to a vector to be used in column "ids_str"
                 sectionIds.push_back(sectionPedDose);
                 sectionTitles.push_back(sectionPedDoseName);
 
-                tree.add_child("html.body", extraHtmlTree);
+                tree.add_child("html.body.div.div", extraHtmlTree.get_child("div"));
             } catch (std::exception &e) {
                 std::clog << "Error adding ped xml: " << extraHtml << std::endl;
                 throw e;
@@ -484,9 +453,11 @@ void getHtmlFromXml(std::string &xml,
                 std::stringstream ss;
                 ss << extraHtml;
                 pt::ptree extraHtmlTree;
-                pt::read_xml(ss, extraHtmlTree);
+                pt::read_xml(ss, extraHtmlTree, pt::xml_parser::no_concat_text);
 
-                tree.add_child("html.body", extraHtmlTree);
+                BOOST_FOREACH(pt::ptree::value_type &et, extraHtmlTree) {
+                    tree.get_child("html.body.div").push_back(pt::ptree::value_type(et.first, et.second));
+                }
             } catch (std::exception &e) {
                 std::clog << "Error adding SAPPINFO xml: " << extraHtml << std::endl;
                 throw e;
@@ -553,20 +524,20 @@ void getHtmlFromXml(std::string &xml,
                 }
                 extraHtml += "</p>";
             }
-            if (addedSectionTitle) {
-                extraHtml += "</div>";
-            }
+        }
+        if (addedSectionTitle) {
+            extraHtml += "</div>";
         }
         if (!extraHtml.empty()) {
             try {
                 std::stringstream ss;
                 ss << extraHtml;
                 pt::ptree extraHtmlTree;
-                pt::read_xml(ss, extraHtmlTree);
+                pt::read_xml(ss, extraHtmlTree, pt::xml_parser::no_concat_text);
 
-                tree.add_child("html.body", extraHtmlTree);
+                tree.add_child("html.body.div.div", extraHtmlTree.get_child("div"));
             } catch (std::exception &e) {
-                std::clog << "xml1: " << extraHtml;
+                std::clog << "Error in Chargenrückrufe, xml: " << extraHtml;
                 throw e;
             }
         }
@@ -628,18 +599,18 @@ void getHtmlFromXml(std::string &xml,
                 }
                 extraHtml += "</p>";
             }
-            if (addedSectionTitle) {
-                extraHtml += "</div>";
-            }
+        }
+        if (addedSectionTitle) {
+            extraHtml += "</div>";
         }
         if (!extraHtml.empty()) {
             try {
                 std::stringstream ss;
                 ss << extraHtml;
                 pt::ptree extraHtmlTree;
-                pt::read_xml(ss, extraHtmlTree);
+                pt::read_xml(ss, extraHtmlTree, pt::xml_parser::no_concat_text);
 
-                tree.add_child("html.body", extraHtmlTree);
+                tree.add_child("html.body.div.div", extraHtmlTree.get_child("div"));
             } catch (std::exception &e) {
                 std::clog << "xml2: " << extraHtml;
                 throw e;
@@ -663,23 +634,22 @@ void getHtmlFromXml(std::string &xml,
         ss << extraHtml;
         pt::ptree extraHtmlTree;
         try {
-            pt::read_xml(ss, extraHtmlTree);
+            pt::read_xml(ss, extraHtmlTree, pt::xml_parser::no_concat_text);
         } catch (std::exception &e) {
             std::cerr << "Error reading footer html: " << extraHtml << std::endl;
             std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
         }
 
-        tree.add_child("html.body", extraHtmlTree);
+        BOOST_FOREACH(pt::ptree::value_type &et, extraHtmlTree) {
+            tree.get_child("html.body.div").push_back(pt::ptree::value_type(et.first, et.second));
+        }
     }
 
     {
-        // tree.get_child("html.head").erase("style");
-        tree.put("html.head.meta.<xmlattr>.content", "text/html; charset=UTF-8");
-
         std::stringstream ss;
         pt::write_xml(ss, tree);
         xml = ss.str();
-        boost::replace_all(xml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
+        boost::replace_all(xml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", "");
     }
 
     html = xml;
@@ -891,14 +861,21 @@ int main(int argc, char **argv)
     }
 
     for (AIPS::Medicine& m : list) {
-        std::string swissAtc = SWISSMEDIC::getAtcFromFirstRn(m.regnrs);
-        std::string refdataAtc = REFDATA::findAtc(m.regnrs);
-        if (swissAtc.size() > refdataAtc.size()) {
-            m.atc = swissAtc;
-        } else if (swissAtc.size() < refdataAtc.size()) {
-            m.atc = refdataAtc;
-        } else {
-            m.atc = swissAtc;
+        std::vector<std::string> regnrs;
+        boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
+        for (std::string regnr : regnrs) {
+            std::string swissAtc = SWISSMEDIC::getAtcFromFirstRn(regnr);
+            std::string refdataAtc = REFDATA::findAtc(regnr);
+            if (swissAtc.size() > refdataAtc.size()) {
+                m.atc = swissAtc;
+            } else if (swissAtc.size() < refdataAtc.size()) {
+                m.atc = refdataAtc;
+            } else {
+                m.atc = swissAtc;
+            }
+            if (!m.atc.empty()) {
+                break;
+            }
         }
         if (m.atc.empty()) {
             statsATCNotFound.push_back(m.regnrs);
@@ -1042,10 +1019,8 @@ int main(int argc, char **argv)
             std::vector<std::string> sectionTitle; // HTML section titles
             {
                 std::string html;
-                std::ifstream inStream(m.contentHTMLPath, std::ios::in | std::ios::binary);
-                std::string xhtml = std::string((std::istreambuf_iterator<char>(inStream)), std::istreambuf_iterator<char>());
 
-                getHtmlFromXml(xhtml, html, m.regnrs, m.auth,
+                getHtmlFromXml(m.contentHTMLPath, html, m.regnrs, m.auth,
                                packages,        // for barcodes
                                sectionId,       // for ids_str
                                sectionTitle,    // for titles_str

@@ -188,26 +188,129 @@ std::string getPharByGtin(const std::string &gtin)
     return phar;
 }
 
-std::regex sectionIdRegex(R"(^section\d+$)");
-void findSectionIdsAndTitle(
-    pt::ptree tree,
-    std::vector<std::string> &sectionIds,
-    std::vector<std::string> &sectionTitles
-) {
-    BOOST_FOREACH(pt::ptree::value_type &v, tree) {
-        std::string idAttr = v.second.get<std::string>("<xmlattr>.id", "");
+std::set<std::string> getHtmlItalicClasses(std::string styleStr) {
+    std::regex styleRegex(R"(\.(s\d+)\{([^}]*)\})");
+    std::set<std::string> result;
 
-        std::smatch match;
-        if (std::regex_search(idAttr, match, sectionIdRegex)) {
-            std::string sectionId = match[0];
-            std::string sectionTitle = BEAUTY::getFlatPTreeContent(v.second);
-            BEAUTY::cleanupForNonHtmlUsage(sectionTitle);
-            sectionIds.push_back(sectionId);
-            sectionTitles.push_back(sectionTitle);
-        } else {
-            findSectionIdsAndTitle(v.second, sectionIds, sectionTitles);
+    const std::sregex_iterator end;
+    for (std::sregex_iterator i(styleStr.begin(), styleStr.end(), styleRegex); i != end; ++i)
+    {
+        std::string className = (*i)[1];
+        std::string styleContent = (*i)[2];
+        if (boost::contains(styleContent, "font-style:italic")) {
+            result.insert(className);
         }
     }
+    return result;
+}
+
+std::set<std::string> allClassesOfTree(pt::ptree tree) {
+    std::set<std::string> result;
+    std::string className = tree.get<std::string>("<xmlattr>.class", "");
+    if (!className.empty()) {
+        result.insert(className);
+    }
+    BOOST_FOREACH(pt::ptree::value_type &v, tree) {
+        std::set<std::string> subResult = allClassesOfTree(v.second);
+        result.insert(subResult.begin(), subResult.end());
+    }
+    return result;
+}
+
+ArticleDocument getArticleDocument(std::string path) {
+    ArticleDocument document;
+    std::vector<ArticleSection> sections;
+
+    pt::ptree tree;
+    try {
+        std::ifstream inStream(path, std::ios::in | std::ios::binary);
+        std::string xhtml = std::string((std::istreambuf_iterator<char>(inStream)), std::istreambuf_iterator<char>());
+
+        BEAUTY::cleanupForNonHtmlUsage(xhtml);
+        boost::replace_all(xhtml, "\ufeff", "");
+
+        // Somehow the html files are so broken they has 2 xml declaration,
+        // remove them all and add one back at last
+        boost::replace_all(xhtml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
+
+        // Somehow the html files are so broken, it starts with <div> instead of <html>
+        // but interestingly with </html>
+        std::regex r1("^\\s*<div ");
+        xhtml = std::regex_replace(xhtml, r1, "<html ");
+
+        xhtml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + xhtml;
+
+        std::stringstream ss;
+        ss << xhtml;
+        pt::read_xml(ss, tree/*, pt::xml_parser::no_concat_text*/);
+    } catch (std::exception &e) {
+        std::clog << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
+        return document;
+    }
+    BEAUTY::cleanUpSpan(tree);
+
+    std::set<std::string> italicClasses;
+    try {
+        std::string styleStr = BEAUTY::getFlatPTreeContent(tree.get_child("html.head.style"));
+        italicClasses = getHtmlItalicClasses(styleStr);
+    } catch (std::exception &e) {
+        // ignore
+    }
+
+
+    pt::ptree body;
+    try {
+        body = tree.get_child("html.body");
+    } catch (std::exception &e) {
+        std::clog << "Error1 in getArticleDocument!" << std::endl;
+        {
+            std::stringstream ss;
+            pt::write_xml(ss, tree);
+            std::string xml = ss.str();
+            std::clog << "errored xml: " << xml << std::endl;
+        }
+        throw e;
+    }
+    ArticleSection currentSection;
+    BOOST_FOREACH(pt::ptree::value_type &bodyValue, body) {
+        if (bodyValue.first == "p") {
+            std::string idAttr = bodyValue.second.get<std::string>("<xmlattr>.id", "");
+            if (!currentSection.title.empty() && !idAttr.empty()) {
+                sections.push_back(currentSection);
+                currentSection = {};
+            }
+            if (!idAttr.empty()) {
+                currentSection.id = idAttr;
+                currentSection.title = BEAUTY::getFlatPTreeContent(bodyValue.second);
+            } else {
+                std::set<std::string> thisClasses = allClassesOfTree(bodyValue.second);
+                std::set<std::string> thisItalicClasses;
+
+                set_intersection(
+                    thisClasses.begin(), thisClasses.end(),
+                    italicClasses.begin(), italicClasses.end(),
+                    inserter(thisItalicClasses, thisItalicClasses.begin())
+                );
+
+                ArticleSectionParagraph paragraph;
+                paragraph.content = BEAUTY::getFlatPTreeContent(bodyValue.second);
+                paragraph.is_italic = !thisItalicClasses.empty();
+                currentSection.paragraphs.push_back(paragraph);
+            }
+        } else {
+            ArticleSectionParagraph paragraph;
+            pt::ptree thisTree;
+            thisTree.push_back(bodyValue);
+            paragraph.tree = thisTree;
+            currentSection.paragraphs.push_back(paragraph);
+        }
+    }
+    if (!currentSection.title.empty()) {
+        sections.push_back(currentSection);
+    }
+
+    document.sections = sections;
+    return document;
 }
 
 }
