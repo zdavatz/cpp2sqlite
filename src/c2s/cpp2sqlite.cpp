@@ -232,11 +232,6 @@ void modifyColgroup(pt::ptree &colgroup)
     }
 }
 
-void removeTagFromXml(std::string &xml, const std::string &tag)
-{
-
-}
-
 // Here we modify the HTML contents and possibly children tags, not the parent tags
 static void cleanupTitle(std::string &title)
 {
@@ -650,6 +645,10 @@ void getHtmlFromXml(std::string &path,
         pt::write_xml(ss, tree);
         xml = ss.str();
         boost::replace_all(xml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", "");
+
+        // Need to add an empty head, as iOS client add style by replacing it
+        // it must be done in string, as adding it in tree results in <head/> which doesn't hit the replace
+        boost::replace_all(xml, "<html>", "<html><head></head>");
     }
 
     html = xml;
