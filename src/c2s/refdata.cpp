@@ -235,8 +235,18 @@ ArticleDocument getArticleDocument(std::string path) {
 
         // Somehow the html files are so broken, it starts with <div> instead of <html>
         // but interestingly with </html>
-        std::regex r1("^\\s*<div ");
+        std::regex r1(R"(^\s*<div )");
+        if (std::regex_search(xhtml, r1)) {
+            std::clog << "Malformed html found(1), trying to fix: " << path << std::endl;
+        }
         xhtml = std::regex_replace(xhtml, r1, "<html ");
+
+        // Somehow the html files are so broken, the <html> tag sometimes have weird quotes
+        std::regex r2(R"(<html \S*">")");
+        if (std::regex_search(xhtml, r2)) {
+            std::clog << "Malformed html found(2), trying to fix: " << path << std::endl;
+        }
+        xhtml = std::regex_replace(xhtml, r2, "<html>");
 
         xhtml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + xhtml;
 
