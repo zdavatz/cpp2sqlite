@@ -244,7 +244,7 @@ ArticleDocument getArticleDocument(std::string path) {
         ss << xhtml;
         pt::read_xml(ss, tree/*, pt::xml_parser::no_concat_text*/);
     } catch (std::exception &e) {
-        std::clog << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
+        std::clog << basename((char *)__FILE__) << ":" << __LINE__ << ", Error in " << path << " " << e.what() << std::endl;
         return document;
     }
     BEAUTY::cleanUpSpan(tree);
