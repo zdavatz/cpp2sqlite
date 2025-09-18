@@ -235,8 +235,18 @@ ArticleDocument getArticleDocument(std::string path) {
 
         // Somehow the html files are so broken, it starts with <div> instead of <html>
         // but interestingly with </html>
-        std::regex r1("^\\s*<div ");
+        std::regex r1(R"(^\s*<div )");
+        if (std::regex_search(xhtml, r1)) {
+            std::clog << "Malformed html found(1), trying to fix: " << path << std::endl;
+        }
         xhtml = std::regex_replace(xhtml, r1, "<html ");
+
+        // Somehow the html files are so broken, the <html> tag sometimes have weird quotes
+        std::regex r2(R"(<html \S*">")");
+        if (std::regex_search(xhtml, r2)) {
+            std::clog << "Malformed html found(2), trying to fix: " << path << std::endl;
+        }
+        xhtml = std::regex_replace(xhtml, r2, "<html>");
 
         xhtml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + xhtml;
 
@@ -244,7 +254,7 @@ ArticleDocument getArticleDocument(std::string path) {
         ss << xhtml;
         pt::read_xml(ss, tree/*, pt::xml_parser::no_concat_text*/);
     } catch (std::exception &e) {
-        std::clog << basename((char *)__FILE__) << ":" << __LINE__ << ", Error " << e.what() << std::endl;
+        std::clog << basename((char *)__FILE__) << ":" << __LINE__ << ", Error in " << path << " " << e.what() << std::endl;
         return document;
     }
     BEAUTY::cleanUpSpan(tree);
@@ -272,15 +282,21 @@ ArticleDocument getArticleDocument(std::string path) {
         throw e;
     }
     ArticleSection currentSection;
+    // We have to calculate our own section number,
+    // as some html doesn't start with a section.
+    int sectionNumber = 1;
     BOOST_FOREACH(pt::ptree::value_type &bodyValue, body) {
         if (bodyValue.first == "p") {
             std::string idAttr = bodyValue.second.get<std::string>("<xmlattr>.id", "");
-            if (!currentSection.title.empty() && !idAttr.empty()) {
+            bool needNewSection = currentSection.title.empty() || !idAttr.empty();
+            if (needNewSection && !currentSection.title.empty()) {
                 sections.push_back(currentSection);
                 currentSection = {};
+                sectionNumber++;
             }
-            if (!idAttr.empty()) {
-                currentSection.id = idAttr;
+            std::string sectionId = "section" + std::to_string(sectionNumber);
+            if (needNewSection) {
+                currentSection.id = sectionId;
                 currentSection.title = BEAUTY::getFlatPTreeContent(bodyValue.second);
             } else {
                 std::set<std::string> thisClasses = allClassesOfTree(bodyValue.second);
