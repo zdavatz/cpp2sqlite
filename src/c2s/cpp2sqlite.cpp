@@ -47,6 +47,7 @@
 #include "drugshortage.hpp"
 #include "batchrecalls.hpp"
 #include "dhpchpc.hpp"
+#include "swissreg.hpp"
 #include "report.hpp"
 #include "config.h"
 
@@ -880,6 +881,8 @@ int main(int argc, char **argv)
             statsATCNotFound.push_back(m.regnrs);
         }
     }
+
+    SWISSREG::parseJSON(opt_inputDirectory + "/swissreg.json");
 
     if (!flagNoSappinfo)
         SAPP::parseXLXS(opt_inputDirectory, "/sappinfo.xlsx", opt_language);
