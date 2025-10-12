@@ -68,7 +68,7 @@ namespace SWISSREG
         cert.protectionDate = entry["protectionDate"].get<std::string>();
         cert.basePatentDate = entry["basePatentDate"].get<std::string>();
         cert.basePatent = entry["basePatent"].get<std::string>();
-        // cert.basePatentId = entry["basePatentId"].get<std::string>();
+        cert.basePatentId = entry["basePatentId"].get<std::string>();
         cert.iksnrs = entry["iksnrs"].get<std::vector<std::string>>();
         cert.expiryDate = entry["expiryDate"].get<std::string>();
         cert.deletionDate = entry["deletionDate"].get<std::string>();

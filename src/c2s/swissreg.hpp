@@ -25,7 +25,7 @@ namespace SWISSREG
         std::string protectionDate;
         std::string basePatentDate;
         std::string basePatent;
-        // std::string basePatentId;
+        std::string basePatentId;
         std::vector<std::string> iksnrs;
         std::string expiryDate;
         std::string deletionDate;

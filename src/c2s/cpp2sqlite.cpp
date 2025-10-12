@@ -71,6 +71,7 @@
 #define SECTION_NUMBER_SAPPINFO_BF      9054
 #define SECTION_NUMBER_BATCH_RECALL     9055
 #define SECTION_NUMBER_DHPC_HPC         9056
+#define SECTION_NUMBER_SWISSREG         9057
 
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
@@ -611,6 +612,81 @@ void getHtmlFromXml(std::string &path,
                 std::clog << "xml2: " << extraHtml;
                 throw e;
             }
+        }
+    }
+
+    {
+        std::vector<std::string> regnrsList;
+        boost::algorithm::split(regnrsList, regnrs, boost::is_any_of(", "), boost::token_compress_on);
+        std::set<std::string> addedCertificateIds;
+        pt::ptree extraHtmlTree;
+        std::string sectionId = "Section" + std::to_string(SECTION_NUMBER_SWISSREG);
+        std::string sectionName = "Swissreg";
+        extraHtmlTree.put("<xmlattr>.class", "paragraph");
+        extraHtmlTree.put("<xmlattr>.id", sectionId);
+
+        extraHtmlTree.put("div.<xmlattr>.class", "absTitle");
+        extraHtmlTree.put("div.<xmltext>", sectionName);
+
+        for (auto regnrs : regnrsList) {
+            for (auto cert : SWISSREG::getCertsByRegnr(regnrs)) {
+                if (cert.certificateId.empty()) continue;
+                if (addedCertificateIds.find(cert.certificateId) != addedCertificateIds.end()) continue;
+                addedCertificateIds.insert(cert.certificateId);
+
+                pt::ptree certLink;
+                certLink.put("<xmlattr>.class", "spacing1");
+                certLink.put("<xmltext>", language == "de" ? "ESZ/PESZ-Nummer:" : "CCP/CCP pédiatrique:");
+                certLink.put("a.<xmltext>", cert.certificateNumber);
+                std::string certId = cert.certificateId;
+                boost::replace_all(certId, "urn:ige:schutztitel:esz:", "");
+                certLink.put("a.<xmlattr>.href", "https://www.swissreg.ch/database-client/register/detail/certificate/" + certId + "?lang=" + language);
+                certLink.put("a.<xmlattr>.target", "_blank");
+                extraHtmlTree.add_child("p", certLink);
+
+                pt::ptree patentLink;
+                patentLink.put("<xmlattr>.class", "spacing1");
+                patentLink.put("<xmltext>", language == "de" ? "Grundpatent:" : "Brevet de base:");
+                patentLink.put("a.<xmltext>", cert.basePatent);
+                patentLink.put("a.<xmlattr>.href", "https://www.swissreg.ch/database-client/register/detail/patent/" + cert.basePatentId + "?lang=" + language);
+                patentLink.put("a.<xmlattr>.target", "_blank");
+                extraHtmlTree.add_child("p", patentLink);
+
+                pt::ptree issueDate;
+                issueDate.put("<xmlattr>.class", "spacing1");
+                issueDate.put("<xmltext>", (language == "de" ? "Erteilungsdatum:" : "Date de délivrance:") + cert.issueDate);
+                extraHtmlTree.add_child("p", issueDate);
+
+                pt::ptree publicationDate;
+                publicationDate.put("<xmlattr>.class", "spacing1");
+                publicationDate.put("<xmltext>", (language == "de" ? "Publikationsdatum:" : "Date de la publication:") + cert.publicationDate);
+                extraHtmlTree.add_child("p", publicationDate);
+
+                pt::ptree protectionDate;
+                protectionDate.put("<xmlattr>.class", "spacing1");
+                protectionDate.put("<xmltext>", (language == "de" ? "Schutzdauerbeginn:" : "Début de la durée de protection:") + cert.protectionDate);
+                extraHtmlTree.add_child("p", protectionDate);
+
+                pt::ptree basePatentDate;
+                basePatentDate.put("<xmlattr>.class", "spacing1");
+                basePatentDate.put("<xmltext>", (language == "de" ? "Anmeldedatum:" : "Date de dépôt:") + cert.basePatentDate);
+                extraHtmlTree.add_child("p", basePatentDate);
+
+                pt::ptree expiryDate;
+                expiryDate.put("<xmlattr>.class", "spacing1");
+                expiryDate.put("<xmltext>", (language == "de" ? "Maximale Schutzdauer:" : "Durée maximale de protection:") + cert.expiryDate);
+                extraHtmlTree.add_child("p", expiryDate);
+
+                pt::ptree deletionDate;
+                deletionDate.put("<xmlattr>.class", "spacing1");
+                deletionDate.put("<xmltext>", (language == "de" ? "Löschung:" : "Radiation:") + cert.deletionDate);
+                extraHtmlTree.add_child("p", deletionDate);
+            }
+        }
+        if (!addedCertificateIds.empty()) {
+            tree.add_child("html.body.div.div", extraHtmlTree);
+            sectionIds.push_back(sectionId);
+            sectionTitles.push_back(sectionName);
         }
     }
 
