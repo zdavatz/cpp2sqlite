@@ -772,7 +772,7 @@ int main(int argc, char **argv)
     bool flagXml = false;
     bool flagVerbose = false;
     bool flagNoSappinfo = false;
-    //bool flagPinfo = false;
+    bool flagPinfo = false;
     std::string type("fi"); // Fachinfo
     std::string opt_aplha;
     std::string opt_regnr;
@@ -792,7 +792,7 @@ int main(int argc, char **argv)
 //        ("owner", po::value<std::string>( &opt_owner ), "only include medications owned by arg value") // Med owner
 //        ("pseudo", "adds pseudo expert infos to db") // Pseudo fi
 //        ("inter", "adds drug interactions to db")
-//        ("pinfo", "generate patient info htmls") // Generate pi
+       ("pinfo", "generate patient info htmls") // Generate pi
 //        ("xml", "generate xml file")
 //        ("gln", "generate csv file with Swiss gln codes") // Shopping cart
 //        ("shop", "generate encrypted files for shopping cart")
@@ -859,9 +859,9 @@ int main(int argc, char **argv)
     }
 
     if (vm.count("pinfo")) {
-        //flagPinfo = true;
+        flagPinfo = true;
         type = "pi";
-        //std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
+        // std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
     }
 
     if (!vm.count("workDir")) {
