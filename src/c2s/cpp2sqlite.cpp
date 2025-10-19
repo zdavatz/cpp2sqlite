@@ -968,6 +968,9 @@ int main(int argc, char **argv)
     }
     else {
         std::string dbFilename = opt_workDirectory + "/output/amiko_db_full_idx_" + opt_language + ".db";
+        if (flagPinfo) {
+            dbFilename = opt_workDirectory + "/output/amiko_db_full_idx_pinfo_" + opt_language + ".db";
+        }
         openDB(dbFilename);
 
         unsigned int statsRnFoundRefdataCount = 0;
