@@ -31,7 +31,7 @@
 #define COLUMN_T       19   // application field
 #define COLUMN_W       22   // preparation contains narcotics
 
-#define FIRST_DATA_ROW_INDEX    5
+#define FIRST_DATA_ROW_INDEX    6
 
 namespace SWISSMEDIC
 {
