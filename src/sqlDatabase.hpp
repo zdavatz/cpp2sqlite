@@ -15,6 +15,28 @@
 
 namespace DB
 {
+
+struct RowToInsert {
+    // _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    std::string title;
+    std::string auth;
+    std::string atc;
+    std::string substances;
+    std::string regnrs;
+    std::string atc_class;
+    std::string tindex_str;
+    std::string application_str;
+    std::string indications_str;
+    int customer_id = 0;
+    std::string pack_info_str;
+    std::string add_info_str;
+    std::string ids_str;
+    std::string titles_str;
+    std::string content;
+    std::string style_str;
+    std::string packages;
+};
+
 struct Sql
 {
 private:
@@ -46,6 +68,7 @@ public:
     void insertInto(const std::string_view &tableName,
                     const std::string &keys,
                     const std::string &values);
+    void insertRow(const std::string_view &tableName, DB::RowToInsert row);
 };
 
 }
