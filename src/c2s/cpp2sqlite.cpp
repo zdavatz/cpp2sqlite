@@ -1114,6 +1114,8 @@ int main(int argc, char **argv)
         unsigned int statsRnNotFoundBagCount = 0;
         std::vector<std::string> statsRegnrsNotFound;
 
+        std::set<std::string> addedRegnrs;
+
 #ifdef WITH_PROGRESS_BAR
         int ii = 1;
         int n = list.size();
@@ -1130,6 +1132,9 @@ int main(int argc, char **argv)
             std::vector<std::string> regnrs;
             boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
             //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << ", regnrs size: " << regnrs.size() << std::endl;
+            for (std::string regnr : regnrs) {
+                addedRegnrs.insert(regnr);
+            }
 
             if (regnrs[0] == "00000")
                 continue;
@@ -1218,6 +1223,46 @@ int main(int argc, char **argv)
 #ifdef WITH_PROGRESS_BAR
         std::cerr << "\r100 %" << std::endl;
 #endif
+
+        // Preparations.xml (BAG) and Packungen.xlsx (Swissmedic).
+        std::vector<BAG::Preparation> bagPrepList = BAG::getPrepList();
+        for (auto bagPrep : bagPrepList) {
+            if (addedRegnrs.find(bagPrep.swissmedNo) == addedRegnrs.end()) {
+                DB::RowToInsert rowToInsert;
+
+                std::string auth = "";
+                for (auto pack : bagPrep.packs) {
+                    if (!pack.partnerDescription.empty()) {
+                        auth = pack.partnerDescription;
+                        break;
+                    }
+                }
+
+                rowToInsert.title = bagPrep.name;
+                rowToInsert.auth = auth;
+                rowToInsert.atc = bagPrep.atcCode;
+                // rowToInsert.substances;
+                rowToInsert.regnrs = bagPrep.swissmedNo;
+                std::string atcClass = ATC::getClassByAtcColumn(bagPrep.atcCode);
+                rowToInsert.atc_class = atcClass;
+                rowToInsert.tindex_str = bagPrep.itCodes.tindex;
+                fillApplicationStr(&rowToInsert);
+                fillPackagesInRow(
+                    opt_language,
+                    &rowToInsert,
+                    &statsRnFoundRefdataCount,
+                    &statsRnNotFoundRefdataCount,
+                    &statsRnFoundSwissmedicCount,
+                    &statsRnNotFoundSwissmedicCount,
+                    &statsRnFoundBagCount,
+                    &statsRnNotFoundBagCount,
+                    &statsRegnrsNotFound
+                );
+
+                sqlDb.insertRow(TABLE_NAME_AMIKO, rowToInsert);
+                addedRegnrs.insert(rowToInsert.regnrs);
+            }
+        }
         REP::html_h1("Usage");
 
         REP::html_h2("aips REGNRS (found/not found)");

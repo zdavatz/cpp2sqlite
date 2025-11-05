@@ -28,7 +28,7 @@ namespace BAG
     struct ItCode {
         // shortest
         std::string tindex;         // localized
-        
+
         // longest
         std::string application;    // localized
         std::string longestItCode;
@@ -42,19 +42,21 @@ namespace BAG
         std::string exFactoryPriceValidFrom;
         std::string publicPrice;
         std::string limitationPoints;   // TODO
+        std::string partnerDescription;
     };
 
     struct Preparation {
         std::string name;
         std::string description;
         std::string swissmedNo;     // same as regnr
+        std::string atcCode;
         std::string orgen;
         std::string sb20;
         std::string sb;
         std::vector<Pack> packs;
         ItCode itCodes;
     };
-    
+
     typedef std::vector<Preparation> PreparationList;
     typedef std::map<std::string, packageFields> PackageMap;
 
@@ -78,6 +80,8 @@ namespace BAG
     std::string formatPriceAsMoney(const std::string &price);
 
     packageFields getPackageFieldsByGtin(const std::string &gtin);
+
+    PreparationList getPrepList();
 
     void printUsageStats();
 }
