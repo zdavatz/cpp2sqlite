@@ -1224,65 +1224,68 @@ int main(int argc, char **argv)
         std::cerr << "\r100 %" << std::endl;
 #endif
 
-        // Preparations.xml (BAG) and Packungen.xlsx (Swissmedic).
-        std::vector<BAG::Preparation> bagPrepList = BAG::getPrepList();
-        for (auto bagPrep : bagPrepList) {
-            if (addedRegnrs.find(bagPrep.swissmedNo) == addedRegnrs.end()) {
-                DB::RowToInsert rowToInsert;
+        if (flagPinfo) {
 
-                std::string auth = "";
-                for (auto pack : bagPrep.packs) {
-                    if (!pack.partnerDescription.empty()) {
-                        auth = pack.partnerDescription;
-                        break;
+            // Preparations.xml (BAG) and Packungen.xlsx (Swissmedic).
+            std::vector<BAG::Preparation> bagPrepList = BAG::getPrepList();
+            for (auto bagPrep : bagPrepList) {
+                if (addedRegnrs.find(bagPrep.swissmedNo) == addedRegnrs.end()) {
+                    DB::RowToInsert rowToInsert;
+
+                    std::string auth = "";
+                    for (auto pack : bagPrep.packs) {
+                        if (!pack.partnerDescription.empty()) {
+                            auth = pack.partnerDescription;
+                            break;
+                        }
                     }
+
+                    rowToInsert.title = bagPrep.name;
+                    rowToInsert.auth = auth;
+                    rowToInsert.atc = bagPrep.atcCode;
+                    // rowToInsert.substances;
+                    rowToInsert.regnrs = bagPrep.swissmedNo;
+                    std::string atcClass = ATC::getClassByAtcColumn(bagPrep.atcCode);
+                    rowToInsert.atc_class = atcClass;
+                    rowToInsert.tindex_str = bagPrep.itCodes.tindex;
+                    fillApplicationStr(&rowToInsert);
+                    fillPackagesInRow(
+                        opt_language,
+                        &rowToInsert,
+                        &statsRnFoundRefdataCount,
+                        &statsRnNotFoundRefdataCount,
+                        &statsRnFoundSwissmedicCount,
+                        &statsRnNotFoundSwissmedicCount,
+                        &statsRnFoundBagCount,
+                        &statsRnNotFoundBagCount,
+                        &statsRegnrsNotFound
+                    );
+
+                    sqlDb.insertRow(TABLE_NAME_AMIKO, rowToInsert);
+                    addedRegnrs.insert(rowToInsert.regnrs);
                 }
-
-                rowToInsert.title = bagPrep.name;
-                rowToInsert.auth = auth;
-                rowToInsert.atc = bagPrep.atcCode;
-                // rowToInsert.substances;
-                rowToInsert.regnrs = bagPrep.swissmedNo;
-                std::string atcClass = ATC::getClassByAtcColumn(bagPrep.atcCode);
-                rowToInsert.atc_class = atcClass;
-                rowToInsert.tindex_str = bagPrep.itCodes.tindex;
-                fillApplicationStr(&rowToInsert);
-                fillPackagesInRow(
-                    opt_language,
-                    &rowToInsert,
-                    &statsRnFoundRefdataCount,
-                    &statsRnNotFoundRefdataCount,
-                    &statsRnFoundSwissmedicCount,
-                    &statsRnNotFoundSwissmedicCount,
-                    &statsRnFoundBagCount,
-                    &statsRnNotFoundBagCount,
-                    &statsRegnrsNotFound
-                );
-
-                sqlDb.insertRow(TABLE_NAME_AMIKO, rowToInsert);
-                addedRegnrs.insert(rowToInsert.regnrs);
             }
-        }
 
-        for (std::string swissRegnr : SWISSMEDIC::getRegnrs()) {
-            if (addedRegnrs.find(swissRegnr) == addedRegnrs.end()) {
-                DB::RowToInsert rowToInsert = SWISSMEDIC::getRow(swissRegnr);
-                std::string atcClass = ATC::getClassByAtcColumn(rowToInsert.atc);
-                rowToInsert.atc_class = atcClass;
-                fillApplicationStr(&rowToInsert);
-                fillPackagesInRow(
-                    opt_language,
-                    &rowToInsert,
-                    &statsRnFoundRefdataCount,
-                    &statsRnNotFoundRefdataCount,
-                    &statsRnFoundSwissmedicCount,
-                    &statsRnNotFoundSwissmedicCount,
-                    &statsRnFoundBagCount,
-                    &statsRnNotFoundBagCount,
-                    &statsRegnrsNotFound
-                );
-                sqlDb.insertRow(TABLE_NAME_AMIKO, rowToInsert);
-                addedRegnrs.insert(rowToInsert.regnrs);
+            for (std::string swissRegnr : SWISSMEDIC::getRegnrs()) {
+                if (addedRegnrs.find(swissRegnr) == addedRegnrs.end()) {
+                    DB::RowToInsert rowToInsert = SWISSMEDIC::getRow(swissRegnr);
+                    std::string atcClass = ATC::getClassByAtcColumn(rowToInsert.atc);
+                    rowToInsert.atc_class = atcClass;
+                    fillApplicationStr(&rowToInsert);
+                    fillPackagesInRow(
+                        opt_language,
+                        &rowToInsert,
+                        &statsRnFoundRefdataCount,
+                        &statsRnNotFoundRefdataCount,
+                        &statsRnFoundSwissmedicCount,
+                        &statsRnNotFoundSwissmedicCount,
+                        &statsRnFoundBagCount,
+                        &statsRnNotFoundBagCount,
+                        &statsRegnrsNotFound
+                    );
+                    sqlDb.insertRow(TABLE_NAME_AMIKO, rowToInsert);
+                    addedRegnrs.insert(rowToInsert.regnrs);
+                }
             }
         }
 
