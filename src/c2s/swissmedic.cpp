@@ -22,6 +22,7 @@
 
 #define COLUMN_A        0   // GTIN (5 digits)
 #define COLUMN_C        2   // name
+#define COLUMN_D        3   // auth, Zulassungsinhaberin
 #define COLUMN_G        6   // ATC
 #define COLUMN_K       10   // packaging code (3 digits)
 #define COLUMN_L       11   // number for dosage
@@ -39,7 +40,7 @@ namespace SWISSMEDIC
     std::vector<std::string> packingCode;   // padded to 3 characters (digits)
     std::vector<std::string> gtin;
     std::string fromSwissmedic("ev.nn.i.H.");
-    
+
     // TODO: change it to a map for better performance
     std::vector<std::string> categoryVec;
 
@@ -50,7 +51,7 @@ namespace SWISSMEDIC
 
     // Usage stats
     unsigned int statsAugmentedRegnCount = 0;
-    unsigned int statsAugmentedGtinCount = 0;    
+    unsigned int statsAugmentedGtinCount = 0;
     unsigned int statsTotalGtinCount = 0;
     unsigned int statsRecoveredDosage = 0;
 
@@ -68,7 +69,7 @@ void printFileStats(const std::string &filename)
 void printUsageStats()
 {
     REP::html_h2("Swissmedic");
-    
+
     REP::html_start_ul();
     REP::html_li("GTINs used: " + std::to_string(statsTotalGtinCount));
     REP::html_li("recovered dosage " + std::to_string(statsRecoveredDosage));
@@ -106,7 +107,7 @@ void parseXLXS(const std::string &filename)
         // Precalculate padded packing code
         std::string code3 = GTIN::padToLength(3, aSingleRow[COLUMN_K]);
         packingCode.push_back(code3);
-        
+
         // Precalculate gtin
         std::string gtin12 = "7680" + rn5 + code3;
         char checksum = GTIN::getGtin13Checksum(gtin12);
@@ -117,10 +118,10 @@ void parseXLXS(const std::string &filename)
         std::string cat = aSingleRow[COLUMN_N];
         if ((cat == "A") && (aSingleRow[COLUMN_W] == "a"))
             cat += "+";
-        
+
         categoryVec.push_back(cat);
         }
-        
+
         // Precalculate dosage and units
         dosageUnits du;
         du.dosage = aSingleRow[COLUMN_L];
@@ -145,12 +146,12 @@ int getAdditionalNames(const std::string &rn,
 
     std::set<std::string>::iterator it;
     int countAdded = 0;
-    
+
     for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
         std::string rn5 = regnrs[rowInt];
         if (rn5 != rn)
             continue;
-        
+
         std::string g13 = gtin[rowInt];
         it = gtinUsedSet.find(g13);
         if (it == gtinUsedSet.end()) { // not found list of used GTINs, we must add the name
@@ -182,7 +183,7 @@ int getAdditionalNames(const std::string &rn,
             packages.name.push_back(onePackageInfo);
         }
     }
-    
+
     if (countAdded > 0)
         statsAugmentedRegnCount++;
 
@@ -202,7 +203,7 @@ int countRowsWithRn(const std::string &rn)
 
     return count;
 }
-    
+
 bool findGtin(const std::string &gtin)
 {
     for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
@@ -214,7 +215,7 @@ bool findGtin(const std::string &gtin)
         // We could also recalculate and verify the checksum
         // but such verification has already been done when parsing the files
         char checksum = GTIN::getGtin13Checksum(gtin12);
-        
+
         if (checksum != gtin[12]) {
             std::cerr
             << basename((char *)__FILE__) << ":" << __LINE__
@@ -285,5 +286,51 @@ dosageUnits getByGtin(const std::string &g)
 
     return du;
 }
-    
+
+std::vector<std::string> getRegnrs() {
+    return regnrs;
+}
+
+std::string longestCommonPrefix(const std::string &s1, const std::string &s2) {
+    int i = 0;
+    while (i < std::min(s1.length(), s2.length()) && s1[i] == s2[i]) {
+        i++;
+    }
+    return s1.substr(0, i);
+}
+
+std::string getName(const std::string &regnr) {
+    std::string currentName;
+    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
+        std::string rn5 = regnrs[rowInt];
+        if (rn5 != regnr) continue;
+        std::string thisName = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
+        if (currentName.empty()) {
+            currentName = thisName;
+        } else {
+            currentName = longestCommonPrefix(currentName, thisName);
+        }
+    }
+    return currentName;
+}
+
+
+
+DB::RowToInsert getRow(const std::string &regnr) {
+    DB::RowToInsert result;
+    result.regnrs = regnr;
+
+    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
+        auto thisRow = theWholeSpreadSheet.at(rowInt);
+        std::string rn5 = regnrs[rowInt];
+        if (rn5 != regnr) continue;
+
+        result.title = getName(regnr);
+        result.auth = thisRow.at(COLUMN_D);
+        result.atc = thisRow.at(COLUMN_G);
+        break;
+    }
+    return result;
+}
+
 }

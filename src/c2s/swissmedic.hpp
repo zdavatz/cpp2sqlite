@@ -12,6 +12,7 @@
 
 #include <set>
 #include "gtin.hpp"
+#include "sqlDatabase.hpp"
 
 namespace SWISSMEDIC
 {
@@ -19,7 +20,7 @@ namespace SWISSMEDIC
         std::string dosage;
         std::string units;
     };
-    
+
     void parseXLXS(const std::string &filename);
 
     int getAdditionalNames(const std::string &rn,
@@ -33,6 +34,10 @@ namespace SWISSMEDIC
     bool findGtin(const std::string &gtin);
     std::string getCategoryByGtin(const std::string &gtin);
     dosageUnits getByGtin(const std::string &gtin);
+
+    std::vector<std::string> getRegnrs();
+
+    DB::RowToInsert getRow(const std::string &regnr);
 
     void printUsageStats();
 }

@@ -1263,6 +1263,29 @@ int main(int argc, char **argv)
                 addedRegnrs.insert(rowToInsert.regnrs);
             }
         }
+
+        for (std::string swissRegnr : SWISSMEDIC::getRegnrs()) {
+            if (addedRegnrs.find(swissRegnr) == addedRegnrs.end()) {
+                DB::RowToInsert rowToInsert = SWISSMEDIC::getRow(swissRegnr);
+                std::string atcClass = ATC::getClassByAtcColumn(rowToInsert.atc);
+                rowToInsert.atc_class = atcClass;
+                fillApplicationStr(&rowToInsert);
+                fillPackagesInRow(
+                    opt_language,
+                    &rowToInsert,
+                    &statsRnFoundRefdataCount,
+                    &statsRnNotFoundRefdataCount,
+                    &statsRnFoundSwissmedicCount,
+                    &statsRnNotFoundSwissmedicCount,
+                    &statsRnFoundBagCount,
+                    &statsRnNotFoundBagCount,
+                    &statsRegnrsNotFound
+                );
+                sqlDb.insertRow(TABLE_NAME_AMIKO, rowToInsert);
+                addedRegnrs.insert(rowToInsert.regnrs);
+            }
+        }
+
         REP::html_h1("Usage");
 
         REP::html_h2("aips REGNRS (found/not found)");
