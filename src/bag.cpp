@@ -27,14 +27,14 @@ namespace BAG
 {
     PreparationList prepList;
     PackageMap packMap;
-    
+
     // Parse-phase stats
     unsigned int statsPackCount = 0;
     unsigned int statsPackWithoutGtinCount = 0;
     unsigned int statsPackRecoveredGtinCount = 0;
     unsigned int statsPackNotRecoveredGtinCount = 0;
     std::vector<std::string> statsSm8EmptyVec;
- 
+
     // Usage stats
     unsigned int statsTotalGtinCount = 0;
 
@@ -44,7 +44,7 @@ void printFileStats(const std::string &filename)
     REP::html_h2("BAG");
     //REP::html_p(std::string(basename((char *)filename.c_str())));
     REP::html_p(filename);
-    
+
     REP::html_start_ul();
     REP::html_li("preparations: " + std::to_string(prepList.size()));
     REP::html_li("packs: " + std::to_string(statsPackCount));
@@ -52,13 +52,13 @@ void printFileStats(const std::string &filename)
     REP::html_li("GTIN recovered from <SwissmedicNo8>: " + std::to_string(statsPackRecoveredGtinCount));
     REP::html_li("GTIN unrecoverable from <SwissmedicNo8>: " + std::to_string(statsPackNotRecoveredGtinCount));
     REP::html_end_ul();
-    
+
     if (statsSm8EmptyVec.size() > 0) {
         REP::html_h3("<SwissmedicNo8> empty");
         REP::html_start_ol();
         for (auto s : statsSm8EmptyVec)
             REP::html_li(s);
-        
+
         REP::html_end_ol();
     }
 }
@@ -66,7 +66,7 @@ void printFileStats(const std::string &filename)
 void printUsageStats()
 {
     REP::html_h2("BAG");
-    
+
     REP::html_start_ul();
     REP::html_li("GTINs used: " + std::to_string(statsTotalGtinCount));
     REP::html_end_ul();
@@ -79,7 +79,7 @@ void parseXML(const std::string &filename,
     std::clog << std::endl << "Reading " << filename << std::endl;
 
     pt::ptree tree;
-    
+
     std::string lan = language;
     lan[0] = toupper(lan[0]);
     const std::string descriptionTag = "Description" + lan;
@@ -91,7 +91,7 @@ void parseXML(const std::string &filename,
     catch (std::exception &e) {
         std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
     }
-    
+
 #ifdef DEBUG
     std::clog << "Analyzing bag" << std::endl;
 #endif
@@ -107,6 +107,8 @@ void parseXML(const std::string &filename,
                 prep.description = v.second.get(descriptionTag, "");
                 boost::algorithm::trim_right(prep.description);
                 prep.description = boost::to_lower_copy<std::string>(prep.description);
+
+                prep.atcCode = v.second.get("AtcCode", "");
 
                 prep.swissmedNo = v.second.get("SwissmedicNo5", "");
                 if (!prep.swissmedNo.empty())
@@ -156,12 +158,18 @@ void parseXML(const std::string &filename,
                         else
                             GTIN::verifyGtin13Checksum(pack.gtin);
 
+                        // Sometimes there's no SwissmedicNo5 but there's gtin
+                        if (prep.swissmedNo.empty() && !pack.gtin.empty()) {
+                            prep.swissmedNo = pack.gtin.substr(4,5);
+                        }
+
                         pack.limitationPoints = p.second.get("PointLimitations.PointLimitation.Points", "");
                         pack.exFactoryPrice = formatPriceAsMoney(p.second.get("Prices.ExFactoryPrice.Price", ""));
                         pack.exFactoryPriceValidFrom = p.second.get("Prices.ExFactoryPrice.ValidFromDate", "");
                         pack.publicPrice = formatPriceAsMoney(p.second.get("Prices.PublicPrice.Price", ""));
+                        pack.partnerDescription = p.second.get("Partners.Partner.Description", "");
                         prep.packs.push_back(pack);
-                        
+
                         statsPackCount++;
 #if 0 //def DEBUG_PHARMA
                     static int i=0;
@@ -176,13 +184,13 @@ void parseXML(const std::string &filename,
 #endif
                     }
                 }
-                
+
                 ItCode itCode;
                 size_t maxLen = size_t(0);
                 size_t minLen = size_t(INT_MAX);
                 BOOST_FOREACH(pt::ptree::value_type &itc, v.second.get_child("ItCodes")) {
                     if (itc.first == "ItCode") {
-                        
+
                         std::string code;
                         pt::ptree & attributes = itc.second.get_child("<xmlattr>");
                         BOOST_FOREACH(pt::ptree::value_type &att, attributes) {
@@ -208,7 +216,7 @@ void parseXML(const std::string &filename,
                         }
                     }
                 } // BOOST_FOREACH ItCodes
-                
+
 #if 0
                 static int i=0;
                 if (i<10)
@@ -286,7 +294,7 @@ std::string getPricesAndFlags(const std::string &gtin,
         for (Pack p : pre.packs)
             if (gtin == p.gtin) {
                 packageFields pf;
-                
+
                 // Prices
                 if (!p.exFactoryPrice.empty()) {
                     prices += "EFP " + p.exFactoryPrice;
@@ -341,11 +349,11 @@ prepareResult:
 //        << ", NOT FOUND: " << gtin
 //        << std::endl;
     }
-    
+
     std::string paf;
     if (!prices.empty())
         paf += ", " + prices;
-    
+
     if (!fromSwissmedic.empty())
         paf += ", " + fromSwissmedic;
 
@@ -379,7 +387,7 @@ std::string getTindex(const std::string &rn)
 
     return tindex;
 }
-    
+
 // Used only by "cpp2sqlite" not by "pharma"
 std::string getApplicationByRN(const std::string &rn)
 {
@@ -401,7 +409,7 @@ std::string getLongestItCodeByGtin(const std::string &gtin)
         for (Pack p : pre.packs)
             if (gtin == p.gtin)
                 return pre.itCodes.longestItCode;
-    
+
     return {};
 }
 
@@ -420,6 +428,11 @@ std::string formatPriceAsMoney(const std::string &price)
 packageFields getPackageFieldsByGtin(const std::string &gtin)
 {
     return packMap[gtin];
+}
+
+PreparationList getPrepList()
+{
+    return prepList;
 }
 
 }

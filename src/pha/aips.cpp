@@ -154,14 +154,12 @@ void parseXML(const std::string &filename,
     try {
         BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("MedicinalDocumentsBundles")) { // TODO
             if (v.first != "MedicinalDocumentsBundle") continue;
-            std::string typ;
+
             // Mapping: https://github.com/zdavatz/cpp2sqlite/issues/252
-            if (v.second.get("Type", "") == "SmPC") {
-                typ = "fi";
-            } else if (v.second.get("Type", "") == "PIL") {
-                typ = "pi";
-            }
-            if (typ != type) {
+            // For --pinfo, Add both fi and pi: https://github.com/zdavatz/cpp2sqlite/issues/271
+            if (!(type == "fi" && v.second.get("Type", "") == "SmPC") &&
+                !(type == "pi" && (v.second.get("Type", "") == "SmPC" || v.second.get("Type", "") == "PIL"))
+            ) {
                 continue;
             }
 

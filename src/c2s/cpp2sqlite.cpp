@@ -760,6 +760,139 @@ void closeDB()
 
 #pragma mark -
 
+GTIN::oneFachinfoPackages fillPackagesInRow(
+    std::string opt_language,
+    DB::RowToInsert *rowToInsert,
+    unsigned int *statsRnFoundRefdataCount,
+    unsigned int *statsRnNotFoundRefdataCount,
+    unsigned int *statsRnFoundSwissmedicCount,
+    unsigned int *statsRnNotFoundSwissmedicCount,
+    unsigned int *statsRnFoundBagCount,
+    unsigned int *statsRnNotFoundBagCount,
+    std::vector<std::string> *statsRegnrsNotFound
+) {
+    GTIN::oneFachinfoPackages packages;
+    std::set<std::string> gtinUsedSet; // To ensure we don't have duplicates, and for stats
+
+    std::vector<std::string> regnrs;
+    boost::algorithm::split(regnrs, rowToInsert->regnrs, boost::is_any_of(", "), boost::token_compress_on);
+
+    for (auto rn : regnrs) {
+        //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " rn: " << rn << std::endl;
+
+    // Search in refdata
+    int nAdd = REFDATA::getNames(rn, gtinUsedSet, packages);
+    if (nAdd == 0)
+        *statsRnNotFoundRefdataCount++;
+    else
+        *statsRnFoundRefdataCount++;
+
+        // Search in swissmedic
+        nAdd = SWISSMEDIC::getAdditionalNames(rn, gtinUsedSet, packages, opt_language);
+        if (nAdd == 0) {
+            *statsRnNotFoundSwissmedicCount++;
+        } else {
+            *statsRnFoundSwissmedicCount++;
+        }
+
+        // Search in bag
+        nAdd = BAG::getAdditionalNames(rn, gtinUsedSet, packages);
+        if (nAdd == 0) {
+            *statsRnNotFoundBagCount++;
+        } else {
+            *statsRnFoundBagCount++;
+        }
+
+        if (gtinUsedSet.empty()) {
+            statsRegnrsNotFound->push_back(rn);
+        }
+    }
+    BEAUTY::sort(packages);
+
+    // Create a single multi-line string from the vector
+    std::string packInfo = boost::algorithm::join(packages.name, "\n");
+
+    if (!packInfo.empty()) {
+        rowToInsert->pack_info_str = packInfo;
+    }
+
+    // packages
+    // The line order must be the same as pack_info_str
+    std::vector<std::string>::iterator itGtin = packages.gtin.begin();
+    std::vector<std::string> lines;
+    for (auto name : packages.name) {
+
+        SWISSMEDIC::dosageUnits du = SWISSMEDIC::getByGtin(*itGtin);
+        BAG::packageFields pf = BAG::getPackageFieldsByGtin(*itGtin);
+
+        // Field 0
+        // TODO: temporarily use the first part of the name
+        std::string::size_type len = name.find(",");
+        std::string oneLine = name.substr(0, len);  // pos, len
+
+        oneLine += "|";
+
+        // Field 1
+        oneLine += du.dosage;
+        oneLine += "|";
+
+        // Field 2
+        oneLine += du.units;
+        oneLine += "|";
+
+        // Field 3
+        if (!pf.efp.empty())
+            oneLine += "CHF " + pf.efp;
+
+        oneLine += "|";
+
+        // Field 4
+        if (!pf.pp.empty())
+            oneLine += "CHF " + pf.pp;
+
+        // Fields 5,6,7
+        // no FAP FEP VAT
+        oneLine += "||||";
+
+        // Field 8
+        // In the Java DB there are 2 commas or 3 if there is SL
+        oneLine += boost::algorithm::join(pf.flags, ",");
+        oneLine += "|";
+
+        // Field 9
+        oneLine += *itGtin;
+        oneLine += "|";
+
+        // Field 10
+        oneLine += REFDATA::getPharByGtin(*itGtin);
+
+        // Fields 11 and 12
+        oneLine += "|255|0";    // visibility flag, free samples
+
+        lines.push_back(oneLine);
+        itGtin++;
+    }
+
+    // Create a single multi-line string from the vector
+    std::string packagesStr = boost::algorithm::join(lines, "\n");
+    rowToInsert->packages = packagesStr;
+    return packages;
+}
+
+void fillApplicationStr(DB::RowToInsert *rowToInsert) {
+    std::vector<std::string> regnrs;
+    boost::algorithm::split(regnrs, rowToInsert->regnrs, boost::is_any_of(", "), boost::token_compress_on);
+    std::string application = SWISSMEDIC::getApplication(regnrs[0]);
+    std::string appBag = BAG::getApplicationByRN(regnrs[0]);
+    if (!appBag.empty()) {
+        application += ";" + appBag;
+    }
+
+    if (!application.empty()) {
+        rowToInsert->application_str = application;
+    }
+}
+
 int main(int argc, char **argv)
 {
     //std::setlocale(LC_ALL, "en_US.utf8");
@@ -981,6 +1114,8 @@ int main(int argc, char **argv)
         unsigned int statsRnNotFoundBagCount = 0;
         std::vector<std::string> statsRegnrsNotFound;
 
+        std::set<std::string> addedRegnrs;
+
 #ifdef WITH_PROGRESS_BAR
         int ii = 1;
         int n = list.size();
@@ -997,93 +1132,51 @@ int main(int argc, char **argv)
             std::vector<std::string> regnrs;
             boost::algorithm::split(regnrs, m.regnrs, boost::is_any_of(", "), boost::token_compress_on);
             //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << ", regnrs size: " << regnrs.size() << std::endl;
+            for (std::string regnr : regnrs) {
+                addedRegnrs.insert(regnr);
+            }
 
             if (regnrs[0] == "00000")
                 continue;
 
+            DB::RowToInsert rowToInsert;
+
             // See DispoParse.java:164 addArticleDB()
             // See SqlDatabase.java:347 addExpertDB()
-            sqlDb.bindText(1, m.title);
-            sqlDb.bindText(2, m.auth);
-            sqlDb.bindText(3, m.atc);
-            sqlDb.bindText(4, m.subst);
-            sqlDb.bindText(5, m.regnrs);
+            rowToInsert.title = m.title;
+            rowToInsert.auth = m.auth;
+            rowToInsert.atc = m.atc;
+            rowToInsert.substances = m.subst;
+            rowToInsert.regnrs = m.regnrs;
 
             // atc_class
             std::string atcClass = ATC::getClassByAtcColumn(m.atc);
-            sqlDb.bindText(6, atcClass);
+            rowToInsert.atc_class = atcClass;
 
             // tindex_str
             std::string tindex = BAG::getTindex(regnrs[0]);
             if (tindex.empty())
-                sqlDb.bindText(7, "");
+                rowToInsert.tindex_str = "";
             else
-                sqlDb.bindText(7, tindex);
+                rowToInsert.tindex_str = tindex;
 
-            // application_str
-            {
-            std::string application = SWISSMEDIC::getApplication(regnrs[0]);
-            std::string appBag = BAG::getApplicationByRN(regnrs[0]);
-            if (!appBag.empty())
-                application += ";" + appBag;
-
-            if (application.empty())
-                sqlDb.bindText(8, "");
-            else
-                sqlDb.bindText(8, application);
-            }
-
-            // TODO: indications_str
-            sqlDb.bindText(9, "");
-
-            // TODO: customer_id
-            sqlDb.bindText(10, "");  // "0"
+            fillApplicationStr(&rowToInsert);
 
 #if 1
-            // pack_info_str
-            GTIN::oneFachinfoPackages packages;
-            std::set<std::string> gtinUsedSet; // To ensure we don't have duplicates, and for stats
-            for (auto rn : regnrs) {
-                //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " rn: " << rn << std::endl;
 
-                // Search in refdata
-                int nAdd = REFDATA::getNames(rn, gtinUsedSet, packages);
-                if (nAdd == 0)
-                    statsRnNotFoundRefdataCount++;
-                else
-                    statsRnFoundRefdataCount++;
+            GTIN::oneFachinfoPackages packages = fillPackagesInRow(
+                opt_language,
+                &rowToInsert,
+                &statsRnFoundRefdataCount,
+                &statsRnNotFoundRefdataCount,
+                &statsRnFoundSwissmedicCount,
+                &statsRnNotFoundSwissmedicCount,
+                &statsRnFoundBagCount,
+                &statsRnNotFoundBagCount,
+                &statsRegnrsNotFound
+            );
 
-                // Search in swissmedic
-                nAdd = SWISSMEDIC::getAdditionalNames(rn, gtinUsedSet, packages, opt_language);
-                if (nAdd == 0)
-                    statsRnNotFoundSwissmedicCount++;
-                else
-                    statsRnFoundSwissmedicCount++;
-
-                // Search in bag
-                nAdd = BAG::getAdditionalNames(rn, gtinUsedSet, packages);
-                if (nAdd == 0)
-                    statsRnNotFoundBagCount++;
-                else
-                    statsRnFoundBagCount++;
-
-                if (gtinUsedSet.empty())
-                    statsRegnrsNotFound.push_back(rn);
-            } // for
-
-            BEAUTY::sort(packages);
-
-            // Create a single multi-line string from the vector
-            std::string packInfo = boost::algorithm::join(packages.name, "\n");
-
-            if (packInfo.empty())
-                sqlDb.bindText(11, "");
-            else
-                sqlDb.bindText(11, packInfo);
 #endif
-
-            // TODO: add_info__str
-            sqlDb.bindText(12, "");
 
             // content
             auto firstAtc = ATC::getFirstAtcInAtcColumn(m.atc);
@@ -1109,93 +1202,93 @@ int main(int argc, char **argv)
                                opt_language,    // for barcode section
                                flagVerbose,
                                flagNoSappinfo);
-                sqlDb.bindText(15, html);
+                rowToInsert.content = html;
             }
 
             // ids_str
             {
                 std::string ids_str = boost::algorithm::join(sectionId, ",");
-                sqlDb.bindText(13, ids_str);
+                rowToInsert.ids_str = ids_str;
             }
 
             // titles_str
             {
                 std::string titles_str = boost::algorithm::join(sectionTitle, TITLES_STR_SEPARATOR);
-                sqlDb.bindText(14, titles_str);
+                rowToInsert.titles_str = titles_str;
             }
 
-            // TODO: style_str
-
-            // packages
-            {
-                // The line order must be the same as pack_info_str
-                std::vector<std::string>::iterator itGtin = packages.gtin.begin();
-                std::vector<std::string> lines;
-                for (auto name : packages.name) {
-
-                    SWISSMEDIC::dosageUnits du = SWISSMEDIC::getByGtin(*itGtin);
-                    BAG::packageFields pf = BAG::getPackageFieldsByGtin(*itGtin);
-
-                    // Field 0
-                    // TODO: temporarily use the first part of the name
-                    std::string::size_type len = name.find(",");
-                    std::string oneLine = name.substr(0, len);  // pos, len
-
-                    oneLine += "|";
-
-                    // Field 1
-                    oneLine += du.dosage;
-                    oneLine += "|";
-
-                    // Field 2
-                    oneLine += du.units;
-                    oneLine += "|";
-
-                    // Field 3
-                    if (!pf.efp.empty())
-                        oneLine += "CHF " + pf.efp;
-
-                    oneLine += "|";
-
-                    // Field 4
-                    if (!pf.pp.empty())
-                        oneLine += "CHF " + pf.pp;
-
-                    // Fields 5,6,7
-                    // no FAP FEP VAT
-                    oneLine += "||||";
-
-                    // Field 8
-                    // In the Java DB there are 2 commas or 3 if there is SL
-                    oneLine += boost::algorithm::join(pf.flags, ",");
-                    oneLine += "|";
-
-                    // Field 9
-                    oneLine += *itGtin;
-                    oneLine += "|";
-
-                    // Field 10
-                    oneLine += REFDATA::getPharByGtin(*itGtin);
-
-                    // Fields 11 and 12
-                    oneLine += "|255|0";    // visibility flag, free samples
-
-                    lines.push_back(oneLine);
-                    itGtin++;
-                }
-
-                // Create a single multi-line string from the vector
-                std::string packages = boost::algorithm::join(lines, "\n");
-
-                sqlDb.bindText(17, packages);
-            }
-
-            sqlDb.runStatement(TABLE_NAME_AMIKO);
+            sqlDb.insertRow(TABLE_NAME_AMIKO, rowToInsert);
         } // for
 
 #ifdef WITH_PROGRESS_BAR
         std::cerr << "\r100 %" << std::endl;
 #endif
+
+        if (flagPinfo) {
+
+            // Preparations.xml (BAG) and Packungen.xlsx (Swissmedic).
+            std::vector<BAG::Preparation> bagPrepList = BAG::getPrepList();
+            for (auto bagPrep : bagPrepList) {
+                if (addedRegnrs.find(bagPrep.swissmedNo) == addedRegnrs.end()) {
+                    DB::RowToInsert rowToInsert;
+
+                    std::string auth = "";
+                    for (auto pack : bagPrep.packs) {
+                        if (!pack.partnerDescription.empty()) {
+                            auth = pack.partnerDescription;
+                            break;
+                        }
+                    }
+
+                    rowToInsert.title = bagPrep.name;
+                    rowToInsert.auth = auth;
+                    rowToInsert.atc = bagPrep.atcCode;
+                    // rowToInsert.substances;
+                    rowToInsert.regnrs = bagPrep.swissmedNo;
+                    std::string atcClass = ATC::getClassByAtcColumn(bagPrep.atcCode);
+                    rowToInsert.atc_class = atcClass;
+                    rowToInsert.tindex_str = bagPrep.itCodes.tindex;
+                    fillApplicationStr(&rowToInsert);
+                    fillPackagesInRow(
+                        opt_language,
+                        &rowToInsert,
+                        &statsRnFoundRefdataCount,
+                        &statsRnNotFoundRefdataCount,
+                        &statsRnFoundSwissmedicCount,
+                        &statsRnNotFoundSwissmedicCount,
+                        &statsRnFoundBagCount,
+                        &statsRnNotFoundBagCount,
+                        &statsRegnrsNotFound
+                    );
+
+                    sqlDb.insertRow(TABLE_NAME_AMIKO, rowToInsert);
+                    addedRegnrs.insert(rowToInsert.regnrs);
+                }
+            }
+
+            for (std::string swissRegnr : SWISSMEDIC::getRegnrs()) {
+                if (addedRegnrs.find(swissRegnr) == addedRegnrs.end()) {
+                    DB::RowToInsert rowToInsert = SWISSMEDIC::getRow(swissRegnr);
+                    std::string atcClass = ATC::getClassByAtcColumn(rowToInsert.atc);
+                    rowToInsert.atc_class = atcClass;
+                    fillApplicationStr(&rowToInsert);
+                    fillPackagesInRow(
+                        opt_language,
+                        &rowToInsert,
+                        &statsRnFoundRefdataCount,
+                        &statsRnNotFoundRefdataCount,
+                        &statsRnFoundSwissmedicCount,
+                        &statsRnNotFoundSwissmedicCount,
+                        &statsRnFoundBagCount,
+                        &statsRnNotFoundBagCount,
+                        &statsRegnrsNotFound
+                    );
+                    sqlDb.insertRow(TABLE_NAME_AMIKO, rowToInsert);
+                    addedRegnrs.insert(rowToInsert.regnrs);
+                }
+            }
+        }
+
         REP::html_h1("Usage");
 
         REP::html_h2("aips REGNRS (found/not found)");

@@ -72,7 +72,7 @@ void Sql::runStatement(const std::string_view &tableName)
 void Sql::bindBool(int pos, bool flag)
 {
     int val = flag ? 1 : 0;
-    bindInt(pos, val);    
+    bindInt(pos, val);
 }
 
 void Sql::bindInt(int pos, int val)
@@ -104,7 +104,7 @@ void Sql::prepareStatement(const std::string_view &tableName,
     std::ostringstream sqlStream;
     sqlStream << "INSERT INTO " << tableName
               << " VALUES (" << placeholders << ");";
-    
+
     int rc = sqlite3_prepare_v2(db, sqlStream.str().c_str(), -1, &statement, NULL);
     if (rc != SQLITE_OK)
         std::cerr
@@ -136,6 +136,31 @@ void Sql::insertInto(const std::string_view &tableName,
     }
 }
 
+void Sql::insertRow(const std::string_view &tableName, DB::RowToInsert row) {
+    bindText(1, row.title);
+    bindText(2, row.auth);
+    bindText(3, row.atc);
+    bindText(4, row.substances);
+    bindText(5, row.regnrs);
+    bindText(6, row.atc_class);
+    bindText(7, row.tindex_str);
+    bindText(8, row.application_str);
+    // TODO:
+    bindText(9, row.indications_str);
+    // TODO:
+    bindText(10, row.customer_id == 0 ? "" : std::to_string(row.customer_id));
+    bindText(11, row.pack_info_str);
+    // TODO:
+    bindText(12, row.add_info_str);
+    bindText(13, row.ids_str);
+    bindText(14, row.titles_str);
+    bindText(15, row.content);
+    // TODO:
+    bindText(16, row.style_str);
+    bindText(17, row.packages);
+    runStatement(tableName);
+}
+
 void Sql::createTable(const std::string_view &tableName,
                       const std::string &keys)
 {
@@ -151,7 +176,7 @@ void Sql::createTable(const std::string_view &tableName,
         << ", error " << rc
         << ", " << errmsg
         << std::endl;
-    
+
     sqlStream << "DROP TABLE IF EXISTS " << tableName << ";";
     rc = sqlite3_exec(db, sqlStream.str().c_str(), NULL, NULL, &errmsg);
     if (rc != SQLITE_OK)
@@ -160,7 +185,7 @@ void Sql::createTable(const std::string_view &tableName,
         << ", error " << rc
         << ", " << errmsg
         << std::endl;
-    
+
     // See SqlDatabase.java 207
     sqlStream.str("");
     sqlStream << "CREATE TABLE " << tableName << "(" << keys.c_str() << ");";
@@ -181,10 +206,10 @@ void Sql::openDB(const std::string &filename)
         << basename((char *)__FILE__) << ":" << __LINE__
         << ", error " << rc
         << std::endl;
-        
+
         return;
     }
-    
+
     char *errmsg;
     sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &errmsg);
 }
@@ -192,6 +217,7 @@ void Sql::openDB(const std::string &filename)
 void Sql::closeDB()
 {
     char *errmsg;
+    sqlite3_exec(db, "COMMIT", NULL, NULL, &errmsg);
     sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &errmsg);
 
     int rc = sqlite3_close(db);
