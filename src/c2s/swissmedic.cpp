@@ -17,6 +17,7 @@
 #include "swissmedic.hpp"
 #include "gtin.hpp"
 #include "bag.hpp"
+#include "refdata.hpp"
 #include "beautify.hpp"
 #include "report.hpp"
 
@@ -291,31 +292,6 @@ std::vector<std::string> getRegnrs() {
     return regnrs;
 }
 
-std::string longestCommonPrefix(const std::string &s1, const std::string &s2) {
-    int i = 0;
-    while (i < std::min(s1.length(), s2.length()) && s1[i] == s2[i]) {
-        i++;
-    }
-    return s1.substr(0, i);
-}
-
-std::string getName(const std::string &regnr) {
-    std::string currentName;
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-        std::string rn5 = regnrs[rowInt];
-        if (rn5 != regnr) continue;
-        std::string thisName = theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
-        if (currentName.empty()) {
-            currentName = thisName;
-        } else {
-            currentName = longestCommonPrefix(currentName, thisName);
-        }
-    }
-    return currentName;
-}
-
-
-
 DB::RowToInsert getRow(const std::string &regnr) {
     DB::RowToInsert result;
     result.regnrs = regnr;
@@ -325,7 +301,14 @@ DB::RowToInsert getRow(const std::string &regnr) {
         std::string rn5 = regnrs[rowInt];
         if (rn5 != regnr) continue;
 
-        result.title = getName(regnr);
+        std::string name = REFDATA::findName(rn5);
+        if (name.empty()) {
+            std::string packageName = thisRow.at(COLUMN_C);
+            std::string::size_type len = packageName.find(",");
+            name = len != packageName.npos ? packageName.substr(0, len) : packageName;  // pos, len
+        }
+
+        result.title = name;
         result.auth = thisRow.at(COLUMN_D);
         result.atc = thisRow.at(COLUMN_G);
         break;

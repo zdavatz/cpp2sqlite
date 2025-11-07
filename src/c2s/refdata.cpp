@@ -175,6 +175,15 @@ std::string findAtc(const std::string &regnrs) {
     return "";
 }
 
+std::string findName(const std::string &regnrs) {
+    for (Article art : artList) {
+        if (art.authorisation_identifier.size() >= 5 && art.authorisation_identifier.substr(0, 5) == regnrs) {
+            return art.name;
+        }
+    }
+    return "";
+}
+
 std::string getPharByGtin(const std::string &gtin)
 {
     std::string phar;

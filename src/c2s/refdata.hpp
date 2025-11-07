@@ -61,6 +61,7 @@ namespace REFDATA
     void printUsageStats();
 
     std::string findAtc(const std::string &regnrs);
+    std::string findName(const std::string &regnrs);
 
     void findSectionIdsAndTitle(
         pt::ptree tree,
