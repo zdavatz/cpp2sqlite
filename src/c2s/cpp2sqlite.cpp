@@ -828,7 +828,7 @@ GTIN::oneFachinfoPackages fillPackagesInRow(
         // Field 0
         // TODO: temporarily use the first part of the name
         std::string::size_type len = name.find(",");
-        std::string oneLine = name.substr(0, len);  // pos, len
+        std::string oneLine = len != name.npos ? name.substr(0, len) : name;  // pos, len
 
         oneLine += "|";
 
