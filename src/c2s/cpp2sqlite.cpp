@@ -1083,6 +1083,7 @@ int main(int argc, char **argv)
                 m.atc = swissAtc;
             }
             if (!m.atc.empty()) {
+                m.atc += ";" + ATC::getTextByAtcs(m.atc);
                 break;
             }
         }
