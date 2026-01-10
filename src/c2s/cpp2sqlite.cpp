@@ -780,27 +780,28 @@ GTIN::oneFachinfoPackages fillPackagesInRow(
     for (auto rn : regnrs) {
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " rn: " << rn << std::endl;
 
-    // Search in refdata
-    int nAdd = REFDATA::getNames(rn, gtinUsedSet, packages);
-    if (nAdd == 0)
-        *statsRnNotFoundRefdataCount++;
-    else
-        *statsRnFoundRefdataCount++;
+        // Search in refdata
+        int nAdd = REFDATA::getNames(rn, gtinUsedSet, packages);
+        if (nAdd == 0){
+            (*statsRnNotFoundRefdataCount)++;
+        } else {
+            (*statsRnFoundRefdataCount)++;
+        }
 
         // Search in swissmedic
         nAdd = SWISSMEDIC::getAdditionalNames(rn, gtinUsedSet, packages, opt_language);
         if (nAdd == 0) {
-            *statsRnNotFoundSwissmedicCount++;
+            (*statsRnNotFoundSwissmedicCount)++;
         } else {
-            *statsRnFoundSwissmedicCount++;
+            (*statsRnFoundSwissmedicCount)++;
         }
 
         // Search in bag
         nAdd = BAG::getAdditionalNames(rn, gtinUsedSet, packages);
         if (nAdd == 0) {
-            *statsRnNotFoundBagCount++;
+            (*statsRnNotFoundBagCount)++;
         } else {
-            *statsRnFoundBagCount++;
+            (*statsRnFoundBagCount)++;
         }
 
         if (gtinUsedSet.empty()) {
