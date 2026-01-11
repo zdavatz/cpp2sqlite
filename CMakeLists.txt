@@ -50,6 +50,7 @@ add_executable(cpp2sqlite
 	src/c2s/swissmedic.hpp src/c2s/swissmedic.cpp
 	src/c2s/sappinfo.hpp src/c2s/sappinfo.cpp
 	src/bag.hpp src/bag.cpp
+	src/bagFHIR.hpp src/bagFHIR.cpp
 	src/gtin.hpp src/gtin.cpp
 	src/beautify.hpp src/beautify.cpp
 	src/sqlDatabase.hpp src/sqlDatabase.cpp

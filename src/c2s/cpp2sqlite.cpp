@@ -51,6 +51,8 @@
 #include "report.hpp"
 #include "config.h"
 
+#include "bagFHIR.hpp"
+
 #include "ean13/functii.h"
 
 #define WITH_PROGRESS_BAR
@@ -1064,6 +1066,15 @@ int main(int argc, char **argv)
     {
         std::vector<std::string> bagList = BAG::getGtinList();
         REP::html_h4("Cross-reference");
+        REP::html_start_ul();
+        REP::html_li(std::to_string(countBagGtinInSwissmedic(bagList)) + " GTIN are also in swissmedic");
+        REP::html_li(std::to_string(countBagGtinInRefdata(bagList)) + " GTIN are also in refdata");
+        REP::html_end_ul();
+    }
+    BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl.ndjson", opt_language, flagVerbose);
+    {
+        std::vector<std::string> bagList = BAGFHIR::getGtinList();
+        REP::html_h4("Cross-reference (BAG FHIR)");
         REP::html_start_ul();
         REP::html_li(std::to_string(countBagGtinInSwissmedic(bagList)) + " GTIN are also in swissmedic");
         REP::html_li(std::to_string(countBagGtinInRefdata(bagList)) + " GTIN are also in refdata");
