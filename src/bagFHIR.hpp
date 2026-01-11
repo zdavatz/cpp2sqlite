@@ -20,7 +20,6 @@
 namespace BAGFHIR
 {
     struct packageFields {
-        std::string shortName;
         std::string efp;
         std::string efp_validFrom;
         std::string pp;
@@ -43,8 +42,6 @@ namespace BAGFHIR
         std::string exFactoryPrice;
         std::string exFactoryPriceValidFrom;
         std::string publicPrice;
-    //     std::string limitationPoints;   // TODO
-    //     std::string partnerDescription;
     };
 
     struct Bundle {
@@ -52,7 +49,7 @@ namespace BAGFHIR
         // std::string description;
         std::string regnr;
         std::string atcCode;
-        // std::string orgen;
+        std::string orgen;
         // std::string sb20;
         // std::string sb;
         std::vector<Pack> packs;

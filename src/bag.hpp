@@ -18,7 +18,6 @@
 namespace BAG
 {
     struct packageFields {
-        std::string shortName;
         std::string efp;
         std::string efp_validFrom;
         std::string pp;

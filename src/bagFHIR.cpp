@@ -75,6 +75,22 @@ Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
                     b.name = productName;
                 }
             }
+
+            for (nlohmann::json classification : entry["resource"]["classification"]) {
+                nlohmann::json code = classification["coding"][0]["code"];
+                if (code.type() == nlohmann::json::value_t::string) {
+                    std::string codeStr = code.get<std::string>();
+                    // https://fhir.ch/ig/ch-epl/CodeSystem-ch-epl-foph-product-type.html
+                    if (codeStr == "756001003001") {
+                        // Generic product
+                        b.orgen = "G";
+                    } else if (codeStr == "756001003002") {
+                        // Originator product
+                        b.orgen = "O";
+                    }
+
+                }
+            }
         } else if (resourceType == "RegulatedAuthorization") {
             // TODO: log if more than 1
             auto regnr = entry["resource"]["identifier"][0]["value"];
@@ -95,8 +111,6 @@ Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
             // TODO: GTIN::verifyGtin13Checksum(pack.gtin);
             if (pack.gtin.empty()) {
                 statsPackWithoutGtinCount++;
-                std::clog << "EMPTY GTIN! " << b.regnr << "," << b.name << std::endl;
-                continue;
             }
             pack.description = entry["resource"]["description"];
 
@@ -144,14 +158,13 @@ Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
                             pack.exFactoryPriceValidFrom = changeDate;
                         }
                     }
-                    std::clog << "GTIN: " << pack.gtin
-                            << " publicPrice: " << pack.publicPrice
-                            << " exFactoryPrice: " << pack.exFactoryPrice
-                            <<" date: " << pack.exFactoryPriceValidFrom
-                            << std::endl;
                 }
             }
-            b.packs.push_back(pack);
+            if (!pack.gtin.empty()) {
+                b.packs.push_back(pack);
+            } else {
+                std::clog << "EMPTY GTIN! " << b.regnr << "," << b.name << "pp: " << pack.publicPrice << " exp: " << pack.exFactoryPrice << std::endl;
+            }
         }
     }
     return b;
@@ -189,7 +202,6 @@ int getAdditionalNames(const std::string &rn,
                 std::string paf = getPricesAndFlags(g13, "", "");
                 if (!paf.empty())
                     onePackageInfo += paf;
-                std::clog << "paf: " << paf << std::endl;
 
                 gtinUsed.insert(g13);
                 packages.gtin.push_back(g13);
@@ -250,10 +262,10 @@ std::string getPricesAndFlags(const std::string &gtin,
                 // else if (bundle.sb20 == "N" || bundle.sb == "N")
                 //     flagsVector.push_back("SB 10%");
 
-                // if (!bundle.orgen.empty())
-                //     flagsVector.push_back(bundle.orgen);
+                if (!bundle.orgen.empty())
+                    flagsVector.push_back(bundle.orgen);
 
-                // pf.flags = flagsVector;
+                pf.flags = flagsVector;
                 packMap[gtin] = pf;
                 found = true;
                 goto prepareResult; // abort the two for loops

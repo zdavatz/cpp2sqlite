@@ -274,6 +274,7 @@ int getAdditionalNames(const std::string &rn,
                 gtinUsed.insert(g13);
                 packages.gtin.push_back(g13);
                 packages.name.push_back(onePackageInfo);
+                // std::cout << "getAdditionalNames: " << rn << " onePackageInfo:" << onePackageInfo << std::endl;
             }
         }
     }
