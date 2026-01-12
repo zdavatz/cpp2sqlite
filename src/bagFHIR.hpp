@@ -17,15 +17,10 @@
 
 #include <nlohmann/json.hpp>
 
+#include <bag.hpp>
+
 namespace BAGFHIR
 {
-    struct packageFields {
-        std::string efp;
-        std::string efp_validFrom;
-        std::string pp;
-        std::vector<std::string> flags;
-    };
-
     struct Pack {
         std::string description;
     //     std::string category;
@@ -33,6 +28,7 @@ namespace BAGFHIR
         std::string exFactoryPrice;
         std::string exFactoryPriceValidFrom;
         std::string publicPrice;
+        std::string partnerDescription;
     };
 
     struct Bundle {
@@ -48,7 +44,7 @@ namespace BAGFHIR
     };
 
     typedef std::vector<Bundle> BundleList;
-    typedef std::map<std::string, packageFields> PackageMap;
+    typedef std::map<std::string, BAG::packageFields> PackageMap;
 
     void parseNDJSON(const std::string &filename,
                      const std::string &language,
@@ -75,7 +71,7 @@ namespace BAGFHIR
 
     std::string formatPriceAsMoney(double price);
 
-    packageFields getPackageFieldsByGtin(const std::string &gtin);
+    BAG::packageFields getPackageFieldsByGtin(const std::string &gtin);
 
     BundleList getBundleList();
 

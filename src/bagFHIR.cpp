@@ -154,6 +154,12 @@ Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
                     sub_entry["resource"]["subject"][0]["reference"] == "PackagedProductDefinition/" + resourceId)
                 {
                     // std::clog << " sub_entry: " << sub_entry["resource"]["extension"].dump() << std::endl;
+
+                    nlohmann::json name = sub_entry["resource"]["contained"][0]["name"];
+                    if (name.type() == nlohmann::json::value_t::string) {
+                        pack.partnerDescription = name.get<std::string>();
+                    }
+
                     for (nlohmann::json resourceExtension : sub_entry["resource"]["extension"]) {
                         if (resourceExtension["url"] != "http://fhir.ch/ig/ch-epl/StructureDefinition/productPrice") {
                             continue;
@@ -259,7 +265,7 @@ std::string getPricesAndFlags(const std::string &gtin,
     for (Bundle bundle : bundleList)
         for (Pack p : bundle.packs)
             if (gtin == p.gtin) {
-                packageFields pf;
+                BAG::packageFields pf;
 
                 // Prices
                 if (!p.exFactoryPrice.empty()) {
@@ -347,7 +353,7 @@ std::string formatPriceAsMoney(double price)
     return s.str();
 }
 
-packageFields getPackageFieldsByGtin(const std::string &gtin)
+BAG::packageFields getPackageFieldsByGtin(const std::string &gtin)
 {
     return packMap[gtin];
 }
