@@ -800,20 +800,11 @@ GTIN::oneFachinfoPackages fillPackagesInRow(
         }
 
         // Search in bag
-        if (flagFHIR) {
-            nAdd = BAGFHIR::getAdditionalNames(rn, gtinUsedSet, packages);
-            if (nAdd == 0) {
-                (*statsRnNotFoundBagCount)++;
-            } else {
-                (*statsRnFoundBagCount)++;
-            }
+        nAdd = flagFHIR ? BAGFHIR::getAdditionalNames(rn, gtinUsedSet, packages) : BAG::getAdditionalNames(rn, gtinUsedSet, packages);
+        if (nAdd == 0) {
+            (*statsRnNotFoundBagCount)++;
         } else {
-            nAdd = BAG::getAdditionalNames(rn, gtinUsedSet, packages);
-            if (nAdd == 0) {
-                (*statsRnNotFoundBagCount)++;
-            } else {
-                (*statsRnFoundBagCount)++;
-            }
+            (*statsRnFoundBagCount)++;
         }
 
         if (gtinUsedSet.empty()) {
@@ -1265,7 +1256,7 @@ int main(int argc, char **argv)
         if (flagPinfo) {
 
             // Preparations.xml (BAG) and Packungen.xlsx (Swissmedic).
-            std::vector<BAG::Preparation> bagPrepList = BAG::getPrepList();
+            std::vector<BAG::Preparation> bagPrepList = flagFHIR ? BAGFHIR::getPrepList() : BAG::getPrepList();
             for (auto bagPrep : bagPrepList) {
                 if (addedRegnrs.find(bagPrep.swissmedNo) == addedRegnrs.end()) {
                     DB::RowToInsert rowToInsert;
@@ -1286,47 +1277,6 @@ int main(int argc, char **argv)
                     std::string atcClass = ATC::getClassByAtcColumn(bagPrep.atcCode);
                     rowToInsert.atc_class = atcClass;
                     rowToInsert.tindex_str = bagPrep.itCodes.tindex;
-                    fillApplicationStr(&rowToInsert);
-                    fillPackagesInRow(
-                        opt_language,
-                        &rowToInsert,
-                        flagFHIR,
-                        &statsRnFoundRefdataCount,
-                        &statsRnNotFoundRefdataCount,
-                        &statsRnFoundSwissmedicCount,
-                        &statsRnNotFoundSwissmedicCount,
-                        &statsRnFoundBagCount,
-                        &statsRnNotFoundBagCount,
-                        &statsRegnrsNotFound
-                    );
-
-                    sqlDb.insertRow(TABLE_NAME_AMIKO, rowToInsert);
-                    addedRegnrs.insert(rowToInsert.regnrs);
-                }
-            }
-
-            // fhir-sl.ndjson (BAG FHIR) and Packungen.xlsx (Swissmedic).
-            std::vector<BAGFHIR::Bundle> bagBundleList = BAGFHIR::getBundleList();
-            for (auto bagBundle : bagBundleList) {
-                if (addedRegnrs.find(bagBundle.regnr) == addedRegnrs.end()) {
-                    DB::RowToInsert rowToInsert;
-
-                    std::string auth = "";
-                    for (auto pack : bagBundle.packs) {
-                        if (!pack.partnerDescription.empty()) {
-                            auth = pack.partnerDescription;
-                            break;
-                        }
-                    }
-
-                    rowToInsert.title = bagBundle.name;
-                    rowToInsert.auth = auth;
-                    rowToInsert.atc = bagBundle.atcCode;
-                    // rowToInsert.substances;
-                    rowToInsert.regnrs = bagBundle.regnr;
-                    std::string atcClass = ATC::getClassByAtcColumn(bagBundle.atcCode);
-                    rowToInsert.atc_class = atcClass;
-                    rowToInsert.tindex_str = "";
                     fillApplicationStr(&rowToInsert);
                     fillPackagesInRow(
                         opt_language,

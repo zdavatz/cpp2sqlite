@@ -26,7 +26,7 @@ namespace pt = boost::property_tree;
 namespace BAGFHIR
 {
 
-    std::vector<Bundle> bundleList;
+    std::vector<BAG::Preparation> prepList;
     PackageMap packMap;
 
     // Parse-phase stats
@@ -50,7 +50,7 @@ void printFileStats(const std::string &filename)
     REP::html_p(filename);
 
     REP::html_start_ul();
-    REP::html_li("preparations: " + std::to_string(bundleList.size()));
+    REP::html_li("preparations: " + std::to_string(prepList.size()));
     REP::html_li("packs: " + std::to_string(statsPackCount));
     REP::html_li("packs without GTIN: " + std::to_string(statsGtinEmptyVec.size()));
     REP::html_end_ul();
@@ -83,16 +83,16 @@ void parseNDJSON(const std::string &filename,
         std::string line;
         while (std::getline(file, line)) {
             nlohmann::json lineJson = nlohmann::json::parse(line);
-            Bundle b = jsonToBundle(lineJson, language);
-            bundleList.push_back(b);
+            BAG::Preparation p = jsonToPreparation(lineJson, language);
+            prepList.push_back(p);
         }
         file.close();
     }
     printFileStats(filename);
 }
 
-Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
-    Bundle b;
+BAG::Preparation jsonToPreparation(nlohmann::json json, const std::string &language) {
+    BAG::Preparation preparation;
     std::string entryID = json["id"];
     for (nlohmann::json entry : json["entry"]) {
         std::string resourceType = entry["resource"]["resourceType"];
@@ -102,13 +102,13 @@ Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
                 continue;
             }
             std::string atcCodeStr = atcCode.get<std::string>();
-            b.atcCode = atcCodeStr;
+            preparation.atcCode = atcCodeStr;
 
             for (nlohmann::json name : entry["resource"]["name"]) {
                 std::string languageCode = name["usage"][0]["language"]["coding"][0]["code"];
                 std::string productName = name["productName"];
                 if (languageCode.find(language) == 0) {
-                    b.name = productName;
+                    preparation.name = productName;
                 }
             }
 
@@ -119,10 +119,10 @@ Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
                     // https://fhir.ch/ig/ch-epl/CodeSystem-ch-epl-foph-product-type.html
                     if (codeStr == "756001003001") {
                         // Generic product
-                        b.orgen = "G";
+                        preparation.orgen = "G";
                     } else if (codeStr == "756001003002") {
                         // Originator product
-                        b.orgen = "O";
+                        preparation.orgen = "O";
                     }
 
                 }
@@ -135,10 +135,10 @@ Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
             }
             std::string regnrStr = regnr.get<std::string>();
             if (regnrStr.length() == 5) {
-                b.regnr = regnrStr;
+                preparation.swissmedNo = regnrStr;
             }
         } else if (resourceType == "PackagedProductDefinition") {
-            Pack pack;
+            BAG::Pack pack;
             nlohmann::json gtin = entry["resource"]["packaging"]["identifier"][0]["value"];
             if (gtin.type() == nlohmann::json::value_t::string) {
                 std::string gtinStr = gtin.get<std::string>();
@@ -201,13 +201,13 @@ Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
             }
             statsPackCount++;
             if (!pack.gtin.empty()) {
-                b.packs.push_back(pack);
+                preparation.packs.push_back(pack);
             } else {
-                statsGtinEmptyVec.push_back(pack.description + ", " + b.regnr);
+                statsGtinEmptyVec.push_back(pack.description + ", " + preparation.swissmedNo);
             }
         }
     }
-    return b;
+    return preparation;
 }
 
 int getAdditionalNames(const std::string &rn,
@@ -217,11 +217,11 @@ int getAdditionalNames(const std::string &rn,
     std::set<std::string>::iterator it;
     int countAdded = 0;
 
-    for (Bundle bundle : bundleList) {
-        if (rn != bundle.regnr)
+    for (BAG::Preparation preparation : prepList) {
+        if (rn != preparation.swissmedNo)
             continue;
 
-        for (Pack p : bundle.packs) {
+        for (BAG::Pack p : preparation.packs) {
             std::string g13 = p.gtin;
             // Build GTIN if missing
             it = gtinUsed.find(g13);
@@ -236,7 +236,7 @@ int getAdditionalNames(const std::string &rn,
                 if (!p.description.empty()) {
                     onePackageInfo += p.description;
                 } else {
-                    onePackageInfo += bundle.name;
+                    onePackageInfo += preparation.name;
                 }
 
                 std::string paf = getPricesAndFlags(g13, "", "");
@@ -262,8 +262,8 @@ std::string getPricesAndFlags(const std::string &gtin,
     std::vector<std::string> flagsVector;
     bool found = false;
 
-    for (Bundle bundle : bundleList)
-        for (Pack p : bundle.packs)
+    for (BAG::Preparation preparation : prepList)
+        for (BAG::Pack p : preparation.packs)
             if (gtin == p.gtin) {
                 BAG::packageFields pf;
 
@@ -294,15 +294,15 @@ std::string getPricesAndFlags(const std::string &gtin,
 
                 // SB: Selbstbehalt
                 // https://github.com/zdavatz/cpp2sqlite/issues/236
-                // if (bundle.sb == "Y")
+                // if (preparation.sb == "Y")
                 //     flagsVector.push_back("SB 40%");
-                // else if (bundle.sb20 == "Y")
+                // else if (preparation.sb20 == "Y")
                 //     flagsVector.push_back("SB 40%");
-                // else if (bundle.sb20 == "N" || bundle.sb == "N")
+                // else if (preparation.sb20 == "N" || preparation.sb == "N")
                 //     flagsVector.push_back("SB 10%");
 
-                if (!bundle.orgen.empty())
-                    flagsVector.push_back(bundle.orgen);
+                if (!preparation.orgen.empty())
+                    flagsVector.push_back(preparation.orgen);
 
                 pf.flags = flagsVector;
                 packMap[gtin] = pf;
@@ -338,8 +338,8 @@ prepareResult:
 std::vector<std::string> getGtinList() {
     std::vector<std::string> list;
 
-    for (Bundle bundle : bundleList)
-        for (Pack p : bundle.packs)
+    for (BAG::Preparation preparation : prepList)
+        for (BAG::Pack p : preparation.packs)
             if (!p.gtin.empty())
                 list.push_back(p.gtin);
 
@@ -358,9 +358,9 @@ BAG::packageFields getPackageFieldsByGtin(const std::string &gtin)
     return packMap[gtin];
 }
 
-BundleList getBundleList()
+PreparationList getPrepList()
 {
-    return bundleList;
+    return prepList;
 }
 
 }

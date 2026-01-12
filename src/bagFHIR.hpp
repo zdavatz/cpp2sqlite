@@ -21,36 +21,14 @@
 
 namespace BAGFHIR
 {
-    struct Pack {
-        std::string description;
-    //     std::string category;
-        std::string gtin;
-        std::string exFactoryPrice;
-        std::string exFactoryPriceValidFrom;
-        std::string publicPrice;
-        std::string partnerDescription;
-    };
-
-    struct Bundle {
-        std::string name;
-        // std::string description;
-        std::string regnr;
-        std::string atcCode;
-        std::string orgen;
-        // std::string sb20;
-        // std::string sb;
-        std::vector<Pack> packs;
-        // ItCode itCodes;
-    };
-
-    typedef std::vector<Bundle> BundleList;
+    typedef std::vector<BAG::Preparation> PreparationList;
     typedef std::map<std::string, BAG::packageFields> PackageMap;
 
     void parseNDJSON(const std::string &filename,
                      const std::string &language,
                      bool verbose);
 
-    Bundle jsonToBundle(nlohmann::json json, const std::string &language);
+    BAG::Preparation jsonToPreparation(nlohmann::json json, const std::string &language);
 
     int getAdditionalNames(const std::string &rn,
                            std::set<std::string> &gtinUsed,
@@ -73,7 +51,7 @@ namespace BAGFHIR
 
     BAG::packageFields getPackageFieldsByGtin(const std::string &gtin);
 
-    BundleList getBundleList();
+    PreparationList getPrepList();
 
     void printUsageStats();
 }
