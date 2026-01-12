@@ -26,15 +26,6 @@ namespace BAGFHIR
         std::vector<std::string> flags;
     };
 
-    // struct ItCode {
-    //     // shortest
-    //     std::string tindex;         // localized
-
-    //     // longest
-    //     std::string application;    // localized
-    //     std::string longestItCode;
-    // };
-
     struct Pack {
         std::string description;
     //     std::string category;
@@ -77,19 +68,18 @@ namespace BAGFHIR
 
 
 
-    // N/A:
+    // Things available in BAG preparation XML, but not in FHIR:
     // std::string getTindex(const std::string &rn);
     // std::string getApplicationByRN(const std::string &rn);
     // std::string getLongestItCodeByGtin(const std::string &gtin);
-    // SwissmedicCategory
 
     std::string formatPriceAsMoney(double price);
 
-    // packageFields getPackageFieldsByGtin(const std::string &gtin);
+    packageFields getPackageFieldsByGtin(const std::string &gtin);
 
-    // PreparationList getPrepList();
+    BundleList getBundleList();
 
-    // void printUsageStats();
+    void printUsageStats();
 }
 
 #endif /* bagfhir_hpp */

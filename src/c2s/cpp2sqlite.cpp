@@ -1332,6 +1332,7 @@ int main(int argc, char **argv)
         REFDATA::printUsageStats();
         SWISSMEDIC::printUsageStats();
         BAG::printUsageStats();
+        BAGFHIR::printUsageStats();
         ATC::printUsageStats();
         PED::printUsageStats();
         if (!flagNoSappinfo) {

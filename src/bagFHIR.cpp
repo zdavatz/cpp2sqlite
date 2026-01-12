@@ -29,15 +29,50 @@ namespace BAGFHIR
     std::vector<Bundle> bundleList;
     PackageMap packMap;
 
+    // Parse-phase stats
+    unsigned int statsPackCount = 0;
+    std::vector<std::string> statsGtinEmptyVec;
+
     // Usage stats
     unsigned int statsTotalGtinCount = 0;
-    unsigned int statsPackWithoutGtinCount = 0;
 
     enum PriceType {
         PriceTypeUnknown = 0,
         PriceTypeRetail = 1,
         PriceTypeExFactory = 2
     };
+
+static
+void printFileStats(const std::string &filename)
+{
+    REP::html_h2("BAG FHIR");
+    //REP::html_p(std::string(basename((char *)filename.c_str())));
+    REP::html_p(filename);
+
+    REP::html_start_ul();
+    REP::html_li("preparations: " + std::to_string(bundleList.size()));
+    REP::html_li("packs: " + std::to_string(statsPackCount));
+    REP::html_li("packs without GTIN: " + std::to_string(statsGtinEmptyVec.size()));
+    REP::html_end_ul();
+
+    if (statsGtinEmptyVec.size() > 0) {
+        REP::html_h3("GTIN empty");
+        REP::html_start_ol();
+        for (auto s : statsGtinEmptyVec)
+            REP::html_li(s);
+
+        REP::html_end_ol();
+    }
+}
+
+void printUsageStats()
+{
+    REP::html_h2("BAG FHIR");
+
+    REP::html_start_ul();
+    REP::html_li("GTINs used: " + std::to_string(statsTotalGtinCount));
+    REP::html_end_ul();
+}
 
 void parseNDJSON(const std::string &filename,
                  const std::string &language,
@@ -53,6 +88,7 @@ void parseNDJSON(const std::string &filename,
         }
         file.close();
     }
+    printFileStats(filename);
 }
 
 Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
@@ -109,9 +145,6 @@ Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
                 pack.gtin = gtinStr;
             }
             // TODO: GTIN::verifyGtin13Checksum(pack.gtin);
-            if (pack.gtin.empty()) {
-                statsPackWithoutGtinCount++;
-            }
             pack.description = entry["resource"]["description"];
 
             std::string resourceId = entry["resource"]["id"];
@@ -160,10 +193,11 @@ Bundle jsonToBundle(nlohmann::json json, const std::string &language) {
                     }
                 }
             }
+            statsPackCount++;
             if (!pack.gtin.empty()) {
                 b.packs.push_back(pack);
             } else {
-                std::clog << "EMPTY GTIN! " << b.regnr << "," << b.name << "pp: " << pack.publicPrice << " exp: " << pack.exFactoryPrice << std::endl;
+                statsGtinEmptyVec.push_back(pack.description + ", " + b.regnr);
             }
         }
     }
@@ -191,7 +225,7 @@ int getAdditionalNames(const std::string &rn,
 
                 std::string onePackageInfo;
 #ifdef DEBUG_IDENTIFY_NAMES
-                onePackageInfo += "bag+";
+                onePackageInfo += "bagfhir+";
 #endif
                 if (!p.description.empty()) {
                     onePackageInfo += p.description;
@@ -206,7 +240,6 @@ int getAdditionalNames(const std::string &rn,
                 gtinUsed.insert(g13);
                 packages.gtin.push_back(g13);
                 packages.name.push_back(onePackageInfo);
-                std::cout << "getAdditionalNames: " << rn << " onePackageInfo:" << onePackageInfo << std::endl;
             }
         }
     }
@@ -312,6 +345,16 @@ std::string formatPriceAsMoney(double price)
     std::ostringstream s;
     s << std::fixed << std::setprecision(2) << price;
     return s.str();
+}
+
+packageFields getPackageFieldsByGtin(const std::string &gtin)
+{
+    return packMap[gtin];
+}
+
+BundleList getBundleList()
+{
+    return bundleList;
 }
 
 }
