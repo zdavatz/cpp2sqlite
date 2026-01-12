@@ -147,6 +147,12 @@ mv -f Preparations.xml bag_preparations.xml
 rm XMLPublications.zip
 fi
 
+if [ $STEP_DOWNLOAD_FHIR ] ; then
+    FHIR_FILE_PATH=$(curl https://epl.bag.admin.ch/api/sl/public/resources/current | jq --raw-output '.fhir.fileUrl')
+    echo "Downloading from https://epl.bag.admin.ch/static/${FHIR_FILE_PATH}"
+    curl "https://epl.bag.admin.ch/static/${FHIR_FILE_PATH}" -o fhir-sl.ndjson
+fi
+
 #-------------------------------------------------------------------------------
 
 if [ $STEP_DOWNLOAD_SWISSPEDDOSE ] ; then
@@ -311,4 +317,3 @@ if [ $STEP_DOWNLOAD_TRANSFER_ZIP ] ; then
   unzip "transfer.zip" -d transfer
   rm transfer.zip
 fi
-
