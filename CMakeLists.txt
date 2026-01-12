@@ -117,6 +117,7 @@ target_link_libraries(drugshortage ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 add_executable(pharma
 	src/gtin.hpp src/gtin.cpp
 	src/bag.hpp src/bag.cpp
+	src/bagFHIR.hpp src/bagFHIR.cpp
 	src/report.hpp src/report.cpp
 	src/beautify.hpp src/beautify.cpp
 	src/pha/refdata.hpp src/pha/refdata.cpp
