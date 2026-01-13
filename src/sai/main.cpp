@@ -33,6 +33,7 @@
 #include "deklarationen.hpp"
 #include "adressen.hpp"
 #include "bag.hpp"
+#include "bagfhir.hpp"
 
 constexpr std::string_view TABLE_NAME_SAI = "sai_db";
 
@@ -45,7 +46,7 @@ void on_version()
 {
     std::cout << appName << " " << PROJECT_VER
     << ", " << __DATE__ << " " << __TIME__ << std::endl;
-    
+
     std::cout << "C++ " << __cplusplus << std::endl;
 }
 
@@ -121,14 +122,14 @@ void closeDB()
     sqlDb.closeDB();
 }
 
-SAI::_package bagToSaiPackage(BAG::Pack pack)
+SAI::_package bagToSaiPackage(BAG::Preparation prep, BAG::Pack pack)
 {
     SAI::_package package;
     package.gtinIndustry = pack.gtin;
-    package.descriptionEnRefdata = pack.nameDe + ", " + pack.descriptionDe + ", " + pack.packDescriptionDe;
-    package.descriptionFrRefdata = pack.nameFr + ", " + pack.descriptionFr + ", " + pack.packDescriptionFr;
+    package.descriptionEnRefdata = prep.nameDe + ", " + prep.descriptionDe + ", " + pack.descriptionDe;
+    package.descriptionFrRefdata = prep.nameFr + ", " + prep.descriptionFr + ", " + pack.descriptionFr;
     package.descriptionFrRefdata = "";
-    package.atcCode = pack.atcCode;
+    package.atcCode = prep.atcCode;
     package.approvalNumber = "";
     package.sequenceNumber = "";
     package.packageCode = "";
@@ -145,12 +146,12 @@ SAI::_package bagToSaiPackage(BAG::Pack pack)
 
 int main(int argc, char **argv)
 {
-    appName = boost::filesystem::basename(argv[0]);
-    
+    appName = basename(argv[0]);
+
     std::string opt_inputDirectory;
     std::string opt_workDirectory;  // for downloads subdirectory
     bool flagVerbose = false;
-    
+
     po::options_description desc("Allowed options");
     desc.add_options()
     ("help,h", "print this message")
@@ -159,22 +160,22 @@ int main(int argc, char **argv)
     ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
     ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
     ;
-    
+
     po::variables_map vm;
-    
+
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm); // populate vm
-        
+
         if (vm.count("help")) {
             std::cout << desc << std::endl;
             return EXIT_SUCCESS;
         }
-        
+
         if (vm.count("version")) {
             on_version();
             return EXIT_SUCCESS;
         }
-        
+
         po::notify(vm); // raise any errors encountered
     }
     catch (std::exception& e) {
@@ -190,15 +191,15 @@ int main(int argc, char **argv)
         std::cerr << "Exception of unknown type!" << std::endl;
         return EXIT_FAILURE;
     }
-    
+
     if (vm.count("verbose")) {
         flagVerbose = true;
     }
-    
+
     if (!vm.count("workDir")) {
         opt_workDirectory = opt_inputDirectory + "/..";
     }
-    
+
     // Parse input files
 
     std::string reportFilename("sai_report.html");
@@ -208,7 +209,7 @@ int main(int argc, char **argv)
     REP::html_start_ul();
     for (int i=0; i<argc; i++)
         REP::html_li(argv[i]);
-    
+
     REP::html_end_ul();
 
     // REP::html_h1("SAI-Packungen.XML");
@@ -219,7 +220,7 @@ int main(int argc, char **argv)
     DEK::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Deklarationen.XML");
     STO::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Stoff-Synonyme.XML");
     ADR::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Adressen.XML");
-    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", true);
+    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", "de", true);
 
     std::string dbFilename = opt_workDirectory + "/output/sai.db";
     openDB(dbFilename);
@@ -227,9 +228,12 @@ int main(int argc, char **argv)
     int i = 0;
     auto packages = SAI::getPackages();
     for (auto gtin : BAG::gtinWhichDoesntStartWith7680()) {
-        BAG::Pack bagPack = BAG::getPackageFieldsByGtin(gtin);
-        auto saiPackage = bagToSaiPackage(bagPack);
-        packages.push_back(saiPackage);
+        BAG::Preparation preparation;
+        BAG::Pack pack;
+        if (BAG::getPreparationAndPackageByGtin(gtin, &preparation, &pack)) {
+            auto saiPackage = bagToSaiPackage(preparation, pack);
+            packages.push_back(saiPackage);
+        }
     }
     int total = packages.size();
     std::set<std::string> missingDeklarationen;
@@ -305,11 +309,11 @@ int main(int argc, char **argv)
                     return a1 < b1;
                 }
             );
-            
+
             for (auto dekPackage : dekPackages) {
                 try {
                     STO::_package stoPackage = STO::getPackageByStoffId(dekPackage.stoffId);
-                    std::string thisString = 
+                    std::string thisString =
                         dekPackage.zeilennummer + ";" +
                         stoPackage.stoffsynonym + ";" +
                         stoPackage.synonymCode + ";" +
@@ -347,7 +351,10 @@ int main(int argc, char **argv)
 
         if (package.gtinIndustry != "") {
             try {
-                auto pack = BAG::getPackageFieldsByGtin(package.gtinIndustry);
+                // auto pack = BAG::getPackageFieldsByGtin(package.gtinIndustry);
+                BAG::Preparation preparation;
+                BAG::Pack pack;
+                BAG::getPreparationAndPackageByGtin(package.gtinIndustry, &preparation, &pack);
                 sqlDb.bindText(39, pack.publicPrice);
                 sqlDb.bindText(40, pack.publicPriceValidFrom);
                 sqlDb.bindText(41, pack.exFactoryPrice);
@@ -373,10 +380,10 @@ int main(int argc, char **argv)
     for (auto str : missingDeklarationen) {
         REP::html_li(str);
     }
-    
+
     REP::html_end_ul();
 
     closeDB();
-    
+
     return EXIT_SUCCESS;
 }

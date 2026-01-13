@@ -35,18 +35,29 @@ namespace BAG
 
     struct Pack {
         std::string description;
+        std::string descriptionDe;
+        std::string descriptionFr;
+
         std::string category;
         std::string gtin;
         std::string exFactoryPrice;
         std::string exFactoryPriceValidFrom;
         std::string publicPrice;
+        std::string publicPriceValidFrom;
         std::string limitationPoints;   // TODO
         std::string partnerDescription;
+        std::string ggsl;
     };
 
     struct Preparation {
         std::string name;
+        std::string nameDe;
+        std::string nameFr;
+
         std::string description;
+        std::string descriptionDe;
+        std::string descriptionFr;
+
         std::string swissmedNo;     // same as regnr
         std::string atcCode;
         std::string orgen;
@@ -78,7 +89,11 @@ namespace BAG
 
     std::string formatPriceAsMoney(const std::string &price);
 
+    packageFields makePackageFields(Preparation pre, Pack p);
     packageFields getPackageFieldsByGtin(const std::string &gtin);
+
+    std::vector<std::string> gtinWhichDoesntStartWith7680();
+    bool getPreparationAndPackageByGtin(const std::string &gtin, Preparation *outPrep, Pack *outPack);
 
     PreparationList getPrepList();
 

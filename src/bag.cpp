@@ -103,10 +103,14 @@ void parseXML(const std::string &filename,
                 Preparation prep;
                 prep.name = v.second.get(nameTag, "");
                 prep.name = boost::to_upper_copy<std::string>(prep.name);
+                prep.nameDe = v.second.get("NameDe", "");
+                prep.nameFr = v.second.get("NameFr", "");
 
                 prep.description = v.second.get(descriptionTag, "");
                 boost::algorithm::trim_right(prep.description);
                 prep.description = boost::to_lower_copy<std::string>(prep.description);
+                prep.descriptionDe = v.second.get("DescriptionDe", "");
+                prep.descriptionFr = v.second.get("DescriptionFr", "");
 
                 prep.atcCode = v.second.get("AtcCode", "");
 
@@ -125,6 +129,8 @@ void parseXML(const std::string &filename,
                         pack.description = p.second.get(descriptionTag, "");
                         boost::algorithm::trim_right(pack.description);
                         pack.description = boost::to_lower_copy<std::string>(pack.description);
+                        pack.descriptionDe = p.second.get("DescriptionDe", "");
+                        pack.descriptionFr = p.second.get("DescriptionFr", "");
 
                         pack.category = p.second.get("SwissmedicCategory", "");
                         pack.gtin = p.second.get("GTIN", "");
@@ -167,7 +173,9 @@ void parseXML(const std::string &filename,
                         pack.exFactoryPrice = formatPriceAsMoney(p.second.get("Prices.ExFactoryPrice.Price", ""));
                         pack.exFactoryPriceValidFrom = p.second.get("Prices.ExFactoryPrice.ValidFromDate", "");
                         pack.publicPrice = formatPriceAsMoney(p.second.get("Prices.PublicPrice.Price", ""));
+                        pack.publicPriceValidFrom = formatPriceAsMoney(p.second.get("Prices.PublicPrice.ValidFromDate", ""));
                         pack.partnerDescription = p.second.get("Partners.Partner.Description", "");
+                        pack.ggsl = p.second.get("FlagGGSL", "");
                         prep.packs.push_back(pack);
 
                         statsPackCount++;
@@ -434,6 +442,33 @@ packageFields getPackageFieldsByGtin(const std::string &gtin)
 PreparationList getPrepList()
 {
     return prepList;
+}
+
+std::vector<std::string> gtinWhichDoesntStartWith7680()
+{
+    std::vector<std::string> result;
+    for (Preparation prep : prepList) {
+        for (Pack pack : prep.packs) {
+            std::string gtin = pack.gtin;
+            if (gtin.substr(0,4) != "7680") {
+                result.push_back(gtin);
+            }
+        }
+    }
+    return result;
+}
+
+bool getPreparationAndPackageByGtin(const std::string &gtin, Preparation *outPrep, Pack *outPack) {
+    for (Preparation prep : prepList) {
+        for (Pack pack : prep.packs) {
+            if (pack.gtin == gtin) {
+                *outPrep = prep;
+                *outPack = pack;
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 }

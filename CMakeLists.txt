@@ -93,7 +93,8 @@ add_executable(sai
 	src/sai/stoffsynonyme.hpp src/sai/stoffsynonyme.cpp
 	src/sai/deklarationen.hpp src/sai/deklarationen.cpp
 	src/sai/adressen.hpp src/sai/adressen.cpp
-	src/sai/bag.hpp src/sai/bag.cpp
+	src/bag.hpp src/bag.cpp
+	src/bagFHIR.hpp src/bagFHIR.cpp
 	src/gtin.hpp src/gtin.cpp
 	src/sai/sai.hpp src/sai/sai.cpp)
 target_include_directories(sai PUBLIC "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/src/sai")
