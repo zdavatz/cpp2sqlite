@@ -141,7 +141,8 @@ add_executable(zurrose
 	src/sqlDatabase.hpp src/sqlDatabase.cpp
 	src/zur/Article.hpp src/zur/Article.cpp
 	src/zur/atc.hpp src/zur/atc.cpp
-	src/zur/bag.hpp src/zur/bag.cpp
+	src/bag.hpp src/bag.cpp
+	src/bagFHIR.hpp src/bagFHIR.cpp
 	src/zur/direkt.hpp src/zur/direkt.cpp
 	src/zur/galen.hpp src/zur/galen.cpp
 	src/zur/generika.hpp src/zur/generika.cpp
