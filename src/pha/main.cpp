@@ -15,6 +15,7 @@
 #include "swissmedic1.hpp"
 #include "swissmedic2.hpp"
 #include "bag.hpp"
+#include "bagfhir.hpp"
 #include "report.hpp"
 #include "config.h"
 #include "ddd.hpp"
@@ -47,6 +48,7 @@ int main(int argc, char **argv)
     std::string opt_workDirectory;  // for downloads subdirectory
     bool flagVerbose = false;
     bool flagStorage = false;
+    bool flagFHIR = false;
 
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -56,8 +58,9 @@ int main(int argc, char **argv)
     ("storage", "add one more column with medicine storage info")
     ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
     ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
+    ("fhir", "Use BAG FHIR ndjson instead of BAG Preparation XML")
     ;
-    
+
     po::variables_map vm;
 
     try {
@@ -100,7 +103,11 @@ int main(int argc, char **argv)
     if (vm.count("storage")) {
         flagStorage = true;
     }
-    
+
+    if (vm.count("fhir")) {
+        flagFHIR = true;
+    }
+
     ////////////////////////////////////////////////////////////////////////////
 
     std::string reportFilename("pharma_report.html");
@@ -119,10 +126,15 @@ int main(int argc, char **argv)
     const std::string language("de");
     SWISSMEDIC1::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages.xlsx");
     SWISSMEDIC2::parseXLXS(opt_workDirectory + "/downloads/Erweiterte_Arzneimittelliste HAM.xlsx");
-    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", language, false);
+    if (flagFHIR) {
+        BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl.ndjson", language, flagVerbose);
+    } else {
+        BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", language, false);
+    }
+
     REFDATA::parseXML(opt_workDirectory + "/downloads/refdata_pharma.xml", language);
     DDD::parseCSV(opt_inputDirectory + "/atc_ddd_2019.csv");
-    
+
     if (flagStorage) {
         std::string type("fi"); // Fachinfo
         AIPS::parseXML(opt_workDirectory + "/downloads/aips.xml",
@@ -132,12 +144,13 @@ int main(int argc, char **argv)
     }
 
     // Create CSV
-    SWISSMEDIC1::createCSV(opt_workDirectory + "/output", flagStorage);
-    
+    SWISSMEDIC1::createCSV(opt_workDirectory + "/output", flagStorage, flagFHIR);
+
     // Usage report
     REP::html_h1("Usage");
     SWISSMEDIC1::printUsageStats();
     BAG::printUsageStats();
+    BAGFHIR::printUsageStats();
     REP::terminate();
 
     return EXIT_SUCCESS;

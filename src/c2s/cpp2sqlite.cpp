@@ -51,6 +51,8 @@
 #include "report.hpp"
 #include "config.h"
 
+#include "bagFHIR.hpp"
+
 #include "ean13/functii.h"
 
 #define WITH_PROGRESS_BAR
@@ -763,6 +765,7 @@ void closeDB()
 GTIN::oneFachinfoPackages fillPackagesInRow(
     std::string opt_language,
     DB::RowToInsert *rowToInsert,
+    bool flagFHIR,
     unsigned int *statsRnFoundRefdataCount,
     unsigned int *statsRnNotFoundRefdataCount,
     unsigned int *statsRnFoundSwissmedicCount,
@@ -780,27 +783,28 @@ GTIN::oneFachinfoPackages fillPackagesInRow(
     for (auto rn : regnrs) {
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " rn: " << rn << std::endl;
 
-    // Search in refdata
-    int nAdd = REFDATA::getNames(rn, gtinUsedSet, packages);
-    if (nAdd == 0)
-        *statsRnNotFoundRefdataCount++;
-    else
-        *statsRnFoundRefdataCount++;
+        // Search in refdata
+        int nAdd = REFDATA::getNames(rn, gtinUsedSet, packages);
+        if (nAdd == 0){
+            (*statsRnNotFoundRefdataCount)++;
+        } else {
+            (*statsRnFoundRefdataCount)++;
+        }
 
         // Search in swissmedic
         nAdd = SWISSMEDIC::getAdditionalNames(rn, gtinUsedSet, packages, opt_language);
         if (nAdd == 0) {
-            *statsRnNotFoundSwissmedicCount++;
+            (*statsRnNotFoundSwissmedicCount)++;
         } else {
-            *statsRnFoundSwissmedicCount++;
+            (*statsRnFoundSwissmedicCount)++;
         }
 
         // Search in bag
-        nAdd = BAG::getAdditionalNames(rn, gtinUsedSet, packages);
+        nAdd = flagFHIR ? BAGFHIR::getAdditionalNames(rn, gtinUsedSet, packages) : BAG::getAdditionalNames(rn, gtinUsedSet, packages);
         if (nAdd == 0) {
-            *statsRnNotFoundBagCount++;
+            (*statsRnNotFoundBagCount)++;
         } else {
-            *statsRnFoundBagCount++;
+            (*statsRnFoundBagCount)++;
         }
 
         if (gtinUsedSet.empty()) {
@@ -823,7 +827,12 @@ GTIN::oneFachinfoPackages fillPackagesInRow(
     for (auto name : packages.name) {
 
         SWISSMEDIC::dosageUnits du = SWISSMEDIC::getByGtin(*itGtin);
-        BAG::packageFields pf = BAG::getPackageFieldsByGtin(*itGtin);
+        BAG::packageFields pf;
+        if (flagFHIR) {
+            pf = BAGFHIR::getPackageFieldsByGtin(*itGtin);
+        } else {
+            pf = BAG::getPackageFieldsByGtin(*itGtin);
+        }
 
         // Field 0
         // TODO: temporarily use the first part of the name
@@ -906,6 +915,7 @@ int main(int argc, char **argv)
     bool flagVerbose = false;
     bool flagNoSappinfo = false;
     bool flagPinfo = false;
+    bool flagFHIR = false;
     std::string type("fi"); // Fachinfo
     std::string opt_aplha;
     std::string opt_regnr;
@@ -945,6 +955,7 @@ int main(int argc, char **argv)
 //        ("stats", po::value<float>(), "generates statistics for given user")
         ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
         ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
+        ("fhir", "Use BAG FHIR ndjson instead of BAG Preparation XML")
         ;
 
     po::variables_map vm;
@@ -995,6 +1006,10 @@ int main(int argc, char **argv)
         flagPinfo = true;
         type = "pi";
         // std::cerr << basename((char *)__FILE__) << ":" << __LINE__ << " flagPinfo: " << flagPinfo << std::endl;
+    }
+
+    if (vm.count("fhir")) {
+        flagFHIR = true;
     }
 
     if (!vm.count("workDir")) {
@@ -1059,14 +1074,26 @@ int main(int argc, char **argv)
 
     REFDATA::parseXML(opt_workDirectory + "/downloads/refdata_pharma.xml", opt_language);
 
-    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", opt_language, flagVerbose);
-    {
-        std::vector<std::string> bagList = BAG::getGtinList();
-        REP::html_h4("Cross-reference");
-        REP::html_start_ul();
-        REP::html_li(std::to_string(countBagGtinInSwissmedic(bagList)) + " GTIN are also in swissmedic");
-        REP::html_li(std::to_string(countBagGtinInRefdata(bagList)) + " GTIN are also in refdata");
-        REP::html_end_ul();
+    if (flagFHIR) {
+        BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl.ndjson", opt_language, flagVerbose);
+        {
+            std::vector<std::string> bagList = BAGFHIR::getGtinList();
+            REP::html_h4("Cross-reference (BAG FHIR)");
+            REP::html_start_ul();
+            REP::html_li(std::to_string(countBagGtinInSwissmedic(bagList)) + " GTIN are also in swissmedic");
+            REP::html_li(std::to_string(countBagGtinInRefdata(bagList)) + " GTIN are also in refdata");
+            REP::html_end_ul();
+        }
+    } else {
+        BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", opt_language, flagVerbose);
+        {
+            std::vector<std::string> bagList = BAG::getGtinList();
+            REP::html_h4("Cross-reference");
+            REP::html_start_ul();
+            REP::html_li(std::to_string(countBagGtinInSwissmedic(bagList)) + " GTIN are also in swissmedic");
+            REP::html_li(std::to_string(countBagGtinInRefdata(bagList)) + " GTIN are also in refdata");
+            REP::html_end_ul();
+        }
     }
 
     for (AIPS::Medicine& m : list) {
@@ -1168,6 +1195,7 @@ int main(int argc, char **argv)
             GTIN::oneFachinfoPackages packages = fillPackagesInRow(
                 opt_language,
                 &rowToInsert,
+                flagFHIR,
                 &statsRnFoundRefdataCount,
                 &statsRnNotFoundRefdataCount,
                 &statsRnFoundSwissmedicCount,
@@ -1228,7 +1256,7 @@ int main(int argc, char **argv)
         if (flagPinfo) {
 
             // Preparations.xml (BAG) and Packungen.xlsx (Swissmedic).
-            std::vector<BAG::Preparation> bagPrepList = BAG::getPrepList();
+            std::vector<BAG::Preparation> bagPrepList = flagFHIR ? BAGFHIR::getPrepList() : BAG::getPrepList();
             for (auto bagPrep : bagPrepList) {
                 if (addedRegnrs.find(bagPrep.swissmedNo) == addedRegnrs.end()) {
                     DB::RowToInsert rowToInsert;
@@ -1253,6 +1281,7 @@ int main(int argc, char **argv)
                     fillPackagesInRow(
                         opt_language,
                         &rowToInsert,
+                        flagFHIR,
                         &statsRnFoundRefdataCount,
                         &statsRnNotFoundRefdataCount,
                         &statsRnFoundSwissmedicCount,
@@ -1276,6 +1305,7 @@ int main(int argc, char **argv)
                     fillPackagesInRow(
                         opt_language,
                         &rowToInsert,
+                        flagFHIR,
                         &statsRnFoundRefdataCount,
                         &statsRnNotFoundRefdataCount,
                         &statsRnFoundSwissmedicCount,
@@ -1320,6 +1350,7 @@ int main(int argc, char **argv)
         REFDATA::printUsageStats();
         SWISSMEDIC::printUsageStats();
         BAG::printUsageStats();
+        BAGFHIR::printUsageStats();
         ATC::printUsageStats();
         PED::printUsageStats();
         if (!flagNoSappinfo) {

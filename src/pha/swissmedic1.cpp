@@ -21,6 +21,7 @@
 #include "swissmedic2.hpp"
 #include "gtin.hpp"
 #include "bag.hpp"
+#include "bagfhir.hpp"
 //#include "beautify.hpp"
 #include "report.hpp"
 #include "refdata.hpp"
@@ -109,7 +110,7 @@ namespace SWISSMEDIC1
     std::vector<std::string> gtin;
 #endif
     std::string fromSwissmedic("ev.nn.i.H.");
-    
+
 //    // TODO: change it to a map for better performance
 //    std::vector<std::string> categoryVec;
 //
@@ -120,7 +121,7 @@ namespace SWISSMEDIC1
 
     // Usage stats
     unsigned int statsAugmentedRegnCount = 0;
-    unsigned int statsAugmentedGtinCount = 0;    
+    unsigned int statsAugmentedGtinCount = 0;
     unsigned int statsTotalGtinCount = 0;
     unsigned int statsRecoveredDosage = 0;
 
@@ -150,7 +151,7 @@ void parseXLXS(const std::string &filename)
     xlnt::workbook wb;
     wb.load(filename);
     auto ws = wb.active_sheet();
-    
+
     auto date_format = wb.create_format().number_format(xlnt::number_format{"dd.mm.yyyy"}, xlnt::optional<bool>(true));
 
     std::clog << std::endl << "Reading " << filename << std::endl;
@@ -196,7 +197,7 @@ void parseXLXS(const std::string &filename)
 
         pr.dosageNr = aSingleRow[COLUMN_B];
         pr.code3 = GTIN::padToLength(3, aSingleRow[COLUMN_K]);
-        
+
         // Precalculate gtin
         std::string gtin12 = "7680" + pr.rn5 + pr.code3;
         char checksum = GTIN::getGtin13Checksum(gtin12);
@@ -226,7 +227,7 @@ void parseXLXS(const std::string &filename)
         pr.categoryMed = aSingleRow[COLUMN_E];
         if ((pr.categoryMed != "Impfstoffe") && (pr.categoryMed != "Blutprodukte"))
             pr.categoryMed.clear();
-        
+
         pr.itNumber = aSingleRow[COLUMN_F];
         pr.regDate = aSingleRow[COLUMN_H];      // Date
         pr.validUntil = aSingleRow[COLUMN_J];   // Date
@@ -243,121 +244,6 @@ void parseXLXS(const std::string &filename)
 
     printFileStats(filename);
 }
-
-//// Return count added
-//int getAdditionalNames(const std::string &rn,
-//                       std::set<std::string> &gtinUsedSet,
-//                       GTIN::oneFachinfoPackages &packages,
-//                       const std::string &language)
-//{
-//    std::set<std::string>::iterator it;
-//    int countAdded = 0;
-//
-//    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-//        std::string rn5 = regnrs[rowInt];
-//        if (rn5 != rn)
-//            continue;
-//
-//        std::string g13 = gtin[rowInt];
-//        it = gtinUsedSet.find(g13);
-//        if (it == gtinUsedSet.end()) { // not found list of used GTINs, we must add the name
-//            countAdded++;
-//            statsAugmentedGtinCount++;
-//            statsTotalGtinCount++;
-//
-//            std::string onePackageInfo;
-//#ifdef DEBUG_IDENTIFY_NAMES
-//            onePackageInfo += "swm+";
-//#endif
-//            onePackageInfo += theWholeSpreadSheet.at(rowInt).at(COLUMN_C);
-//            BEAUTY::beautifyName(onePackageInfo);
-//            // Verify presence of dosage
-//            std::regex r(R"(\d+)");
-//            if (!std::regex_search(onePackageInfo, r)) {
-//                statsRecoveredDosage++;
-//                //std::clog << "no dosage for " << name << std::endl;
-//                onePackageInfo += " " + duVec[rowInt].dosage;
-//                onePackageInfo += " " + duVec[rowInt].units;
-//            }
-//
-//            // See RealExpertInfo.java:1544
-//            //  "a.H." --> "ev.nn.i.H."
-//            //  "p.c." --> "ev.ep.e.c."
-//            if (language == "fr")
-//                fromSwissmedic = "ev.ep.e.c.";
-//
-//            std::string paf = BAG::getPricesAndFlags(g13, fromSwissmedic, categoryVec[rowInt]);
-//            if (!paf.empty())
-//                onePackageInfo += paf;
-//
-//            gtinUsedSet.insert(g13);
-//            packages.gtin.push_back(g13);
-//            packages.name.push_back(onePackageInfo);
-//        }
-//    }
-//
-//    if (countAdded > 0)
-//        statsAugmentedRegnCount++;
-//
-//    return countAdded;
-//}
-
-//int countRowsWithRn(const std::string &rn)
-//{
-//    int count = 0;
-//    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-//        std::string gtin_5 = regnrs[rowInt];
-//        // TODO: to speed up do a numerical comparison so that we can return when gtin5>rn
-//        // assuming that column A is sorted
-//        if (gtin_5 == rn)
-//            count++;
-//    }
-//
-//    return count;
-//}
-    
-//bool findGtin(const std::string &gtin)
-//{
-//    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-//        std::string rn5 = regnrs[rowInt];
-//        std::string code3 = packingCode[rowInt];
-//        std::string gtin12 = "7680" + rn5 + code3;
-//
-//#if 0
-//        // We could also recalculate and verify the checksum
-//        // but such verification has already been done when parsing the files
-//        char checksum = GTIN::getGtin13Checksum(gtin12);
-//
-//        if (checksum != gtin[12]) {
-//            std::cerr
-//            << basename((char *)__FILE__) << ":" << __LINE__
-//            << ", GTIN error, expected:" << checksum
-//            << ", received" << gtin[12]
-//            << std::endl;
-//        }
-//#endif
-//
-//        // The comparison is only the first 12 digits, without checksum
-//        if (gtin12 == gtin.substr(0,12)) // pos, len
-//            return true;
-//    }
-//
-//    return false;
-//}
-
-//std::string getApplication(const std::string &rn)
-//{
-//    std::string app;
-//
-//    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-//        if (rn == regnrs[rowInt]) {
-//            app = theWholeSpreadSheet.at(rowInt).at(COLUMN_S) + " (Swissmedic)";
-//            break;
-//        }
-//    }
-//
-//    return app;
-//}
 
 std::string getAtcFromFirstRn(const std::string &rn)
 {
@@ -385,7 +271,7 @@ std::string getCategoryPackByGtin(const std::string &g)
 
     return cat;
 }
-    
+
 // Issue #68, 9
 void getPackageSizeNumericalFromName(std::string &calculatedDosage)
 {
@@ -395,11 +281,11 @@ void getPackageSizeNumericalFromName(std::string &calculatedDosage)
 
     std::string stringMassaged = boost::to_lower_copy<std::string>(calculatedDosage); // "X" --> "x"
     boost::replace_all(stringMassaged, ",", "."); // "0,5" --> "0.5"
-    
+
     if (stringMassaged.find("x") == std::string::npos) {      // It doesn't contain "x"
         if (stringMassaged.find("ml") != std::string::npos)   // but it contains "ml"
             calculatedDosage = "1";
-        
+
         return;
     }
 
@@ -432,7 +318,7 @@ void getPackageSizeNumericalFromName(std::string &calculatedDosage)
         calculatedDosage = std::to_string(a*b);
     }
 }
-    
+
 // Issue #72 Extract "Dosierung" from "Präparat" with an almighty regular expression
 std::string getDosageFromName(const std::string &name)
 {
@@ -452,11 +338,11 @@ std::string getDosageFromName(const std::string &name)
     if (dosage.empty() || boost::algorithm::contains(dosage2, dosage)) {
         return dosage2;
     }
-    
+
 
     // TODO: trim trailing space
     // TODO: change " / " to "/"
-    
+
     return dosage;
 }
 
@@ -473,13 +359,13 @@ std::string getDosageFromName(const std::string &name)
 //    return du;
 //}
 
-void createCSV(const std::string &outDir, bool storageColumn)
+void createCSV(const std::string &outDir, bool storageColumn, bool flagFHIR)
 {
     std::ofstream ofs;
     std::string filename = outDir + "/pharma.csv";
     ofs.open(filename);
     constexpr std::string_view OUTPUT_FILE_SEPARATOR = ";";
- 
+
     std::clog << std::endl << "Creating CSV" << std::endl;
 
     ofs
@@ -514,14 +400,14 @@ void createCSV(const std::string &outDir, bool storageColumn)
         ofs << OUTPUT_FILE_SEPARATOR << "storage";      // AA
 
     ofs << std::endl;
-    
+
 #ifdef WITH_PROGRESS_BAR
     int ii=1;
     int n=pharmaVec.size();
 #endif
 
     for (auto pv : pharmaVec) {
-        
+
 #ifdef WITH_PROGRESS_BAR
         // Show progress
         if ((ii++ % 60) == 0)
@@ -529,11 +415,17 @@ void createCSV(const std::string &outDir, bool storageColumn)
 #endif
 
         std::string cat = getCategoryPackByGtin(pv.gtin13);
-        (void)BAG::getPricesAndFlags(pv.gtin13, "", cat); // update BAG::packMap within this GTIN
-        BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(pv.gtin13); // get it from BAG::packMap
+        BAG::packageFields fromBag;
+        if (flagFHIR) {
+            (void)BAGFHIR::getPricesAndFlags(pv.gtin13, "", cat); // update BAG::packMap within this GTIN
+            fromBag = BAGFHIR::getPackageFieldsByGtin(pv.gtin13); // get it from BAG::packMap
+        } else {
+            (void)BAG::getPricesAndFlags(pv.gtin13, "", cat); // update BAG::packMap within this GTIN
+            fromBag = BAG::getPackageFieldsByGtin(pv.gtin13); // get it from BAG::packMap
+        }
         std::string auth = SWISSMEDIC2::getAuthorizationByAtc(pv.rn5, pv.dosageNr);
         std::string storage = AIPS::getStorageByRN(pv.rn5);
-        
+
         // Column E
         // Take the name first from Refdata based on GTIN
         std::string name = REFDATA::getNameByGtin(pv.gtin13);
@@ -551,7 +443,7 @@ void createCSV(const std::string &outDir, bool storageColumn)
             << std::endl;
         }
 #endif
-        
+
         // Column I
         std::string calculatedDosageString = pv.du.dosage;
         getPackageSizeNumericalFromName(calculatedDosageString);
@@ -566,10 +458,13 @@ void createCSV(const std::string &outDir, bool storageColumn)
             if ((s == "G") || (s == "O"))
                 bagFlagGeneric = s;
         }
-        
+
         // Column T
-        std::string itCodeBag = BAG::getLongestItCodeByGtin(pv.gtin13);
-        
+        std::string itCodeBag;
+        if (!flagFHIR) {
+            itCodeBag = BAG::getLongestItCodeByGtin(pv.gtin13);
+        }
+
         // Column X
         std::string dailyCostString;
         std::string dailyCostFormula;
@@ -605,26 +500,26 @@ void createCSV(const std::string &outDir, bool storageColumn)
 
                             // Multiply by column K --> package_cost
                             if (!fromBag.pp.empty() && !calculatedDosageString.empty()) {
-                                
+
                                 // Multiply bu column I
                                 double calculatedDosageValue = std::atof(calculatedDosageString.c_str());
                                 package_mg *= calculatedDosageValue;
 
                                 double package_cost = std::atof(fromBag.pp.c_str());
-                                
+
                                 // Divide package_cost by package_mg --> package_cost_per_mg
                                 double package_cost_per_mg = package_cost / package_mg;
 
                                 // Multiply by DDD daily_dosage_mg --> daily_cost
                                 double dailyCost = package_cost_per_mg * daily_dosage_mg;
-                            
+
                                 if (dailyCost > 0.01) {
                                     std::ostringstream s;
 
                                     // Format column X as money
                                     s << std::fixed << std::setprecision(2) << dailyCost;
                                     dailyCostString = s.str();
-                                    
+
                                     // Column Y
                                     s.str(std::string()); // clear the variable s
                                     s // << std::fixed << std::setprecision(2)
@@ -684,13 +579,13 @@ void createCSV(const std::string &outDir, bool storageColumn)
 
         ofs << std::endl;
     }
-    
+
 #ifdef WITH_PROGRESS_BAR
     std::cerr << "\r100 %" << std::endl;
 #endif
 
     ofs.close();
-    
+
     std::clog << std::endl << "Created " << filename << std::endl;
 }
 }

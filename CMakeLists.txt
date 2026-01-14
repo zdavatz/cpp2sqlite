@@ -50,6 +50,7 @@ add_executable(cpp2sqlite
 	src/c2s/swissmedic.hpp src/c2s/swissmedic.cpp
 	src/c2s/sappinfo.hpp src/c2s/sappinfo.cpp
 	src/bag.hpp src/bag.cpp
+	src/bagFHIR.hpp src/bagFHIR.cpp
 	src/gtin.hpp src/gtin.cpp
 	src/beautify.hpp src/beautify.cpp
 	src/sqlDatabase.hpp src/sqlDatabase.cpp
@@ -92,7 +93,8 @@ add_executable(sai
 	src/sai/stoffsynonyme.hpp src/sai/stoffsynonyme.cpp
 	src/sai/deklarationen.hpp src/sai/deklarationen.cpp
 	src/sai/adressen.hpp src/sai/adressen.cpp
-	src/sai/bag.hpp src/sai/bag.cpp
+	src/bag.hpp src/bag.cpp
+	src/bagFHIR.hpp src/bagFHIR.cpp
 	src/gtin.hpp src/gtin.cpp
 	src/sai/sai.hpp src/sai/sai.cpp)
 target_include_directories(sai PUBLIC "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/src/sai")
@@ -116,6 +118,7 @@ target_link_libraries(drugshortage ${Boost_LIBRARIES} ${XLNT_LIBRARIES})
 add_executable(pharma
 	src/gtin.hpp src/gtin.cpp
 	src/bag.hpp src/bag.cpp
+	src/bagFHIR.hpp src/bagFHIR.cpp
 	src/report.hpp src/report.cpp
 	src/beautify.hpp src/beautify.cpp
 	src/pha/refdata.hpp src/pha/refdata.cpp
@@ -138,7 +141,8 @@ add_executable(zurrose
 	src/sqlDatabase.hpp src/sqlDatabase.cpp
 	src/zur/Article.hpp src/zur/Article.cpp
 	src/zur/atc.hpp src/zur/atc.cpp
-	src/zur/bag.hpp src/zur/bag.cpp
+	src/bag.hpp src/bag.cpp
+	src/bagFHIR.hpp src/bagFHIR.cpp
 	src/zur/direkt.hpp src/zur/direkt.cpp
 	src/zur/galen.hpp src/zur/galen.cpp
 	src/zur/generika.hpp src/zur/generika.cpp
