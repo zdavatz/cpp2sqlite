@@ -15,7 +15,7 @@
 #include "swissmedic1.hpp"
 #include "swissmedic2.hpp"
 #include "bag.hpp"
-#include "bagfhir.hpp"
+#include "bagFHIR.hpp"
 #include "report.hpp"
 #include "config.h"
 #include "ddd.hpp"

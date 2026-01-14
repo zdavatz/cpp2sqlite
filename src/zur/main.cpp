@@ -28,7 +28,7 @@
 #include "nota.hpp"
 #include "report.hpp"
 #include "bag.hpp"
-#include "bagfhir.hpp"
+#include "bagFHIR.hpp"
 #include "galen.hpp"
 #include "swissmedic.hpp"
 #include "neu.hpp"

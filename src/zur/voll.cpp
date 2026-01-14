@@ -24,7 +24,7 @@
 #include "report.hpp"
 #include "galen.hpp"
 #include "bag.hpp"
-#include "bagfhir.hpp"
+#include "bagFHIR.hpp"
 #include "swissmedic.hpp"
 
 #define WITH_PROGRESS_BAR

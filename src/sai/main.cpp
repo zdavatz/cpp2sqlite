@@ -33,7 +33,7 @@
 #include "deklarationen.hpp"
 #include "adressen.hpp"
 #include "bag.hpp"
-#include "bagfhir.hpp"
+#include "bagFHIR.hpp"
 
 constexpr std::string_view TABLE_NAME_SAI = "sai_db";
 

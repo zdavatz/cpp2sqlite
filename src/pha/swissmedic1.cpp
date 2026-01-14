@@ -21,7 +21,7 @@
 #include "swissmedic2.hpp"
 #include "gtin.hpp"
 #include "bag.hpp"
-#include "bagfhir.hpp"
+#include "bagFHIR.hpp"
 //#include "beautify.hpp"
 #include "report.hpp"
 #include "refdata.hpp"
