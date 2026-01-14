@@ -50,7 +50,9 @@ namespace BAGFHIR
     std::string formatPriceAsMoney(double price);
 
     BAG::packageFields getPackageFieldsByGtin(const std::string &gtin);
+    bool getPreparationAndPackageByGtin(const std::string &gtin, BAG::Preparation *outPrep, BAG::Pack *outPack);
 
+    std::vector<std::string> gtinWhichDoesntStartWith7680();
     PreparationList getPrepList();
 
     void printUsageStats();

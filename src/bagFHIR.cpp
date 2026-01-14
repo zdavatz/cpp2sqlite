@@ -358,6 +358,33 @@ BAG::packageFields getPackageFieldsByGtin(const std::string &gtin)
     return packMap[gtin];
 }
 
+std::vector<std::string> gtinWhichDoesntStartWith7680()
+{
+    std::vector<std::string> result;
+    for (BAG::Preparation prep : prepList) {
+        for (BAG::Pack pack : prep.packs) {
+            std::string gtin = pack.gtin;
+            if (gtin.substr(0,4) != "7680") {
+                result.push_back(gtin);
+            }
+        }
+    }
+    return result;
+}
+
+bool getPreparationAndPackageByGtin(const std::string &gtin, BAG::Preparation *outPrep, BAG::Pack *outPack) {
+    for (BAG::Preparation prep : prepList) {
+        for (BAG::Pack pack : prep.packs) {
+            if (pack.gtin == gtin) {
+                *outPrep = prep;
+                *outPack = pack;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 PreparationList getPrepList()
 {
     return prepList;

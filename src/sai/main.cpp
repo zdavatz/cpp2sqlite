@@ -151,6 +151,7 @@ int main(int argc, char **argv)
     std::string opt_inputDirectory;
     std::string opt_workDirectory;  // for downloads subdirectory
     bool flagVerbose = false;
+    bool flagFHIR = false;
 
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -159,6 +160,7 @@ int main(int argc, char **argv)
     ("verbose", "be extra verbose") // Show errors and logs
     ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
     ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
+    ("fhir", "Use BAG FHIR ndjson instead of BAG Preparation XML")
     ;
 
     po::variables_map vm;
@@ -200,6 +202,10 @@ int main(int argc, char **argv)
         opt_workDirectory = opt_inputDirectory + "/..";
     }
 
+    if (vm.count("fhir")) {
+        flagFHIR = true;
+    }
+
     // Parse input files
 
     std::string reportFilename("sai_report.html");
@@ -220,17 +226,33 @@ int main(int argc, char **argv)
     DEK::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Deklarationen.XML");
     STO::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Stoff-Synonyme.XML");
     ADR::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Adressen.XML");
-    BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", "de", true);
+    if (flagFHIR) {
+        BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl.ndjson", "de", true);
+    } else {
+        BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", "de", true);
+    }
 
     std::string dbFilename = opt_workDirectory + "/output/sai.db";
     openDB(dbFilename);
 
     int i = 0;
     auto packages = SAI::getPackages();
-    for (auto gtin : BAG::gtinWhichDoesntStartWith7680()) {
+    std::vector<std::string> gtins;
+    if (flagFHIR) {
+        gtins = BAGFHIR::gtinWhichDoesntStartWith7680();
+    } else {
+        gtins = BAG::gtinWhichDoesntStartWith7680();
+    }
+    for (auto gtin : gtins) {
         BAG::Preparation preparation;
         BAG::Pack pack;
-        if (BAG::getPreparationAndPackageByGtin(gtin, &preparation, &pack)) {
+        bool success = false;
+        if (flagFHIR) {
+            success = BAGFHIR::getPreparationAndPackageByGtin(gtin, &preparation, &pack);
+        } else {
+            success = BAG::getPreparationAndPackageByGtin(gtin, &preparation, &pack);
+        }
+        if (success) {
             auto saiPackage = bagToSaiPackage(preparation, pack);
             packages.push_back(saiPackage);
         }
@@ -354,7 +376,11 @@ int main(int argc, char **argv)
                 // auto pack = BAG::getPackageFieldsByGtin(package.gtinIndustry);
                 BAG::Preparation preparation;
                 BAG::Pack pack;
-                BAG::getPreparationAndPackageByGtin(package.gtinIndustry, &preparation, &pack);
+                if (flagFHIR) {
+                    BAGFHIR::getPreparationAndPackageByGtin(package.gtinIndustry, &preparation, &pack);
+                } else {
+                    BAG::getPreparationAndPackageByGtin(package.gtinIndustry, &preparation, &pack);
+                }
                 sqlDb.bindText(39, pack.publicPrice);
                 sqlDb.bindText(40, pack.publicPriceValidFrom);
                 sqlDb.bindText(41, pack.exFactoryPrice);
