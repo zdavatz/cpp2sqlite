@@ -24,6 +24,7 @@
 #include "report.hpp"
 #include "galen.hpp"
 #include "bag.hpp"
+#include "bagfhir.hpp"
 #include "swissmedic.hpp"
 
 #define WITH_PROGRESS_BAR
@@ -57,7 +58,7 @@ void printFileStats(const std::string &filename)
     REP::html_h2("ARTIKEL");
     //REP::html_p(std::string(basename((char *)filename.c_str())));
     REP::html_p(filename);
-    
+
     REP::html_start_ul();
     REP::html_li("Total Articles: " + std::to_string(statsCsvLineCount));
     REP::html_li("Used Articles: " + std::to_string(articles.size()));
@@ -111,6 +112,7 @@ std::string parseUnitFromTitle(const std::string &pack_title)
 
 void parseCSV(const std::string &filename,
               const std::string type,
+              bool flagFHIR,
               bool dumpHeader)
 {
     std::cout << "Reading " << filename << std::endl;
@@ -137,7 +139,7 @@ void parseCSV(const std::string &filename,
                     int index = 0;
                     for (auto t : headerTitles)
                         outHeader << index++ << ") " << colLetter++ << "\t" << t << std::endl;
-                    
+
                     outHeader.close();
                 }
 
@@ -146,7 +148,7 @@ void parseCSV(const std::string &filename,
 
             std::vector<std::string> columnVector;
             boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
-            
+
             if (columnVector.size() != 21) {
 #ifdef DEBUG
                 std::clog
@@ -158,12 +160,12 @@ void parseCSV(const std::string &filename,
                 // but these lines have pharmacode >= 7900000 anyway and they would be skipped later
                 continue;
             }
-            
+
             // Validate column A
             auto pharmaCode = columnVector[0]; // A
             try {
                 auto numericCode = std::stol(pharmaCode);
-                
+
                 if (numericCode == maxAcceptablePharmaCode)
                     statsLineWithPharmaMax = statsCsvLineCount;
 
@@ -172,7 +174,7 @@ void parseCSV(const std::string &filename,
                     // therefore all following lines will fail this validation.
                     // We could abort parsing here, but we continue to collects stats on the file.
                     statsPharmaCodeTooBig++;
-                    
+
                     //std::cerr << " CSV " << statsCsvLineCount << ", " << str << std::endl;
                     if (statsFirstLinePharmaOverMax == -1)
                         statsFirstLinePharmaOverMax = statsCsvLineCount;
@@ -185,7 +187,7 @@ void parseCSV(const std::string &filename,
                 //std::cerr << "Line: " << __LINE__ << " Error " << e.what() << std::endl;
                 continue;
             }
-            
+
             // Validate column H
             auto atcCode = columnVector[7]; // H
             if (atcCode.length() == 0)
@@ -194,20 +196,30 @@ void parseCSV(const std::string &filename,
                 if (type == "atcdb")
                     continue;
             }
-            
+
             Article a;
             a.pharma_code = pharmaCode;
             a.pack_title = columnVector[1];
-            
+
             // See file DispoParse.java line 417
             a.ean_code = columnVector[2];   // C
             if ((a.ean_code.length() == 13) &&
                 (a.ean_code.substr(0, 4) == "7680"))
             {
                 auto cat = SWISSMEDIC::getCategoryPackByGtin(a.ean_code);
-                auto paf = BAG::getPricesAndFlags(a.ean_code, cat); // update BAG::packMap within this GTIN
+                std::string paf;
+                if (flagFHIR) {
+                    paf = BAGFHIR::getPricesAndFlags(a.ean_code, cat); // update BAG::packMap within this GTIN
+                } else {
+                    paf = BAG::getPricesAndFlags(a.ean_code, cat); // update BAGFHIR::packMap within this GTIN
+                }
                 if (paf.length() > 0) {
-                    BAG::packageFields fromBag = BAG::getPackageFieldsByGtin(a.ean_code); // get it from BAG::packMap
+                    BAG::packageFields fromBag;
+                    if (flagFHIR) {
+                        fromBag = BAGFHIR::getPackageFieldsByGtin(a.ean_code); // get it from BAG::packMap
+                    } else {
+                        fromBag = BAG::getPackageFieldsByGtin(a.ean_code); // get it from BAGFHIR::packMap
+                    }
 
                     auto bioT = SWISSMEDIC::getCategoryMedByGtin(a.ean_code);
                     if (bioT == "Biotechnologika") {
@@ -224,12 +236,12 @@ void parseCSV(const std::string &filename,
             a.likes = 0; // TODO:
 
             a.availability = columnVector[3];
-            
+
             // TODO: columnVector[4]; // E unused ?
 
             a.pack_size = std::stoi(columnVector[5]);
             // TODO: if 0 parse the size from the title
-            
+
             a.therapy_code = columnVector[6];
             if (a.therapy_code.size() == 0)
                 a.therapy_code = NO_DETAILS;
@@ -245,9 +257,9 @@ void parseCSV(const std::string &filename,
 
             //if (columnVector[8].length() > 0)
             a.stock = std::stoi(columnVector[8]); // I
-            
+
             a.rose_supplier = columnVector[9]; // J
-            
+
             auto gal = columnVector[10]; // K
             if (gal.length() == 0) {
                 statsEmptyGalenForm++;
@@ -263,20 +275,20 @@ void parseCSV(const std::string &filename,
                     //a.galen_code = TODO: reverse lookup ?
                 }
             }
-            
+
             // See file DispoParse.java line 497
             a.pack_unit = columnVector[11]; // L
             if ((a.pack_unit.length() == 0) || (a.pack_unit == "0")) {
                 a.pack_unit = parseUnitFromTitle(a.pack_title); // get it from column B
             }
-            
+
             a.rose_base_price = columnVector[12]; // M TODO: see bag formatPriceAsMoney
-            
+
             auto ean = columnVector[13];  // N TODO: check that length is 13
             a.replace_ean_code = ean;
 
             a.replace_pharma_code = columnVector[14]; // O
-            
+
             a.off_the_market = (boost::to_lower_copy<std::string>(columnVector[15]) == "ja"); // P
             a.npl_article = (boost::to_lower_copy<std::string>(columnVector[16]) == "ja"); // Q
 
@@ -291,7 +303,7 @@ void parseCSV(const std::string &filename,
             articles.push_back(a);
             pharmaArticleIndexMap.insert(std::make_pair(a.pharma_code, articles.size()-1));
         }  // while
-        
+
         file.close();
     }
     catch (std::exception &e) {
@@ -301,7 +313,7 @@ void parseCSV(const std::string &filename,
         << ",  Error " << e.what()
         << std::endl;
     }
-    
+
     printFileStats(filename);
 }
 
@@ -391,7 +403,7 @@ void openDB(const std::string &filename)
     sqlDb.insertInto(TABLE_NAME_ANDROID, "locale", "'en_US'");
 
     //createTable("sqlite_sequence", "");  // created automatically
-    
+
     sqlDb.prepareStatement(TABLE_NAME_ROSE,
                            "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 }
@@ -405,7 +417,7 @@ void createDB()
     int n = articles.size();
 #endif
     for (auto a : articles) {
-        
+
 #ifdef WITH_PROGRESS_BAR
         // Show progress
         if ((ii++ % 300) == 0)
@@ -438,7 +450,7 @@ void createDB()
 
         sqlDb.runStatement(TABLE_NAME_ROSE);
     } // for
-        
+
 #ifdef WITH_PROGRESS_BAR
         std::cerr << "\r100 %" << std::endl;
 #endif

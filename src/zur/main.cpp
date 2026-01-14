@@ -28,6 +28,7 @@
 #include "nota.hpp"
 #include "report.hpp"
 #include "bag.hpp"
+#include "bagfhir.hpp"
 #include "galen.hpp"
 #include "swissmedic.hpp"
 #include "neu.hpp"
@@ -47,14 +48,6 @@ void getAtcMap(const std::string downloadDir)
 }
 #endif
 
-// See file DispoParse.java line 725
-void getSLMap(const std::string downloadDir,
-              const std::string &language,
-              bool verbose)
-{
-    BAG::parseXML(downloadDir + "/bag_preparations.xml", language, false);
-}
-
 // See file DispoParse.java line 818
 void enhanceFlags(const std::string downloadDir)
 {
@@ -71,9 +64,9 @@ void processLikes(const std::string inDir)
 
 // See file DispoParse.java line 363
 // fulldb,atcdb
-void generateFullSQLiteDB(const std::string inDir, const std::string type)
+void generateFullSQLiteDB(const std::string inDir, const std::string type, bool flagFHIR)
 {
-    VOLL::parseCSV(inDir + "/zurrose/artikel_vollstamm_zurrose.csv", type);
+    VOLL::parseCSV(inDir + "/zurrose/artikel_vollstamm_zurrose.csv", type, flagFHIR);
     VOLL::parseNonFullCSV(inDir + "/zurrose/artikel_stamm_zurrose.csv", type);
     VOLL::createDB();
 }
@@ -150,7 +143,8 @@ int main(int argc, char **argv)
     std::string opt_language;
     std::string opt_zurrose;
     bool flagVerbose = false;
-    
+    bool flagFHIR = false;
+
     po::options_description desc("Allowed options");
     desc.add_options()
     ("help,h", "print this message")
@@ -160,18 +154,19 @@ int main(int argc, char **argv)
     ("zurrose", po::value<std::string>( &opt_zurrose )->default_value("fulldb"), "generate zur Rose full article database or stock/like files (fulldb/atcdb/quick)")
     ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
     ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
+    ("fhir", "Use BAG FHIR ndjson instead of BAG Preparation XML")
     ;
-    
+
     po::variables_map vm;
-    
+
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm); // populate vm
-        
+
         if (vm.count("help")) {
             std::cout << desc << std::endl;
             return EXIT_SUCCESS;
         }
-        
+
         if (vm.count("version")) {
             on_version();
             return EXIT_SUCCESS;
@@ -192,15 +187,19 @@ int main(int argc, char **argv)
         std::cerr << "Exception of unknown type!" << std::endl;
         return EXIT_FAILURE;
     }
-    
+
     if (vm.count("verbose")) {
         flagVerbose = true;
     }
-    
+
     if (!vm.count("workDir")) {
         opt_workDirectory = opt_inputDirectory + "/..";
     }
-    
+
+    if (!vm.count("fhir")) {
+        flagFHIR = true;
+    }
+
     // Report
     std::string reportFilename("zurrose_report_" + opt_language + ".html");
     std::string language = opt_language;
@@ -242,8 +241,11 @@ int main(int argc, char **argv)
         getAtcMap(opt_workDirectory + "/downloads");
 #endif
 
-        // See file DispoParse.java line 725
-        getSLMap(opt_workDirectory + "/downloads", language, false);
+        if (flagFHIR) {
+            BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl.ndjson", language, flagVerbose);
+        } else {
+            BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", language, flagVerbose);
+        }
 
         // Enhance SL map with information on"Abgabekategorie"
         enhanceFlags(opt_workDirectory + "/downloads");
@@ -258,7 +260,9 @@ int main(int argc, char **argv)
         SWISSMEDIC::parseXLXS(opt_workDirectory + "/downloads");
 
         // Process CSV file and generate Sqlite DB
-        generateFullSQLiteDB(opt_inputDirectory, opt_zurrose);
+        generateFullSQLiteDB(opt_inputDirectory, opt_zurrose, flagFHIR);
+
+        VOLL::closeDB();
     }
     else if (opt_zurrose == "quick") {
         generatePharmaToStockCsv(opt_inputDirectory, opt_workDirectory + "/output");

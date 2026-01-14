@@ -14,6 +14,7 @@ namespace VOLL
 {
 void parseCSV(const std::string &filename,
               const std::string type,
+              bool flagFHIR,
               bool dumpHeader = false);
 void parseNonFullCSV(const std::string &filename,
                      const std::string type,
