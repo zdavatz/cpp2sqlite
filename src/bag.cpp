@@ -262,6 +262,8 @@ int getAdditionalNames(const std::string &rn,
 
         for (Pack p : pre.packs) {
             std::string g13 = p.gtin;
+            std::string paf = getPricesAndFlags(g13, "", p.category);
+
             // Build GTIN if missing
             it = gtinUsed.find(g13);
             if (it == gtinUsed.end()) { // not found in list of used GTINs, we must add the name
@@ -275,7 +277,6 @@ int getAdditionalNames(const std::string &rn,
                 onePackageInfo += pre.name + " " + pre.description;
                 onePackageInfo += ", " + p.description;
 
-                std::string paf = getPricesAndFlags(g13, "", p.category);
                 if (!paf.empty())
                     onePackageInfo += paf;
 
