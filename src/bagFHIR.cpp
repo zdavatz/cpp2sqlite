@@ -144,7 +144,7 @@ BAG::Preparation jsonToPreparation(nlohmann::json json, const std::string &langu
                 std::string gtinStr = gtin.get<std::string>();
                 pack.gtin = gtinStr;
             }
-            // TODO: GTIN::verifyGtin13Checksum(pack.gtin);
+            GTIN::verifyGtin13Checksum(pack.gtin);
             pack.description = entry["resource"]["description"];
 
             std::string resourceId = entry["resource"]["id"];
@@ -223,6 +223,8 @@ int getAdditionalNames(const std::string &rn,
 
         for (BAG::Pack p : preparation.packs) {
             std::string g13 = p.gtin;
+            std::string paf = getPricesAndFlags(g13, "", "");
+
             // Build GTIN if missing
             it = gtinUsed.find(g13);
             if (it == gtinUsed.end()) { // not found in list of used GTINs, we must add the name
@@ -239,7 +241,6 @@ int getAdditionalNames(const std::string &rn,
                     onePackageInfo += preparation.name;
                 }
 
-                std::string paf = getPricesAndFlags(g13, "", "");
                 if (!paf.empty())
                     onePackageInfo += paf;
 
