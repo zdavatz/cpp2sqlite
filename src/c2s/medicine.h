@@ -26,6 +26,7 @@ struct Medicine {
     std::string style;
     std::string contentHTMLPath; // Path to the XHTML file
     std::string sections;
+    std::string type;   // "FI" for type=SmPC, "PI" for type=PIL
 };
 
 typedef std::vector<Medicine> MedicineList;
