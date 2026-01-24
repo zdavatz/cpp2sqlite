@@ -35,6 +35,7 @@ struct RowToInsert {
     std::string content;
     std::string style_str;
     std::string packages;
+    std::string type; // "FI" for Fachinfo or "PI" for Patinfo
 };
 
 struct Sql

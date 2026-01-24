@@ -158,6 +158,7 @@ void Sql::insertRow(const std::string_view &tableName, DB::RowToInsert row) {
     // TODO:
     bindText(16, row.style_str);
     bindText(17, row.packages);
+    bindText(18, row.type);
     runStatement(tableName);
 }
 

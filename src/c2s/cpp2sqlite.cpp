@@ -740,10 +740,10 @@ void openDB(const std::string &filename)
 
     sqlDb.openDB(filename);
 
-    sqlDb.createTable(TABLE_NAME_AMIKO, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, auth TEXT, atc TEXT, substances TEXT, regnrs TEXT, atc_class TEXT, tindex_str TEXT, application_str TEXT, indications_str TEXT, customer_id INTEGER, pack_info_str TEXT, add_info_str TEXT, ids_str TEXT, titles_str TEXT, content TEXT, style_str TEXT, packages TEXT");
+    sqlDb.createTable(TABLE_NAME_AMIKO, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, auth TEXT, atc TEXT, substances TEXT, regnrs TEXT, atc_class TEXT, tindex_str TEXT, application_str TEXT, indications_str TEXT, customer_id INTEGER, pack_info_str TEXT, add_info_str TEXT, ids_str TEXT, titles_str TEXT, content TEXT, style_str TEXT, packages TEXT, type TEXT");
     sqlDb.createIndex(TABLE_NAME_AMIKO, "idx_", {"title", "auth", "atc", "substances", "regnrs", "atc_class"});
     sqlDb.prepareStatement(TABLE_NAME_AMIKO,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
 
     sqlDb.createTable(TABLE_NAME_PRODUCT, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, author TEXT, eancodes TEXT, pack_info_str TEXT, packages TEXT");
     sqlDb.createIndex(TABLE_NAME_PRODUCT, "idx_prod_", {"title", "author", "eancodes"});
@@ -1176,6 +1176,7 @@ int main(int argc, char **argv)
             rowToInsert.atc = m.atc;
             rowToInsert.substances = m.subst;
             rowToInsert.regnrs = m.regnrs;
+            rowToInsert.type = m.type;
 
             // atc_class
             std::string atcClass = ATC::getClassByAtcColumn(m.atc);

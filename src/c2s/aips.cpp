@@ -166,8 +166,9 @@ MedicineList & parseXML(const std::string &filename,
 
             // Mapping: https://github.com/zdavatz/cpp2sqlite/issues/252
             // For --pinfo, Add both fi and pi: https://github.com/zdavatz/cpp2sqlite/issues/271
-            if (!(type == "fi" && v.second.get("Type", "") == "SmPC") &&
-                !(type == "pi" && (v.second.get("Type", "") == "SmPC" || v.second.get("Type", "") == "PIL"))
+            std::string medType = v.second.get("Type", "");
+            if (!(type == "fi" && medType == "SmPC") &&
+                !(type == "pi" && (medType == "SmPC" || medType == "PIL"))
             ) {
                 continue;
             }
@@ -183,6 +184,9 @@ MedicineList & parseXML(const std::string &filename,
                 }
 
                 Medicine Med;
+                Med.type = medType == "SmPC" ? "FI"
+                    : medType == "PIL" ? "PI"
+                    : "";
                 Med.title = attachedDocument.second.get("Description", "");
                 boost::replace_all(Med.title, "&#038;", "&"); // Issue #49
 
