@@ -127,7 +127,7 @@ sed -i -e 's/xmlns.*="[^"]*"//' $TARGET
 sed -i -e 's/xsi:.*="[^"]*"//' $TARGET
 
 rm Refdata.Articles.xml
-rm $TARGET-e
+rm temp.zip
 
 rm -rf Refdata-AllHtml
 
