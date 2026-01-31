@@ -366,7 +366,6 @@ std::string getFlatPTreeContent(pt::ptree tree) {
             result += getFlatPTreeContent(v.second);
         }
     }
-    boost::algorithm::trim(result);
     return result;
 }
 

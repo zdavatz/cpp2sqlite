@@ -307,6 +307,7 @@ ArticleDocument getArticleDocument(std::string path) {
             if (needNewSection) {
                 currentSection.id = sectionId;
                 currentSection.title = BEAUTY::getFlatPTreeContent(bodyValue.second);
+                boost::algorithm::trim(currentSection.title);
             } else {
                 std::set<std::string> thisClasses = allClassesOfTree(bodyValue.second);
                 std::set<std::string> thisItalicClasses;
@@ -319,6 +320,7 @@ ArticleDocument getArticleDocument(std::string path) {
 
                 ArticleSectionParagraph paragraph;
                 paragraph.content = BEAUTY::getFlatPTreeContent(bodyValue.second);
+                boost::algorithm::trim(paragraph.content);
                 paragraph.is_italic = !thisItalicClasses.empty();
                 currentSection.paragraphs.push_back(paragraph);
             }
