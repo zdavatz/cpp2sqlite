@@ -261,7 +261,7 @@ ArticleDocument getArticleDocument(std::string path) {
 
         std::stringstream ss;
         ss << xhtml;
-        pt::read_xml(ss, tree/*, pt::xml_parser::no_concat_text*/);
+        pt::read_xml(ss, tree, pt::xml_parser::no_concat_text);
     } catch (std::exception &e) {
         std::clog << basename((char *)__FILE__) << ":" << __LINE__ << ", Error in " << path << " " << e.what() << std::endl;
         return document;
@@ -319,8 +319,8 @@ ArticleDocument getArticleDocument(std::string path) {
                 );
 
                 ArticleSectionParagraph paragraph;
-                paragraph.content = BEAUTY::getFlatPTreeContent(bodyValue.second);
-                boost::algorithm::trim(paragraph.content);
+                paragraph.tree = BEAUTY::getTextAndImagePTree(bodyValue.second);
+                paragraph.needs_to_wrap_in_paragraph = true;
                 paragraph.is_italic = !thisItalicClasses.empty();
                 currentSection.paragraphs.push_back(paragraph);
             }

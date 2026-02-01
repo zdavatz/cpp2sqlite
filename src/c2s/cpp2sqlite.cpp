@@ -359,11 +359,14 @@ void getHtmlFromXml(std::string &path,
             }
         } else {
             for (REFDATA::ArticleSectionParagraph paragraph : section.paragraphs) {
-                if (!paragraph.content.empty()) {
-                    pt::ptree paragraphP = pt::ptree(paragraph.content);
+                if (paragraph.needs_to_wrap_in_paragraph) {
+                    pt::ptree paragraphP;
                     paragraphP.put("<xmlattr>.class", "spacing1");
                     if (paragraph.is_italic) {
                         paragraphP.put("<xmlattr>.style", "font-style: italic");
+                    }
+                    BOOST_FOREACH(pt::ptree::value_type &pv, paragraph.tree) {
+                        paragraphP.push_back(pt::ptree::value_type(pv.first, pv.second));
                     }
                     thisDiv.push_back(pt::ptree::value_type("p", paragraphP));
                 } else {
