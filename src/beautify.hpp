@@ -35,6 +35,7 @@ namespace BEAUTY
     std::string escapeHtml(std::string str);
     void cleanUpSpan(pt::ptree &tree);
     std::string getFlatPTreeContent(pt::ptree tree);
+    pt::ptree getTextAndImagePTree(pt::ptree tree);
 }
 
 #endif /* beautify_hpp */

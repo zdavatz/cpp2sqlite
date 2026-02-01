@@ -366,7 +366,23 @@ std::string getFlatPTreeContent(pt::ptree tree) {
             result += getFlatPTreeContent(v.second);
         }
     }
-    boost::algorithm::trim(result);
+    return result;
+}
+
+pt::ptree getTextAndImagePTree(pt::ptree tree) {
+    pt::ptree result;
+    BOOST_FOREACH(pt::ptree::value_type &v, tree) {
+        if (v.first == "<xmltext>") {
+            result.add_child("<xmltext>", v.second);
+        } else if (v.first == "img") {
+            result.add_child("img", v.second);
+        } else if (v.first != "<xmlattr>") {
+            pt::ptree child = getTextAndImagePTree(v.second);
+            for (pt::ptree::value_type &child_v : child) {
+                result.add_child(child_v.first, child_v.second);
+            }
+        }
+    }
     return result;
 }
 

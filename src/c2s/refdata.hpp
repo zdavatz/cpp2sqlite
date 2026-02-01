@@ -30,7 +30,7 @@ namespace REFDATA
     };
 
     struct ArticleSectionParagraph {
-        std::string content;
+        bool needs_to_wrap_in_paragraph = false;
         pt::ptree tree;
         bool is_italic;
     };
