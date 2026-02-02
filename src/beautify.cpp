@@ -348,15 +348,28 @@ void cleanUpSpan(pt::ptree &tree) {
     if (childrenCount == 1 && hasSpan) {
         pt::ptree span = tree.get_child("span");
         bool hasAttr = span.get_child("<xmlattr>", empty_ptree).size() > 0;
-        std::string spanContent = getFlatPTreeContent(span);
+        bool isSpanEmpty = isElementEmpty(span);
 
-        if (spanContent.empty()) {
+        if (isSpanEmpty) {
             tree.erase("span");
         } else if (!hasAttr) {
+            pt::ptree spanContent = getTextAndImagePTree(span);
             tree.erase("span");
-            tree.put("<xmltext>", spanContent);
+            for (auto &child : spanContent) {
+                tree.push_back(child);
+            }
         }
     }
+}
+
+bool isElementEmpty(pt::ptree tree) {
+    bool isDataEmpty = tree.data().empty();
+    bool hasNoChildren = tree.size() == 0;
+    bool allChildrenEmpty = hasNoChildren || std::all_of(tree.begin(), tree.end(), [](const pt::ptree::value_type &v) {
+        return isElementEmpty(v.second);
+    });
+
+    return isDataEmpty && allChildrenEmpty;
 }
 
 std::string getFlatPTreeContent(pt::ptree tree) {
