@@ -199,6 +199,11 @@ MedicineList & parseXML(const std::string &filename,
                     BOOST_FOREACH(pt::ptree::value_type &regulatedAuthorization, v.second.get_child("RegulatedAuthorization")) {
                         if (regulatedAuthorization.first == "Identifier") {
                             std::string regnr = regulatedAuthorization.second.data();
+                            // 8-digit identifiers need to be truncated to 5 digits
+                            // by removing the last 3 digits (package number suffix)
+                            if (regnr.size() == 8)
+                                regnr = regnr.substr(0, 5);
+
                             rnVector.push_back(regnr);
                         }
                     }
