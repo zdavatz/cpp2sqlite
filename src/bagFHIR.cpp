@@ -149,52 +149,58 @@ BAG::Preparation jsonToPreparation(nlohmann::json json, const std::string &langu
 
             std::string resourceId = entry["resource"]["id"];
             // Fill the prices
-            for (nlohmann::json sub_entry : json["entry"]) {
-                if (sub_entry["resource"]["resourceType"] == "RegulatedAuthorization" &&
-                    sub_entry["resource"]["subject"][0]["reference"] == "PackagedProductDefinition/" + resourceId)
+            for (nlohmann::json subEntry : json["entry"]) {
+                if (subEntry["resource"]["resourceType"] == "RegulatedAuthorization" &&
+                    subEntry["resource"]["subject"][0]["reference"] == "CHIDMPPackagedProductDefinition/" + resourceId)
                 {
-                    // std::clog << " sub_entry: " << sub_entry["resource"]["extension"].dump() << std::endl;
+                    // std::clog << " subEntry: " << subEntry["resource"]["extension"].dump() << std::endl;
 
-                    nlohmann::json name = sub_entry["resource"]["contained"][0]["name"];
+                    nlohmann::json name = subEntry["resource"]["contained"][0]["name"];
                     if (name.type() == nlohmann::json::value_t::string) {
                         pack.partnerDescription = name.get<std::string>();
                     }
 
-                    for (nlohmann::json resourceExtension : sub_entry["resource"]["extension"]) {
-                        if (resourceExtension["url"] != "http://fhir.ch/ig/ch-epl/StructureDefinition/productPrice") {
-                            continue;
-                        }
-                        PriceType type = PriceTypeUnknown;
-                        double moneyValue;
-                        std::string moneyCurrency;
-                        std::string changeDate;
-                        for (nlohmann::json subExtension : resourceExtension["extension"]) {
-                            std::string subExtensionUrl = subExtension["url"];
-                            if (subExtensionUrl == "type") {
-                                std::string code = subExtension["valueCodeableConcept"]["coding"][0]["code"];
-                                // https://build.fhir.org/ig/bag-epl/bag-epl-fhir/branches/__default/ValueSet-ch-epl-foph-pricetype.html
-                                if (code == "756002005001") {
-                                    // retail price
-                                    type = PriceTypeRetail;
-                                } else if (code == "756002005002") {
-                                    // Ex-factory price
-                                    type = PriceTypeExFactory;
+                    for (nlohmann::json reimbursementSL : subEntry["resource"]["extension"]) {
+                        if (reimbursementSL["url"] == "http://fhir.ch/ig/ch-epl/StructureDefinition/reimbursementSL") {
+                            for (nlohmann::json reimbursementSLExtension : reimbursementSL["extension"]) {
+                                if (reimbursementSLExtension["url"] == "http://fhir.ch/ig/ch-epl/StructureDefinition/productPrice") {
+                                    PriceType type = PriceTypeUnknown;
+                                    double moneyValue;
+                                    std::string moneyCurrency;
+                                    std::string changeDate;
+                                    for (nlohmann::json productPriceExtension : reimbursementSLExtension["extension"]) {
+                                        std::string productPriceExtensionUrl = productPriceExtension["url"];
+                                        if (productPriceExtensionUrl == "type") {
+                                            std::string code = productPriceExtension["valueCodeableConcept"]["coding"][0]["code"];
+                                            // https://build.fhir.org/ig/bag-epl/bag-epl-fhir/branches/__default/ValueSet-ch-epl-foph-pricetype.html
+                                            if (code == "756002005001") {
+                                                // retail price
+                                                type = PriceTypeRetail;
+                                            } else if (code == "756002005002") {
+                                                // Ex-factory price
+                                                type = PriceTypeExFactory;
+                                            }
+                                        } else if (productPriceExtensionUrl == "value") {
+                                            moneyValue = productPriceExtension["valueMoney"]["value"];
+                                            moneyCurrency = productPriceExtension["valueMoney"]["currency"];
+                                        } else if (productPriceExtensionUrl == "changeDate") {
+                                            changeDate = productPriceExtension["valueDate"];
+                                        }
+                                    }
+                                    if (type == PriceTypeRetail) {
+                                        // TODO: currency
+                                        pack.publicPrice = formatPriceAsMoney(moneyValue);
+                                    } else if (type == PriceTypeExFactory) {
+                                        // TODO: currency
+                                        pack.exFactoryPrice = formatPriceAsMoney(moneyValue);
+                                        // TODO: format date
+                                        pack.exFactoryPriceValidFrom = changeDate;
+                                    }
+                                } else if (reimbursementSLExtension["url"] == "costShare") {
+                                    int valueInteger = reimbursementSLExtension["valueInteger"];
+                                    preparation.sb = valueInteger;
                                 }
-                            } else if (subExtensionUrl == "value") {
-                                moneyValue = subExtension["valueMoney"]["value"];
-                                moneyCurrency = subExtension["valueMoney"]["currency"];
-                            } else if (subExtensionUrl == "changeDate") {
-                                changeDate = subExtension["valueDate"];
                             }
-                        }
-                        if (type == PriceTypeRetail) {
-                            // TODO: currency
-                            pack.publicPrice = formatPriceAsMoney(moneyValue);
-                        } else if (type == PriceTypeExFactory) {
-                            // TODO: currency
-                            pack.exFactoryPrice = formatPriceAsMoney(moneyValue);
-                            // TODO: format date
-                            pack.exFactoryPriceValidFrom = changeDate;
                         }
                     }
                 }
@@ -293,14 +299,9 @@ std::string getPricesAndFlags(const std::string &gtin,
                 // if (!p.limitationPoints.empty())
                 //     flagsVector.push_back("LIM" + p.limitationPoints);
 
-                // SB: Selbstbehalt
-                // https://github.com/zdavatz/cpp2sqlite/issues/236
-                // if (preparation.sb == "Y")
-                //     flagsVector.push_back("SB 40%");
-                // else if (preparation.sb20 == "Y")
-                //     flagsVector.push_back("SB 40%");
-                // else if (preparation.sb20 == "N" || preparation.sb == "N")
-                //     flagsVector.push_back("SB 10%");
+                if (preparation.sb != 0) {
+                    flagsVector.push_back("SB " + std::to_string(preparation.sb) + "%");
+                }
 
                 if (!preparation.orgen.empty())
                     flagsVector.push_back(preparation.orgen);
