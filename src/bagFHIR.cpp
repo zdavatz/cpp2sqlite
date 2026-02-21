@@ -147,6 +147,22 @@ BAG::Preparation jsonToPreparation(nlohmann::json json, const std::string &langu
             GTIN::verifyGtin13Checksum(pack.gtin);
             pack.description = entry["resource"]["description"];
 
+            nlohmann::json legalStatusCodeJson = entry["resource"]["legalStatusOfSupply"][0]["code"]["coding"][0]["code"];
+            if (legalStatusCodeJson.type() == nlohmann::json::value_t::string) {
+                std::string legalStatusCode = legalStatusCodeJson.get<std::string>();
+                if (legalStatusCode == "756005022001") {
+                    pack.category = "A";
+                } else if (legalStatusCode == "756005022003") {
+                    pack.category = "B";
+                } else if (legalStatusCode == "756005022005") {
+                    pack.category = "C";
+                } else if (legalStatusCode == "756005022007") {
+                    pack.category = "D";
+                } else if (legalStatusCode == "756005022009") {
+                    pack.category = "E";
+                }
+            }
+
             std::string resourceId = entry["resource"]["id"];
             // Fill the prices
             for (nlohmann::json subEntry : json["entry"]) {
@@ -229,7 +245,7 @@ int getAdditionalNames(const std::string &rn,
 
         for (BAG::Pack p : preparation.packs) {
             std::string g13 = p.gtin;
-            std::string paf = getPricesAndFlags(g13, "", "");
+            std::string paf = getPricesAndFlags(g13, "", p.category);
 
             // Build GTIN if missing
             it = gtinUsed.find(g13);
