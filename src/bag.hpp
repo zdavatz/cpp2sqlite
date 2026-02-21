@@ -61,8 +61,7 @@ namespace BAG
         std::string swissmedNo;     // same as regnr
         std::string atcCode;
         std::string orgen;
-        std::string sb20;
-        std::string sb;
+        int sb;
         std::vector<Pack> packs;
         ItCode itCodes;
     };
