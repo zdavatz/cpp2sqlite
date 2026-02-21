@@ -119,8 +119,16 @@ void parseXML(const std::string &filename,
                     prep.swissmedNo = GTIN::padToLength(5, prep.swissmedNo);
 
                 prep.orgen = v.second.get("OrgGenCode", "");
-                prep.sb20 = v.second.get("FlagSB20", "");
-                prep.sb = v.second.get("FlagSB", "");
+
+                std::string sb20 = v.second.get("FlagSB20", "");
+                std::string sb = v.second.get("FlagSB", "");
+
+                if (sb == "Y")
+                    prep.sb = 40;
+                else if (sb20 == "Y")
+                    prep.sb = 40;
+                else if (sb20 == "N" || sb == "N")
+                    prep.sb = 10;
 
                 // Each preparation has multiple packs (GTIN)
                 BOOST_FOREACH(pt::ptree::value_type &p, v.second.get_child("Packs")) {
@@ -332,12 +340,9 @@ std::string getPricesAndFlags(const std::string &gtin,
 
                 // SB: Selbstbehalt
                 // https://github.com/zdavatz/cpp2sqlite/issues/236
-                if (pre.sb == "Y")
-                    flagsVector.push_back("SB 40%");
-                else if (pre.sb20 == "Y")
-                    flagsVector.push_back("SB 40%");
-                else if (pre.sb20 == "N" || pre.sb == "N")
-                    flagsVector.push_back("SB 10%");
+                if (pre.sb != 0) {
+                    flagsVector.push_back("SB " + std::to_string(pre.sb) + "%");
+                }
 
                 if (!pre.orgen.empty())
                     flagsVector.push_back(pre.orgen);
