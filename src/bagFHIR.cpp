@@ -156,7 +156,7 @@ BAG::Preparation jsonToPreparation(nlohmann::json json, const std::string &langu
                     pack.category = "B";
                 } else if (legalStatusCode == "756005022005") {
                     pack.category = "C";
-                } else if (legalStatusCode == "756005022007") {
+                } else if (legalStatusCode == "756005022007" || legalStatusCode == "756005022008") {
                     pack.category = "D";
                 } else if (legalStatusCode == "756005022009") {
                     pack.category = "E";

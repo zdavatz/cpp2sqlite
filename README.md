@@ -31,6 +31,7 @@ _ if there are no errors, then commit `intput/deepl.sappinfo.out.fr.txt`.
 ## Input Sources
 _ [AIPS](http://download.swissmedicinfo.ch)\
 _ [BAG XML](http://www.spezialitätenliste.ch/File.axd?file=XMLPublications.zip)\
+_ [BAG FHIR](https://epl.bag.admin.ch) (ndjson, use `--fhir` flag)\
 _ [Refdata Artikel](https://www.refdata.ch/de/artikel/abfrage/artikel-refdatabase-gtin)\
 _ [Refdata Partner](https://www.refdata.ch/de/partner/abfrage/partner-refdatabase-gln)\
 _ [Refdata SAI](https://sai.refdata.ch/download)\
