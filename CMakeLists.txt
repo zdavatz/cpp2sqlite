@@ -10,6 +10,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 find_package(Boost REQUIRED COMPONENTS log program_options)
+add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 include_directories(${Boost_INCLUDE_DIRS})
 
 #-------------------------------------------------------------------------------

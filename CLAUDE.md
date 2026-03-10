@@ -10,6 +10,8 @@ source steps_public2.source && ./download.sh
 cd ../build && cmake .. && make -j9
 ```
 
+Note: `BOOST_BIND_GLOBAL_PLACEHOLDERS` is defined in CMakeLists.txt to suppress Boost bind placeholder deprecation warnings (the project doesn't use boost::bind directly, but Boost headers trigger the warning internally).
+
 ## Key Executables
 - `cpp2sqlite` - Main tool, generates amiko_db SQLite databases
 - `pharma` - Generates pharma.csv

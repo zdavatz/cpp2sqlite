@@ -4,7 +4,7 @@ C++ tool to generate sqlite database containing Swiss Healthcare Public Domain D
 This tool is a port of [aips2sqlite](https://github.com/zdavatz/aips2sqlite)
 ## Requirements
 
-- Boost
+- Boost (BOOST_BIND_GLOBAL_PLACEHOLDERS is defined to suppress deprecated bind placeholder warnings)
 - C++17
 - sqlite
 - cmake
