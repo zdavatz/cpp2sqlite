@@ -383,12 +383,28 @@ std::string extractSubstancesFromHtml(const std::string &htmlPath)
 
         std::string textLower = boost::to_lower_copy(text);
 
-        // Check for Wirkstoff/Wirkstoffe/Wirkstoff(e) header (italic)
-        if (para.is_italic &&
-            (textLower.find("wirkstoff") != std::string::npos ||
-             textLower.find("principe") != std::string::npos ||     // French
-             textLower.find("principes actifs") != std::string::npos)) {
+        // Check for Wirkstoff/Wirkstoffe/Wirkstoff(e) header
+        bool isWirkstoffHeader =
+            textLower.find("wirkstoff") != std::string::npos ||
+            textLower.find("principe") != std::string::npos ||
+            textLower.find("principes actifs") != std::string::npos;
+
+        if (isWirkstoffHeader) {
             foundWirkstoff = true;
+
+            // Handle inline pattern: "Wirkstoff: Ceritinib." or "Wirkstoffe: X."
+            // Extract substance text after colon or after the header word
+            std::regex inlineRe(R"((?:Wirkstoff(?:e|\(e\))?)\s*:?\s+(.+))",
+                                std::regex::icase);
+            std::smatch inlineMatch;
+            if (std::regex_search(text, inlineMatch, inlineRe)) {
+                std::string inlineSubst = inlineMatch[1].str();
+                boost::algorithm::trim(inlineSubst);
+                if (!inlineSubst.empty()) {
+                    substanceText = inlineSubst;
+                    break; // Found inline substance, done
+                }
+            }
             continue;
         }
 
@@ -396,15 +412,15 @@ std::string extractSubstancesFromHtml(const std::string &htmlPath)
             continue;
 
         // Stop at Hilfsstoff(e) header
-        if (para.is_italic &&
-            (textLower.find("hilfsstoff") != std::string::npos ||
-             textLower.find("excipient") != std::string::npos)) {
+        if (textLower.find("hilfsstoff") != std::string::npos ||
+            textLower.find("excipient") != std::string::npos) {
             break;
         }
 
-        // Stop at any other italic sub-header (e.g. "Tablettenkern:")
+        // Skip italic sub-headers (dosage forms like "Morgendosis:", "Durchstechflasche:")
+        // but don't break — more substance paragraphs may follow
         if (para.is_italic)
-            break;
+            continue;
 
         if (!substanceText.empty())
             substanceText += ", ";
@@ -437,6 +453,15 @@ std::string extractSubstancesFromHtml(const std::string &htmlPath)
             if (name.empty())
                 continue;
 
+            // Strip trailing period
+            while (!name.empty() && name.back() == '.')
+                name.pop_back();
+
+            // Truncate at footnote markers (* or **)
+            auto starPos = name.find('*');
+            if (starPos != std::string::npos)
+                name = boost::algorithm::trim_copy(name.substr(0, starPos));
+
             // Take text before "als" or "ut" (salt form)
             std::string nameLower = boost::to_lower_copy(name);
             auto alsPos = nameLower.find(" als ");
@@ -452,7 +477,16 @@ std::string extractSubstancesFromHtml(const std::string &htmlPath)
             if (parenPos != std::string::npos)
                 name = boost::algorithm::trim_copy(name.substr(0, parenPos));
 
-            // Strip trailing period
+            // Truncate at descriptive phrases
+            nameLower = boost::to_lower_copy(name);
+            for (const auto &phrase : {" ist ein", " wird ", " aus ", " der ",
+                                       " die ", " das ", " ein "}) {
+                auto pos = nameLower.find(phrase);
+                if (pos != std::string::npos)
+                    name = boost::algorithm::trim_copy(name.substr(0, pos));
+            }
+
+            // Strip trailing period again
             while (!name.empty() && name.back() == '.')
                 name.pop_back();
 
@@ -466,6 +500,36 @@ std::string extractSubstancesFromHtml(const std::string &htmlPath)
                 if (nameEnd == "um" && nameEnd3 != "ium" && nameEnd3 != "eum")
                     name = name.substr(0, name.size() - 2);
             }
+
+            // Limit to max 3 words (substance names are short)
+            {
+                std::vector<std::string> words;
+                boost::algorithm::split(words, name, boost::is_any_of(" \t"),
+                                        boost::token_compress_on);
+                if (words.size() > 3) {
+                    words.resize(3);
+                    name = boost::algorithm::join(words, " ");
+                }
+            }
+
+            // Must start with uppercase letter or digit
+            if (!name.empty() && !std::isupper(name[0]) && !std::isdigit(name[0]))
+                continue;
+
+            // Reject fragments starting with common German words
+            nameLower = boost::to_lower_copy(name);
+            bool reject = false;
+            for (const auto &prefix : {"jeder ", "die ", "der ", "das ",
+                                        "den ", "dem ", "des ",
+                                        "ein ", "eine ", "einer ",
+                                        "einem ", "einen "}) {
+                if (nameLower.find(prefix) == 0) {
+                    reject = true;
+                    break;
+                }
+            }
+            if (reject)
+                continue;
 
             if (name.size() > 2)
                 substances.push_back(name);
