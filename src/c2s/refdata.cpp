@@ -340,4 +340,139 @@ ArticleDocument getArticleDocument(std::string path) {
     return document;
 }
 
+// Extract active substance name(s) from the Zusammensetzung/Wirkstoffe section
+// of the HTML content. Used as fallback when the ATC text file has no substance
+// name for a given ATC code.
+//
+// Looks for a section titled "Zusammensetzung", then finds the italic sub-header
+// "Wirkstoff(e)" and returns the text of the following non-italic paragraph(s)
+// up to "Hilfsstoff(e)".
+//
+// Cleans up salt forms ("als ...", "ut ..."), parenthesized descriptions,
+// and Latin -um suffixes.
+std::string extractSubstancesFromHtml(const std::string &htmlPath)
+{
+    if (htmlPath.empty())
+        return std::string();
+
+    ArticleDocument document = getArticleDocument(htmlPath);
+
+    // Find the "Zusammensetzung" section
+    const ArticleSection *zusammensetzung = nullptr;
+    for (const auto &section : document.sections) {
+        if (section.title.find("Zusammensetzung") != std::string::npos ||
+            section.title.find("Composition") != std::string::npos) {
+            zusammensetzung = &section;
+            break;
+        }
+    }
+
+    if (!zusammensetzung)
+        return std::string();
+
+    // Walk paragraphs: find "Wirkstoff" header, then collect substance text
+    bool foundWirkstoff = false;
+    std::string substanceText;
+
+    for (const auto &para : zusammensetzung->paragraphs) {
+        std::string text = BEAUTY::getFlatPTreeContent(para.tree);
+        boost::algorithm::trim(text);
+
+        if (text.empty())
+            continue;
+
+        std::string textLower = boost::to_lower_copy(text);
+
+        // Check for Wirkstoff/Wirkstoffe/Wirkstoff(e) header (italic)
+        if (para.is_italic &&
+            (textLower.find("wirkstoff") != std::string::npos ||
+             textLower.find("principe") != std::string::npos ||     // French
+             textLower.find("principes actifs") != std::string::npos)) {
+            foundWirkstoff = true;
+            continue;
+        }
+
+        if (!foundWirkstoff)
+            continue;
+
+        // Stop at Hilfsstoff(e) header
+        if (para.is_italic &&
+            (textLower.find("hilfsstoff") != std::string::npos ||
+             textLower.find("excipient") != std::string::npos)) {
+            break;
+        }
+
+        // Stop at any other italic sub-header (e.g. "Tablettenkern:")
+        if (para.is_italic)
+            break;
+
+        if (!substanceText.empty())
+            substanceText += ", ";
+
+        substanceText += text;
+    }
+
+    if (substanceText.empty())
+        return std::string();
+
+    // Parse out clean substance names
+    // Split by comma for multi-substance entries
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, substanceText, boost::is_any_of(","));
+
+    std::vector<std::string> substances;
+    // Regex for splitting by " und " or " et "
+    std::regex undRe(R"(\s+und\s+|\s+et\s+)", std::regex::icase);
+
+    for (const auto &part : parts) {
+        std::string trimmed = boost::algorithm::trim_copy(part);
+        if (trimmed.empty())
+            continue;
+
+        // Split by "und" / "et"
+        std::sregex_token_iterator it(trimmed.begin(), trimmed.end(), undRe, -1);
+        std::sregex_token_iterator end;
+        for (; it != end; ++it) {
+            std::string name = boost::algorithm::trim_copy(it->str());
+            if (name.empty())
+                continue;
+
+            // Take text before "als" or "ut" (salt form)
+            std::string nameLower = boost::to_lower_copy(name);
+            auto alsPos = nameLower.find(" als ");
+            if (alsPos != std::string::npos)
+                name = boost::algorithm::trim_copy(name.substr(0, alsPos));
+
+            auto utPos = boost::to_lower_copy(name).find(" ut ");
+            if (utPos != std::string::npos)
+                name = boost::algorithm::trim_copy(name.substr(0, utPos));
+
+            // Remove parenthesized content
+            auto parenPos = name.find('(');
+            if (parenPos != std::string::npos)
+                name = boost::algorithm::trim_copy(name.substr(0, parenPos));
+
+            // Strip trailing period
+            while (!name.empty() && name.back() == '.')
+                name.pop_back();
+
+            boost::algorithm::trim(name);
+
+            // Strip Latin -um suffix (e.g. Desvenlafaxinum → Desvenlafaxin)
+            // but not -ium (Aluminium, Calcium) or -eum
+            if (name.size() > 6) {
+                std::string nameEnd = name.substr(name.size() - 2);
+                std::string nameEnd3 = name.substr(name.size() - 3);
+                if (nameEnd == "um" && nameEnd3 != "ium" && nameEnd3 != "eum")
+                    name = name.substr(0, name.size() - 2);
+            }
+
+            if (name.size() > 2)
+                substances.push_back(name);
+        }
+    }
+
+    return boost::algorithm::join(substances, ", ");
+}
+
 }

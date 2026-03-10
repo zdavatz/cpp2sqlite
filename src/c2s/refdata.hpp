@@ -70,6 +70,8 @@ namespace REFDATA
     );
 
     ArticleDocument getArticleDocument(std::string path);
+
+    std::string extractSubstancesFromHtml(const std::string &htmlPath);
 }
 
 #endif /* refdata_hpp */

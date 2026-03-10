@@ -1113,7 +1113,12 @@ int main(int argc, char **argv)
                 m.atc = swissAtc;
             }
             if (!m.atc.empty()) {
-                m.atc += ";" + ATC::getTextByAtcs(m.atc);
+                std::string substText = ATC::getTextByAtcs(m.atc);
+                if (substText.empty()) {
+                    // Fallback: extract from Zusammensetzung/Wirkstoffe HTML section
+                    substText = REFDATA::extractSubstancesFromHtml(m.contentHTMLPath);
+                }
+                m.atc += ";" + substText;
                 break;
             }
         }
