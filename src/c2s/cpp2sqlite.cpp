@@ -1123,7 +1123,18 @@ int main(int argc, char **argv)
             }
         }
         if (m.atc.empty()) {
-            statsATCNotFound.push_back(m.regnrs);
+            // Fallback: extract ATC code from Eigenschaften/Wirkungen HTML section
+            std::string htmlAtc = REFDATA::extractAtcFromHtml(m.contentHTMLPath);
+            if (!htmlAtc.empty()) {
+                m.atc = htmlAtc;
+                std::string substText = ATC::getTextByAtcs(m.atc);
+                if (substText.empty()) {
+                    substText = REFDATA::extractSubstancesFromHtml(m.contentHTMLPath);
+                }
+                m.atc += ";" + substText;
+            } else {
+                statsATCNotFound.push_back(m.regnrs);
+            }
         }
     }
 

@@ -71,6 +71,7 @@ namespace REFDATA
 
     ArticleDocument getArticleDocument(std::string path);
 
+    std::string extractAtcFromHtml(const std::string &htmlPath);
     std::string extractSubstancesFromHtml(const std::string &htmlPath);
 }
 

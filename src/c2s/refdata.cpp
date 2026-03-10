@@ -342,6 +342,84 @@ ArticleDocument getArticleDocument(std::string path) {
 
 // Extract active substance name(s) from the Zusammensetzung/Wirkstoffe section
 // of the HTML content. Used as fallback when the ATC text file has no substance
+// Extracts the ATC code from the "Eigenschaften/Wirkungen" section of a drug's HTML.
+// Looks for "ATC-Code" in the section text and extracts the 4-7 character code.
+// Patterns handled:
+//   1. Italic "ATC-Code" header → code in next paragraph
+//   2. Inline "ATC-Code: L01XX01" or "ATC-Code A02BC02"
+std::string extractAtcFromHtml(const std::string &htmlPath)
+{
+    if (htmlPath.empty())
+        return std::string();
+
+    ArticleDocument document = getArticleDocument(htmlPath);
+
+    // Find the "Eigenschaften/Wirkungen" section
+    const ArticleSection *eigenSection = nullptr;
+    for (const auto &section : document.sections) {
+        if (section.title.find("Eigenschaften") != std::string::npos &&
+            section.title.find("Wirkungen") != std::string::npos) {
+            eigenSection = &section;
+            break;
+        }
+    }
+
+    if (!eigenSection)
+        return std::string();
+
+    // ATC code regex: letter, 2 digits, then optional further characters
+    // Matches 4-char (R05X), 5-char (A02BC), and 7-char (A02BC02) codes
+    std::regex atcRe(R"(([A-Z]\d{2}[A-Z]{1,2}\d{0,2}))");
+
+    bool foundAtcHeader = false;
+    for (const auto &para : eigenSection->paragraphs) {
+        std::string text = BEAUTY::getFlatPTreeContent(para.tree);
+        boost::algorithm::trim(text);
+
+        if (text.empty())
+            continue;
+
+        // Remove HTML entities like &#32;
+        text = std::regex_replace(text, std::regex(R"(&#\d+;)"), "");
+        // Remove spaces within the code (e.g. "G02A B01" → "G02AB01")
+        // We'll do this after extracting
+
+        std::string textLower = boost::to_lower_copy(text);
+
+        if (textLower.find("atc-code") != std::string::npos) {
+            // Skip "kein ATC-Code"
+            if (textLower.find("kein") != std::string::npos)
+                return std::string();
+
+            // Try to find ATC code inline in this paragraph
+            // Remove spaces that might be inside the code
+            std::string textNoSpaces = text;
+            std::smatch match;
+            if (std::regex_search(textNoSpaces, match, atcRe)) {
+                return match[1].str();
+            }
+
+            // Code might be in the next paragraph
+            foundAtcHeader = true;
+            continue;
+        }
+
+        if (foundAtcHeader) {
+            // Remove internal spaces (some codes have "G02A B01")
+            std::string textCompact = text;
+            textCompact.erase(std::remove(textCompact.begin(), textCompact.end(), ' '), textCompact.end());
+            std::smatch match;
+            if (std::regex_search(textCompact, match, atcRe)) {
+                return match[1].str();
+            }
+            // If the next paragraph after "ATC-Code" doesn't have a code, stop looking
+            break;
+        }
+    }
+
+    return std::string();
+}
+
 // name for a given ATC code.
 //
 // Looks for a section titled "Zusammensetzung", then finds the italic sub-header
@@ -456,6 +534,12 @@ std::string extractSubstancesFromHtml(const std::string &htmlPath)
             // Strip trailing period
             while (!name.empty() && name.back() == '.')
                 name.pop_back();
+
+            // Strip leading dosage patterns (e.g. "284 mg Inotersen" → "Inotersen")
+            {
+                std::regex dosageRe(R"(^\d+[\.,]?\d*\s*(?:mg|g|ml|µg|mcg|IE|UI|mmol|µmol)\s+)");
+                name = std::regex_replace(name, dosageRe, "");
+            }
 
             // Truncate at footnote markers (* or **)
             auto starPos = name.find('*');
