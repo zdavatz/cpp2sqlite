@@ -52,7 +52,8 @@ namespace REFDATA
 
     int getNames(const std::string &rn,
                  std::set<std::string> &gtinUsed,
-                 GTIN::oneFachinfoPackages &packages);
+                 GTIN::oneFachinfoPackages &packages,
+                 bool fhir = false);
 
     bool findGtin(const std::string &gtin);
 

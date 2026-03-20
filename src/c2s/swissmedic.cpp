@@ -17,6 +17,7 @@
 #include "swissmedic.hpp"
 #include "gtin.hpp"
 #include "bag.hpp"
+#include "bagFHIR.hpp"
 #include "refdata.hpp"
 #include "beautify.hpp"
 #include "report.hpp"
@@ -137,7 +138,8 @@ void parseXLXS(const std::string &filename)
 int getAdditionalNames(const std::string &rn,
                        std::set<std::string> &gtinUsedSet,
                        GTIN::oneFachinfoPackages &packages,
-                       const std::string &language)
+                       const std::string &language,
+                       bool fhir)
 {
     // See RealExpertInfo.java:1544
     //  "a.H." --> "ev.nn.i.H."
@@ -175,7 +177,8 @@ int getAdditionalNames(const std::string &rn,
                 onePackageInfo += " " + duVec[rowInt].units;
             }
 
-            std::string paf = BAG::getPricesAndFlags(g13, fromSwissmedic, categoryVec[rowInt]);
+            std::string paf = fhir ? BAGFHIR::getPricesAndFlags(g13, fromSwissmedic, categoryVec[rowInt])
+                                   : BAG::getPricesAndFlags(g13, fromSwissmedic, categoryVec[rowInt]);
             if (!paf.empty())
                 onePackageInfo += paf;
 

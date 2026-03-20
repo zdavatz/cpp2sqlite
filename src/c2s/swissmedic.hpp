@@ -26,7 +26,8 @@ namespace SWISSMEDIC
     int getAdditionalNames(const std::string &rn,
                            std::set<std::string> &gtinUsed,
                            GTIN::oneFachinfoPackages &packages,
-                           const std::string &language);
+                           const std::string &language,
+                           bool fhir = false);
     int countRowsWithRn(const std::string &rn);
     std::string getApplication(const std::string &rn);
     std::string getAtcFromFirstRn(const std::string &rn);

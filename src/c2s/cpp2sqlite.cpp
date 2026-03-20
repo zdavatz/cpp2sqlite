@@ -787,7 +787,7 @@ GTIN::oneFachinfoPackages fillPackagesInRow(
         //std::cerr << basename((char *)__FILE__) << ":" << __LINE__  << " rn: " << rn << std::endl;
 
         // Search in refdata
-        int nAdd = REFDATA::getNames(rn, gtinUsedSet, packages);
+        int nAdd = REFDATA::getNames(rn, gtinUsedSet, packages, flagFHIR);
         if (nAdd == 0){
             (*statsRnNotFoundRefdataCount)++;
         } else {
@@ -795,7 +795,7 @@ GTIN::oneFachinfoPackages fillPackagesInRow(
         }
 
         // Search in swissmedic
-        nAdd = SWISSMEDIC::getAdditionalNames(rn, gtinUsedSet, packages, opt_language);
+        nAdd = SWISSMEDIC::getAdditionalNames(rn, gtinUsedSet, packages, opt_language, flagFHIR);
         if (nAdd == 0) {
             (*statsRnNotFoundSwissmedicCount)++;
         } else {

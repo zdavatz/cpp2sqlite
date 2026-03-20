@@ -18,6 +18,7 @@
 #include "refdata.hpp"
 #include "gtin.hpp"
 #include "bag.hpp"
+#include "bagFHIR.hpp"
 #include "swissmedic.hpp"
 #include "beautify.hpp"
 #include "report.hpp"
@@ -126,7 +127,8 @@ void parseXML(const std::string &filename,
 // Return count added
 int getNames(const std::string &rn,
              std::set<std::string> &gtinUsed,
-             GTIN::oneFachinfoPackages &packages)
+             GTIN::oneFachinfoPackages &packages,
+             bool fhir)
 {
     int countAdded = 0;
 
@@ -142,7 +144,8 @@ int getNames(const std::string &rn,
             onePackageInfo += art.name;
 
             std::string cat = SWISSMEDIC::getCategoryByGtin(art.gtin_13);
-            std::string paf = BAG::getPricesAndFlags(art.gtin_13, "", cat);
+            std::string paf = fhir ? BAGFHIR::getPricesAndFlags(art.gtin_13, "", cat)
+                                   : BAG::getPricesAndFlags(art.gtin_13, "", cat);
             if (!paf.empty())
                 onePackageInfo += paf;
 

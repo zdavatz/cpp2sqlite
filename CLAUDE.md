@@ -26,6 +26,7 @@ All support `--fhir` flag to use BAG FHIR ndjson instead of BAG XML.
 - Each line is a FHIR Bundle with entries: MedicinalProductDefinition, RegulatedAuthorization, PackagedProductDefinition, Ingredient
 - Prices (EFP/PP) and reimbursement data are in RegulatedAuthorization extensions under `reimbursementSL` > `productPrice`
 - Legal status codes map to categories: A (756005022001), B (756005022003), C (756005022005), D (756005022007, 756005022008), E (756005022009)
+- When `--fhir` is active, all price lookups (including from Refdata and Swissmedic) must use `BAGFHIR::getPricesAndFlags()` instead of `BAG::getPricesAndFlags()`, since `BAG::parseXML()` is not called and its prepList is empty
 
 ## Directory Structure
 - `src/` - C++ source files
