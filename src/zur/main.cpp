@@ -242,7 +242,7 @@ int main(int argc, char **argv)
 #endif
 
         if (flagFHIR) {
-            BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl.ndjson", language, flagVerbose);
+            BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl-" + language + ".ndjson", language, flagVerbose);
         } else {
             BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", language, flagVerbose);
         }

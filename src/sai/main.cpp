@@ -227,7 +227,7 @@ int main(int argc, char **argv)
     STO::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Stoff-Synonyme.XML");
     ADR::parseXML(opt_workDirectory + "/downloads/SAI/SAI-Adressen.XML");
     if (flagFHIR) {
-        BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl.ndjson", "de", true);
+        BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl-de.ndjson", "de", true);
     } else {
         BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", "de", true);
     }

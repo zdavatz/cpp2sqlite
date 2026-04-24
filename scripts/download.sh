@@ -148,9 +148,12 @@ rm XMLPublications.zip
 fi
 
 if [ $STEP_DOWNLOAD_FHIR ] ; then
-    FHIR_FILE_PATH=$(curl https://epl.bag.admin.ch/api/sl/public/resources/current | jq --raw-output '.fhir.fileUrl')
-    echo "Downloading from https://epl.bag.admin.ch/static/${FHIR_FILE_PATH}"
-    curl "https://epl.bag.admin.ch/static/${FHIR_FILE_PATH}" -o fhir-sl.ndjson
+    FHIR_BASE_URL="https://epl.bag.admin.ch/static/fhir"
+    for LANG in de fr it ; do
+        URL="${FHIR_BASE_URL}/foph-sl-export-latest-${LANG}.ndjson"
+        echo "Downloading from ${URL}"
+        curl -fsSL "${URL}" -o "fhir-sl-${LANG}.ndjson"
+    done
 fi
 
 #-------------------------------------------------------------------------------

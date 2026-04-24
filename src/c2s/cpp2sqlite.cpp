@@ -1078,7 +1078,7 @@ int main(int argc, char **argv)
     REFDATA::parseXML(opt_workDirectory + "/downloads/refdata_pharma.xml", opt_language);
 
     if (flagFHIR) {
-        BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl.ndjson", opt_language, flagVerbose);
+        BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl-" + opt_language + ".ndjson", opt_language, flagVerbose);
         {
             std::vector<std::string> bagList = BAGFHIR::getGtinList();
             REP::html_h4("Cross-reference (BAG FHIR)");

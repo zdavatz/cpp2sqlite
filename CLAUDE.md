@@ -22,7 +22,7 @@ All support `--fhir` flag to use BAG FHIR ndjson instead of BAG XML.
 
 ## FHIR NDJSON Parsing
 - Source: `src/bagFHIR.cpp` / `src/bagFHIR.hpp`
-- Input: `downloads/fhir-sl.ndjson` from https://epl.bag.admin.ch
+- Input: `downloads/fhir-sl-{de,fr,it}.ndjson` from https://epl.bag.admin.ch/static/fhir/foph-sl-export-latest-{de,fr,it}.ndjson (per-language NDJSON)
 - Each line is a FHIR Bundle with entries: MedicinalProductDefinition, RegulatedAuthorization, PackagedProductDefinition, Ingredient
 - Prices (EFP/PP) and reimbursement data are in RegulatedAuthorization extensions under `reimbursementSL` > `productPrice`
 - Legal status codes map to categories: A (756005022001), B (756005022003), C (756005022005), D (756005022007, 756005022008), E (756005022009)

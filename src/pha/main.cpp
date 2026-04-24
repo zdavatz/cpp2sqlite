@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     SWISSMEDIC1::parseXLXS(opt_workDirectory + "/downloads/swissmedic_packages.xlsx");
     SWISSMEDIC2::parseXLXS(opt_workDirectory + "/downloads/Erweiterte_Arzneimittelliste HAM.xlsx");
     if (flagFHIR) {
-        BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl.ndjson", language, flagVerbose);
+        BAGFHIR::parseNDJSON(opt_workDirectory + "/downloads/fhir-sl-" + language + ".ndjson", language, flagVerbose);
     } else {
         BAG::parseXML(opt_workDirectory + "/downloads/bag_preparations.xml", language, false);
     }
