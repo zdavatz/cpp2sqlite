@@ -479,13 +479,16 @@ void getIndCByRegnr(const std::string &regnr,
     text.clear();
     if (regnr.empty()) return;
 
+    // The same Swissmedic regnr can appear across multiple FHIR bundles
+    // (often only one of them carries the ClinicalUseDefinitions). Walk the
+    // entire prepList and merge IndicationCodes from every matching prep,
+    // dedup by code; that way we don't lose IndCs because the first matching
+    // prep happens to have an empty indicationCodes list.
+    std::set<std::string> seen;
+    std::vector<std::string> codeOut;
+    std::vector<std::string> textOut;
     for (const BAG::Preparation &prep : prepList) {
         if (prep.swissmedNo != regnr) continue;
-        if (prep.indicationCodes.empty()) return;
-
-        std::set<std::string> seen;
-        std::vector<std::string> codeOut;
-        std::vector<std::string> textOut;
         for (const BAG::IndicationCode &ic : prep.indicationCodes) {
             if (ic.code.empty()) continue;
             if (!seen.insert(ic.code).second) continue;
@@ -494,10 +497,9 @@ void getIndCByRegnr(const std::string &regnr,
                 textOut.push_back(ic.code + ": " + ic.text);
             }
         }
-        codes = boost::algorithm::join(codeOut, ",");
-        text = boost::algorithm::join(textOut, "\n");
-        return;
     }
+    codes = boost::algorithm::join(codeOut, ",");
+    text = boost::algorithm::join(textOut, "\n");
 }
 
 std::vector<std::string> getGtinList() {
