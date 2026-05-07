@@ -45,5 +45,20 @@ _ [Drugshortage](https://drugshortage.ch)
 ## Output Sqlite Database
 _ [amiko_db_de](http://pillbox.oddb.org/amiko_db_full_idx_de.zip)\
 _ [amiko_db_fr](http://pillbox.oddb.org/amiko_db_full_idx_fr.zip)
+
+## Indikationscode (BAG XXXXX.NN)
+When `--fhir` is set, two extra columns are appended at the tail of the
+`amikodb` schema:
+
+- `indikationscode` — comma-joined `XXXXX.NN` codes (BAG FOPHDossierNumber +
+  ClinicalUseDefinition `.NN` suffix), deduped, in bundle order.
+- `indikationscode_text` — newline-joined `XXXXX.NN: <limitations text>`
+  lines for the same set of codes.
+
+Both columns are bundle-scoped at the BAG preparation level and joined onto
+each row by Swissmedic 5-digit registration number. Non-FHIR builds keep
+the legacy schema (columns 0..18 only), so existing apps that read by
+column index are unaffected. Mandatory transmission of IndC on prescriptions
+and invoices for SL drugs starts 2026-07-01 (BAG Rundschreiben 2026-02-19).
 ## Glossary
 _ [GTIN](http://www.ywesee.com/Main/EANCode)
