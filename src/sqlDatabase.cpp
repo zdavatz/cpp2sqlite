@@ -159,6 +159,11 @@ void Sql::insertRow(const std::string_view &tableName, DB::RowToInsert row) {
     bindText(16, row.style_str);
     bindText(17, row.packages);
     bindText(18, row.type);
+    if (useIndC) {
+        // Tail columns added when --fhir is set; see Sql::useIndC.
+        bindText(19, row.indikationscode);
+        bindText(20, row.indikationscode_text);
+    }
     runStatement(tableName);
 }
 

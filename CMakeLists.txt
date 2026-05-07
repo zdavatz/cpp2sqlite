@@ -19,7 +19,12 @@ pkg_check_modules(SQLITE3 REQUIRED sqlite3)
 message(STATUS "SQLITE3_INCLUDEDIR: ${SQLITE3_INCLUDEDIR}")
 message(STATUS "SQLITE3_LIBRARIES: ${SQLITE3_LIBRARIES}")
 
-include_directories(${SQLITE3_INCLUDEDIR})
+# NOTE: pkg-config returns the SDK's /usr/include for sqlite3 on macOS,
+# which shadows libc++ headers when added with -I. The toolchain already
+# searches the SDK's usr/include for the SQLite C headers, so skip it.
+if(NOT APPLE)
+    include_directories(${SQLITE3_INCLUDEDIR})
+endif()
 
 #-------------------------------------------------------------------------------
 message(STATUS "XLNT_DIR: ${XLNT_DIR}")

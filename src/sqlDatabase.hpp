@@ -36,6 +36,11 @@ struct RowToInsert {
     std::string style_str;
     std::string packages;
     std::string type; // "FI" for Fachinfo or "PI" for Patinfo
+    // Indikationscode (BAG XXXXX.NN) — populated only when --fhir is set.
+    // Tail of the row so older clients reading column indices 0..18 keep
+    // working unchanged (see Sql::useIndC).
+    std::string indikationscode;
+    std::string indikationscode_text;
 };
 
 struct Sql
@@ -45,6 +50,11 @@ private:
     sqlite3_stmt *statement;
 
 public:
+    /// When true, the amikodb schema gets two trailing TEXT columns
+    /// (indikationscode, indikationscode_text) and insertRow binds them.
+    /// Off by default to keep DBs read by older apps unchanged.
+    bool useIndC = false;
+
     void openDB(const std::string &filename);
     void closeDB();
 

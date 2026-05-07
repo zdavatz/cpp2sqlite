@@ -91,8 +91,123 @@ void parseNDJSON(const std::string &filename,
     printFileStats(filename);
 }
 
+// Trailing ".NN" suffix of a ClinicalUseDefinition id (e.g. "CYRAMZA.01" → "01").
+// Returns empty when the id has no trailing all-digit segment.
+static std::string nnSuffix(const std::string &id) {
+    auto pos = id.rfind('.');
+    if (pos == std::string::npos || pos + 1 >= id.size()) return "";
+    std::string tail = id.substr(pos + 1);
+    for (char c : tail) {
+        if (c < '0' || c > '9') return "";
+    }
+    return tail;
+}
+
+// Extract the indication text from a ClinicalUseDefinition.  The BAG feed
+// ships `indication` as a single object; the FHIR spec also allows an array.
+// Path:
+//   indication.diseaseSymptomProcedure.concept.text
+// fallback: indication.extension[url == "limitationText"].valueString
+static std::string cudIndicationText(const nlohmann::json &resource) {
+    if (!resource.contains("indication")) return "";
+    const auto &indNode = resource["indication"];
+    const nlohmann::json *ind = nullptr;
+    if (indNode.is_object()) {
+        ind = &indNode;
+    } else if (indNode.is_array() && !indNode.empty()) {
+        ind = &indNode[0];
+    }
+    if (!ind) return "";
+
+    if (ind->contains("diseaseSymptomProcedure") &&
+        (*ind)["diseaseSymptomProcedure"].contains("concept") &&
+        (*ind)["diseaseSymptomProcedure"]["concept"].contains("text") &&
+        (*ind)["diseaseSymptomProcedure"]["concept"]["text"].is_string()) {
+        return (*ind)["diseaseSymptomProcedure"]["concept"]["text"].get<std::string>();
+    }
+    if (ind->contains("extension") && (*ind)["extension"].is_array()) {
+        for (const auto &e : (*ind)["extension"]) {
+            if (e.value("url", "") == "limitationText" && e.contains("valueString") &&
+                e["valueString"].is_string()) {
+                return e["valueString"].get<std::string>();
+            }
+        }
+    }
+    return "";
+}
+
+// Walk the bundle and collect the bundle-scoped FOPHDossierNumber + each
+// indication ClinicalUseDefinition.  Build the XXXXX.NN codes per the
+// rust2xml convention.  Empty when no SL price-model data is present.
+static std::vector<BAG::IndicationCode> collectBundleIndC(const nlohmann::json &json) {
+    std::vector<BAG::IndicationCode> out;
+    if (!json.contains("entry") || !json["entry"].is_array()) return out;
+
+    std::string dossier;
+    // (cudId, nn, text), preserving bundle order
+    std::vector<std::tuple<std::string, std::string, std::string>> cuds;
+
+    for (const auto &entry : json["entry"]) {
+        if (!entry.contains("resource")) continue;
+        const auto &res = entry["resource"];
+        const std::string rt = res.value("resourceType", "");
+
+        if (rt == "RegulatedAuthorization" && dossier.empty() &&
+            res.contains("extension") && res["extension"].is_array()) {
+            for (const auto &ext : res["extension"]) {
+                std::string url = ext.value("url", "");
+                if (url.size() < 16 || url.substr(url.size() - 16) != "/reimbursementSL") {
+                    continue;
+                }
+                if (!ext.contains("extension") || !ext["extension"].is_array()) continue;
+                for (const auto &sub : ext["extension"]) {
+                    if (sub.value("url", "") != "FOPHDossierNumber") continue;
+                    if (sub.contains("valueIdentifier") &&
+                        sub["valueIdentifier"].contains("value") &&
+                        sub["valueIdentifier"]["value"].is_string()) {
+                        dossier = sub["valueIdentifier"]["value"].get<std::string>();
+                    }
+                }
+                if (!dossier.empty()) break;
+            }
+        } else if (rt == "ClinicalUseDefinition") {
+            // Skip non-"indication" CUDs (contraindication, interaction, etc).
+            // The BAG feed ships `type` as a plain string; the FHIR spec also
+            // permits a CodeableConcept (`type.text`).
+            std::string typeText;
+            if (res.contains("type")) {
+                const auto &t = res["type"];
+                if (t.is_string()) {
+                    typeText = t.get<std::string>();
+                } else if (t.is_object() && t.contains("text") && t["text"].is_string()) {
+                    typeText = t["text"].get<std::string>();
+                }
+            }
+            if (typeText != "indication") continue;
+            if (!res.contains("id") || !res["id"].is_string()) continue;
+            std::string id = res["id"].get<std::string>();
+            std::string nn = nnSuffix(id);
+            if (nn.empty()) continue;
+            cuds.emplace_back(id, nn, cudIndicationText(res));
+        }
+    }
+
+    if (dossier.empty() || cuds.empty()) return out;
+
+    for (const auto &[cudId, nn, text] : cuds) {
+        BAG::IndicationCode ic;
+        ic.code = dossier + "." + nn;
+        ic.cudId = cudId;
+        ic.text = text;
+        out.push_back(std::move(ic));
+    }
+    return out;
+}
+
 BAG::Preparation jsonToPreparation(nlohmann::json json, const std::string &language) {
     BAG::Preparation preparation;
+    // Bundle-scoped Indikationscodes (BAG XXXXX.NN), applied to every pack.
+    preparation.indicationCodes = collectBundleIndC(json);
     std::string entryID = json["id"];
     for (nlohmann::json entry : json["entry"]) {
         std::string resourceType = entry["resource"]["resourceType"];
@@ -221,6 +336,9 @@ BAG::Preparation jsonToPreparation(nlohmann::json json, const std::string &langu
                     }
                 }
             }
+            // Inherit the bundle-scoped Indikationscodes (BAG XXXXX.NN).
+            pack.indicationCodes = preparation.indicationCodes;
+
             statsPackCount++;
             if (!pack.gtin.empty()) {
                 preparation.packs.push_back(pack);
@@ -351,6 +469,35 @@ prepareResult:
         paf += " [" + boost::algorithm::join(flagsVector, ", ") + "]";
 
     return paf;
+}
+
+void getIndCByRegnr(const std::string &regnr,
+                    std::string &codes,
+                    std::string &text)
+{
+    codes.clear();
+    text.clear();
+    if (regnr.empty()) return;
+
+    for (const BAG::Preparation &prep : prepList) {
+        if (prep.swissmedNo != regnr) continue;
+        if (prep.indicationCodes.empty()) return;
+
+        std::set<std::string> seen;
+        std::vector<std::string> codeOut;
+        std::vector<std::string> textOut;
+        for (const BAG::IndicationCode &ic : prep.indicationCodes) {
+            if (ic.code.empty()) continue;
+            if (!seen.insert(ic.code).second) continue;
+            codeOut.push_back(ic.code);
+            if (!ic.text.empty()) {
+                textOut.push_back(ic.code + ": " + ic.text);
+            }
+        }
+        codes = boost::algorithm::join(codeOut, ",");
+        text = boost::algorithm::join(textOut, "\n");
+        return;
+    }
 }
 
 std::vector<std::string> getGtinList() {

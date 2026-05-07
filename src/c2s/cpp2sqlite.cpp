@@ -737,16 +737,32 @@ void getHtmlFromXml(std::string &path,
 }
 
 // See SqlDatabase.java:65
-void openDB(const std::string &filename)
+void openDB(const std::string &filename, bool flagFHIR)
 {
     std::clog << std::endl << "Create DB: " << filename << std::endl;
 
     sqlDb.openDB(filename);
 
-    sqlDb.createTable(TABLE_NAME_AMIKO, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, auth TEXT, atc TEXT, substances TEXT, regnrs TEXT, atc_class TEXT, tindex_str TEXT, application_str TEXT, indications_str TEXT, customer_id INTEGER, pack_info_str TEXT, add_info_str TEXT, ids_str TEXT, titles_str TEXT, content TEXT, style_str TEXT, packages TEXT, type TEXT");
+    // Indikationscode (BAG XXXXX.NN) — only emitted under --fhir, and
+    // appended to the end of the schema so existing apps reading by
+    // column index keep working with non-FHIR builds (issue: ywesee/generikacc#102).
+    sqlDb.useIndC = flagFHIR;
+    std::string amikoSchema =
+        "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, auth TEXT, atc TEXT, "
+        "substances TEXT, regnrs TEXT, atc_class TEXT, tindex_str TEXT, "
+        "application_str TEXT, indications_str TEXT, customer_id INTEGER, "
+        "pack_info_str TEXT, add_info_str TEXT, ids_str TEXT, titles_str TEXT, "
+        "content TEXT, style_str TEXT, packages TEXT, type TEXT";
+    std::string amikoPlaceholders =
+        "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
+    if (flagFHIR) {
+        amikoSchema += ", indikationscode TEXT, indikationscode_text TEXT";
+        amikoPlaceholders += ", ?, ?";
+    }
+
+    sqlDb.createTable(TABLE_NAME_AMIKO, amikoSchema);
     sqlDb.createIndex(TABLE_NAME_AMIKO, "idx_", {"title", "auth", "atc", "substances", "regnrs", "atc_class"});
-    sqlDb.prepareStatement(TABLE_NAME_AMIKO,
-                           "null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+    sqlDb.prepareStatement(TABLE_NAME_AMIKO, amikoPlaceholders);
 
     sqlDb.createTable(TABLE_NAME_PRODUCT, "_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, author TEXT, eancodes TEXT, pack_info_str TEXT, packages TEXT");
     sqlDb.createIndex(TABLE_NAME_PRODUCT, "idx_prod_", {"title", "author", "eancodes"});
@@ -888,6 +904,16 @@ GTIN::oneFachinfoPackages fillPackagesInRow(
     // Create a single multi-line string from the vector
     std::string packagesStr = boost::algorithm::join(lines, "\n");
     rowToInsert->packages = packagesStr;
+
+    // Indikationscode (BAG XXXXX.NN) — only available from the FHIR feed,
+    // bundle-scoped at the preparation level. Use the first regnr; all
+    // packs of a SwissmedicNo5 share the same dossier-derived codes.
+    if (flagFHIR && !regnrs.empty()) {
+        BAGFHIR::getIndCByRegnr(regnrs[0],
+                                rowToInsert->indikationscode,
+                                rowToInsert->indikationscode_text);
+    }
+
     return packages;
 }
 
@@ -1151,7 +1177,7 @@ int main(int argc, char **argv)
         if (flagPinfo) {
             dbFilename = opt_workDirectory + "/output/amiko_db_full_idx_pinfo_" + opt_language + ".db";
         }
-        openDB(dbFilename);
+        openDB(dbFilename, flagFHIR);
 
         unsigned int statsRnFoundRefdataCount = 0;
         unsigned int statsRnNotFoundRefdataCount = 0;

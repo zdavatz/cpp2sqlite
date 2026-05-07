@@ -33,6 +33,16 @@ namespace BAG
         std::string longestItCode;
     };
 
+    /// Indikationscode (BAG XXXXX.NN) — mandatory on prescriptions and
+    /// invoices for SL drugs with a price model from 2026-07-01 (BAG
+    /// Rundschreiben 2026-02-19).  XXXXX is the FOPHDossierNumber, NN is
+    /// the trailing index from a sibling ClinicalUseDefinition's id.
+    struct IndicationCode {
+        std::string code;       // e.g. "18923.01"
+        std::string cudId;      // raw CUD id (e.g. "CYRAMZA.01")
+        std::string text;       // limitations text for this indication
+    };
+
     struct Pack {
         std::string description;
         std::string descriptionDe;
@@ -47,6 +57,7 @@ namespace BAG
         std::string limitationPoints;   // TODO
         std::string partnerDescription;
         std::string ggsl;
+        std::vector<IndicationCode> indicationCodes;  // FHIR-only, see above
     };
 
     struct Preparation {
@@ -64,6 +75,7 @@ namespace BAG
         int sb;
         std::vector<Pack> packs;
         ItCode itCodes;
+        std::vector<IndicationCode> indicationCodes;  // FHIR-only, see above
     };
 
     typedef std::vector<Preparation> PreparationList;

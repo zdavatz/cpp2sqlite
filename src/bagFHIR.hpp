@@ -40,6 +40,15 @@ namespace BAGFHIR
 
     std::vector<std::string> getGtinList();
 
+    /// Indikationscode (BAG XXXXX.NN) — comma-joined codes + newline-joined
+    /// "code: text" lines, deduped by code, in bundle order.  Empty when the
+    /// preparation has no IndC.  Looks up by Swissmedic 5-digit registration
+    /// number; matches the `INDIKATIONSCODE` / `INDIKATIONSCODE_TEXT` columns
+    /// produced by rust2xml >= 3.1.12.
+    void getIndCByRegnr(const std::string &regnr,
+                        std::string &codes,
+                        std::string &text);
+
 
 
     // Things available in BAG preparation XML, but not in FHIR:
