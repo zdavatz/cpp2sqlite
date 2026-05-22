@@ -43,6 +43,9 @@ All support `--fhir` flag to use BAG FHIR ndjson instead of BAG XML.
 - Schema change (2026-05): a trailing column `Exfact` (V, index 21) was appended, growing the row from 21 to 22 semicolon-separated fields. All four column-count guards must match the new width — `src/zur/stamm.cpp:69`, `src/zur/stamm.cpp:129`, `src/zur/voll.cpp:152`, `src/zur/voll.cpp:355`. Note that `voll.cpp::parseCSV` (line 152) silently `continue`s on mismatch instead of exiting, so a missed bump there empties the output DB without an error message.
 - `Exfact` is the Zur Rose ex-factory price and is wired into `rosedb.exfprice` as a fallback for the BAG EFP in `voll.cpp::parseCSV` (~line 304). BAG values stay canonical for SL-listed drugs; Zur Rose Exfact fills the long tail. In `--fhir` builds without BAG XML this lifts `rosedb.exfprice` population from 0/163858 to 163858/163858.
 
+## zurrose SQLite lifecycle (do not double-close)
+`VOLL::closeDB()` calls `sqlite3_finalize(statement)` then `sqlite3_close(db)`, so it must be called exactly once. Calling it twice double-frees both handles and corrupts the glibc heap — the failure surfaces as `free(): invalid next size (fast)` on process exit and, depending on arena state, may not reproduce on smaller workloads (atcdb hid it while fulldb crashed every run). `src/zur/main.cpp` previously had a stray second `closeDB` block right after the fulldb/atcdb branch; the single call inside the branch is the correct lifecycle.
+
 ## Directory Structure
 - `src/` - C++ source files
 - `src/c2s/` - cpp2sqlite specific sources

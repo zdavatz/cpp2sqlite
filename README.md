@@ -72,5 +72,12 @@ It is consumed by `zurrose` and written into the `exfprice` column of
 ex-factory price is missing for the article's GTIN — BAG values remain
 canonical for SL-listed drugs. In `--fhir` builds (no BAG XML), this raises
 `rosedb.exfprice` population from 0/163858 to 163858/163858 rows.
+
+## zurrose SQLite lifecycle
+`VOLL::closeDB()` finalizes the prepared statement and closes the SQLite
+handle, so it must be called exactly once per run. A previous duplicate call
+in `main()` double-freed both and caused `free(): invalid next size (fast)`
+on exit of `--zurrose=fulldb` (`--zurrose=atcdb` happened not to trip the
+allocator). Fixed in 3ed2fb5; do not reintroduce a second close.
 ## Glossary
 _ [GTIN](http://www.ywesee.com/Main/EANCode)
