@@ -46,6 +46,9 @@ All support `--fhir` flag to use BAG FHIR ndjson instead of BAG XML.
 ## zurrose SQLite lifecycle (do not double-close)
 `VOLL::closeDB()` calls `sqlite3_finalize(statement)` then `sqlite3_close(db)`, so it must be called exactly once. Calling it twice double-frees both handles and corrupts the glibc heap — the failure surfaces as `free(): invalid next size (fast)` on process exit and, depending on arena state, may not reproduce on smaller workloads (atcdb hid it while fulldb crashed every run). `src/zur/main.cpp` previously had a stray second `closeDB` block right after the fulldb/atcdb branch; the single call inside the branch is the correct lifecycle.
 
+## ean13 is a separate git submodule
+`src/c2s/ean13` is a git submodule pointing at `ywesee/BarcodeGenerator` (separate org from `zdavatz/cpp2sqlite`). Fixes there require: commit + push inside the submodule on master, then bump the parent's submodule pointer in a parent commit. Consumers (and the build server) must run `git submodule update` after pulling the parent. Also note: GCC 13+ no longer pulls `<cstdint>` transitively through other headers, so any new fixed-width type (`uint8_t`, `int32_t`, …) in the submodule must `#include <cstdint>` explicitly — the Funtoo build server tripped on `'uint8_t' does not name a type` in `functii.cpp` until the include was added.
+
 ## Directory Structure
 - `src/` - C++ source files
 - `src/c2s/` - cpp2sqlite specific sources
