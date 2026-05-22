@@ -352,7 +352,7 @@ void parseNonFullCSV(const std::string &filename,
             std::vector<std::string> columnVector;
             boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
 
-            if (columnVector.size() != 21) {
+            if (columnVector.size() != 22) {
                 std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
                 exit(EXIT_FAILURE);
             }

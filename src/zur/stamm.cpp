@@ -65,12 +65,12 @@ void parseCSV(const std::string &filename, bool dumpHeader)
             
             std::vector<std::string> columnVector;
             boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR1));
-            
-            if (columnVector.size() != 21) {
+
+            if (columnVector.size() != 22) {
                 std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
                 exit(EXIT_FAILURE);
             }
-            
+
             std::string pharma = columnVector[0]; // A
             if (pharma.length() > 0) {
                 stockStruct stock;
@@ -125,12 +125,12 @@ void parseFullCSV(const std::string &filename, bool dumpHeader)
             
             std::vector<std::string> columnVector;
             boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR1));
-            
-            if (columnVector.size() != 21) {
+
+            if (columnVector.size() != 22) {
                 std::clog << "Unexpected # columns: " << columnVector.size() << std::endl;
                 exit(EXIT_FAILURE);
             }
-            
+
             std::string pharma = columnVector[0]; // A
             if (pharma.length() > 0 && columnVector[15] == "ja") {
                 auto search = pharmaStockMap.find(pharma);
