@@ -47,7 +47,14 @@ All support `--fhir` flag to use BAG FHIR ndjson instead of BAG XML.
 `VOLL::closeDB()` calls `sqlite3_finalize(statement)` then `sqlite3_close(db)`, so it must be called exactly once. Calling it twice double-frees both handles and corrupts the glibc heap — the failure surfaces as `free(): invalid next size (fast)` on process exit and, depending on arena state, may not reproduce on smaller workloads (atcdb hid it while fulldb crashed every run). `src/zur/main.cpp` previously had a stray second `closeDB` block right after the fulldb/atcdb branch; the single call inside the branch is the correct lifecycle.
 
 ## ean13 is a separate git submodule
-`src/c2s/ean13` is a git submodule pointing at `ywesee/BarcodeGenerator` (separate org from `zdavatz/cpp2sqlite`). Fixes there require: commit + push inside the submodule on master, then bump the parent's submodule pointer in a parent commit. Consumers (and the build server) must run `git submodule update` after pulling the parent. Also note: GCC 13+ no longer pulls `<cstdint>` transitively through other headers, so any new fixed-width type (`uint8_t`, `int32_t`, …) in the submodule must `#include <cstdint>` explicitly — the Funtoo build server tripped on `'uint8_t' does not name a type` in `functii.cpp` until the include was added.
+`src/c2s/ean13` is a git submodule pointing at `ywesee/BarcodeGenerator` (separate org from `zdavatz/cpp2sqlite`). Fixes there require: commit + push inside the submodule on master, then bump the parent's submodule pointer in a parent commit. Consumers (and the build server) must run `git submodule update` after pulling the parent.
+
+## GCC 13+ header transitivity
+GCC 13+ (and current libstdc++) no longer pulls many standard headers transitively. New code that uses standard types/streams must `#include` them explicitly or the Funtoo build server breaks:
+- `<cstdint>` for `uint8_t` / `int32_t` / etc. (tripped `src/c2s/ean13/functii.cpp` — fixed in ywesee/BarcodeGenerator c1f17da)
+- `<fstream>` for `std::ofstream` / `std::ifstream` (tripped `src/sap/main.cpp`, `src/dru/main.cpp` — fixed in 0203368, plus `bagFHIR.cpp`, `c2s/peddose.cpp`, `c2s/sappinfo.cpp`, `c2s/refdata.cpp` cleaned up preemptively)
+
+If a new source file uses these (or `<sstream>`, `<iomanip>`, etc.) without an explicit include, it will compile locally on older toolchains and break on the build server.
 
 ## Directory Structure
 - `src/` - C++ source files
