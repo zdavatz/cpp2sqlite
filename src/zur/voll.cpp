@@ -149,7 +149,7 @@ void parseCSV(const std::string &filename,
             std::vector<std::string> columnVector;
             boost::algorithm::split(columnVector, str, boost::is_any_of(CSV_SEPARATOR));
 
-            if (columnVector.size() != 21) {
+            if (columnVector.size() != 22) {
 #ifdef DEBUG
                 std::clog
                 << "CSV line: " << statsCsvLineCount
