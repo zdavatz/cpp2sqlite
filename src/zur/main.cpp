@@ -267,12 +267,6 @@ int main(int argc, char **argv)
     else if (opt_zurrose == "quick") {
         generatePharmaToStockCsv(opt_inputDirectory, opt_workDirectory + "/output");
     }
-    
-    if ((opt_zurrose == "fulldb") ||
-        (opt_zurrose == "atcdb"))
-    {
-        VOLL::closeDB();
-    }
 
     REP::terminate();
 
