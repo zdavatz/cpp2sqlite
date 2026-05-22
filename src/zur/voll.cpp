@@ -300,6 +300,13 @@ void parseCSV(const std::string &filename,
             a.dlk_flag = boost::contains(columnVector[19], "100%"); // T
             a.pack_title_FR = columnVector[20]; // U
 
+            // V: Zur Rose Exfact — fallback when BAG had no EFP for this EAN.
+            // BAG is canonical for SL-listed drugs; Zur Rose ships an Exfact
+            // for every article and covers the long tail of non-SL items.
+            if (a.exfactory_price.empty()) {
+                a.exfactory_price = BAG::formatPriceAsMoney(columnVector[21]);
+            }
+
             articles.push_back(a);
             pharmaArticleIndexMap.insert(std::make_pair(a.pharma_code, articles.size()-1));
         }  // while
