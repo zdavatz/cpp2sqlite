@@ -60,5 +60,17 @@ each row by Swissmedic 5-digit registration number. Non-FHIR builds keep
 the legacy schema (columns 0..18 only), so existing apps that read by
 column index are unaffected. Mandatory transmission of IndC on prescriptions
 and invoices for SL drugs starts 2026-07-01 (BAG Rundschreiben 2026-02-19).
+
+## Zur Rose Artikelstamm (Exfact column)
+As of 2026-05 the Zur Rose feed (`artikel_vollstamm_zurrose.csv` and
+`artikel_stamm_zurrose.csv`) ships **22** semicolon-separated columns instead
+of the previous 21. The new trailing column `Exfact` (V) is the Zur Rose
+ex-factory price.
+
+It is consumed by `zurrose` and written into the `exfprice` column of
+`rose_db_new_full.db` / `rose_db_new_atc_only.db` as a fallback when BAG's
+ex-factory price is missing for the article's GTIN — BAG values remain
+canonical for SL-listed drugs. In `--fhir` builds (no BAG XML), this raises
+`rosedb.exfprice` population from 0/163858 to 163858/163858 rows.
 ## Glossary
 _ [GTIN](http://www.ywesee.com/Main/EANCode)

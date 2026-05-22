@@ -38,6 +38,11 @@ All support `--fhir` flag to use BAG FHIR ndjson instead of BAG XML.
 - Schema/binding: `Sql::useIndC` is set from `flagFHIR` in `openDB()`. When true, the `amikodb` schema gains two trailing TEXT columns (`indikationscode`, `indikationscode_text`) and `insertRow` binds positions 19/20. Non-FHIR builds emit the legacy 19-column schema, so apps reading by column index keep working.
 - iOS consumer: `generikacc/Generika/IndCSection.swift` (issue zdavatz/generikacc#102) — guarded by `AmikoDBManager isIndcColumnAvailable` so older DB snapshots don't break the app
 
+## Zur Rose Artikelstamm (Exfact column)
+- Feed: `artikel_vollstamm_zurrose.csv` and `artikel_stamm_zurrose.csv` are downloaded via `scripts/download_zr.sh` (SFTP from ftp.zur-rose.ch).
+- Schema change (2026-05): a trailing column `Exfact` (V, index 21) was appended, growing the row from 21 to 22 semicolon-separated fields. All four column-count guards must match the new width — `src/zur/stamm.cpp:69`, `src/zur/stamm.cpp:129`, `src/zur/voll.cpp:152`, `src/zur/voll.cpp:355`. Note that `voll.cpp::parseCSV` (line 152) silently `continue`s on mismatch instead of exiting, so a missed bump there empties the output DB without an error message.
+- `Exfact` is the Zur Rose ex-factory price and is wired into `rosedb.exfprice` as a fallback for the BAG EFP in `voll.cpp::parseCSV` (~line 304). BAG values stay canonical for SL-listed drugs; Zur Rose Exfact fills the long tail. In `--fhir` builds without BAG XML this lifts `rosedb.exfprice` population from 0/163858 to 163858/163858.
+
 ## Directory Structure
 - `src/` - C++ source files
 - `src/c2s/` - cpp2sqlite specific sources
