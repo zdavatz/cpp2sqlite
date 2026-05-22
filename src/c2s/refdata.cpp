@@ -8,6 +8,7 @@
 //
 
 #include <set>
+#include <fstream>
 #include <libgen.h>     // for basename()
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>

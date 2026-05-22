@@ -15,6 +15,7 @@
 #include <string>
 #include <set>
 #include <unordered_set>
+#include <fstream>
 #include <libgen.h>     // for basename()
 
 #include <boost/filesystem.hpp>

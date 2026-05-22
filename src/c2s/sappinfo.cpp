@@ -12,6 +12,7 @@
 #include <set>
 #include <unordered_set>
 #include <map>
+#include <fstream>
 #include <libgen.h>     // for basename()
 #include <boost/algorithm/string.hpp>
 
