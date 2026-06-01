@@ -8,6 +8,7 @@
 //
 
 #include <set>
+#include <map>
 #include <iomanip>
 #include <sstream>
 #include <fstream>
@@ -137,39 +138,92 @@ static std::string cudIndicationText(const nlohmann::json &resource) {
     return "";
 }
 
-// Walk the bundle and collect the bundle-scoped FOPHDossierNumber + each
-// indication ClinicalUseDefinition.  Build the XXXXX.NN codes per the
-// rust2xml convention.  Empty when no SL price-model data is present.
+// Strip a "ResourceType/" prefix from a FHIR reference
+// (e.g. "ClinicalUseDefinition/CYRAMZA.01" → "CYRAMZA.01").
+static std::string stripRefPrefix(const std::string &ref) {
+    auto pos = ref.rfind('/');
+    return pos == std::string::npos ? ref : ref.substr(pos + 1);
+}
+
+// Walk the bundle and collect the BAG Indikationscodes (XXXXX.NN).
+//
+// Preferred source (BAG SL FHIR export >= v2.0.5): the explicit
+// `indicationCode` sub-extension carried on each limitation
+// (RegulatedAuthorization.indication[].extension[regulatedAuthorization-limitation]).
+// The BAG changelog states the limitation code (ClinicalUseDefinition.id) and
+// the indication code are independent fields, so XXXXX.NN must NOT be
+// reconstructed from the CUD id suffix.  The limitation text is resolved via
+// the `limitationIndication` reference into the referenced CUD's text.
+//
+// Fallback (older feeds without the extension): combine the bundle-scoped
+// FOPHDossierNumber with each indication CUD's trailing ".NN" id-suffix.
+// Empty when no SL price-model data is present.
 static std::vector<BAG::IndicationCode> collectBundleIndC(const nlohmann::json &json) {
     std::vector<BAG::IndicationCode> out;
     if (!json.contains("entry") || !json["entry"].is_array()) return out;
 
     std::string dossier;
-    // (cudId, nn, text), preserving bundle order
+    // (cudId, nn, text) for the fallback derivation, preserving bundle order
     std::vector<std::tuple<std::string, std::string, std::string>> cuds;
+    // cudId -> indication text, for resolving explicit-code limitation text
+    std::map<std::string, std::string> cudTextById;
+    // Explicit (code, cudRef) pairs read from the limitation extensions
+    std::vector<std::pair<std::string, std::string>> explicitCodes;
 
     for (const auto &entry : json["entry"]) {
         if (!entry.contains("resource")) continue;
         const auto &res = entry["resource"];
         const std::string rt = res.value("resourceType", "");
 
-        if (rt == "RegulatedAuthorization" && dossier.empty() &&
-            res.contains("extension") && res["extension"].is_array()) {
-            for (const auto &ext : res["extension"]) {
-                std::string url = ext.value("url", "");
-                if (url.size() < 16 || url.substr(url.size() - 16) != "/reimbursementSL") {
-                    continue;
+        if (rt == "RegulatedAuthorization") {
+            // FOPHDossierNumber (used only by the fallback derivation).
+            if (dossier.empty() && res.contains("extension") && res["extension"].is_array()) {
+                for (const auto &ext : res["extension"]) {
+                    std::string url = ext.value("url", "");
+                    if (url.size() < 16 || url.substr(url.size() - 16) != "/reimbursementSL") {
+                        continue;
+                    }
+                    if (!ext.contains("extension") || !ext["extension"].is_array()) continue;
+                    for (const auto &sub : ext["extension"]) {
+                        if (sub.value("url", "") != "FOPHDossierNumber") continue;
+                        if (sub.contains("valueIdentifier") &&
+                            sub["valueIdentifier"].contains("value") &&
+                            sub["valueIdentifier"]["value"].is_string()) {
+                            dossier = sub["valueIdentifier"]["value"].get<std::string>();
+                        }
+                    }
+                    if (!dossier.empty()) break;
                 }
-                if (!ext.contains("extension") || !ext["extension"].is_array()) continue;
-                for (const auto &sub : ext["extension"]) {
-                    if (sub.value("url", "") != "FOPHDossierNumber") continue;
-                    if (sub.contains("valueIdentifier") &&
-                        sub["valueIdentifier"].contains("value") &&
-                        sub["valueIdentifier"]["value"].is_string()) {
-                        dossier = sub["valueIdentifier"]["value"].get<std::string>();
+            }
+            // Explicit indicationCode on each limitation extension under
+            // indication[].extension[regulatedAuthorization-limitation].
+            if (res.contains("indication") && res["indication"].is_array()) {
+                for (const auto &ind : res["indication"]) {
+                    if (!ind.contains("extension") || !ind["extension"].is_array()) continue;
+                    for (const auto &ext : ind["extension"]) {
+                        std::string url = ext.value("url", "");
+                        if (url.size() < 34 ||
+                            url.substr(url.size() - 34) != "/regulatedAuthorization-limitation") {
+                            continue;
+                        }
+                        if (!ext.contains("extension") || !ext["extension"].is_array()) continue;
+                        std::string code, cudRef;
+                        for (const auto &sub : ext["extension"]) {
+                            std::string surl = sub.value("url", "");
+                            if (surl == "indicationCode" && sub.contains("valueString") &&
+                                sub["valueString"].is_string()) {
+                                code = sub["valueString"].get<std::string>();
+                            } else if (surl == "limitationIndication" &&
+                                       sub.contains("valueReference") &&
+                                       sub["valueReference"].contains("reference") &&
+                                       sub["valueReference"]["reference"].is_string()) {
+                                cudRef = stripRefPrefix(
+                                    sub["valueReference"]["reference"].get<std::string>());
+                            }
+                        }
+                        if (!code.empty()) explicitCodes.emplace_back(code, cudRef);
                     }
                 }
-                if (!dossier.empty()) break;
             }
         } else if (rt == "ClinicalUseDefinition") {
             // Skip non-"indication" CUDs (contraindication, interaction, etc).
@@ -187,12 +241,27 @@ static std::vector<BAG::IndicationCode> collectBundleIndC(const nlohmann::json &
             if (typeText != "indication") continue;
             if (!res.contains("id") || !res["id"].is_string()) continue;
             std::string id = res["id"].get<std::string>();
+            std::string text = cudIndicationText(res);
+            cudTextById[id] = text;
             std::string nn = nnSuffix(id);
-            if (nn.empty()) continue;
-            cuds.emplace_back(id, nn, cudIndicationText(res));
+            if (!nn.empty()) cuds.emplace_back(id, nn, text);
         }
     }
 
+    // Preferred: explicit indicationCode field.
+    if (!explicitCodes.empty()) {
+        for (const auto &[code, cudRef] : explicitCodes) {
+            BAG::IndicationCode ic;
+            ic.code = code;
+            ic.cudId = cudRef;
+            auto it = cudTextById.find(cudRef);
+            ic.text = (it != cudTextById.end()) ? it->second : "";
+            out.push_back(std::move(ic));
+        }
+        return out;
+    }
+
+    // Fallback for older feeds without the extension.
     if (dossier.empty() || cuds.empty()) return out;
 
     for (const auto &[cudId, nn, text] : cuds) {

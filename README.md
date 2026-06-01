@@ -50,8 +50,10 @@ _ [amiko_db_fr](http://pillbox.oddb.org/amiko_db_full_idx_fr.zip)
 When `--fhir` is set, two extra columns are appended at the tail of the
 `amikodb` schema:
 
-- `indikationscode` — comma-joined `XXXXX.NN` codes (BAG FOPHDossierNumber +
-  ClinicalUseDefinition `.NN` suffix), deduped, in bundle order.
+- `indikationscode` — comma-joined `XXXXX.NN` codes, deduped, in bundle order.
+  Read directly from the explicit `indicationCode` extension on each limitation
+  (BAG SL FHIR export >= v2.0.5); for older feeds without it, derived from the
+  BAG FOPHDossierNumber + the ClinicalUseDefinition `.NN` suffix.
 - `indikationscode_text` — newline-joined `XXXXX.NN: <limitations text>`
   lines for the same set of codes.
 
