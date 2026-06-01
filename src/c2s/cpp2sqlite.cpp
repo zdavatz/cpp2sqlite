@@ -944,7 +944,7 @@ int main(int argc, char **argv)
     bool flagVerbose = false;
     bool flagNoSappinfo = false;
     bool flagPinfo = false;
-    bool flagFHIR = false;
+    bool flagFHIR = true; // default ON since 01.06.2026; disable with --no-fhir
     std::string type("fi"); // Fachinfo
     std::string opt_aplha;
     std::string opt_regnr;
@@ -984,7 +984,8 @@ int main(int argc, char **argv)
 //        ("stats", po::value<float>(), "generates statistics for given user")
         ("inDir", po::value<std::string>( &opt_inputDirectory )->required(), "input directory") //  without trailing '/'
         ("workDir", po::value<std::string>( &opt_workDirectory ), "parent of 'downloads' and 'output' directories, default as parent of inDir ")
-        ("fhir", "Use BAG FHIR ndjson instead of BAG Preparation XML")
+        ("fhir", "Use BAG FHIR ndjson instead of BAG Preparation XML (default ON since 01.06.2026)")
+        ("no-fhir", "Use the legacy BAG Preparation XML instead of FHIR ndjson")
         ;
 
     po::variables_map vm;
@@ -1039,6 +1040,9 @@ int main(int argc, char **argv)
 
     if (vm.count("fhir")) {
         flagFHIR = true;
+    }
+    if (vm.count("no-fhir")) {
+        flagFHIR = false;
     }
 
     if (!vm.count("workDir")) {

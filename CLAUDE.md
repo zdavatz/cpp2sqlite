@@ -18,7 +18,7 @@ Note: `BOOST_BIND_GLOBAL_PLACEHOLDERS` is defined in CMakeLists.txt to suppress 
 - `sai` - Processes SAI (Refdata structured article information)
 - `zurrose` - Processes Zur Rose data
 
-All support `--fhir` flag to use BAG FHIR ndjson instead of BAG XML.
+All use BAG FHIR ndjson by default since 01.06.2026 (`flagFHIR=true`); pass `--no-fhir` to fall back to the legacy BAG XML. The `--fhir` flag still works as an explicit opt-in.
 
 ## FHIR NDJSON Parsing
 - Source: `src/bagFHIR.cpp` / `src/bagFHIR.hpp`
