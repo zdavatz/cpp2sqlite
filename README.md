@@ -75,6 +75,45 @@ ex-factory price is missing for the article's GTIN — BAG values remain
 canonical for SL-listed drugs. In `--fhir` builds (no BAG XML), this raises
 `rosedb.exfprice` population from 0/163858 to 163858/163858 rows.
 
+## Zur Rose download and publishing
+`scripts/download_zr.sh` fetches the eleven Zur Rose feeds over SFTP. It never
+writes over a live input file directly: everything is staged in
+`input/zurrose/.staging.<pid>`, validated, and only then moved into place, with
+the previous version kept in `input/zurrose/.bak`. A feed that fails validation
+leaves the last known-good file untouched.
+
+All files are fetched in **one** sftp session (the server rate-limits new
+connections), preceded by a connection test, and each file is checked against
+the size the server reported. Then, per file: size and line floors, a shrink
+guard against the current copy, no NUL bytes, no HTML error page, stable
+encoding, and the `;`-column layout that the corresponding parser in `src/zur/`
+requires. The spec table at the top of the script lists those numbers next to
+the `src/zur/*.cpp` line that enforces each one — when Zur Rose changes a feed
+layout (as with `Exfact` in 2026-05), bump the parser guard *and* the table.
+
+    ./download_zr.sh              # download, validate, promote
+    ZR_CHECK_ONLY=1 ./download_zr.sh   # validate the current inputs, no network
+    ZR_DRY_RUN=1    ./download_zr.sh   # download and validate, replace nothing
+    ZR_FORCE=1      ./download_zr.sh   # promote even if validation failed
+
+Exit status: `0` all feeds updated, `1` at least one rejected (the rest were
+updated), `2` the server could not be reached and nothing was touched.
+
+`scripts/so_data` and `scripts/so_data_full` are the two cron entry points for
+so.zurrose.ch — quick (`--zurrose=quick`) and full (`fulldb` + `atcdb`). Both
+stop before building if a feed was rejected, stop before publishing if a build
+failed, and verify every generated file (sqlite `integrity_check`, `rosedb` row
+counts, JSON well-formedness, line counts, size floors, a shrink guard against
+what is currently published, and that the file was actually rewritten by this
+run). They also check a real basket and a real customer — `CANARY_PHARMACODES`
+and `CANARY_GLNCODES` at the top of each script — so a build that would answer
+`/smart/full` with nothing never goes live. Publishing is copy-then-rename, so
+a client never reads a half-written database. The shared checks live in
+`scripts/so_data_lib.sh`.
+
+    6,16,26,36,46,56 7-19 * * 1-6 zdavatz /usr/bin/nice /usr/local/src/cpp2sqlite/scripts/so_data > /dev/null
+    20 4,8,12,16,18   * * 1-6 zdavatz /usr/bin/nice /usr/local/src/cpp2sqlite/scripts/so_data_full > /dev/null
+
 ## zurrose SQLite lifecycle
 `VOLL::closeDB()` finalizes the prepared statement and closes the SQLite
 handle, so it must be called exactly once per run. A previous duplicate call

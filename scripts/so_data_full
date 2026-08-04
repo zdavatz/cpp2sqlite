@@ -1,0 +1,80 @@
+#!/bin/bash
+# Nightly full Zur Rose job: download -> build fulldb + atcdb -> verify -> publish.
+#
+# Same steps as the old cron one-liner script, but every stage is gated:
+#   - a rejected input feed stops the run before ./zurrose is even started
+#   - a failed build stops the run before anything is published
+#   - the generated files are checked (sqlite integrity, row counts, JSON
+#     well-formedness, no sudden shrink) before they replace the live ones
+#   - each file is published atomically, so a client never reads a half-copied DB
+#
+# Usage: ./so_data_full [test]
+# See so_data_lib.sh for the environment knobs. Exits non-zero on any problem.
+
+set -uo pipefail
+
+WD=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$WD/so_data_lib.sh"
+
+#-------------------------------------------------------------------------------
+# What has to be true of every generated file before it may go live.
+#
+#   name | min bytes | min rows or - | kind
+#
+OUTPUTS=(
+    "rose_db_new_full.db|20000000|100000|sqlite"
+    "rose_db_new_atc_only.db|5000000|20000|sqlite"
+    "rose_nota.json|1000000|-|json"
+    "rose_conditions_new.json|300000|-|json"
+    "rose_ids.json|30000|-|json"
+)
+
+# A real order that has to keep working: if any of these articles or this
+# customer is missing, https://so.zurrose.ch/smart/full answers with nothing.
+CANARY_PHARMACODES=(5575685 0909199 1491649 5936835 7770719 2967108)
+CANARY_GLNCODES=(937003)
+
+#-------------------------------------------------------------------------------
+step "Downloading input data"
+
+cd "$SRC/scripts" || die "no $SRC/scripts"
+
+if [ "${ZR_SKIP_DOWNLOAD:-0}" == "1" ]; then
+    echo "ZR_SKIP_DOWNLOAD=1, using the inputs already in $SRC/input"
+else
+    source steps_public2.source
+    ./download.sh                 || die "download.sh failed"
+    ./download_zr.sh "${1:-}"
+    case $? in
+    0) ;;
+    2) die "could not reach the Zur Rose server - nothing was touched" ;;
+    *) die "download_zr.sh rejected at least one Zur Rose feed" ;;
+    esac
+fi
+
+#-------------------------------------------------------------------------------
+step "Building"
+
+if [ "${ZR_SKIP_BUILD:-0}" == "1" ]; then
+    echo "ZR_SKIP_BUILD=1, verifying the databases already in $SRC/output"
+    STARTED_AT=0                  # they were not written by this run
+else
+    cd "$SRC/build" || die "no $SRC/build"
+
+    time ./zurrose --zurrose=fulldb --inDir ../input || die "zurrose fulldb failed"
+    time ./zurrose --zurrose=atcdb  --inDir ../input || die "zurrose atcdb failed"
+fi
+
+#-------------------------------------------------------------------------------
+step "Verifying the generated files"
+verify_outputs "${OUTPUTS[@]}"
+canary_db      rose_db_new_full.db     "${CANARY_PHARMACODES[@]}"
+canary_db      rose_db_new_atc_only.db "${CANARY_PHARMACODES[@]}"
+canary_json_key rose_ids.json          "${CANARY_GLNCODES[@]}"
+canary_json_key rose_conditions_new.json "${CANARY_GLNCODES[@]}"
+
+step "Publishing to $WWW"
+publish_outputs "${OUTPUTS[@]}"
+
+echo
+echo "Done."

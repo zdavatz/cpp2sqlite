@@ -1,0 +1,83 @@
+#!/bin/bash
+# Frequent Zur Rose job: download the Zur Rose feeds -> build the quick files
+# -> verify -> publish. No BAG/Swissmedic download, no SQLite databases.
+#
+# Every stage is gated:
+#   - a rejected input feed stops the run before ./zurrose is even started
+#   - a failed build stops the run before anything is published
+#   - the generated files are checked (JSON well-formedness, line counts,
+#     no sudden shrink) before they replace the live ones
+#   - each file is published atomically, so a client never reads a half copy
+#
+# Usage: ./so_data [test]
+# See so_data_lib.sh for the environment knobs. Exits non-zero on any problem.
+
+set -uo pipefail
+
+WD=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$WD/so_data_lib.sh"
+
+#-------------------------------------------------------------------------------
+# What has to be true of every generated file before it may go live.
+#
+#   name | min bytes | min rows or - | kind
+#
+# Grippeimpfstoff.json is an empty JSON array ("[\n]") whenever the Zur Rose
+# feed is empty, which is the normal case outside the flu season - hence the
+# floor of 2 bytes. It still has to parse as JSON.
+#
+OUTPUTS=(
+    "rose_nota.json|1000000|-|json"
+    "rose_conditions_new.json|300000|-|json"
+    "rose_ids.json|30000|-|json"
+    "rose_direct_subst.json|100|-|json"
+    "rose_stock.csv|1500000|50000|csv"
+    "Grippeimpfstoff.json|2|-|json"
+)
+
+# A real order that has to keep working: if any of these articles or this
+# customer is missing, https://so.zurrose.ch/smart/full answers with nothing.
+CANARY_PHARMACODES=(5575685 0909199 1491649 5936835 7770719 2967108)
+CANARY_GLNCODES=(937003)
+
+#-------------------------------------------------------------------------------
+step "Downloading the Zur Rose feeds"
+
+cd "$SRC/scripts" || die "no $SRC/scripts"
+
+if [ "${ZR_SKIP_DOWNLOAD:-0}" == "1" ]; then
+    echo "ZR_SKIP_DOWNLOAD=1, using the inputs already in $SRC/input"
+else
+    ./download_zr.sh "${1:-}"
+    case $? in
+    0) ;;
+    2) echo "Zur Rose server unreachable, nothing was touched - skipping this cycle"
+       exit 0 ;;                       # the next run is 10 minutes away, no need to shout
+    *) die "download_zr.sh rejected at least one Zur Rose feed" ;;
+    esac
+fi
+
+#-------------------------------------------------------------------------------
+step "Building"
+
+if [ "${ZR_SKIP_BUILD:-0}" == "1" ]; then
+    echo "ZR_SKIP_BUILD=1, verifying the files already in $SRC/output"
+    STARTED_AT=0                  # they were not written by this run
+else
+    cd "$SRC/build" || die "no $SRC/build"
+
+    time ./zurrose --zurrose=quick --inDir ../input || die "zurrose quick failed"
+fi
+
+#-------------------------------------------------------------------------------
+step "Verifying the generated files"
+verify_outputs "${OUTPUTS[@]}"
+canary_csv      rose_stock.csv           "${CANARY_PHARMACODES[@]}"
+canary_json_key rose_ids.json            "${CANARY_GLNCODES[@]}"
+canary_json_key rose_conditions_new.json "${CANARY_GLNCODES[@]}"
+
+step "Publishing to $WWW"
+publish_outputs "${OUTPUTS[@]}"
+
+echo
+echo "Done."
