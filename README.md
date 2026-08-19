@@ -166,13 +166,26 @@ they replaced stopped at the first match. Both properties matter: appending to
 those lists later, or switching `emplace` to `operator[]`, changes results
 silently.
 
-When changing any of this, verify by comparing the generated databases rather
-than by spot checks: normalise the build timestamp in the html footer, then
-hash every column of every row in `_id` order and diff against a database built
-before the change. Run it for `--lang de`, `--lang fr`, `--pinfo`, `--no-fhir`
-and `--without-sappinfo` — `bag.cpp` is only reached with `--no-fhir`, and
-`--no-fhir` is also the only configuration that emits the legacy 19-column
-schema.
+`bag.cpp` and `bagFHIR.cpp` are shared with **zurrose, pharma and sai**, so a
+change there is not a cpp2sqlite-only change — `rosedb.exfprice`, the prices in
+`pharma.csv` and `sai.db` all come through the same `getPricesAndFlags()`. The
+other three tools got faster too: the full run matrix went from 622 s to 276 s.
+
+Note that `--fhir` is **inverted** on zurrose, pharma and sai: omitting it uses
+the FHIR ndjson, passing `--fhir` falls back to the legacy BAG XML. cpp2sqlite
+is the other way round, with `--no-fhir` as the opt-out.
+
+When changing any of this, verify by comparing the generated artifacts rather
+than by spot checks: hash every table, column and row of the databases, and
+normalise the build timestamp in the html footer (plus the run timestamp and
+argv paths in the `*_report.html` files). Build the "before" side from the
+previous commit in a `git worktree` — the binary in `build/` may be far older
+than HEAD. Sixteen configurations cover every path these files touch:
+
+    cpp2sqlite  --lang de | --lang fr | --pinfo | --no-fhir | --without-sappinfo
+    zurrose     --zurrose=fulldb|atcdb|quick , each with and without --fhir
+    pharma      default | --fhir | --storage
+    sai         default | --fhir
 
 ## Glossary
 _ [GTIN](http://www.ywesee.com/Main/EANCode)
