@@ -129,11 +129,57 @@ sed -i -e 's/xsi:.*="[^"]*"//' $TARGET
 rm Refdata.Articles.xml
 rm temp.zip
 
+# AllHtml.zip carries the Fachinfo/Patinfo content. src/c2s/aips.cpp drops a
+# medicine whose html is not on disk (empty contentHTMLPath), so a truncated
+# download or an unzip that stops half way silently removes those medicines -
+# and all their Swissmedic packages - from the db, without failing the build.
+# Therefore: download to a staging name, verify, extract to a staging folder,
+# and only then replace the live one. On any failure keep the previous folder
+# and exit 1.
+ALLHTML_URL=https://files.refdata.ch/simis-public-prod/MedicinalDocuments/AllHtml.zip
+ALLHTML_MIN_FILES=${ALLHTML_MIN_FILES:-25000}
+
+rm -rf Refdata-AllHtml.new
+rm -f Refdata-AllHtml.zip
+
+if ! wget --tries=3 --timeout=60 $ALLHTML_URL -O Refdata-AllHtml.zip ; then
+    echo "ERROR: cannot download $ALLHTML_URL, keeping the previous Refdata-AllHtml" 1>&2
+    rm -f Refdata-AllHtml.zip
+    exit 1
+fi
+
+# catches a truncated transfer and corrupt deflate streams
+if ! unzip -tqq Refdata-AllHtml.zip ; then
+    echo "ERROR: Refdata-AllHtml.zip is corrupt, keeping the previous Refdata-AllHtml" 1>&2
+    rm -f Refdata-AllHtml.zip
+    exit 1
+fi
+
+ALLHTML_EXPECTED=$(unzip -l Refdata-AllHtml.zip | tail -1 | awk '{print $2}')
+if [ "$ALLHTML_EXPECTED" -lt "$ALLHTML_MIN_FILES" ] ; then
+    echo "ERROR: Refdata-AllHtml.zip has only $ALLHTML_EXPECTED files (< $ALLHTML_MIN_FILES), keeping the previous Refdata-AllHtml" 1>&2
+    rm -f Refdata-AllHtml.zip
+    exit 1
+fi
+
+if ! unzip -q Refdata-AllHtml.zip -d Refdata-AllHtml.new ; then
+    echo "ERROR: cannot unzip Refdata-AllHtml.zip, keeping the previous Refdata-AllHtml" 1>&2
+    rm -rf Refdata-AllHtml.new
+    rm -f Refdata-AllHtml.zip
+    exit 1
+fi
+
+# unzip 6.00 can skip entries and still exit 0, so count what actually landed
+ALLHTML_EXTRACTED=$(ls Refdata-AllHtml.new | wc -l)
+if [ "$ALLHTML_EXTRACTED" -ne "$ALLHTML_EXPECTED" ] ; then
+    echo "ERROR: extracted $ALLHTML_EXTRACTED of $ALLHTML_EXPECTED html files, keeping the previous Refdata-AllHtml" 1>&2
+    rm -rf Refdata-AllHtml.new
+    rm -f Refdata-AllHtml.zip
+    exit 1
+fi
+
 rm -rf Refdata-AllHtml
-
-wget https://files.refdata.ch/simis-public-prod/MedicinalDocuments/AllHtml.zip -O Refdata-AllHtml.zip
-
-unzip Refdata-AllHtml.zip -d Refdata-AllHtml
+mv Refdata-AllHtml.new Refdata-AllHtml
 rm Refdata-AllHtml.zip
 
 fi

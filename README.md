@@ -75,6 +75,28 @@ ex-factory price is missing for the article's GTIN — BAG values remain
 canonical for SL-listed drugs. In `--fhir` builds (no BAG XML), this raises
 `rosedb.exfprice` population from 0/163858 to 163858/163858 rows.
 
+## AIPS content HTML (Refdata AllHtml.zip)
+`downloads/aips.xml` only references the Fachinfo/Patinfo documents; the text
+itself lives in `AllHtml.zip` (~1.1 GB, ~30'500 files), which `download.sh`
+unpacks into `downloads/Refdata-AllHtml/`. **A medicine whose html file is not
+on disk is dropped completely** by `src/c2s/aips.cpp` — no row in `amikodb`,
+and therefore none of its Swissmedic packages either, even though
+`swissmedic_packages.xlsx` and the Refdata SAI feed list them. The only trace
+is the "Missing html files" section of `output/amiko_report_{de,fr}.html`.
+
+On 2026-08-19 one run extracted 11'108 of 30'525 files (a full-length zip with
+a corrupt middle region; `unzip` skipped the entries and still exited 0). 6'514
+of the 10'232 German documents referenced by `aips.xml` were missing, the
+German db came out with 1'694 rows, and registration 62069 (Levetiracetam
+Desitin) lost all seven of its packages.
+
+The download is therefore staged and verified before it replaces the live
+folder: `wget` exit code, `unzip -t` over the whole archive, an entry-count
+floor (`ALLHTML_MIN_FILES`, default 25000), extraction into
+`Refdata-AllHtml.new`, and a comparison of the extracted file count against the
+archive's entry count. Any failure keeps the previous `Refdata-AllHtml/` and
+exits 1, so a build never runs on a half-populated folder.
+
 ## Zur Rose download and publishing
 `scripts/download_zr.sh` fetches the eleven Zur Rose feeds over SFTP. It never
 writes over a live input file directly: everything is staged in
