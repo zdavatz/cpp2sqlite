@@ -20,6 +20,10 @@ $ git clone\
 $ git submodule init\
 $ git submodule update
 
+The remaining submodules are `json` and `xlnt`. The EAN13 barcode generator
+used to be one as well; since 2026-08-19 `src/c2s/ean13/` is vendored in-tree
+(see the README there), so a fix to it is a single ordinary commit.
+
 See [build.sh](https://github.com/zdavatz/cpp2sqlite/blob/master/scripts/build.sh)
 ## Usage
 ### cpp2sqlite

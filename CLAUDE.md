@@ -67,8 +67,11 @@ All use BAG FHIR ndjson by default since 01.06.2026 (`flagFHIR=true`); pass `--n
 ## zurrose SQLite lifecycle (do not double-close)
 `VOLL::closeDB()` calls `sqlite3_finalize(statement)` then `sqlite3_close(db)`, so it must be called exactly once. Calling it twice double-frees both handles and corrupts the glibc heap — the failure surfaces as `free(): invalid next size (fast)` on process exit and, depending on arena state, may not reproduce on smaller workloads (atcdb hid it while fulldb crashed every run). `src/zur/main.cpp` previously had a stray second `closeDB` block right after the fulldb/atcdb branch; the single call inside the branch is the correct lifecycle.
 
-## ean13 is a separate git submodule
-`src/c2s/ean13` is a git submodule pointing at `ywesee/BarcodeGenerator` (separate org from `zdavatz/cpp2sqlite`). Fixes there require: commit + push inside the submodule on master, then bump the parent's submodule pointer in a parent commit. Consumers (and the build server) must run `git submodule update` after pulling the parent.
+## ean13 is vendored, not a submodule (since 2026-08-19)
+- `src/c2s/ean13/` holds `functii.cpp` + `functii.h` as ordinary files, copied from `ywesee/BarcodeGenerator` at `c1f17da` (the `<cstdint>` fix). Edit them like any other source; one commit, no pointer bump, no `git submodule update`.
+- It used to be a submodule, and the three-step dance was a real hazard: a `git pull` without `git submodule update` left the working tree on the 2019 commit `7516528`, which silently *removed* the `<cstdint>` include again. `git status` then shows a submodule "change" that is actually a revert — committing it would have broken the Funtoo build server.
+- Only the library is vendored; upstream's standalone demo (`main.cpp`, `sample-input.txt`, `sample.html`) was dropped. Changes here do NOT flow back to `ywesee/BarcodeGenerator` — port by hand if that repo needs them.
+- Single consumer: `EAN13::createSvg()` in `getBarcodesFromGtins()` (`src/c2s/cpp2sqlite.cpp:156`), which embeds one SVG barcode per package GTIN into the Fachinfo html. `CMakeLists.txt:50` and `:71` list the two files directly.
 
 ## GCC 13+ header transitivity
 GCC 13+ (and current libstdc++) no longer pulls many standard headers transitively. New code that uses standard types/streams must `#include` them explicitly or the Funtoo build server breaks:
