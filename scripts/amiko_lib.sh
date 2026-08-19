@@ -24,7 +24,7 @@ SRC=${AMIKO_SRC:-/usr/local/src/cpp2sqlite}
 SHRINK_PCT=${AMIKO_SHRINK_PCT:-70}
 
 AMIKO_REMOTES=()
-CONF=${AMIKO_CONF:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/amiko_targets.conf}
+CONF=${AMIKO_CONF:-${BASH_SOURCE[0]%/*}/amiko_targets.conf}   # no external dirname: cron PATH is minimal
 if [ -f "$CONF" ]; then
     source "$CONF"
 else
@@ -35,6 +35,11 @@ fi
 WWW=${AMIKO_WWW:-}
 AI=${AMIKO_AI:-}
 [ -n "$WWW" ] || { echo "AMIKO_WWW is not set (see $CONF)" >&2; exit 1; }
+
+# The row and integrity checks are the whole point of this pipeline, so a
+# missing sqlite3 is a hard error rather than a skipped check. Under cron the
+# PATH is minimal, which is exactly where a silent "not checked" would hide.
+command -v sqlite3 >/dev/null || { echo "sqlite3 is not on PATH ($PATH)" >&2; exit 1; }
 
 OUT="$SRC/output"
 STARTED_AT=$(date +%s)
@@ -84,11 +89,6 @@ verify_outputs() {
             continue
         fi
 
-        if ! command -v sqlite3 >/dev/null; then
-            echo "  ??  $name ($size bytes, sqlite3 not installed - not checked)"
-            continue
-        fi
-
         check=$(sqlite3 "$path" "PRAGMA integrity_check;" 2>&1)
         [ "$check" == "ok" ] || die "$name failed sqlite integrity_check: $check"
 
@@ -111,10 +111,6 @@ canary_regnr() {
     local db="$1" name r n; shift
     name=$(basename "$db")
 
-    if ! command -v sqlite3 >/dev/null; then
-        echo "  ??  canary skipped for $name (sqlite3 not installed)"
-        return 0
-    fi
     for r in "$@"; do
         n=$(sqlite3 "$db" "SELECT count(*) FROM amikodb WHERE regnrs LIKE '%$r%';" 2>&1)
         [[ "$n" =~ ^[0-9]+$ ]] || die "canary query on $name failed: $n"
