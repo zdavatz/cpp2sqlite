@@ -1,16 +1,31 @@
 # Shared verification and publishing helpers for so_data and so_data_full.
 # Sourced, not executed.
 #
+# Hosts and directories are not named here. They live in zr_targets.conf,
+# which is not in git; zr_targets.conf.example documents the format.
+#
 # Environment knobs (both callers):
 #   ZR_SRC=/usr/local/src/cpp2sqlite       source tree
-#   ZR_WWW=/var/www/so.zurrose.ch/rose     publish target
+#   ZR_CONF=<path>                         targets file (default: next to this one)
+#   ZR_WWW=<dir>                           publish target
 #   ZR_SHRINK_PCT=70                       refuse a file that lost more than 30%
 #   ZR_SKIP_DOWNLOAD=1                     use the inputs already in input/
 #   ZR_SKIP_BUILD=1                        verify and publish the existing output/
 #   ZR_NO_PUBLISH=1                        build and verify, publish nothing
 
 SRC=${ZR_SRC:-/usr/local/src/cpp2sqlite}
-WWW=${ZR_WWW:-/var/www/so.zurrose.ch/rose}
+
+ZR_CONF=${ZR_CONF:-${BASH_SOURCE[0]%/*}/zr_targets.conf}   # no external dirname
+if [ -f "$ZR_CONF" ]; then
+    source "$ZR_CONF"
+else
+    echo "no $ZR_CONF - copy zr_targets.conf.example and fill it in" >&2
+    exit 1
+fi
+
+WWW=${ZR_WWW:-}
+[ -n "$WWW" ] || { echo "ZR_WWW is not set (see $ZR_CONF)" >&2; exit 1; }
+
 SHRINK_PCT=${ZR_SHRINK_PCT:-70}
 STARTED_AT=$(date +%s)
 

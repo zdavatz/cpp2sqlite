@@ -30,7 +30,17 @@ set -uo pipefail
 WD=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SRC_DIR=$(realpath "$WD/..")
 
-DOMAIN=${ZR_DOMAIN:-ftp.zur-rose.ch}
+# Hosts live in zr_targets.conf, which is not in git; the account and password
+# for the server stay in scripts/passwords, also not in git.
+ZR_CONF=${ZR_CONF:-$WD/zr_targets.conf}
+if [ -f "$ZR_CONF" ]; then
+    source "$ZR_CONF"
+else
+    echo "no $ZR_CONF - copy zr_targets.conf.example and fill it in" >&2
+    exit 1
+fi
+DOMAIN=${ZR_DOMAIN:-}
+[ -n "$DOMAIN" ] || { echo "ZR_DOMAIN is not set (see $ZR_CONF)" >&2; exit 1; }
 if [ "test" == "${1:-}" ] ; then
     DIR="/ywesee OutTest"
 else

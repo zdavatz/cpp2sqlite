@@ -176,6 +176,13 @@ Environment knobs (see `scripts/amiko_lib.sh`): `AMIKO_SKIP_DOWNLOAD=1`,
 `AMIKO_CONF`.
 
 ## Zur Rose download and publishing
+Hosts and directories are not in this repository: the publish target and the sftp
+server live in `scripts/zr_targets.conf`, which is gitignored, with
+`zr_targets.conf.example` as the template. Credentials stay in `scripts/passwords`,
+also gitignored. `so_data`, `so_data_full` and `download_zr.sh` abort if the conf is
+missing, so on an existing installation create it **before** pulling -- those two are
+already in cron on the publishing host.
+
 `scripts/download_zr.sh` fetches the eleven Zur Rose feeds over SFTP. It never
 writes over a live input file directly: everything is staged in
 `input/zurrose/.staging.<pid>`, validated, and only then moved into place, with

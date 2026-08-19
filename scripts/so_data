@@ -36,7 +36,7 @@ OUTPUTS=(
 )
 
 # A real order that has to keep working: if any of these articles or this
-# customer is missing, https://so.zurrose.ch/smart/full answers with nothing.
+# customer is missing, the live order endpoint answers with nothing.
 CANARY_PHARMACODES=(5575685 0909199 1491649 5936835 7770719 2967108)
 CANARY_GLNCODES=(937003)
 
