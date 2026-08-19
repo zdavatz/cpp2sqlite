@@ -159,6 +159,17 @@ written last, after everything they refer to is in place.
 starting with 62069. A missing content html silently drops a whole medicine without
 changing anything structural, so the row floor alone would not catch it.
 
+Downloading happens **once**, at the start of the `aips` stage. The three stages after
+it build from the same `input/` and `downloads/`, so `pinfo` never refetches anything --
+and unlike the old 07:00 job, it does not run at all if that download was rejected.
+
+Under cron the PATH is minimal (`/usr/bin:/bin`), which the script accounts for:
+
+- `sqlite3` is a **hard requirement**, checked before any stage runs. The integrity
+  check, the row floors and the canaries all go through it, so a missing `sqlite3` must
+  never degrade into a run with no gate that still reports success.
+- `cargo` is not on that PATH; the `fachinfo` stage sources `~/.cargo/env` first.
+
 Environment knobs (see `scripts/amiko_lib.sh`): `AMIKO_SKIP_DOWNLOAD=1`,
 `AMIKO_SKIP_BUILD=1` (verify and publish what is already in `output/`),
 `AMIKO_NO_PUBLISH=1`, `AMIKO_NO_REMOTE=1`, `AMIKO_SHRINK_PCT`, `AMIKO_SRC`,
