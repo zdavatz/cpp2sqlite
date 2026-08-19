@@ -1,0 +1,24 @@
+# Publishing targets for amiko_data. Copy to amiko_targets.conf and fill in.
+#
+# amiko_targets.conf is not in git: it is the only place that names hosts,
+# addresses and directories, so nothing operational leaks into the repository.
+# Every value honours an environment override, so a test run can point the
+# whole pipeline somewhere else without editing this file.
+
+# Local publish directory (the web root that serves the archives and reports).
+AMIKO_WWW=${AMIKO_WWW:-/srv/www/CHANGEME}
+
+# fachinfo_ai checkout that builds the frequency databases.
+AMIKO_AI=${AMIKO_AI:-/usr/local/src/fachinfo_ai}
+
+# Hosts that receive the uncompressed databases over ssh.
+#
+#   user@host | remote directory | ssh port
+#
+# An entry that cannot be reached is a warning, not an abort: the remaining
+# targets still get the build and the run exits non-zero so cron mails about
+# it. Comment an entry out rather than leaving a dead host in the list -- a
+# target that fails on every run trains everyone to ignore the warning.
+AMIKO_REMOTES=(
+    "user@host.example|/srv/www/CHANGEME/sqlite|22"
+)

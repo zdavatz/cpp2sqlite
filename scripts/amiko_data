@@ -1,0 +1,235 @@
+#!/bin/bash
+# Nightly AIPS job: download -> build -> verify -> publish.
+#
+# Replaces nine hand-written scripts in /usr/local/src that used to be chained
+# through cron times and through each other: one per build (aips, fachinfo de,
+# fachinfo fr, sai, pinfo) and one per publishing target, each calling the next.
+#
+# What that layout got wrong, and what this fixes:
+#
+#   - Nothing checked an exit code. download.sh refuses a bad AllHtml.zip and
+#     exits 1, but the caller ignored that and built anyway. Here every stage
+#     is gated and a failure stops the run before it publishes.
+#   - Nothing looked at the databases. On 2026-08-19 a two-thirds empty
+#     amiko_db_full_idx_de.db (1'694 instead of 4'640 rows) went to four
+#     servers unnoticed. Row floors and registration canaries now catch that.
+#   - Three of the publishing scripts began with "rm *.zip" in output/, so the
+#     05:00 sai run deleted the 04:00 amiko archives and the 07:00 copy to the
+#     web root then copied files that were no longer there. Each archive is now
+#     rebuilt where it is used and nothing deletes another stage's output.
+#   - The fachinfo stage started at a fixed 04:30 while the de/fr build needs
+#     ~35 minutes with no interlock, so it could copy a database that was still
+#     being written. The stages here run in order.
+#   - Publishing was a bare scp of a 400 MB file over the live one. Every file
+#     now lands under a temp name and is renamed into place.
+#
+# Usage:
+#   ./amiko_data                     all stages, in order
+#   ./amiko_data aips                download + de/fr databases
+#   ./amiko_data fachinfo            fachinfo_ai frequency databases
+#   ./amiko_data sai                 sai + nonpharma
+#   ./amiko_data pinfo               patient information database
+#   ./amiko_data sai pinfo           any combination
+#
+# See amiko_lib.sh for the environment knobs. Exits non-zero on any problem.
+
+set -uo pipefail
+
+WD=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$WD/amiko_lib.sh"
+
+#-------------------------------------------------------------------------------
+# Where the finished files go is not decided here: amiko_lib.sh reads
+# amiko_targets.conf, which is not in git and is the only place that names
+# hosts and directories. It sets AMIKO_WWW (local web root) and AMIKO_REMOTES
+# (ssh targets for the uncompressed databases).
+#
+# An unreachable target is a warning, not an abort: the remaining targets still
+# get the build and the run exits non-zero. Watch for that in the cron mail --
+# one of the old scripts ran under "set -e" with a long-dead host first in its
+# list, so every run aborted before it reached the hosts that did work, and one
+# of them served a month-old database without anyone noticing.
+
+# Registrations that have to survive every build. 62069 is the one that went
+# missing on 2026-08-19; it shares its content html with 61848, so a single
+# absent file took both with it.
+CANARY_REGNRS=(62069 58868 59270 68454 40441 66994)
+
+#-------------------------------------------------------------------------------
+stage_aips() {
+    step "Downloading input data"
+
+    if [ "${AMIKO_SKIP_DOWNLOAD:-0}" == "1" ]; then
+        echo "AMIKO_SKIP_DOWNLOAD=1, using the inputs already in $SRC/input"
+    else
+        cd "$SRC/scripts" || die "no $SRC/scripts"
+        # Two passes with different step flags; see steps_public*.source
+        source ./steps_public1.source
+        ./download.sh || die "download.sh rejected an input (public1)"
+        source ./steps_public2.source
+        ./download.sh || die "download.sh rejected an input (public2)"
+    fi
+
+    step "Building the AIPS databases"
+
+    if [ "${AMIKO_SKIP_BUILD:-0}" == "1" ]; then
+        echo "AMIKO_SKIP_BUILD=1, verifying the files already in $OUT"
+        STARTED_AT=0                  # they were not written by this run
+    else
+        cd "$SRC/build" || die "no $SRC/build"
+        time ./cpp2sqlite --verbose --fhir --lang=de --inDir ../input || die "cpp2sqlite de failed"
+        time ./cpp2sqlite --verbose --fhir --lang=fr --inDir ../input || die "cpp2sqlite fr failed"
+    fi
+
+    step "Verifying the AIPS databases"
+    verify_outputs "$OUT" \
+        "amiko_db_full_idx_de.db|300000000|4000|amikodb" \
+        "amiko_db_full_idx_fr.db|300000000|4000|amikodb" \
+        "amiko_report_de.html|5000|-|-" \
+        "amiko_report_fr.html|5000|-|-"
+    canary_regnr "$OUT/amiko_db_full_idx_de.db" "${CANARY_REGNRS[@]}"
+    canary_regnr "$OUT/amiko_db_full_idx_fr.db" "${CANARY_REGNRS[@]}"
+
+    step "Packing"
+    zip_output "$OUT" amiko_db_full_idx_de.zip amiko_db_full_idx_de.db
+    zip_output "$OUT" amiko_db_full_idx_fr.zip amiko_db_full_idx_fr.db
+
+    step "Publishing the AIPS databases"
+    # the _zr_ names are the same archive under a second name
+    publish_local "$OUT" amiko_db_full_idx_de.zip
+    publish_local "$OUT" amiko_db_full_idx_de.zip amiko_db_full_idx_zr_de.zip
+    publish_local "$OUT" amiko_db_full_idx_fr.zip
+    publish_local "$OUT" amiko_db_full_idx_fr.zip amiko_db_full_idx_zr_fr.zip
+    publish_local "$OUT" amiko_report_de.html
+    publish_local "$OUT" amiko_report_fr.html
+
+    for r in "${AMIKO_REMOTES[@]}"; do
+        publish_remote "$r" "$OUT" amiko_db_full_idx_de.db amiko_db_full_idx_fr.db
+    done
+}
+
+#-------------------------------------------------------------------------------
+stage_fachinfo() {
+    step "Building the fachinfo_ai frequency databases"
+
+    if [ "${AMIKO_SKIP_BUILD:-0}" == "1" ]; then
+        echo "AMIKO_SKIP_BUILD=1, verifying the files already in $AI/output"
+        STARTED_AT=0
+    else
+        # cron does not read .profile/.bashrc, so cargo is not on PATH without this
+        [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
+        cp "$OUT/amiko_db_full_idx_de.db" "$AI/dbs/" || die "could not stage the de database for $AI"
+        cp "$OUT/amiko_db_full_idx_fr.db" "$AI/dbs/" || die "could not stage the fr database for $AI"
+
+        cd "$AI" || die "no $AI"
+        git pull                                        || die "git pull in $AI failed"
+        cargo build --release --manifest-path rust/Cargo.toml || die "cargo build in $AI failed"
+        ./rust/target/release/smartinfo --lang=de       || die "smartinfo de failed"
+        ./rust/target/release/smartinfo --lang=fr       || die "smartinfo fr failed"
+    fi
+
+    step "Verifying the frequency databases"
+    verify_outputs "$AI/output" \
+        "amiko_frequency_de.db|30000000|100000|frequency" \
+        "amiko_frequency_fr.db|30000000|50000|frequency"
+
+    step "Packing"
+    zip_output "$AI/output" amiko_frequency_de.db.zip amiko_frequency_de.db
+    zip_output "$AI/output" amiko_frequency_fr.db.zip amiko_frequency_fr.db
+
+    step "Publishing the frequency databases"
+    publish_local "$AI/output" amiko_frequency_de.db.zip
+    publish_local "$AI/output" amiko_frequency_fr.db.zip
+
+    for r in "${AMIKO_REMOTES[@]}"; do
+        publish_remote "$r" "$AI/output" amiko_frequency_de.db amiko_frequency_fr.db
+    done
+}
+
+#-------------------------------------------------------------------------------
+stage_sai() {
+    step "Building sai and nonpharma"
+
+    if [ "${AMIKO_SKIP_BUILD:-0}" == "1" ]; then
+        echo "AMIKO_SKIP_BUILD=1, verifying the files already in $OUT"
+        STARTED_AT=0
+    else
+        cd "$SRC/build" || die "no $SRC/build"
+        # sai takes --fhir the normal way round; one of the other tools in
+        # this repository has the flag inverted, see CLAUDE.md
+        time ./sai       --verbose --fhir --inDir ../downloads || die "sai failed"
+        time ./nonpharma --verbose        --inDir ../downloads || die "nonpharma failed"
+    fi
+
+    step "Verifying sai and nonpharma"
+    verify_outputs "$OUT" \
+        "sai.db|30000000|50000|sai_db" \
+        "nonpharma.db|40000000|200000|nonpharma_db" \
+        "sai_report.html|10000|-|-" \
+        "nonpharma_report.html|100|-|-"
+
+    step "Packing"
+    zip_output "$OUT" sai.db.zip       sai.db
+    zip_output "$OUT" nonpharma.db.zip nonpharma.db
+
+    step "Publishing sai and nonpharma"
+    publish_local "$OUT" sai.db.zip
+    publish_local "$OUT" nonpharma.db.zip
+    publish_local "$OUT" sai_report.html
+    publish_local "$OUT" nonpharma_report.html
+
+    mark_done sai_non_pharma_done
+}
+
+#-------------------------------------------------------------------------------
+stage_pinfo() {
+    step "Building the patient information database"
+
+    if [ "${AMIKO_SKIP_BUILD:-0}" == "1" ]; then
+        echo "AMIKO_SKIP_BUILD=1, verifying the files already in $OUT"
+        STARTED_AT=0
+    else
+        cd "$SRC/build" || die "no $SRC/build"
+        # note: this run rewrites amiko_report_de.html, which is why it comes
+        # after stage_aips has published the Fachinfo version of that report
+        time ./cpp2sqlite --verbose --fhir --lang=de --pinfo --inDir ../input \
+            || die "cpp2sqlite pinfo failed"
+    fi
+
+    step "Verifying the patient information database"
+    verify_outputs "$OUT" "amiko_db_full_idx_pinfo_de.db|500000000|8000|amikodb"
+    canary_regnr "$OUT/amiko_db_full_idx_pinfo_de.db" "${CANARY_REGNRS[@]}"
+
+    step "Packing"
+    zip_output "$OUT" amiko_db_full_idx_pinfo_de.db.zip amiko_db_full_idx_pinfo_de.db
+
+    step "Publishing the patient information database"
+    publish_local "$OUT" amiko_db_full_idx_pinfo_de.db
+    publish_local "$OUT" amiko_db_full_idx_pinfo_de.db.zip
+}
+
+#-------------------------------------------------------------------------------
+STAGES=("$@")
+[ ${#STAGES[@]} -eq 0 ] && STAGES=(aips fachinfo sai pinfo)
+
+for s in "${STAGES[@]}"; do
+    case "$s" in
+    aips)     stage_aips     ;;
+    fachinfo) stage_fachinfo ;;
+    sai)      stage_sai      ;;
+    pinfo)    stage_pinfo    ;;
+    *)        die "unknown stage '$s' (aips, fachinfo, sai, pinfo)" ;;
+    esac
+done
+
+# The amiko marker covers everything the AmiKo clients read, so it is only
+# written when the stages that produce those files have all run.
+case " ${STAGES[*]} " in
+*" aips "*|*" fachinfo "*|*" pinfo "*)
+    step "Marking the amiko update as complete"
+    mark_done amiko_update_done
+    ;;
+esac
+
+finish

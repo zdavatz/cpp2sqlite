@@ -11,3 +11,6 @@ scripts/passwords
 scripts/temp/
 input/deepl.sappinfo.in.txt
 input/deepl.sappinfo.err.fr.txt
+
+# local publishing targets for scripts/amiko_data (hosts, paths)
+scripts/amiko_targets.conf

@@ -101,6 +101,69 @@ floor (`ALLHTML_MIN_FILES`, default 25000), extraction into
 archive's entry count. Any failure keeps the previous `Refdata-AllHtml/` and
 exits 1, so a build never runs on a half-populated folder.
 
+## AIPS build and publishing (scripts/amiko_data)
+
+`scripts/amiko_data` builds every AiPS artefact and publishes it. It replaces nine
+hand-written scripts in `/usr/local/src` that used to be chained through cron times
+and through each other: one per build (aips, fachinfo de, fachinfo fr, sai, pinfo)
+and one per publishing target, each calling the next.
+
+```bash
+cd scripts
+cp amiko_targets.conf.example amiko_targets.conf   # once, then fill in
+./amiko_data                 # all four stages, in order
+./amiko_data aips            # download + cpp2sqlite de/fr
+./amiko_data fachinfo        # fachinfo_ai frequency databases
+./amiko_data sai             # sai + nonpharma
+./amiko_data pinfo           # cpp2sqlite --pinfo
+./amiko_data sai pinfo       # any combination
+```
+
+One cron entry replaces five:
+
+```cron
+0 4 * * * <user> /usr/local/src/cpp2sqlite/scripts/amiko_data >> ~/amiko_data.log 2>&1
+```
+
+Hosts, addresses and directories are **not** in this repository. They live in
+`scripts/amiko_targets.conf`, which is gitignored; `amiko_targets.conf.example`
+documents the format. It sets the local web root, the `fachinfo_ai` checkout and the
+list of ssh targets. Every value honours an environment override, so a test run can
+redirect the whole pipeline; a missing conf aborts before anything runs.
+
+Every stage is gated. A failed download, a failed build, a database that does not open,
+one that is too small or has too few rows, or a missing canary registration stops the run
+before anything is published; an unreachable publishing host is a warning and the run still
+exits non-zero. Each file is installed under a temporary name and renamed into place, locally
+and over ssh, so a client never reads a half-copied 400 MB database.
+
+Checked before anything goes live:
+
+| file | table | row floor |
+| --- | --- | --- |
+| `amiko_db_full_idx_de.db` | `amikodb` | 4'000 |
+| `amiko_db_full_idx_fr.db` | `amikodb` | 4'000 |
+| `amiko_db_full_idx_pinfo_de.db` | `amikodb` | 8'000 |
+| `amiko_frequency_de.db` | `frequency` | 100'000 |
+| `amiko_frequency_fr.db` | `frequency` | 50'000 |
+| `sai.db` | `sai_db` | 50'000 |
+| `nonpharma.db` | `nonpharma_db` | 200'000 |
+
+plus, for each file: it must have been written by this run, clear a byte floor, and not
+have lost more than 30 % against the copy already published (`AMIKO_SHRINK_PCT`).
+The `.zip` archives and the reports go to the local web root, the uncompressed databases
+to the ssh targets. The marker files `amiko_update_done` and `sai_non_pharma_done` are
+written last, after everything they refer to is in place.
+
+`CANARY_REGNRS` in `amiko_data` lists registrations that have to survive every build,
+starting with 62069. A missing content html silently drops a whole medicine without
+changing anything structural, so the row floor alone would not catch it.
+
+Environment knobs (see `scripts/amiko_lib.sh`): `AMIKO_SKIP_DOWNLOAD=1`,
+`AMIKO_SKIP_BUILD=1` (verify and publish what is already in `output/`),
+`AMIKO_NO_PUBLISH=1`, `AMIKO_NO_REMOTE=1`, `AMIKO_SHRINK_PCT`, `AMIKO_SRC`,
+`AMIKO_CONF`.
+
 ## Zur Rose download and publishing
 `scripts/download_zr.sh` fetches the eleven Zur Rose feeds over SFTP. It never
 writes over a live input file directly: everything is staged in

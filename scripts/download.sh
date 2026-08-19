@@ -248,7 +248,7 @@ curl -H "Host: db.swisspeddose.ch" \
     "${URL}${FILENAME_V4}"
 echo "Got zip"
 
-unzip "swisspeddosepublication_v4.zip"
+unzip -o "swisspeddosepublication_v4.zip"
 
 rm "swisspeddosepublication_v4.zip"
 mv SwissPedDosePublicationV4.xml "swisspeddosepublication_v4.xml"
@@ -363,6 +363,6 @@ fi
 
 if [ $STEP_DOWNLOAD_TRANSFER_ZIP ] ; then
   curl -o "transfer.zip" "http://pillbox.oddb.org/TRANSFER.ZIP"
-  unzip "transfer.zip" -d transfer
+  unzip -o "transfer.zip" -d transfer
   rm transfer.zip
 fi
