@@ -10,6 +10,7 @@
 #include <iostream>
 #include <libgen.h>     // for basename()
 #include <regex>
+#include <unordered_map>
 #include <boost/algorithm/string.hpp>
 
 #include <xlnt/xlnt.hpp>
@@ -48,6 +49,13 @@ namespace SWISSMEDIC
 
     // TODO: change them to a map for better performance
     std::vector<dosageUnits> duVec;
+
+    // Indexes into theWholeSpreadSheet, built once at the end of parseXLXS().
+    // Every lookup below used to be a linear scan over ~18'000 rows, run once
+    // per registration number and once per package of every Fachinfo.
+    std::unordered_map<std::string, std::vector<int>> rowsByRegnr;
+    std::unordered_map<std::string, int> rowByGtin;    // first row with that GTIN
+    std::unordered_map<std::string, int> rowByGtin12;  // ... without the checksum
 
     // Parse-phase stats
 
@@ -131,6 +139,14 @@ void parseXLXS(const std::string &filename)
         duVec.push_back(du);
     }
 
+    // Build the lookup indexes. emplace() keeps the first row for a given GTIN,
+    // which is what the "first match wins" scans below used to return.
+    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
+        rowsByRegnr[regnrs[rowInt]].push_back(rowInt);
+        rowByGtin.emplace(gtin[rowInt], rowInt);
+        rowByGtin12.emplace(gtin[rowInt].substr(0, 12), rowInt);
+    }
+
     printFileStats(filename);
 }
 
@@ -150,11 +166,11 @@ int getAdditionalNames(const std::string &rn,
     std::set<std::string>::iterator it;
     int countAdded = 0;
 
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-        std::string rn5 = regnrs[rowInt];
-        if (rn5 != rn)
-            continue;
+    auto rows = rowsByRegnr.find(rn);
+    if (rows == rowsByRegnr.end())
+        return 0;
 
+    for (int rowInt : rows->second) {
         std::string g13 = gtin[rowInt];
         it = gtinUsedSet.find(g13);
         if (it == gtinUsedSet.end()) { // not found list of used GTINs, we must add the name
@@ -196,57 +212,24 @@ int getAdditionalNames(const std::string &rn,
 
 int countRowsWithRn(const std::string &rn)
 {
-    int count = 0;
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-        std::string gtin_5 = regnrs[rowInt];
-        // TODO: to speed up do a numerical comparison so that we can return when gtin5>rn
-        // assuming that column A is sorted
-        if (gtin_5 == rn)
-            count++;
-    }
+    auto rows = rowsByRegnr.find(rn);
 
-    return count;
+    return rows == rowsByRegnr.end() ? 0 : static_cast<int>(rows->second.size());
 }
 
 bool findGtin(const std::string &gtin)
 {
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-        std::string rn5 = regnrs[rowInt];
-        std::string code3 = packingCode[rowInt];
-        std::string gtin12 = "7680" + rn5 + code3;
-
-#if 0
-        // We could also recalculate and verify the checksum
-        // but such verification has already been done when parsing the files
-        char checksum = GTIN::getGtin13Checksum(gtin12);
-
-        if (checksum != gtin[12]) {
-            std::cerr
-            << basename((char *)__FILE__) << ":" << __LINE__
-            << ", GTIN error, expected:" << checksum
-            << ", received" << gtin[12]
-            << std::endl;
-        }
-#endif
-
-        // The comparison is only the first 12 digits, without checksum
-        if (gtin12 == gtin.substr(0,12)) // pos, len
-            return true;
-    }
-
-    return false;
+    // The comparison is only the first 12 digits, without checksum
+    return rowByGtin12.find(gtin.substr(0,12)) != rowByGtin12.end();
 }
 
 std::string getApplication(const std::string &rn)
 {
     std::string app;
 
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-        if (rn == regnrs[rowInt]) {
-            app = theWholeSpreadSheet.at(rowInt).at(COLUMN_T) + " (Swissmedic)";
-            break;
-        }
-    }
+    auto rows = rowsByRegnr.find(rn);
+    if (rows != rowsByRegnr.end())
+        app = theWholeSpreadSheet.at(rows->second.front()).at(COLUMN_T) + " (Swissmedic)";
 
     return app;
 }
@@ -255,12 +238,9 @@ std::string getAtcFromFirstRn(const std::string &rn)
 {
     std::string atc;
 
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
-        if (rn == regnrs[rowInt]) {
-            atc = theWholeSpreadSheet.at(rowInt).at(COLUMN_G);
-            break;
-        }
-    }
+    auto rows = rowsByRegnr.find(rn);
+    if (rows != rowsByRegnr.end())
+        atc = theWholeSpreadSheet.at(rows->second.front()).at(COLUMN_G);
 
     return atc;
 }
@@ -269,11 +249,9 @@ std::string getCategoryByGtin(const std::string &g)
 {
     std::string cat;
 
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++)
-        if (gtin[rowInt] == g) {
-            cat = categoryVec[rowInt];
-            break;
-        }
+    auto row = rowByGtin.find(g);
+    if (row != rowByGtin.end())
+        cat = categoryVec[row->second];
 
     return cat;
 }
@@ -282,11 +260,9 @@ dosageUnits getByGtin(const std::string &g)
 {
     dosageUnits du;
 
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++)
-        if (gtin[rowInt] == g) {
-            du = duVec[rowInt];
-            break;
-        }
+    auto row = rowByGtin.find(g);
+    if (row != rowByGtin.end())
+        du = duVec[row->second];
 
     return du;
 }
@@ -299,10 +275,11 @@ DB::RowToInsert getRow(const std::string &regnr) {
     DB::RowToInsert result;
     result.regnrs = regnr;
 
-    for (int rowInt = 0; rowInt < theWholeSpreadSheet.size(); rowInt++) {
+    auto rows = rowsByRegnr.find(regnr);
+    if (rows != rowsByRegnr.end()) {
+        int rowInt = rows->second.front();
         auto thisRow = theWholeSpreadSheet.at(rowInt);
         std::string rn5 = regnrs[rowInt];
-        if (rn5 != regnr) continue;
 
         std::string name = REFDATA::findName(rn5);
         if (name.empty()) {
@@ -314,7 +291,6 @@ DB::RowToInsert getRow(const std::string &regnr) {
         result.title = name;
         result.auth = thisRow.at(COLUMN_D);
         result.atc = thisRow.at(COLUMN_G);
-        break;
     }
     return result;
 }

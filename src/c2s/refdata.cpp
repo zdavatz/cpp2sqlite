@@ -15,6 +15,7 @@
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <regex>
+#include <unordered_map>
 
 #include "refdata.hpp"
 #include "gtin.hpp"
@@ -29,6 +30,12 @@ namespace pt = boost::property_tree;
 namespace REFDATA
 {
     ArticleList artList;
+
+    // Indexes into artList, built once at the end of parseXML(). Each of the
+    // lookups below used to be a linear scan over ~15'000 articles.
+    std::unordered_map<std::string, std::vector<size_t>> byGtin5;
+    std::unordered_map<std::string, size_t> byGtin13;   // first article
+    std::unordered_map<std::string, size_t> byRegnr5;   // first article
 
     unsigned int statsArticleChildCount = 0;
     unsigned int statsItemCount = 0;
@@ -115,6 +122,16 @@ void parseXML(const std::string &filename,
             }
         }
 
+        // Build the lookup indexes. emplace() keeps the first article, which is
+        // what the "first match wins" scans below used to return.
+        for (size_t i = 0; i < artList.size(); i++) {
+            const Article &art = artList[i];
+            byGtin5[art.gtin_5].push_back(i);
+            byGtin13.emplace(art.gtin_13, i);
+            if (art.authorisation_identifier.size() >= 5)
+                byRegnr5.emplace(art.authorisation_identifier.substr(0, 5), i);
+        }
+
         printFileStats(filename);
     }
     catch (std::exception &e) {
@@ -133,8 +150,13 @@ int getNames(const std::string &rn,
 {
     int countAdded = 0;
 
-    for (Article art : artList) {
-        if (art.gtin_5 == rn) {
+    auto found = byGtin5.find(rn);
+    if (found == byGtin5.end())
+        return 0;
+
+    for (size_t idx : found->second) {
+        const Article &art = artList[idx];
+        {
             countAdded++;
             statsTotalGtinCount++;
 
@@ -161,42 +183,28 @@ int getNames(const std::string &rn,
 
 bool findGtin(const std::string &gtin)
 {
-    for (Article art : artList)
-        if (art.gtin_13 == gtin)
-            return true;
-
-    return false;
+    return byGtin13.find(gtin) != byGtin13.end();
 }
 
 std::string findAtc(const std::string &regnrs) {
-    for (Article art : artList) {
-        // std::clog << "authorisation_identifier: " << art.authorisation_identifier << " size: " << std::to_string(art.authorisation_identifier.size()) << std::endl;
-        // std::clog << "finding " << (art.authorisation_identifier.size() >= 5 ? art.authorisation_identifier.substr(0, 5) : "xx") << " with " << regnrs << std::endl;
-        if (art.authorisation_identifier.size() >= 5 && art.authorisation_identifier.substr(0, 5) == regnrs) {
-            return art.atc;
-        }
-    }
-    return "";
+    auto found = byRegnr5.find(regnrs);
+
+    return found == byRegnr5.end() ? "" : artList[found->second].atc;
 }
 
 std::string findName(const std::string &regnrs) {
-    for (Article art : artList) {
-        if (art.authorisation_identifier.size() >= 5 && art.authorisation_identifier.substr(0, 5) == regnrs) {
-            return art.name;
-        }
-    }
-    return "";
+    auto found = byRegnr5.find(regnrs);
+
+    return found == byRegnr5.end() ? "" : artList[found->second].name;
 }
 
 std::string getPharByGtin(const std::string &gtin)
 {
     std::string phar;
 
-    for (Article art : artList)
-        if (art.gtin_13 == gtin) {
-            phar = art.phar;
-            break;
-        }
+    auto found = byGtin13.find(gtin);
+    if (found != byGtin13.end())
+        phar = artList[found->second].phar;
 
     return phar;
 }
@@ -230,6 +238,68 @@ std::set<std::string> allClassesOfTree(pt::ptree tree) {
     return result;
 }
 
+// The two fixups below were std::regex until they showed up in a profile:
+// they scanned every ~85 KB document four times (search + replace, twice) and
+// cost about 43 s of a full run. These plain-string versions were verified to
+// produce byte-identical output - and the same log decision - on all 29'693
+// downloaded Refdata HTML files.
+static bool isXmlSpace(char c)
+{
+    return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
+}
+
+// Equivalent to std::regex_replace with  ^\s*<div   ->  "<html "
+// The pattern is anchored, so there is at most one match, at the very start.
+static bool fixLeadingDiv(std::string &xhtml)
+{
+    std::string::size_type p = 0;
+    while (p < xhtml.size() && isXmlSpace(xhtml[p]))
+        p++;
+
+    if (xhtml.compare(p, 5, "<div ") != 0)
+        return false;
+
+    xhtml = "<html " + xhtml.substr(p + 5);
+    return true;
+}
+
+// Equivalent to std::regex_replace with  <html \S*">"  ->  "<html>", for every
+// occurrence. \S* is greedy, so a match ends at the last  ">"  within the run
+// of non-space characters that follows "<html ".
+static bool fixHtmlTagQuotes(std::string &xhtml)
+{
+    std::string out;
+    std::string::size_type search = 0, copied = 0, i;
+    bool found = false;
+
+    while ((i = xhtml.find("<html ", search)) != std::string::npos) {
+        std::string::size_type runStart = i + 6, end = runStart;
+        while (end < xhtml.size() && !isXmlSpace(xhtml[end]))
+            end++;
+
+        std::string::size_type hit = std::string::npos;
+        if (end >= runStart + 3)
+            hit = xhtml.rfind("\">\"", end - 3);
+
+        if (hit == std::string::npos || hit < runStart) {
+            search = i + 1;             // nothing here, try the next "<html "
+            continue;
+        }
+
+        out.append(xhtml, copied, i - copied);
+        out += "<html>";
+        search = copied = hit + 3;
+        found = true;
+    }
+
+    if (found) {
+        out.append(xhtml, copied, std::string::npos);
+        xhtml.swap(out);
+    }
+
+    return found;
+}
+
 ArticleDocument getArticleDocument(std::string path) {
     ArticleDocument document;
     std::vector<ArticleSection> sections;
@@ -248,18 +318,14 @@ ArticleDocument getArticleDocument(std::string path) {
 
         // Somehow the html files are so broken, it starts with <div> instead of <html>
         // but interestingly with </html>
-        std::regex r1(R"(^\s*<div )");
-        if (std::regex_search(xhtml, r1)) {
+        if (fixLeadingDiv(xhtml)) {
             std::clog << "Malformed html found(1), trying to fix: " << path << std::endl;
         }
-        xhtml = std::regex_replace(xhtml, r1, "<html ");
 
         // Somehow the html files are so broken, the <html> tag sometimes have weird quotes
-        std::regex r2(R"(<html \S*">")");
-        if (std::regex_search(xhtml, r2)) {
+        if (fixHtmlTagQuotes(xhtml)) {
             std::clog << "Malformed html found(2), trying to fix: " << path << std::endl;
         }
-        xhtml = std::regex_replace(xhtml, r2, "<html>");
 
         xhtml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + xhtml;
 

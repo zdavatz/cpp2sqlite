@@ -146,5 +146,33 @@ handle, so it must be called exactly once per run. A previous duplicate call
 in `main()` double-freed both and caused `free(): invalid next size (fast)`
 on exit of `--zurrose=fulldb` (`--zurrose=atcdb` happened not to trip the
 allocator). Fixed in 3ed2fb5; do not reintroduce a second close.
+## Performance
+A full `cpp2sqlite --lang de` run takes about **151 s**, down from 463 s, with
+byte-identical output. The work was single-threaded throughout; the database
+writes were never the bottleneck (`insertRow` accounts for 1.9 s of the run).
+
+What the profile showed, and what was done about it:
+
+| Was | Now | Change |
+| --- | --- | --- |
+| lookups scanning 6'800-18'000 entries per call | `unordered_map` indexes built once after parsing | `swissmedic.cpp`, `refdata.cpp`, `bagFHIR.cpp`, `bag.cpp` |
+| range-for copying `Article` / `Preparation` per iteration | `const&` | same four files |
+| 76 `replace_all` passes over each ~85 KB document | one pass with a hash lookup | `beautify.cpp` |
+| 2 `std::regex` per document | plain string operations | `refdata.cpp` |
+
+The indexes assume the parsed lists are immutable after their parse function
+returns, and they keep the *first* entry for a duplicate key because the scans
+they replaced stopped at the first match. Both properties matter: appending to
+those lists later, or switching `emplace` to `operator[]`, changes results
+silently.
+
+When changing any of this, verify by comparing the generated databases rather
+than by spot checks: normalise the build timestamp in the html footer, then
+hash every column of every row in `_id` order and diff against a database built
+before the change. Run it for `--lang de`, `--lang fr`, `--pinfo`, `--no-fhir`
+and `--without-sappinfo` — `bag.cpp` is only reached with `--no-fhir`, and
+`--no-fhir` is also the only configuration that emits the legacy 19-column
+schema.
+
 ## Glossary
 _ [GTIN](http://www.ywesee.com/Main/EANCode)

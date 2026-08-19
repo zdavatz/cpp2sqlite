@@ -10,6 +10,8 @@
 #include <string>
 #include <sstream>
 #include <regex>
+#include <unordered_map>
+#include <algorithm>
 #include <libgen.h>     // for basename()
 
 #include <boost/algorithm/string.hpp>
@@ -123,87 +125,144 @@ void sort(GTIN::oneFachinfoPackages &packages)
 //
 // The Java version seems to be using Jsoup and EscapeMode.xhtml
 // Don't convert &lt; &gt; &apos;
+// HTML entities that occur in the Refdata documents and have to become real
+// characters. No replacement produces a '&', so these substitutions cannot
+// cascade into one another - which is what makes the single pass in
+// cleanupForNonHtmlUsage() below equivalent to replacing them one at a time.
+static const std::unordered_map<std::string, std::string> &entityTable()
+{
+    static const std::unordered_map<std::string, std::string> table = {
+        {"&nbsp;",   " "},
+        {"&ge;",     "≥"},
+        {"&le;",     "≤"},
+        {"&plusmn;", "±"}, // used in rn 58868 table 6
+        {"&agrave;", "à"},
+        {"&Agrave;", "À"},
+        {"&acirc;",  "â"},
+        {"&Acirc;",  "Â"},
+        {"&auml;",   "ä"},
+        {"&Auml;",   "Ä"},
+        {"&egrave;", "è"},
+        {"&Egrave;", "È"},
+        {"&eacute;", "é"},
+        {"&Eacute;", "É"},
+        {"&ecirc;",  "ê"},
+        {"&euml;",   "ë"},
+        {"&iuml;",   "ï"},
+        {"&icirc;",  "î"},
+        {"&ouml;",   "ö"},
+        {"&ocirc;",  "ô"},
+        {"&Ouml;",   "Ö"},
+        {"&Ograve;", "Ò"},
+        {"&uuml;",   "ü"},
+        {"&Uuml;",   "Ü"},
+        {"&oelig;",  "œ"},
+        {"&OElig;",  "Œ"},
+        {"&middot;", "–"}, // the true middot is "·"
+        {"&bdquo;",  "„"},
+        {"&ldquo;",  "“"},
+        {"&lsquo;",  "‘"},
+        {"&rsquo;",  "’"},
+        {"&alpha;",  "α"},
+        {"&beta;",   "β"},
+        {"&gamma;",  "γ"},
+        {"&kappa;",  "κ"},
+        {"&micro;",  "µ"},
+        {"&mu;",     "μ"},
+        {"&phi;",    "φ"},
+        {"&Phi;",    "Φ"},
+        {"&tau;",    "τ"},
+        {"&frac12;", "½"},
+        {"&minus;",  "−"},
+        {"&mdash;",  "—"},
+        {"&ndash;",  "–"},
+        {"&bull;",   "•"}, // See rn 63182. Where is this in the Java code ?
+        {"&reg;",    "®"},
+        {"&copy;",   "©"},
+        {"&trade;",  "™"},
+        {"&laquo;",  "«"},
+        {"&raquo;",  "»"},
+        {"&deg;",    "°"},
+        {"&sup1;",   "¹"},
+        {"&sup2;",   "²"},
+        {"&sup3;",   "³"},
+        {"&times;",  "×"},
+        {"&pi;",     "π"},
+        {"&szlig;",  "ß"},
+        {"&infin;",  "∞"},
+        {"&dagger;", "†"},
+        {"&Dagger;", "‡"},
+        {"&sect;",   "§"},
+        {"&spades;", "♠"}, // rn 63285, table 2
+        {"&THORN;",  "Þ"},
+        {"&Oslash;", "Ø"},
+        {"&para;",   "¶"},
+
+        {"&frasl;",  "⁄"}, // see rn 36083
+        {"&curren;", "¤"},
+        {"&yen;",    "¥"},
+        {"&pound;",  "£"},
+        {"&ordf;",   "ª"},
+        {"&ccedil;", "ç"},
+
+        {"&larr;",   "←"},
+        {"&uarr;",   "↑"},
+        {"&rarr;",   "→"},
+        {"&darr;",   "↓"},
+        {"&harr;",   "↔"},
+    };
+    return table;
+}
+
+// Length of the longest key in entityTable(), so that adding a longer entity
+// above cannot silently stop matching.
+static std::string::size_type maxEntityLength()
+{
+    static const std::string::size_type len = []{
+        std::string::size_type m = 0;
+        for (const auto &entity : entityTable())
+            m = std::max(m, entity.first.size());
+        return m;
+    }();
+    return len;
+}
+
+// This used to be 76 consecutive boost::replace_all() calls, i.e. 76 full
+// scans (each reallocating on every hit) of an ~85 KB document, for every one
+// of the ~4500 Fachinfos. One pass with a lookup on each "&...;" token gives
+// byte-identical output at a fraction of the cost.
 void cleanupForNonHtmlUsage(std::string &xml)
 {
-    boost::replace_all(xml, "&nbsp;",   " ");
-    boost::replace_all(xml, "&ge;",     "≥");
-    boost::replace_all(xml, "&le;",     "≤");
-    boost::replace_all(xml, "&plusmn;", "±"); // used in rn 58868 table 6
-    boost::replace_all(xml, "&agrave;", "à");
-    boost::replace_all(xml, "&Agrave;", "À");
-    boost::replace_all(xml, "&acirc;",  "â");
-    boost::replace_all(xml, "&Acirc;",  "Â");
-    boost::replace_all(xml, "&auml;",   "ä");
-    boost::replace_all(xml, "&Auml;",   "Ä");
-    boost::replace_all(xml, "&egrave;", "è");
-    boost::replace_all(xml, "&Egrave;", "È");
-    boost::replace_all(xml, "&eacute;", "é");
-    boost::replace_all(xml, "&Eacute;", "É");
-    boost::replace_all(xml, "&ecirc;",  "ê");
-    boost::replace_all(xml, "&euml;",   "ë");
-    boost::replace_all(xml, "&iuml;",   "ï");
-    boost::replace_all(xml, "&icirc;",  "î");
-    boost::replace_all(xml, "&ouml;",   "ö");
-    boost::replace_all(xml, "&ocirc;",  "ô");
-    boost::replace_all(xml, "&Ouml;",   "Ö");
-    boost::replace_all(xml, "&Ograve;", "Ò");
-    boost::replace_all(xml, "&uuml;",   "ü");
-    boost::replace_all(xml, "&Uuml;",   "Ü");
-    boost::replace_all(xml, "&oelig;",  "œ");
-    boost::replace_all(xml, "&OElig;",  "Œ");
-    boost::replace_all(xml, "&middot;", "–"); // the true middot is "·"
-    boost::replace_all(xml, "&bdquo;",  "„");
-    boost::replace_all(xml, "&ldquo;",  "“");
-    boost::replace_all(xml, "&lsquo;",  "‘");
-    boost::replace_all(xml, "&rsquo;",  "’");
-    boost::replace_all(xml, "&alpha;",  "α");
-    boost::replace_all(xml, "&beta;",   "β");
-    boost::replace_all(xml, "&gamma;",  "γ");
-    boost::replace_all(xml, "&kappa;",  "κ");
-    boost::replace_all(xml, "&micro;",  "µ");
-    boost::replace_all(xml, "&mu;",     "μ");
-    boost::replace_all(xml, "&phi;",    "φ");
-    boost::replace_all(xml, "&Phi;",    "Φ");
-    boost::replace_all(xml, "&tau;",    "τ");
-    boost::replace_all(xml, "&frac12;", "½");
-    boost::replace_all(xml, "&minus;",  "−");
-    boost::replace_all(xml, "&mdash;",  "—");
-    boost::replace_all(xml, "&ndash;",  "–");
-    boost::replace_all(xml, "&bull;",   "•"); // See rn 63182. Where is this in the Java code ?
-    boost::replace_all(xml, "&reg;",    "®");
-    boost::replace_all(xml, "&copy;",   "©");
-    boost::replace_all(xml, "&trade;",  "™");
-    boost::replace_all(xml, "&laquo;",  "«");
-    boost::replace_all(xml, "&raquo;",  "»");
-    boost::replace_all(xml, "&deg;",    "°");
-    boost::replace_all(xml, "&sup1;",   "¹");
-    boost::replace_all(xml, "&sup2;",   "²");
-    boost::replace_all(xml, "&sup3;",   "³");
-    boost::replace_all(xml, "&times;",  "×");
-    boost::replace_all(xml, "&pi;",     "π");
-    boost::replace_all(xml, "&szlig;",  "ß");
-    boost::replace_all(xml, "&infin;",  "∞");
-    boost::replace_all(xml, "&dagger;", "†");
-    boost::replace_all(xml, "&Dagger;", "‡");
-    boost::replace_all(xml, "&sect;",   "§");
-    boost::replace_all(xml, "&spades;", "♠"); // rn 63285, table 2
-    boost::replace_all(xml, "&THORN;",  "Þ");
-    boost::replace_all(xml, "&Oslash;", "Ø");
-    boost::replace_all(xml, "&para;",   "¶");
+    if (xml.find('&') == std::string::npos)
+        return;
 
-    boost::replace_all(xml, "&frasl;",  "⁄"); // see rn 36083
-    boost::replace_all(xml, "&curren;", "¤");
-    boost::replace_all(xml, "&yen;",    "¥");
-    boost::replace_all(xml, "&pound;",  "£");
-    boost::replace_all(xml, "&ordf;",   "ª");
-    boost::replace_all(xml, "&ccedil;", "ç");
+    const auto &table = entityTable();
+    const std::string::size_type maxLen = maxEntityLength();
 
-    boost::replace_all(xml, "&larr;", "←");
-    boost::replace_all(xml, "&uarr;", "↑");
-    boost::replace_all(xml, "&rarr;", "→");
-    boost::replace_all(xml, "&darr;", "↓");
-    boost::replace_all(xml, "&harr;", "↔");
+    std::string out;
+    out.reserve(xml.size());
+
+    std::string::size_type i = 0;
+    while (i < xml.size()) {
+        if (xml[i] == '&') {
+            // A key runs from '&' up to the first following ';', so at most one
+            // table entry can match here, exactly as replace_all would have.
+            std::string::size_type semi = xml.find(';', i + 1);
+            if (semi != std::string::npos && semi - i + 1 <= maxLen) {
+                auto it = table.find(xml.substr(i, semi - i + 1));
+                if (it != table.end()) {
+                    out += it->second;
+                    i = semi + 1;
+                    continue;
+                }
+            }
+        }
+        out += xml[i++];
+    }
+
+    xml.swap(out);
 }
+
 
 // Cleanup and also escape some children tags
 void cleanupXml(std::string &xml,

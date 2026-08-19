@@ -8,6 +8,7 @@
 //
 
 #include <set>
+#include <unordered_map>
 #include <iomanip>
 #include <sstream>
 #include <libgen.h>     // for basename()
@@ -27,6 +28,12 @@ namespace BAG
 {
     PreparationList prepList;
     PackageMap packMap;
+
+    // Indexes into prepList, built once at the end of parseXML(). Same purpose
+    // as the ones in bagFHIR.cpp: these lookups used to walk every preparation
+    // and every pack on each call.
+    std::unordered_map<std::string, std::vector<size_t>> prepsByRegnr;
+    std::unordered_map<std::string, std::pair<size_t, size_t>> packByGtin; // first (prep, pack)
 
     // Parse-phase stats
     unsigned int statsPackCount = 0;
@@ -249,6 +256,14 @@ void parseXML(const std::string &filename,
             }
         }
 
+        // Build the lookup indexes. emplace() keeps the first pack carrying a
+        // given GTIN, matching the "first match wins" scans below.
+        for (size_t i = 0; i < prepList.size(); i++) {
+            prepsByRegnr[prepList[i].swissmedNo].push_back(i);
+            for (size_t j = 0; j < prepList[i].packs.size(); j++)
+                packByGtin.emplace(prepList[i].packs[j].gtin, std::make_pair(i, j));
+        }
+
         printFileStats(filename);
     }
     catch (std::exception &e) {
@@ -264,11 +279,14 @@ int getAdditionalNames(const std::string &rn,
     std::set<std::string>::iterator it;
     int countAdded = 0;
 
-    for (Preparation pre : prepList) {
-        if (rn != pre.swissmedNo)
-            continue;
+    auto preps = prepsByRegnr.find(rn);
+    if (preps == prepsByRegnr.end())
+        return 0;
 
-        for (Pack p : pre.packs) {
+    for (size_t prepIdx : preps->second) {
+        const Preparation &pre = prepList[prepIdx];
+
+        for (const Pack &p : pre.packs) {
             std::string g13 = p.gtin;
             std::string paf = getPricesAndFlags(g13, "", p.category);
 
@@ -308,52 +326,54 @@ std::string getPricesAndFlags(const std::string &gtin,
     std::vector<std::string> flagsVector;
     bool found = false;
 
-    for (Preparation pre : prepList)
-        for (Pack p : pre.packs)
-            if (gtin == p.gtin) {
-                packageFields pf;
+    // A GTIN identifies one pack; packByGtin holds the first one carrying it,
+    // which is the pack the scan over prepList used to stop at.
+    auto hit = packByGtin.find(gtin);
+    if (hit != packByGtin.end()) {
+        const Preparation &pre = prepList[hit->second.first];
+        const Pack &p = pre.packs[hit->second.second];
 
-                // Prices
-                if (!p.exFactoryPrice.empty()) {
-                    prices += "EFP " + p.exFactoryPrice;
-                    pf.efp = p.exFactoryPrice;
-                }
+        packageFields pf;
 
-                if (!p.publicPrice.empty()) {
-                    prices += ", PP " + p.publicPrice;
-                    pf.pp = p.publicPrice;
-                }
+        // Prices
+        if (!p.exFactoryPrice.empty()) {
+            prices += "EFP " + p.exFactoryPrice;
+            pf.efp = p.exFactoryPrice;
+        }
 
-                if (!p.exFactoryPriceValidFrom.empty()) { // for pharma.csv
-                    pf.efp_validFrom = p.exFactoryPriceValidFrom;
-                }
+        if (!p.publicPrice.empty()) {
+            prices += ", PP " + p.publicPrice;
+            pf.pp = p.publicPrice;
+        }
 
-                // Flags
-                if (!category.empty())
-                    flagsVector.push_back(category);
+        if (!p.exFactoryPriceValidFrom.empty()) { // for pharma.csv
+            pf.efp_validFrom = p.exFactoryPriceValidFrom;
+        }
 
-                if (!p.exFactoryPrice.empty() || !p.publicPrice.empty())
-                    flagsVector.push_back("SL");  // TODO: localize to LS for French
+        // Flags
+        if (!category.empty())
+            flagsVector.push_back(category);
 
-                if (!p.limitationPoints.empty())
-                    flagsVector.push_back("LIM" + p.limitationPoints);
+        if (!p.exFactoryPrice.empty() || !p.publicPrice.empty())
+            flagsVector.push_back("SL");  // TODO: localize to LS for French
 
-                // SB: Selbstbehalt
-                // https://github.com/zdavatz/cpp2sqlite/issues/236
-                if (pre.sb != 0) {
-                    flagsVector.push_back("SB " + std::to_string(pre.sb) + "%");
-                }
+        if (!p.limitationPoints.empty())
+            flagsVector.push_back("LIM" + p.limitationPoints);
 
-                if (!pre.orgen.empty())
-                    flagsVector.push_back(pre.orgen);
+        // SB: Selbstbehalt
+        // https://github.com/zdavatz/cpp2sqlite/issues/236
+        if (pre.sb != 0) {
+            flagsVector.push_back("SB " + std::to_string(pre.sb) + "%");
+        }
 
-                pf.flags = flagsVector;
-                packMap[gtin] = pf;
-                found = true;
-                goto prepareResult; // abort the two for loops
-            } // if
+        if (!pre.orgen.empty())
+            flagsVector.push_back(pre.orgen);
 
-prepareResult:
+        pf.flags = flagsVector;
+        packMap[gtin] = pf;
+        found = true;
+    }
+
     // The category (input parameter) must be added even if the GTIN was not found
     if (!found) {
         if (!category.empty())
@@ -382,8 +402,8 @@ std::vector<std::string> getGtinList()
 {
     std::vector<std::string> list;
 
-    for (Preparation pre : prepList)
-        for (Pack p : pre.packs)
+    for (const Preparation &pre : prepList)
+        for (const Pack &p : pre.packs)
             if (!p.gtin.empty())
                 list.push_back(p.gtin);
 
@@ -393,12 +413,10 @@ std::vector<std::string> getGtinList()
 std::string getTindex(const std::string &rn)
 {
     std::string tindex;
-    for (Preparation pre : prepList) {
-        if (rn == pre.swissmedNo) {
-            tindex = pre.itCodes.tindex;
-            break;
-        }
-    }
+
+    auto preps = prepsByRegnr.find(rn);
+    if (preps != prepsByRegnr.end())
+        tindex = prepList[preps->second.front()].itCodes.tindex;
 
     return tindex;
 }
@@ -407,12 +425,10 @@ std::string getTindex(const std::string &rn)
 std::string getApplicationByRN(const std::string &rn)
 {
     std::string app;
-    for (Preparation p : prepList) {
-        if (rn == p.swissmedNo) {
-            app = p.itCodes.application + " (BAG)";
-            break;
-        }
-    }
+
+    auto preps = prepsByRegnr.find(rn);
+    if (preps != prepsByRegnr.end())
+        app = prepList[preps->second.front()].itCodes.application + " (BAG)";
 
     return app;
 }
@@ -420,10 +436,9 @@ std::string getApplicationByRN(const std::string &rn)
 // Used only by "pharma" not by "cpp2sqlite"
 std::string getLongestItCodeByGtin(const std::string &gtin)
 {
-    for (Preparation pre : prepList)
-        for (Pack p : pre.packs)
-            if (gtin == p.gtin)
-                return pre.itCodes.longestItCode;
+    auto hit = packByGtin.find(gtin);
+    if (hit != packByGtin.end())
+        return prepList[hit->second.first].itCodes.longestItCode;
 
     return {};
 }
@@ -453,8 +468,8 @@ PreparationList getPrepList()
 std::vector<std::string> gtinWhichDoesntStartWith7680()
 {
     std::vector<std::string> result;
-    for (Preparation prep : prepList) {
-        for (Pack pack : prep.packs) {
+    for (const Preparation &prep : prepList) {
+        for (const Pack &pack : prep.packs) {
             std::string gtin = pack.gtin;
             if (gtin.substr(0,4) != "7680") {
                 result.push_back(gtin);
@@ -465,8 +480,8 @@ std::vector<std::string> gtinWhichDoesntStartWith7680()
 }
 
 bool getPreparationAndPackageByGtin(const std::string &gtin, Preparation *outPrep, Pack *outPack) {
-    for (Preparation prep : prepList) {
-        for (Pack pack : prep.packs) {
+    for (const Preparation &prep : prepList) {
+        for (const Pack &pack : prep.packs) {
             if (pack.gtin == gtin) {
                 *outPrep = prep;
                 *outPack = pack;
