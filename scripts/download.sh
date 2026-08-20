@@ -102,10 +102,35 @@ fi
 fi
 
 if [ $STEP_DOWNLOAD_SWISSMEDIC_HAM ] ; then
-# Needed in pharma
-# Extended drug list
-FILE2="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/erweiterte_ham.xlsx.download.xlsx/Erweiterte_Arzneimittelliste%20HAM.xlsx"
-wget -N $FILE2
+# Needed in pharma (src/pha/main.cpp -> SWISSMEDIC2::parseXLXS), not in AmiKo.
+# Extended drug list.
+#
+# Swissmedic renamed the DAM node from erweiterte_ham to erweiterte_ham_ind
+# ("mit Indikation", alongside zugelassene_arzneimittel_ham -> ..._ham_ind).
+# The old URL had been answering 404 since about Feb 2025 and nobody noticed,
+# because `wget -N` leaves the previous file in place and the caller ignored
+# its exit code - so pharma.csv was built from a stale list for 18 months.
+# Download to a temp name and validate before replacing, like the packages
+# list above.
+#
+# A failure here is a warning, not an abort: this file reaches only pharma,
+# and pharma is not part of the gated amiko_data pipeline. Aborting would let
+# a Swissmedic outage block the whole AiPS build over an input it never reads.
+FILE2="https://www.swissmedic.ch/dam/swissmedic/de/dokumente/internetlisten/erweiterte_ham_ind.xlsx.download.xlsx/Erweiterte_Arzneimittelliste%20HAM.xlsx"
+HAM_FILE="Erweiterte_Arzneimittelliste HAM.xlsx"
+HAM_TEMP=erweiterte_ham_temp.xlsx
+
+rm -f $HAM_TEMP
+if wget $FILE2 -O $HAM_TEMP && unzip -t -qq $HAM_TEMP ; then
+    mv -f $HAM_TEMP "$HAM_FILE"
+else
+    rm -f $HAM_TEMP
+    if [ ! -f "$HAM_FILE" ] ; then
+        echo "ERROR: cannot download $FILE2 and there is no previous copy" 1>&2
+        exit 1
+    fi
+    echo "WARNING: cannot download $FILE2, pharma will use the old $HAM_FILE ($(date -r "$HAM_FILE" +%Y-%m-%d))" 1>&2
+fi
 fi
 
 #-------------------------------------------------------------------------------
