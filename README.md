@@ -122,8 +122,15 @@ cp amiko_targets.conf.example amiko_targets.conf   # once, then fill in
 One cron entry replaces five:
 
 ```cron
-0 4 * * * <user> /usr/local/src/cpp2sqlite/scripts/amiko_data >> ~/amiko_data.log 2>&1
+0 5 * * * <user> /usr/local/src/cpp2sqlite/scripts/amiko_data >> ~/amiko_data.log 2>&1
 ```
+
+05:00 and not earlier: Refdata overwrites `AllHtml.zip` in place, under the same URL,
+at 04:00:37 CEST. A job starting at 04:00 downloads straight into that rewrite, and
+`wget`'s own retry then resumes with a bare `Range` — splicing the tail of the new
+version onto the head of the old one into a full-length archive that only
+`unzip -tqq` can tell is broken. At 05:00 the blob written at 04:00 the same day is
+complete and an hour old.
 
 Hosts, addresses and directories are **not** in this repository. They live in
 `scripts/amiko_targets.conf`, which is gitignored; `amiko_targets.conf.example`
