@@ -138,22 +138,36 @@ rm temp.zip
 # and exit 1.
 ALLHTML_URL=https://files.refdata.ch/simis-public-prod/MedicinalDocuments/AllHtml.zip
 ALLHTML_MIN_FILES=${ALLHTML_MIN_FILES:-25000}
+ALLHTML_TRIES=${ALLHTML_TRIES:-3}
 
 rm -rf Refdata-AllHtml.new
 rm -f Refdata-AllHtml.zip
 
-if ! wget --tries=3 --timeout=60 $ALLHTML_URL -O Refdata-AllHtml.zip ; then
-    echo "ERROR: cannot download $ALLHTML_URL, keeping the previous Refdata-AllHtml" 1>&2
+# Never resume this download. Refdata rewrites the blob around 04:00 CEST, and
+# on 2026-08-19 and 2026-08-20 it changed size mid-transfer. wget's own --tries
+# picks up where the connection dropped, with a Range request, so it appended
+# the tail of the new version to the head of the old one. The result is an
+# archive of exactly the announced length, with a valid central directory, that
+# is garbage from the splice onwards - 2026-08-20 broke at file #19968, offset
+# 704'115'827, the byte where the connection had died. No length or exit-code
+# check can see that; only unzip -tqq does. So: one try per attempt, delete the
+# partial file, and fetch the whole thing again.
+attempt=1
+while : ; do
     rm -f Refdata-AllHtml.zip
-    exit 1
-fi
-
-# catches a truncated transfer and corrupt deflate streams
-if ! unzip -tqq Refdata-AllHtml.zip ; then
-    echo "ERROR: Refdata-AllHtml.zip is corrupt, keeping the previous Refdata-AllHtml" 1>&2
-    rm -f Refdata-AllHtml.zip
-    exit 1
-fi
+    if wget --tries=1 --timeout=60 $ALLHTML_URL -O Refdata-AllHtml.zip && \
+       unzip -tqq Refdata-AllHtml.zip ; then
+        break
+    fi
+    if [ $attempt -ge $ALLHTML_TRIES ] ; then
+        echo "ERROR: no sound $ALLHTML_URL after $ALLHTML_TRIES attempts, keeping the previous Refdata-AllHtml" 1>&2
+        rm -f Refdata-AllHtml.zip
+        exit 1
+    fi
+    echo "WARNING: AllHtml.zip attempt $attempt was incomplete or corrupt, starting over" 1>&2
+    attempt=$((attempt + 1))
+    sleep 30
+done
 
 ALLHTML_EXPECTED=$(unzip -l Refdata-AllHtml.zip | tail -1 | awk '{print $2}')
 if [ "$ALLHTML_EXPECTED" -lt "$ALLHTML_MIN_FILES" ] ; then
