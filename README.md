@@ -94,11 +94,12 @@ of the 10'232 German documents referenced by `aips.xml` were missing, the
 German db came out with 1'694 rows, and registration 62069 (Levetiracetam
 Desitin) lost all seven of its packages.
 
-The download is therefore staged and verified before it replaces the live
-folder: `wget` exit code, `unzip -t` over the whole archive, an entry-count
-floor (`ALLHTML_MIN_FILES`, default 25000), extraction into
-`Refdata-AllHtml.new`, and a comparison of the extracted file count against the
-archive's entry count. Any failure keeps the previous `Refdata-AllHtml/` and
+The download therefore never resumes — each attempt deletes the partial file and
+refetches the whole archive with `wget --tries=1` — and it is staged and verified
+before it replaces the live folder: `wget` exit code, `unzip -t` over the whole
+archive, an entry-count floor (`ALLHTML_MIN_FILES`, default 25000), extraction
+into `Refdata-AllHtml.new`, and a comparison of the extracted file count against
+the archive's entry count. Any failure keeps the previous `Refdata-AllHtml/` and
 exits 1, so a build never runs on a half-populated folder.
 
 ## AIPS build and publishing (scripts/amiko_data)
