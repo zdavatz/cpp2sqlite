@@ -233,9 +233,19 @@ rm XMLPublications.zip
 fi
 
 if [ $STEP_DOWNLOAD_FHIR ] ; then
-    FHIR_BASE_URL="https://epl.bag.admin.ch/static/fhir"
+    # BAG moved the export on 24.08.2026 and announced it the next evening:
+    # /static/fhir/foph-sl-export-* became
+    # /static/sl/publication/fhir/foph-sl-publication-*.
+    #
+    # The old -latest- alias answers 404 while the old dated snapshots stay in
+    # place, so this fails by fetching nothing rather than by breaking loudly.
+    # There is no language-less default any more; per BAG every url has to name
+    # de, fr or it. A preliminary publication now exists in parallel under
+    # /static/sl/preliminary/fhir/foph-sl-preliminary-*, which we do not use.
+    FHIR_BASE_URL="https://epl.bag.admin.ch/static/sl/publication/fhir"
+    FHIR_FILE_PREFIX="foph-sl-publication"
     for LANG in de fr it ; do
-        URL="${FHIR_BASE_URL}/foph-sl-export-latest-${LANG}.ndjson"
+        URL="${FHIR_BASE_URL}/${FHIR_FILE_PREFIX}-latest-${LANG}.ndjson"
         echo "Downloading from ${URL}"
         curl -fsSL "${URL}" -o "fhir-sl-${LANG}.ndjson"
     done

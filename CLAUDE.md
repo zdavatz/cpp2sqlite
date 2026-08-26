@@ -22,7 +22,7 @@ All use BAG FHIR ndjson by default since 01.06.2026 (`flagFHIR=true`); pass `--n
 
 ## FHIR NDJSON Parsing
 - Source: `src/bagFHIR.cpp` / `src/bagFHIR.hpp`
-- Input: `downloads/fhir-sl-{de,fr,it}.ndjson` from https://epl.bag.admin.ch/static/fhir/foph-sl-export-latest-{de,fr,it}.ndjson (per-language NDJSON)
+- Input: `downloads/fhir-sl-{de,fr,it}.ndjson` from https://epl.bag.admin.ch/static/sl/publication/fhir/foph-sl-publication-latest-{de,fr,it}.ndjson (per-language NDJSON). BAG moved the export there on 24.08.2026; the old `/static/fhir/foph-sl-export-*` answers 404 for `-latest-` while the old dated snapshots remain, so the failure looks like a download that fetched nothing.
 - Each line is a FHIR Bundle with entries: MedicinalProductDefinition, RegulatedAuthorization, PackagedProductDefinition, Ingredient, ClinicalUseDefinition
 - Prices (EFP/PP) and reimbursement data are in RegulatedAuthorization extensions under `reimbursementSL` > `productPrice`
 - Legal status codes map to categories: A (756005022001), B (756005022003), C (756005022005), D (756005022007, 756005022008), E (756005022009)
