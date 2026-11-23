@@ -317,13 +317,18 @@ void createStockCSV(const std::string &filename)
         constexpr std::string_view OUTPUT_FILE_SEPARATOR = ";";
         
         std::clog << std::endl << "Creating CSV" << std::endl;
-        
+
+        // One line per overridden pharmacode used to go to stderr here:
+        // ~186000 lines (8.6 MB) per run, mailed by cron every 10 minutes,
+        // which filled the disk on the test server. Count them instead.
+        size_t nOverridden = 0;
+
         for (auto item : pharmaStockMap) {
 
             bool shouldOverrideVoigtWithZero = item.second.overrideZeroVoigt;
 
             if (shouldOverrideVoigtWithZero) {
-                std::clog << "overriding to zero " << item.first << std::endl;
+                nOverridden++;
             }
 
             ofs
@@ -333,6 +338,9 @@ void createStockCSV(const std::string &filename)
         }
         
         ofs.close();
+
+        std::clog << "Voigt stock overridden to zero for " << nOverridden
+                  << " of " << pharmaStockMap.size() << " pharmacodes" << std::endl;
 
     #ifdef DEBUG
         std::clog << std::endl << "Created " << filename << std::endl;
